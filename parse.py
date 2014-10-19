@@ -80,7 +80,8 @@ def loadPosts(site, logger):
 
     """Gathers the data and put them in database"""
 
-    request = "INSERT INTO papers(percentage_match, title, date, journal, authors, abstract, graphical_abstract) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    request = "INSERT INTO papers(percentage_match, title, date, journal, authors, abstract, graphical_abstract) \
+               VALUES (?, ?, ?, ?, ?, ?, ?)"
     query = QtSql.QSqlQuery("fichiers.sqlite")
 
     feed = feedparser.parse(site)
@@ -98,7 +99,7 @@ def loadPosts(site, logger):
 
         #query.prepare(request)
 
-        #params = (percentage_match, entry.title, entry.date, journal, abstract, graphical_abstract)
+        #params = (percentage_match, title, date, journal, authors, abstract, graphical_abstract)
 
         #On fixe chaque variable à chaque placeholder
         #for value in params:
@@ -116,6 +117,7 @@ def parse(logger):
 
     #List of the flux to parse
     flux = ["ang.xml", "jacs.xml"]
+    #flux = ["jacs.xml"]
 
     with ThreadPoolExecutor(max_workers=10) as e:
      
