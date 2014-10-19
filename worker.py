@@ -2,15 +2,14 @@
 # -*-coding:Utf-8 -*
 
 from PyQt4 import QtGui, QtSql, QtCore
-import time
 import parse
+
 
 class Worker(QtCore.QThread):
 
-    """Cette classe hérite de QThread pr pouvoir lancer
-    l'actualisation des torrents dans un thread à part.
-    Cela permet de ne pas faire freezer le programme tout entier
-    lors des requêtes http, qui peuvent être longues"""
+    """Subclassing the class in order to provide a thread.
+    The thread is used to parse the RSS flux, in background. The
+    main UI remains functional"""
 
     #Explique comment faire une classe de thread pr ne pas bloquer la GUI principale
     #http://stackoverflow.com/questions/6783194/background-thread-with-qthread-in-pyqt
@@ -22,15 +21,15 @@ class Worker(QtCore.QThread):
 
         self.exiting = False
 
-        #On crée un argument pr la fenêtre principale
+        #Get the parent window
         self.window = window
 
-        self.window.l.debug("Initialisation du plugin TPB terminée")
+        self.window.l.debug("Starting parsing of the new articles")
 
 
     def render(self):
 
-        """Envoyer les paramètres à cette fct !!!"""
+        """Give the parameter to this function, if needed"""
         self.start()
 
 
@@ -42,15 +41,6 @@ class Worker(QtCore.QThread):
 
     def run(self):
 
-        """Méthode avec l'algo principal de parsing.
-        S'appelle run car on sous-classe la méthode run
-        de QThread"""
+        """Main function. Starts the real business"""
 
         parse.parse(self.window.l)
-
-        #count = 0
-        #while count < 500:
-            #time.sleep(1)
-            #print("Increasing")
-            #count += 1
-

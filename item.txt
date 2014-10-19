@@ -30,8 +30,7 @@ Totally wired: A new motif for the synthesis of 1D metal atom wire crystal is de
 
 --------------------------------------------
 
-
-
+Item angewandte:
 
 {'prism_doi': '10.1002/anie.201408693',
 'updated': '2014-10-15T11:20:10.723327-05:00',
@@ -67,3 +66,32 @@ Totally wired: A new motif for the synthesis of 1D metal atom wire crystal is de
 
 'prism_section': 'Communication',
 'authors': [{}]}
+
+
+
+--------------------------------------------
+
+
+Item du JACS:
+
+{
+'id': 'http://dx.doi.org/10.1021/ja508798s',
+'feedburner_origlink': 'http://dx.doi.org/10.1021/ja508798s',
+'link': 'http://feedproxy.google.com/~r/acs/jacsat/~3/TA9XuYEcMzY/ja508798s',
+'updated_parsed': time.struct_time(tm_year=2014, tm_mon=10, tm_mday=18, tm_hour=12, tm_min=0, tm_sec=37, tm_wday=5, tm_yday=291, tm_isdst=0),
+'guidislink': False,
+'title_detail': 
+    {'base': '', 'type': 'text/plain', 'language': None, 'value': 'Influence\nof Side-Chain Regiochemistry on the Transistor\nPerformance of High-Mobility, All-Donor Polymers'},
+'author_detail': {'name': 'Zhuping Fei, Pichaya Pattanasattayavong, Yang Han, Bob C. Schroeder, Feng Yan, R. Joseph Kline, Thomas D. Anthopoulos and Martin Heeney'},
+'published': 'Sat, 18 Oct 2014 12:00:37 GMT',
+'published_parsed': time.struct_time(tm_year=2014, tm_mon=10, tm_mday=18, tm_hour=12, tm_min=0, tm_sec=37, tm_wday=5, tm_yday=291, tm_isdst=0),
+'updated': '2014-10-18T12:00:37Z',
+'authors': [{}],
+'summary_detail': {'base': '', 'type': 'text/html', 'language': None, 'value': '<p><img alt="TOC Graphic" src="http://pubs.acs.org/appl/literatum/publisher/achs/journals/content/jacsat/0/jacsat.ahead-of-print/ja508798s/20141014/images/medium/ja-2014-08798s_0006.gif" /></p><div><cite>Journal of the American Chemical Society</cite></div><div>DOI: 10.1021/ja508798s</div><div class="feedflare">\n<a href="http://feeds.feedburner.com/~ff/acs/jacsat?a=TA9XuYEcMzY:RXqYIZfMmww:yIl2AUoC8zA"><img border="0" src="http://feeds.feedburner.com/~ff/acs/jacsat?d=yIl2AUoC8zA" /></a>\n</div><img height="1" src="http://feeds.feedburner.com/~r/acs/jacsat/~4/TA9XuYEcMzY" width="1" />'},
+'links': [{'rel': 'alternate', 'href': 'http://feedproxy.google.com/~r/acs/jacsat/~3/TA9XuYEcMzY/ja508798s', 'type': 'text/html'}],
+'title': 'Influence\nof Side-Chain Regiochemistry on the Transistor\nPerformance of High-Mobility, All-Donor Polymers',
+
+'summary': '<p><img alt="TOC Graphic" src="http://pubs.acs.org/appl/literatum/publisher/achs/journals/content/jacsat/0/jacsat.ahead-of-print/ja508798s/20141014/images/medium/ja-2014-08798s_0006.gif" /></p><div><cite>Journal of the American Chemical Society</cite></div><div>DOI: 10.1021/ja508798s</div><div class="feedflare">\n<a href="http://feeds.feedburner.com/~ff/acs/jacsat?a=TA9XuYEcMzY:RXqYIZfMmww:yIl2AUoC8zA"><img border="0" src="http://feeds.feedburner.com/~ff/acs/jacsat?d=yIl2AUoC8zA" /></a>\n</div><img height="1" src="http://feeds.feedburner.com/~r/acs/jacsat/~4/TA9XuYEcMzY" width="1" />',
+'author': 'Zhuping Fei, Pichaya Pattanasattayavong, Yang Han, Bob C. Schroeder, Feng Yan, R. Joseph Kline, Thomas D. Anthopoulos and Martin Heeney'
+}
+

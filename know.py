@@ -49,7 +49,7 @@ class Fenetre(QtGui.QMainWindow):
         self.bdd.open()
         query = QtSql.QSqlQuery("fichiers.sqlite")
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match TEXT, \
-                     title TEXT, date TEXT, journal TEXT, abstract TEXT, graphical_abstract TEXT)")
+                     title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT)")
 
 
         #Création du modèle, issu de la bdd
