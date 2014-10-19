@@ -1,0 +1,69 @@
+</description>
+    </item><item rdf:about="http://onlinelibrary.wiley.com/resolve/doi?DOI=10.1002%2Fanie.201408461" xmlns="http://purl.org/rss/1.0/">
+    <title>A Motif for Infinite Metal Atom Wires</title>
+    <link>http://onlinelibrary.wiley.com/resolve/doi?DOI=10.1002%2Fanie.201408461</link>
+    <dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">A Motif for Infinite Metal Atom Wires</dc:title>
+    <dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Xi Yin, Steven A. Warren, Yung-Tin Pan, Kai-Chieh Tsao, Danielle L. Gray, Jeffery Bertke, Hong Yang</dc:creator>
+    <dc:date xmlns:dc="http://purl.org/dc/elements/1.1/">2014-10-15T10:30:20.392516-05:00</dc:date>
+    <dc:identifier xmlns:dc="http://purl.org/dc/elements/1.1/">doi:10.1002/anie.201408461</dc:identifier>
+    <dc:rights xmlns:dc="http://purl.org/dc/elements/1.1/"/>
+    <dc:publisher xmlns:dc="http://purl.org/dc/elements/1.1/">John Wiley &amp; Sons, Inc.</dc:publisher>
+    <prism:doi xmlns:prism="http://prismstandard.org/namespaces/1.2/basic/">10.1002/anie.201408461</prism:doi>
+    <prism:url xmlns:prism="http://prismstandard.org/namespaces/1.2/basic/">http://onlinelibrary.wiley.com/resolve/doi?DOI=10.1002%2Fanie.201408461</prism:url>
+    <prism:section xmlns:prism="http://prismstandard.org/namespaces/1.2/basic/">Communication</prism:section>
+    <prism:startingPage xmlns:prism="http://prismstandard.org/namespaces/1.2/basic/">n/a</prism:startingPage>
+    <prism:endingPage xmlns:prism="http://prismstandard.org/namespaces/1.2/basic/">n/a</prism:endingPage>
+    <content:encoded xmlns:content="http://purl.org/rss/1.0/modules/content/">
+        <![CDATA[
+<h3 xhtml="http://www.w3.org/1999/xhtml" xmlns:ol="http://www.wiley.com/namespaces/ol/xsl-lib">Abstract</h3>
+<div class="para" xmlns="http://www.w3.org/1999/xhtml"><p>A new motif for infinite metal atom wires with tunable compositions and properties is developed based on the connection between metal paddlewheel and square planar complex moieties. Two infinite Pd chain compounds, [Pd<sub>4</sub>(CO)<sub>4</sub>(OAc)<sub>4</sub>Pd(acac)<sub>2</sub>] <b>1</b> and [Pd<sub>4</sub>(CO)<sub>4</sub>(TFA)<sub>4</sub>Pd(acac)<sub>2</sub>] <b>2</b>, and an infinite Pd<img src="http://onlinelibrarystatic.wiley.com/undisplayable_characters/00f8ff.gif" alt="[BOND]"/>Pt heterometallic chain compound, [Pd<sub>4</sub>(CO)<sub>4</sub>(OAc)<sub>4</sub>Pt(acac)<sub>2</sub>] <b>3</b>, are identified by single-crystal X-ray diffraction analysis. In these new structures, the paddlewheel moiety is a Pd four-membered ring coordinated by bridging carboxylic ligands and μ<sub>2</sub> carbonyl ligands. The planar moiety is either Pd(acac)<sub>2</sub> or Pt(acac)<sub>2</sub> (acac=acetylacetonate). These moieties are connected by metallophilic interactions. The results showed that these one-dimensional metal wire compounds have photoluminescent properties that are tunable by changing ligands and metal ions. <b>3</b> can also serve as a single source precursor for making Pd<sub>4</sub>Pt bimetallic nanostructures with precise control of metal composition.</p></div>
+<a title="Link to full-size graphical abstract" class="figZoom" href="http://onlinelibrary.wiley.com/store/10.1002/anie.201408461/asset/image_m/mcontent.gif?v=1&amp;s=3c0f8272799b1aca31c6926f046808494c49cedd" xmlns="http://www.w3.org/1999/xhtml"><img alt="Thumbnail image of graphical abstract" title="Thumbnail image of graphical abstract" src="http://onlinelibrary.wiley.com/store/10.1002/anie.201408461/asset/image_n/ncontent.gif?v=1&amp;s=0e3b2d16b9f568b47be44bff8d66298d4599c6f1"/></a>
+<div class="para" xmlns="http://www.w3.org/1999/xhtml"><p><b>Totally wired</b>: A new motif for the synthesis of 1D metal atom wire crystal is described in which Pd/Pt heterometallic and Pd atom chain structures were formed. The picture depicts an SEM micrograph of a needle-like crystal of the metal atom wire compound and representations of its molecular building blocks.</p></div>
+]]>
+</content:encoded>
+<description>
+
+A new motif for infinite metal atom wires with tunable compositions and properties is developed based on the connection between metal paddlewheel and square planar complex moieties. Two infinite Pd chain compounds, [Pd4(CO)4(OAc)4Pd(acac)2] 1 and [Pd4(CO)4(TFA)4Pd(acac)2] 2, and an infinite PdPt heterometallic chain compound, [Pd4(CO)4(OAc)4Pt(acac)2] 3, are identified by single-crystal X-ray diffraction analysis. In these new structures, the paddlewheel moiety is a Pd four-membered ring coordinated by bridging carboxylic ligands and μ2 carbonyl ligands. The planar moiety is either Pd(acac)2 or Pt(acac)2 (acac=acetylacetonate). These moieties are connected by metallophilic interactions. The results showed that these one-dimensional metal wire compounds have photoluminescent properties that are tunable by changing ligands and metal ions. 3 can also serve as a single source precursor for making Pd4Pt bimetallic nanostructures with precise control of metal composition.
+Totally wired: A new motif for the synthesis of 1D metal atom wire crystal is described in which Pd/Pt heterometallic and Pd atom chain structures were formed. The picture depicts an SEM micrograph of a needle-like crystal of the metal atom wire compound and representations of its molecular building blocks.
+
+
+
+--------------------------------------------
+
+
+
+
+{'prism_doi': '10.1002/anie.201408693',
+'updated': '2014-10-15T11:20:10.723327-05:00',
+'title': 'Iron(III) Located in the Dinuclear Metallo-β-Lactamase IMP-1 by Pseudocontact Shifts',
+'prism_url': 'http://onlinelibrary.wiley.com/resolve/doi?DOI=10.1002%2Fanie.201408693',
+'prism_endingpage': 'n/a',
+'author': 'Thomas J. Carruthers, Paul D. Carr, Choy-Theng Loh, Colin J. Jackson, Gottfried Otting',
+'dc_identifier': 'doi:10.1002/anie.201408693',
+'rights_detail': {'language': None, 'base': '', 'value': '', 'type': 'text/plain'},
+
+'content': [
+{'language': None,
+'base': '',
+'value': '<h3>Abstract</h3>\n<div class="para"><p>Heterodinuclear metalloenzymes are an important class of metalloproteins, but determining the location of the different metal ions can be difficult. Herein we present a new NMR spectroscopy method that uses pseudocontact shifts (PCS) to achieve this without assumptions about the coordinating ligands. The approach is illustrated with the dinuclear [FeZn] complex of IMP-1, which is a prototypical metallo-β-lactamase (MβL) that confers resistance to β-lactam antibiotics. Results from single-crystal X-ray diffraction were compromised by degradation during crystallization. With [GaZn]-IMP-1 as diamagnetic reference, the PCSs unambiguously identified the iron binding site in fresh samples of [FeZn]-IMP-1, even though the two metal centers are less than 3.8 Å apart and the iron is high-spin Fe<sup>3+</sup>, which produces only small PCSs. [FeZn]-MβLs may be important drug targets, as [FeZn]-IMP-1 is enzymatically active and readily produced in the presence of small amounts of Fe<sup>3+</sup>.</p></div>\n<a class="figZoom" href="http://onlinelibrary.wiley.com/store/10.1002/anie.201408693/asset/image_m/mcontent.gif?v=1&amp;s=a74f762bd596222d1d97ba2ff4bf1d6fdf9fa8ba" title="Link to full-size graphical abstract"><img alt="Thumbnail image of graphical abstract" src="http://onlinelibrary.wiley.com/store/10.1002/anie.201408693/asset/image_n/ncontent.gif?v=1&amp;s=fe6ea01eef91e603b5b9b58769380540a26fc6db" title="Thumbnail image of graphical abstract" /></a>\n<div class="para"><p><b>Metal detector</b>: Pseudocontact shifts measured by NMR spectroscopy allow the accurate determination of the location of paramagnetic metal ions in the active site of dinuclear metalloenzymes. Using this method a [FeZn]-complex of the metallo-β-lactamase IMP-1 could be identified and characterized.</p></div>',
+'type': 'text/html'},
+{'language': None,
+'base': '',
+'value': 'Heterodinuclear metalloenzymes are an important class of metalloproteins, but determining the location of the different metal ions can be difficult. Herein we present a new NMR spectroscopy method that uses pseudocontact shifts (PCS) to achieve this without assumptions about the coordinating ligands. The approach is illustrated with the dinuclear [FeZn] complex of IMP-1, which is a prototypical metallo-β-lactamase (MβL) that confers resistance to β-lactam antibiotics. Results from single-crystal X-ray diffraction were compromised by degradation during crystallization. With [GaZn]-IMP-1 as diamagnetic reference, the PCSs unambiguously identified the iron binding site in fresh samples of [FeZn]-IMP-1, even though the two metal centers are less than 3.8 Å apart and the iron is high-spin Fe3+, which produces only small PCSs. [FeZn]-MβLs may be important drug targets, as [FeZn]-IMP-1 is enzymatically active and readily produced in the presence of small amounts of Fe3+.\nMetal detector: Pseudocontact shifts measured by NMR spectroscopy allow the accurate determination of the location of paramagnetic metal ions in the active site of dinuclear metalloenzymes. Using this method a [FeZn]-complex of the metallo-β-lactamase IMP-1 could be identified and characterized.',
+'type': 'text/plain'}],
+
+'link': 'http://onlinelibrary.wiley.com/resolve/doi?DOI=10.1002%2Fanie.201408693',
+'publisher_detail': {'name': 'John Wiley & Sons, Inc.'},
+'rights': '',
+'prism_startingpage': 'n/a',
+'publisher': 'John Wiley & Sons, Inc.',
+'title_detail': {'language': None, 'base': '', 'value': 'Iron(III) Located in the Dinuclear Metallo-β-Lactamase IMP-1 by Pseudocontact Shifts', 'type': 'text/plain'},
+'links': [{'rel': 'alternate', 'href': 'http://onlinelibrary.wiley.com/resolve/doi?DOI=10.1002%2Fanie.201408693', 'type': 'text/html'}],
+'author_detail': {'name': 'Thomas J. Carruthers, Paul D. Carr, Choy-Theng Loh, Colin J. Jackson, Gottfried Otting'},
+'id': 'http://onlinelibrary.wiley.com/resolve/doi?DOI=10.1002%2Fanie.201408693',
+'updated_parsed': time.struct_time(tm_year=2014, tm_mon=10, tm_mday=15, tm_hour=16, tm_min=20, tm_sec=10, tm_wday=2, tm_yday=288, tm_isdst=0),
+
+'summary': '<h3>Abstract</h3>\n<div class="para"><p>Heterodinuclear metalloenzymes are an important class of metalloproteins, but determining the location of the different metal ions can be difficult. Herein we present a new NMR spectroscopy method that uses pseudocontact shifts (PCS) to achieve this without assumptions about the coordinating ligands. The approach is illustrated with the dinuclear [FeZn] complex of IMP-1, which is a prototypical metallo-β-lactamase (MβL) that confers resistance to β-lactam antibiotics. Results from single-crystal X-ray diffraction were compromised by degradation during crystallization. With [GaZn]-IMP-1 as diamagnetic reference, the PCSs unambiguously identified the iron binding site in fresh samples of [FeZn]-IMP-1, even though the two metal centers are less than 3.8 Å apart and the iron is high-spin Fe<sup>3+</sup>, which produces only small PCSs. [FeZn]-MβLs may be important drug targets, as [FeZn]-IMP-1 is enzymatically active and readily produced in the presence of small amounts of Fe<sup>3+</sup>.</p></div>\n<a class="figZoom" href="http://onlinelibrary.wiley.com/store/10.1002/anie.201408693/asset/image_m/mcontent.gif?v=1&amp;s=a74f762bd596222d1d97ba2ff4bf1d6fdf9fa8ba" title="Link to full-size graphical abstract"><img alt="Thumbnail image of graphical abstract" src="http://onlinelibrary.wiley.com/store/10.1002/anie.201408693/asset/image_n/ncontent.gif?v=1&amp;s=fe6ea01eef91e603b5b9b58769380540a26fc6db" title="Thumbnail image of graphical abstract" /></a>\n<div class="para"><p><b>Metal detector</b>: Pseudocontact shifts measured by NMR spectroscopy allow the accurate determination of the location of paramagnetic metal ions in the active site of dinuclear metalloenzymes. Using this method a [FeZn]-complex of the metallo-β-lactamase IMP-1 could be identified and characterized.</p></div>',
+
+'prism_section': 'Communication',
+'authors': [{}]}
