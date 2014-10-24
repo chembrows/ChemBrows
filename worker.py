@@ -43,4 +43,4 @@ class Worker(QtCore.QThread):
 
         """Main function. Starts the real business"""
 
-        parse.parse(self.window.l)
+        parse.parse(self.window.l, self.window.modele)

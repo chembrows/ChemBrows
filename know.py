@@ -7,12 +7,13 @@ import signal
 import numpy as np
 import feedparser
 
-from PyQt4 import QtGui, QtSql, QtCore
+from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
 
 #Personal modules
 from log import MyLog
 from model import ModelPerso
 from view import ViewPerso
+from graphicsview import GraphicsViewPerso
 from view_delegate import ViewDelegate
 from tabwidget import TabPerso
 from worker import Worker
@@ -34,7 +35,7 @@ class Fenetre(QtGui.QMainWindow):
         self.connectionBdd()
         self.defineActions()
         self.initUI()
-        #self.etablirSlots()
+        self.defineSlots()
         #self.restoreSettings()
 
 
@@ -49,7 +50,7 @@ class Fenetre(QtGui.QMainWindow):
         self.bdd.open()
         query = QtSql.QSqlQuery("fichiers.sqlite")
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match TEXT, \
-                     title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, liked INTEGER)")
+                     doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, liked INTEGER)")
 
 
         #Création du modèle, issu de la bdd
@@ -171,7 +172,7 @@ class Fenetre(QtGui.QMainWindow):
         self.l.info("Fermeture du programme")
 
 
-    def etablirSlots(self):
+    def defineSlots(self):
 
         """Méthode pour connecter les signaux aux slots. On sépare cette
         partie de la création de la fenêtre pour plus de lisibilité"""
@@ -185,10 +186,8 @@ class Fenetre(QtGui.QMainWindow):
         #self.tableau.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         #self.tableau.customContextMenuRequested.connect(self.popup)
 
-        ##On connecte la sélection d'une ligne à l'affichage des tags d'une vid
-        #self.tableau.clicked.connect(self.getTags)
-
-        pass
+        self.tableau.clicked.connect(self.displayInfos)
+        self.tableau.clicked.connect(self.displayMosaic)
 
 
     def keyPressEvent(self, e):
@@ -224,6 +223,59 @@ class Fenetre(QtGui.QMainWindow):
             #self.plugins[plugin].keyPressed(e)
 
         pass
+
+    def displayInfos(self):
+
+        try:
+            #On essaie de récupérer la description du torrent
+            #self.text_abstract.setText(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data())
+            self.text_abstract.setHtml(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data())
+        except TypeError:
+            self.l.debug("No abstract for this post, displayInfos()")
+            self.text_abstract.setHtml("")
+
+
+
+    def displayMosaic(self):
+
+        """Slot qui affiche la mosaïque de la vidéo dans
+        la partie droite"""
+        #infos:
+        #http://vincent-vande-vyvre.developpez.com/tutoriels/pyqt/manipulation-images/
+
+        try:
+            path_graphical_abstract = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 8).data()
+            if type(path_graphical_abstract) is not str:
+                try:
+                    self.scene.clear()
+                except AttributeError:
+                    self.l.warn("No scene object yet, displayMosaic")
+                return
+        except TypeError:
+            self.l.debug("No graphical abstract for this post, displayMosaic()")
+            self.scene.clear()
+            return
+
+        #On obtient le path de la mosaique grâce au path de la thumb
+        path_graphical_abstract = "./graphical_abstracts/" + path_graphical_abstract
+
+        w_vue, h_vue = self.vision.width(), self.vision.height() 
+        self.current_image = QtGui.QImage(path_graphical_abstract)
+
+        self.pixmap = QtGui.QPixmap.fromImage(self.current_image.scaled(w_vue, h_vue,
+                                                QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)) 
+
+        w_pix, h_pix = self.pixmap.width(), self.pixmap.height()
+
+        self.scene = QtGui.QGraphicsScene()
+
+        #On recentre un peu l'image
+        self.scene.setSceneRect(0, 0, w_pix , h_pix - 10)
+        self.scene.addPixmap(self.pixmap)
+        self.vision.setScene(self.scene)
+
+
+
 
 
     def launchFile(self):
@@ -374,12 +426,28 @@ class Fenetre(QtGui.QMainWindow):
         #On crée la zone du bas, un simple widget
         self.zone_bas = QtGui.QWidget()
 
+        #On utilise un layout pr pouvoir redimensionner
+        #la zone de mosaïque automatiquement
+        self.vision = GraphicsViewPerso(self.zone_bas)
+        self.vision.setDragMode(GraphicsViewPerso.ScrollHandDrag)
+
+        self.box_mosaic = QtGui.QVBoxLayout()
+        self.box_mosaic.addWidget(self.vision)
+
+        self.zone_bas.setLayout(self.box_mosaic)
+
+
+
+#------------------------- ZONE DE DROITE ------------------------------------------------------------------------------------
+
+        #self.text_abstract = QtGui.QTextEdit()
+        self.text_abstract = QtWebKit.QWebView()
+
 
 ##------------------------- ASSEMBLAGE DES ZONES------------------------------------------------------------------------------------
 
         #On crée un splitter horizontal pour mettre les widgets du haut
         self.splitter1 = QtGui.QSplitter(QtCore.Qt.Horizontal)
-        self.splitter1.addWidget(self.dock_journals)
 
         #On définit un TabWidget pr la zone centrale.
         #Cela permettra aux plugins d'ouvrir des onglets.
@@ -387,17 +455,18 @@ class Fenetre(QtGui.QMainWindow):
         self.onglets = TabPerso()
         self.onglets.addTab(self.tableau, "Bibliothèque")
 
-        self.splitter1.addWidget(self.onglets)
+        #self.splitter1.addWidget(self.dock_journals)
 
         self.splitter2 = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.splitter2.addWidget(self.splitter1)
+        self.splitter2.addWidget(self.onglets)
         self.splitter2.addWidget(self.zone_bas)
 
-        #self.splitter3 = QtGui.QSplitter(QtCore.Qt.Horizontal)
-        #self.splitter3.addWidget(self.splitter2)
-        #self.splitter3.addWidget(self.onglets_droite)
+        self.splitter3 = QtGui.QSplitter(QtCore.Qt.Horizontal)
+        self.splitter3.addWidget(self.dock_journals)
+        self.splitter3.addWidget(self.splitter2)
+        self.splitter3.addWidget(self.text_abstract)
 
-        self.setCentralWidget(self.splitter2)    
+        self.setCentralWidget(self.splitter3)    
 
         self.show()
 

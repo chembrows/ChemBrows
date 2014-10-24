@@ -14,6 +14,27 @@ from log import MyLog
 import hosts
 
 
+def listDoi():
+
+    """Fonction qui récupère les id de ts les posts"""
+
+    list_doi = []
+    #liste_response = []
+
+    #On utilise le Sql de PyQt, évite les conflits
+    query = QtSql.QSqlQuery("fichiers.sqlite")
+    query.exec_("SELECT doi FROM papers")
+
+    while query.next():
+        record = query.record()
+        liste_doi.append(record.value('doi'))
+        #liste_response.append(record.value('response'))
+
+    return list_doi
+
+
+
+
 #def markDled(id_bdd, test=False, logger=None):
 
     #"""Fonction pr marquer un torrent comme lu en bdd"""
@@ -80,35 +101,37 @@ def loadPosts(site, logger):
 
     """Gathers the data and put them in database"""
 
-    request = "INSERT INTO papers(percentage_match, title, date, journal, authors, abstract, graphical_abstract) \
+    request = "INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract) \
                VALUES (?, ?, ?, ?, ?, ?, ?)"
     query = QtSql.QSqlQuery("fichiers.sqlite")
 
     feed = feedparser.parse(site)
     journal = feed['feed']['title']
 
+    list_doi = listDoi()
+
     for entry in feed.entries:
 
-        #title, date, authors, abstract, graphical_abstract = hosts.getData(journal, entry)
-        results = hosts.getData(journal, entry)
+        doi, title, date, authors, abstract, graphical_abstract = hosts.getData(journal, entry)
+        #results = hosts.getData(journal, entry)
 
-        for element in results:
-            print(element)
+        #for element in results:
+            #print(element)
 
-        #TODO: calculer le percentage_match ici
+        if doi not in list_doi:
 
-        #query.prepare(request)
+            query.prepare(request)
 
-        #params = (percentage_match, title, date, journal, authors, abstract, graphical_abstract)
+            params = (doi, title, date, journal, authors, abstract, graphical_abstract)
 
-        #On fixe chaque variable à chaque placeholder
-        #for value in params:
-            #query.addBindValue(value)
+            #On fixe chaque variable à chaque placeholder
+            for value in params:
+                query.addBindValue(value)
 
-        #query.exec_()
+            query.exec_()
 
 
-def parse(logger):
+def parse(logger, modele):
 
     """Function wich starts a worker on every website"""
 
@@ -117,6 +140,7 @@ def parse(logger):
 
     #List of the flux to parse
     flux = ["ang.xml", "jacs.xml"]
+    #flux = ["ang.xml"]
     #flux = ["jacs.xml"]
 
     with ThreadPoolExecutor(max_workers=10) as e:
@@ -128,6 +152,8 @@ def parse(logger):
             #Display the exception if an error occured
             if future.exception() is not None:
                 logger.debug((future.exception()))
+
+            modele.select()
 
 
     elsapsed_time = datetime.datetime.now() - start_time

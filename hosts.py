@@ -7,6 +7,7 @@ import feedparser
 from bs4 import BeautifulSoup
 import requests
 from io import open as iopen
+import arrow
 
 #Personal modules
 sys.path.append('/home/djipey/informatique/python/batbelt')
@@ -27,19 +28,39 @@ def getData(journal, entry):
 
     if journal == "Angewandte Chemie International Edition":
 
-        abstract = batbelt.strip_tags(entry.summary) 
+        #abstract = batbelt.strip_tags(entry.summary) 
+        #abstract = entry.summary
+
         title = entry.title
+        doi = entry.prism_doi
+        date = arrow.get(entry.updated).format('YYYY-MM-DD')
+        author = entry.author.split(", ")
+        author = ",".join(author)
+
+        graphical_abstract = None
+
         soup = BeautifulSoup(entry.summary)
 
         r = soup.find_all("a", attrs={"class": "figZoom"})
+        response, graphical_abstract = downloadPic(r[0]['href'])
 
-        if len(r) == 1:
-            response, graphical_abstract = downloadPic(r[0]['href'])
+        r[0].replaceWith("")
+        abstract = soup.renderContents().decode()
 
 
     if journal == "Journal of the American Chemical Society: Latest Articles (ACS Publications)":
+
         title = entry.title.replace("\n", " ")
         abstract = None
+        doi = entry.id.split("dx.doi.org/")[1]
+        date = arrow.get(entry.updated).format('YYYY-MM-DD')
+
+        author = entry.author.split(" and ")
+        author = author[0] + ", " + author[1]
+        author = author.split(", ")
+        author = ",".join(author)
+
+        graphical_abstract = None
 
         try:
             #Dl of the article website page
@@ -61,11 +82,10 @@ def getData(journal, entry):
 
         soup = BeautifulSoup(entry.summary)
         r = soup.find_all("img", alt="TOC Graphic")
-
         if len(r) == 1:
             response, graphical_abstract = downloadPic(r[0]['src'])
 
-    return title, entry.date, entry.author, abstract, graphical_abstract
+    return doi, title, date, author, abstract, graphical_abstract
 
 
 
@@ -100,9 +120,7 @@ def downloadPic(url):
                 #de l'url
                 return True, batbelt.simpleChar(url)
 
-        #Si la page n'est pas téléchargée et qu'on est à la dernière
-        #url de la liste
-        elif page.status_code != requests.codes.ok and url == list_urls[-1]:
+        elif page.status_code != requests.codes.ok:
             print("Bad return code: {0}".format(page.status_code))
             return "wrongPage", None
 
@@ -115,9 +133,10 @@ def downloadPic(url):
 if __name__ == "__main__":
 
     #urls_test = ["ang.xml",
-                 ##"jacs.xml"
+                 #"jacs.xml"
                 #]
-    urls_test = ["jacs.xml"]
+    #urls_test = ["jacs.xml"]
+    urls_test = ["ang.xml"]
 
     for site in urls_test:
 
@@ -128,8 +147,9 @@ if __name__ == "__main__":
 
         for entry in feed.entries:
             for element in getData(journal, entry):
-                print(element)
-                break
+                #print(element)
+                #break
+                pass
             break
 
         print("\n\n")
