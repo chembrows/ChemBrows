@@ -17,6 +17,7 @@ from graphicsview import GraphicsViewPerso
 from view_delegate import ViewDelegate
 from tabwidget import TabPerso
 from worker import Worker
+from predictor import Predictor
 
 
 sys.path.append('/home/djipey/informatique/python/batbelt')
@@ -45,9 +46,10 @@ class Fenetre(QtGui.QMainWindow):
         à la vue"""
 
         #Accès à la base de donnée.
-        self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE");
-        self.bdd.setDatabaseName("fichiers.sqlite");
+        self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        self.bdd.setDatabaseName("fichiers.sqlite")
         self.bdd.open()
+
         query = QtSql.QSqlQuery("fichiers.sqlite")
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match TEXT, \
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, liked INTEGER)")
@@ -76,7 +78,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.setModel(self.proxy)
         self.tableau.setItemDelegate(ViewDelegate(self))
         self.tableau.setSelectionBehavior(self.tableau.SelectRows)
-        ##self.adjustView()
+        #self.adjustView()
 
 
     def parse(self):
@@ -100,6 +102,9 @@ class Fenetre(QtGui.QMainWindow):
 
         self.parseAction = QtGui.QAction('&Parser', self)        
         self.parseAction.triggered.connect(self.parse)
+
+        self.calculatePercentageMatchAction = QtGui.QAction('&Percentages', self)        
+        self.calculatePercentageMatchAction.triggered.connect(self.calculatePercentageMatch)
 
         ##Action pour enlever un tag
         #self.removeTagAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_207_remove_2.png'), 'Supprimer un tag', self)
@@ -166,6 +171,8 @@ class Fenetre(QtGui.QMainWindow):
         ##Corrige un bug. self.options semble ne pas effectuer
         ##ttes ces tâches immédiatement.
         #self.options.sync()
+
+        self.bdd.close()
 
         QtGui.qApp.quit()
 
@@ -294,6 +301,13 @@ class Fenetre(QtGui.QMainWindow):
         pass
 
 
+    def calculatePercentageMatch(self):
+
+
+        self.predictor = Predictor(self.bdd)
+        self.predictor.calculatePercentageMatch()
+        self.modele.select()
+
 
     def initUI(self):               
 
@@ -352,6 +366,7 @@ class Fenetre(QtGui.QMainWindow):
         #Puis on ajoute les widgets
         self.toolbar = self.addToolBar('toolbar')
         self.toolbar.addAction(self.parseAction)
+        self.toolbar.addAction(self.calculatePercentageMatchAction)
         #self.toolbar.addAction(self.verificationAction)
         #self.toolbar.addAction(self.importAction)
         #self.toolbar.addAction(self.putOnWaitingAction)
@@ -400,13 +415,11 @@ class Fenetre(QtGui.QMainWindow):
 
         #Style du tableau
         self.tableau.setHorizontalHeader(self.horizontal_header) #Active le header perso
-        ##self.tableau.hideColumn(0) #Cache la colonne des id
-        ##self.tableau.hideColumn(2) #Cache la colonne des name_simple
-        ##self.tableau.hideColumn(4) #Cache la colonne des path 
-        ###self.tableau.hideColumn(6) #Cache la colonne des dates de modification 
-        ##self.tableau.hideColumn(7) #Cache la colonne des md4 
-        ##self.tableau.hideColumn(10) #Cache la colonne waited
-        ##self.tableau.horizontalHeader().moveSection(5, 0) # Met les thumbs en premier
+        self.tableau.hideColumn(0) #Cache la colonne des id
+        self.tableau.hideColumn(2) #Cache la colonne des doi
+        self.tableau.hideColumn(6) #Cache la colonne des auteurs
+        self.tableau.hideColumn(7) #Cache la colonne des abstracts
+        self.tableau.hideColumn(8) #Cache la colonne des graphical abstracts
         ##self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
         ##self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
         self.tableau.setSortingEnabled(True) #Active le tri

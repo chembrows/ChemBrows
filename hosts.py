@@ -82,8 +82,7 @@ def getData(journal, entry):
 
         soup = BeautifulSoup(entry.summary)
         r = soup.find_all("img", alt="TOC Graphic")
-        if len(r) == 1:
-            response, graphical_abstract = downloadPic(r[0]['src'])
+        response, graphical_abstract = downloadPic(r[0]['src'])
 
     return doi, title, date, author, abstract, graphical_abstract
 

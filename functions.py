@@ -14,6 +14,11 @@ from log import MyLog
 import hosts
 
 
+#bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE");
+#bdd.setDatabaseName("fichiers.sqlite");
+#bdd.open()
+
+
 def listDoi():
 
     """Fonction qui récupère les id de ts les posts"""
@@ -27,7 +32,7 @@ def listDoi():
 
     while query.next():
         record = query.record()
-        liste_doi.append(record.value('doi'))
+        list_doi.append(record.value('doi'))
         #liste_response.append(record.value('response'))
 
     return list_doi
@@ -35,35 +40,19 @@ def listDoi():
 
 
 
-#def markDled(id_bdd, test=False, logger=None):
+def like(id_bdd):
 
-    #"""Fonction pr marquer un torrent comme lu en bdd"""
+    request = "UPDATE papers SET liked = ? WHERE id = ?"
+    params = (1, id_bdd)
 
-    #request = "UPDATE pirate SET dled = ? WHERE id = ?"
-    #params = (True, id_bdd)
+    query = QtSql.QSqlQuery("fichiers.sqlite")
 
-    #if not test:
-        ##On utilise le Sql de PyQt, évite les conflits
-        #query = QtSql.QSqlQuery("fichiers.sqlite")
+    query.prepare(request)
 
-        ##query.prepare(request)
+    for value in params:
+        query.addBindValue(value)
 
-        ###On fixe chaque variable à chaque placeholder
-        ##for value in params:
-            ##query.addBindValue(value)
-
-        ##query.exec_()
-
-    #else:
-        #bdd = sqlite3.connect("fichiers.sqlite")
-        ##bdd.row_factory = sqlite3.Row 
-        ##c = bdd.cursor()
-
-        ##c.execute(request, params)
-
-        ##bdd.commit()
-        ##c.close()
-        ##bdd.close()
+    query.exec_()
 
 
 ##def markRead(id_bdd, test=False, logger=None):
@@ -101,22 +90,26 @@ def loadPosts(site, logger):
 
     """Gathers the data and put them in database"""
 
-    request = "INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract) \
-               VALUES (?, ?, ?, ?, ?, ?, ?)"
-    query = QtSql.QSqlQuery("fichiers.sqlite")
 
     feed = feedparser.parse(site)
     journal = feed['feed']['title']
 
+    print(site)
+
     list_doi = listDoi()
 
     for entry in feed.entries:
+
+        print(entry.title)
 
         doi, title, date, authors, abstract, graphical_abstract = hosts.getData(journal, entry)
         #results = hosts.getData(journal, entry)
 
         #for element in results:
             #print(element)
+        request = "INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract) \
+                   VALUES (?, ?, ?, ?, ?, ?, ?)"
+        query = QtSql.QSqlQuery("fichiers.sqlite")
 
         if doi not in list_doi:
 
@@ -139,9 +132,13 @@ def parse(logger, modele):
     start_time = datetime.datetime.now()
 
     #List of the flux to parse
-    flux = ["ang.xml", "jacs.xml"]
+    #flux = ["ang.xml", "jacs.xml"]
     #flux = ["ang.xml"]
     #flux = ["jacs.xml"]
+    flux = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
+            "http://feeds.feedburner.com/acs/jacsat"
+           ]
+
 
     with ThreadPoolExecutor(max_workers=10) as e:
      
@@ -164,4 +161,7 @@ def parse(logger, modele):
 
 
 if __name__ == "__main__":
+    like(1)
+    like(10)
+    like(15)
     pass

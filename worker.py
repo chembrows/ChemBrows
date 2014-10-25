@@ -2,7 +2,7 @@
 # -*-coding:Utf-8 -*
 
 from PyQt4 import QtGui, QtSql, QtCore
-import parse
+import functions
 
 
 class Worker(QtCore.QThread):
@@ -29,7 +29,7 @@ class Worker(QtCore.QThread):
 
     def render(self):
 
-        """Give the parameter to this function, if needed"""
+        """Give the parameters to this function, if needed"""
         self.start()
 
 
@@ -43,4 +43,4 @@ class Worker(QtCore.QThread):
 
         """Main function. Starts the real business"""
 
-        parse.parse(self.window.l, self.window.modele)
+        functions.parse(self.window.l, self.window.modele)
