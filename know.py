@@ -6,6 +6,7 @@ import os
 import signal
 import numpy as np
 import feedparser
+import subprocess
 
 from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
 
@@ -18,6 +19,7 @@ from view_delegate import ViewDelegate
 from tabwidget import TabPerso
 from worker import Worker
 from predictor import Predictor
+import functions
 
 
 sys.path.append('/home/djipey/informatique/python/batbelt')
@@ -31,13 +33,16 @@ class Fenetre(QtGui.QMainWindow):
 
         super(Fenetre, self).__init__()
         self.l = MyLog()
-        self.l.info('Démarrage du programme')
+        self.l.info('Starting the program')
+
+        #Object to store options and preferences
+        self.options = QtCore.QSettings("options.ini", QtCore.QSettings.IniFormat)
 
         self.connectionBdd()
         self.defineActions()
         self.initUI()
         self.defineSlots()
-        #self.restoreSettings()
+        self.restoreSettings()
 
 
     def connectionBdd(self):
@@ -51,8 +56,9 @@ class Fenetre(QtGui.QMainWindow):
         self.bdd.open()
 
         query = QtSql.QSqlQuery("fichiers.sqlite")
-        query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match TEXT, \
-                     doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, liked INTEGER)")
+        query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
+                     doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
+                     liked INTEGER, url TEXT)")
 
 
         #Création du modèle, issu de la bdd
@@ -83,28 +89,47 @@ class Fenetre(QtGui.QMainWindow):
 
     def parse(self):
 
-        print("coucou")
-
         worker = Worker(self)
         worker.render()
+
 
     def defineActions(self):
 
         """On définit ici les actions du programme. Cette méthode est
         appelée à la création de la classe"""
 
-        #Action pour quitter
-        #self.exitAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_063_power'), '&Quitter', self)        
-        self.exitAction = QtGui.QAction('&Quitter', self)        
+        #Action to quit
+        self.exitAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_063_power'), '&Quitter', self)        
         self.exitAction.setShortcut('Ctrl+Q')
-        self.exitAction.setStatusTip("Quitter l'application")
+        self.exitAction.setStatusTip("Quit")
         self.exitAction.triggered.connect(self.closeEvent)
 
-        self.parseAction = QtGui.QAction('&Parser', self)        
+        #Action to refresh the posts
+        self.parseAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_081_refresh.png'), '&Refresh', self)        
+        self.parseAction.setShortcut('F5')
+        self.parseAction.setStatusTip("Download new posts")
         self.parseAction.triggered.connect(self.parse)
 
-        self.calculatePercentageMatchAction = QtGui.QAction('&Percentages', self)        
+        #Action to calculate the percentages of match
+        self.calculatePercentageMatchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_040_stats.png'), '&Percentages', self)        
+        self.calculatePercentageMatchAction.setShortcut('F6')
+        self.calculatePercentageMatchAction.setStatusTip("Calculate percentages")
         self.calculatePercentageMatchAction.triggered.connect(self.calculatePercentageMatch)
+
+        #Action to like a post
+        self.likeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_343_thumbs_up'), 'Like the post', self)
+        self.likeAction.setShortcut('L')
+        self.likeAction.triggered.connect(self.like)
+
+        #Action to unlike a post
+        self.unLikeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_344_thumbs_down'), 'unLike the post', self)
+        self.unLikeAction.setShortcut('U')
+        self.unLikeAction.triggered.connect(self.unLike)
+
+        #Action to open the post in browser
+        self.openInBrowserAction = QtGui.QAction('Open post in browser', self)
+        self.openInBrowserAction.triggered.connect(self.openInBrowser)
+        self.openInBrowserAction.setShortcut('Ctrl+W')
 
         ##Action pour enlever un tag
         #self.removeTagAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_207_remove_2.png'), 'Supprimer un tag', self)
@@ -151,32 +176,45 @@ class Fenetre(QtGui.QMainWindow):
         ##http://stackoverflow.com/questions/9249500/
         ##pyside-pyqt-detect-if-user-trying-to-close-window
 
-        ##On enregistre l'état de l'application
-        #self.options.beginGroup("Window")
-        ##On réinitialise les clés
-        #self.options.remove("")
+        #Record the window state and appearance
+        self.options.beginGroup("Window")
 
-        #self.l.debug("Sauvegarde de l'état de la fenêtre dans options.ini")
-        #self.options.setValue("window_geometry", self.saveGeometry())
-        #self.options.setValue("window_state", self.saveState())
-        #self.options.setValue("header_state", self.tableau.horizontalHeader().saveState())
-        #self.options.setValue("onglets_gauche_geometry", self.splitter1.saveState())
-        #self.options.setValue("splitter_vertical", self.splitter2.saveState())
-        #self.options.setValue("splitter_central", self.splitter3.saveState())
+        #Reinitializing the keys
+        self.options.remove("")
 
-        #self.options.endGroup()
+        self.l.debug("Sauvegarde de l'état de la fenêtre dans options.ini")
+        self.options.setValue("window_geometry", self.saveGeometry())
+        self.options.setValue("window_state", self.saveState())
+        self.options.setValue("header_state", self.tableau.horizontalHeader().saveState())
+        self.options.setValue("central_splitter", self.splitter1.saveState())
+        self.options.setValue("final_splitter", self.splitter2.saveState())
 
+        self.options.endGroup()
 
-        ##On s'assure que self.options finit ttes ces taches.
-        ##Corrige un bug. self.options semble ne pas effectuer
-        ##ttes ces tâches immédiatement.
-        #self.options.sync()
+        #On s'assure que self.options finit ttes ces taches.
+        #Corrige un bug. self.options semble ne pas effectuer
+        #ttes ces tâches immédiatement.
+        self.options.sync()
 
         self.bdd.close()
 
         QtGui.qApp.quit()
 
         self.l.info("Fermeture du programme")
+
+
+    def restoreSettings(self):
+
+        """Restore the prefs"""
+
+        #Si des réglages pour la fenêtre
+        #sont disponibles, on les importe et applique
+        if "Window" in self.options.childGroups():
+            self.restoreGeometry(self.options.value("Window/window_geometry"))
+            self.restoreState(self.options.value("Window/window_state"))
+            self.tableau.horizontalHeader().restoreState(self.options.value("Window/header_state"))
+            self.splitter1.restoreState(self.options.value("Window/central_splitter"))
+            self.splitter2.restoreState(self.options.value("Window/final_splitter"))
 
 
     def defineSlots(self):
@@ -242,7 +280,6 @@ class Fenetre(QtGui.QMainWindow):
             self.text_abstract.setHtml("")
 
 
-
     def displayMosaic(self):
 
         """Slot qui affiche la mosaïque de la vidéo dans
@@ -282,9 +319,6 @@ class Fenetre(QtGui.QMainWindow):
         self.vision.setScene(self.scene)
 
 
-
-
-
     def launchFile(self):
 
         """Slot qui lance le fichier double cliqué dans le tableau
@@ -301,12 +335,119 @@ class Fenetre(QtGui.QMainWindow):
         pass
 
 
+    def openInBrowser(self):
+
+        """Slot to open the post in browser"""
+
+        url = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 10).data()
+
+        if not url:
+            return
+
+        cmd = subprocess.Popen(['firefox', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE) 
+        out, err = cmd.communicate()
+
+        if cmd.returncode != 0:
+            self.window.l.warn("Problem while opening post in browser")
+        else:
+            self.window.l.info("Opening {0} in browser".format(url))
+
+
+
     def calculatePercentageMatch(self):
 
+        """Slot to calculate the match percentage"""
 
         self.predictor = Predictor(self.bdd)
         self.predictor.calculatePercentageMatch()
         self.modele.select()
+
+
+    def like(self):
+
+        """Slot to mark a post like"""
+
+        posts_selected, previous_lines = self.vidsSelected(True)
+
+        if not posts_selected:
+            return
+
+        functions.like(posts_selected[0], self.l)
+
+        #try:
+        ##On régènére la vue courante en effectuant la même
+        ##requête que précédemment
+            #self.query.prepare(self.query.executedQuery())
+            #self.query.exec_()
+            #self.modele.setTable("videos")
+            #self.modele.setQuery(self.query)
+        #except AttributeError:
+            #self.l.warn("Pas de requête précédente")
+            #self.modele.setTable("videos")
+            #self.modele.select()
+
+        self.modele.select()
+        self.proxy.setSourceModel(self.modele)
+        self.tableau.setModel(self.proxy)
+
+        #self.adjustView()
+
+        self.tableau.selectRow(previous_lines[0])
+
+
+    def unLike(self):
+
+        """Slot to mark a post unlike"""
+
+        posts_selected, previous_lines = self.vidsSelected(True)
+
+        if not posts_selected:
+            return
+
+        functions.unLike(posts_selected[0], self.l)
+
+        self.modele.select()
+        self.proxy.setSourceModel(self.modele)
+        self.tableau.setModel(self.proxy)
+
+        self.tableau.selectRow(previous_lines[0])
+
+
+    def vidsSelected(self, previous=False):
+
+        """Méthode pr récupérer les id de ttes les vids sélectionnées.
+        Prend en paramètre un booléen pr savoir si on retourne la ligne
+        de la vidéo précédente, pr resélection si effacement d'une vid
+        par ex"""
+
+        vids_selected = []
+        lignes = []
+
+        #On récupère ttes les cells sélectionnées
+        for element in self.tableau.selectionModel().selection().indexes():
+            lignes.append(element.row())
+            #element est un QModelIndex. Comme on sélectionne des lignes
+            #entières, on a ttes les colonnes de ttes les lignes ds
+            #cette boucle. Si on n'est pas sur la colonne de l'id, on break
+            #car inutile.
+            if element.column() == 0:
+                #On récupère l'id de la vid sélectionnée
+                new_id = element.data()
+            else:
+                continue
+
+            #Si l'id d'une vid sélectionnée n'est pas ds déjà ds la liste,
+            #on l'y ajoute
+            if not new_id in vids_selected:
+                vids_selected.append(new_id)
+
+        if previous:
+            #On récupère les LIGNES de la vue correspondant
+            #aux vids sélectionnées
+            lignes = list(set(lignes))
+            return vids_selected, lignes
+        else:
+            return vids_selected
 
 
     def initUI(self):               
@@ -321,36 +462,20 @@ class Fenetre(QtGui.QMainWindow):
 
         self.menubar = self.menuBar()
 
-        ##Construction du menu fichier
-        ##Les actions sont définies dans une méthode propre
-        self.fileMenu = self.menubar.addMenu('&Fichier')
+        #Building files menu
+        self.fileMenu = self.menubar.addMenu('&Files')
         self.fileMenu.addAction(self.exitAction)
-        #self.fileMenu.addAction(self.importAction)
-        #self.fileMenu.addAction(self.verificationAction)
-        #self.fileMenu.addAction(self.effacerBddAction)
 
-        ##Construction du menu édition
-        #self.editMenu = self.menubar.addMenu("&Édition")
-        #self.editMenu.addAction(self.putOnWaitingAction)
-        #self.editMenu.addAction(self.removeOfWaitingAction)
-        #self.editMenu.addAction(self.emptyWaitingAction)
-        #self.editMenu.addAction(self.addTagAction)
-        #self.editMenu.addAction(self.removeTagAction)
-        #self.editMenu.addAction(self.bigRemoveTagAction)
-        #self.editMenu.addAction(self.addActorAction)
-        #self.editMenu.addAction(self.removeActorAction)
-        #self.editMenu.addAction(self.bigRemoveActorAction)
-        #self.editMenu.addAction(self.likeAction)
-        #self.editMenu.addAction(self.regeneratePicturesAction)
-        #self.editMenu.addAction(self.effacerFichierAction)
-        #self.editMenu.addAction(self.deleteFileFromBddAction)
+        #Building edition menu
+        self.editMenu = self.menubar.addMenu("&Edition")
+        self.editMenu.addAction(self.parseAction)
+        self.editMenu.addAction(self.calculatePercentageMatchAction)
+        self.editMenu.addAction(self.likeAction)
+        self.editMenu.addAction(self.unLikeAction)
 
-        ##Construction du menu outils, ac ttes les features
-        ##spéciales
-        #self.toolMenu = self.menubar.addMenu("&Outils")
-        #self.toolMenu.addAction(self.shuffleAction)
-        #self.toolMenu.addAction(self.displayVidsWithNoTagAction)
-        #self.toolMenu.addAction(self.statsAction)
+        #Building tools menu
+        self.toolMenu = self.menubar.addMenu("&Tools")
+        self.toolMenu.addAction(self.openInBrowserAction)
 
         ##Ajout d'une entrée pr les réglages dans la barre
         ##des menus
@@ -367,11 +492,12 @@ class Fenetre(QtGui.QMainWindow):
         self.toolbar = self.addToolBar('toolbar')
         self.toolbar.addAction(self.parseAction)
         self.toolbar.addAction(self.calculatePercentageMatchAction)
+        self.toolbar.addAction(self.likeAction)
+        self.toolbar.addAction(self.unLikeAction)
         #self.toolbar.addAction(self.verificationAction)
         #self.toolbar.addAction(self.importAction)
         #self.toolbar.addAction(self.putOnWaitingAction)
         #self.toolbar.addAction(self.removeOfWaitingAction)
-        #self.toolbar.addAction(self.likeAction)
         #self.toolbar.addAction(self.addTagAction)
         #self.toolbar.addAction(self.removeTagAction)
         #self.toolbar.addAction(self.removeTagAction)
@@ -410,8 +536,8 @@ class Fenetre(QtGui.QMainWindow):
         self.horizontal_header = QtGui.QHeaderView(QtCore.Qt.Horizontal) #Déclare le header perso
         self.horizontal_header.setDefaultAlignment(QtCore.Qt.AlignLeft) #Aligne à gauche l'étiquette des colonnes
         self.horizontal_header.setClickable(True) #Rend cliquable le header perso
-        ##self.tableau.horizontalHeader().setResizeMode(5, QtGui.QHeaderView.Fixed)
-        self.tableau.resizeColumnToContents(1) #Redimensionne au contenu des cells
+
+        self.tableau.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
 
         #Style du tableau
         self.tableau.setHorizontalHeader(self.horizontal_header) #Active le header perso
@@ -420,10 +546,12 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.hideColumn(6) #Cache la colonne des auteurs
         self.tableau.hideColumn(7) #Cache la colonne des abstracts
         self.tableau.hideColumn(8) #Cache la colonne des graphical abstracts
+        self.tableau.hideColumn(10) #Cache la colonne des graphical abstracts
         ##self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
         ##self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
         self.tableau.setSortingEnabled(True) #Active le tri
         self.tableau.verticalHeader().setVisible(False) #Cache le header vertical
+        #self.tableau.verticalHeader().sectionResizeMode(QHeaderView.ResizeToContents)
         self.tableau.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers) #Empêche l'édition des cells
 
 
@@ -449,37 +577,30 @@ class Fenetre(QtGui.QMainWindow):
 
         self.zone_bas.setLayout(self.box_mosaic)
 
-
-
 #------------------------- ZONE DE DROITE ------------------------------------------------------------------------------------
 
-        #self.text_abstract = QtGui.QTextEdit()
         self.text_abstract = QtWebKit.QWebView()
-
+        self.web_settings = QtWebKit.QWebSettings.globalSettings()
+        self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 20)
 
 ##------------------------- ASSEMBLAGE DES ZONES------------------------------------------------------------------------------------
-
-        #On crée un splitter horizontal pour mettre les widgets du haut
-        self.splitter1 = QtGui.QSplitter(QtCore.Qt.Horizontal)
 
         #On définit un TabWidget pr la zone centrale.
         #Cela permettra aux plugins d'ouvrir des onglets.
         self.onglets = QtGui.QTabWidget()
         self.onglets = TabPerso()
-        self.onglets.addTab(self.tableau, "Bibliothèque")
+        self.onglets.addTab(self.tableau, "New posts")
 
-        #self.splitter1.addWidget(self.dock_journals)
+        self.splitter1 = QtGui.QSplitter(QtCore.Qt.Vertical)
+        self.splitter1.addWidget(self.text_abstract)
+        self.splitter1.addWidget(self.zone_bas)
 
-        self.splitter2 = QtGui.QSplitter(QtCore.Qt.Vertical)
+        self.splitter2 = QtGui.QSplitter(QtCore.Qt.Horizontal)
+        self.splitter2.addWidget(self.dock_journals)
         self.splitter2.addWidget(self.onglets)
-        self.splitter2.addWidget(self.zone_bas)
+        self.splitter2.addWidget(self.splitter1)
 
-        self.splitter3 = QtGui.QSplitter(QtCore.Qt.Horizontal)
-        self.splitter3.addWidget(self.dock_journals)
-        self.splitter3.addWidget(self.splitter2)
-        self.splitter3.addWidget(self.text_abstract)
-
-        self.setCentralWidget(self.splitter3)    
+        self.setCentralWidget(self.splitter2)    
 
         self.show()
 

@@ -28,14 +28,14 @@ def getData(journal, entry):
 
     if journal == "Angewandte Chemie International Edition":
 
-        #abstract = batbelt.strip_tags(entry.summary) 
-        #abstract = entry.summary
-
+        journal_abb = "Angew. Chem. Int. Ed. Engl."
         title = entry.title
-        doi = entry.prism_doi
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
+
         author = entry.author.split(", ")
         author = ",".join(author)
+
+        url = entry.prism_url
 
         graphical_abstract = None
 
@@ -50,15 +50,17 @@ def getData(journal, entry):
 
     if journal == "Journal of the American Chemical Society: Latest Articles (ACS Publications)":
 
+        journal_abb = "J. Am. Chem. Soc."
         title = entry.title.replace("\n", " ")
         abstract = None
-        doi = entry.id.split("dx.doi.org/")[1]
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
 
         author = entry.author.split(" and ")
         author = author[0] + ", " + author[1]
         author = author.split(", ")
         author = ",".join(author)
+
+        url = entry.feedburner_origlink
 
         graphical_abstract = None
 
@@ -84,8 +86,21 @@ def getData(journal, entry):
         r = soup.find_all("img", alt="TOC Graphic")
         response, graphical_abstract = downloadPic(r[0]['src'])
 
-    return doi, title, date, author, abstract, graphical_abstract
 
+    return title, journal_abb, date, author, abstract, graphical_abstract, url
+
+
+def getDoi(journal, entry):
+
+    """Get the DOI number of a post, to save time"""
+
+    if journal == "Angewandte Chemie International Edition":
+        doi = entry.prism_doi
+
+    if journal == "Journal of the American Chemical Society: Latest Articles (ACS Publications)":
+        doi = entry.id.split("dx.doi.org/")[1]
+
+    return doi
 
 
 def downloadPic(url):

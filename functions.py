@@ -21,29 +21,43 @@ import hosts
 
 def listDoi():
 
-    """Fonction qui récupère les id de ts les posts"""
+    """Function to get the doi from the database"""
 
     list_doi = []
-    #liste_response = []
 
-    #On utilise le Sql de PyQt, évite les conflits
     query = QtSql.QSqlQuery("fichiers.sqlite")
     query.exec_("SELECT doi FROM papers")
 
     while query.next():
         record = query.record()
         list_doi.append(record.value('doi'))
-        #liste_response.append(record.value('response'))
 
     return list_doi
 
 
+def like(id_bdd, logger):
 
-
-def like(id_bdd):
+    """Function to like a post"""
 
     request = "UPDATE papers SET liked = ? WHERE id = ?"
     params = (1, id_bdd)
+
+    query = QtSql.QSqlQuery("fichiers.sqlite")
+
+    query.prepare(request)
+
+    for value in params:
+        query.addBindValue(value)
+
+    query.exec_()
+
+
+def unLike(id_bdd, logger):
+
+    """Function to unlike a post"""
+
+    request = "UPDATE papers SET liked = ? WHERE id = ?"
+    params = (None, id_bdd)
 
     query = QtSql.QSqlQuery("fichiers.sqlite")
 
@@ -94,34 +108,35 @@ def loadPosts(site, logger):
     feed = feedparser.parse(site)
     journal = feed['feed']['title']
 
-    print(site)
-
     list_doi = listDoi()
 
     for entry in feed.entries:
 
-        print(entry.title)
+        doi = hosts.getDoi(journal, entry)
 
-        doi, title, date, authors, abstract, graphical_abstract = hosts.getData(journal, entry)
-        #results = hosts.getData(journal, entry)
+        if doi in list_doi:
+            logger.debug("Post already in db")
+            return
+        else:
+            title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
 
-        #for element in results:
-            #print(element)
-        request = "INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract) \
-                   VALUES (?, ?, ?, ?, ?, ?, ?)"
-        query = QtSql.QSqlQuery("fichiers.sqlite")
+            print(url)
 
-        if doi not in list_doi:
+            request = "INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url) \
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+
+            query = QtSql.QSqlQuery("fichiers.sqlite")
 
             query.prepare(request)
 
-            params = (doi, title, date, journal, authors, abstract, graphical_abstract)
+            params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url)
 
-            #On fixe chaque variable à chaque placeholder
             for value in params:
                 query.addBindValue(value)
 
             query.exec_()
+
+            logger.debug("Adding {0} to the database".format(title))
 
 
 def parse(logger, modele):
@@ -146,12 +161,13 @@ def parse(logger, modele):
 
         for future in as_completed(futures_and_posts):
 
+            print("worker completed")
+
             #Display the exception if an error occured
-            if future.exception() is not None:
-                logger.debug((future.exception()))
+            #if future.exception() is not None:
+                #logger.debug((future.exception()))
 
             modele.select()
-
 
     elsapsed_time = datetime.datetime.now() - start_time
     logger.info(elsapsed_time.total_seconds())
