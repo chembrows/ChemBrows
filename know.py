@@ -89,9 +89,42 @@ class Fenetre(QtGui.QMainWindow):
 
     def parse(self):
 
+        """Method to start the parsing of the data"""
+
+        #flux = ["ang.xml", "jacs.xml"]
+        flux = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
+                "http://feeds.feedburner.com/acs/jacsat"
+               ]
+
+
+        #Disabling the parse action to avoid double start
         self.parseAction.setEnabled(False)
-        worker = Worker(self)
-        worker.render()
+
+        #List to store the threads.
+        #The list is cleared when the method is started
+        self.list_threads = []
+
+        for site in flux:
+            #One worker for each website
+            worker = Worker(site, self.l)
+            worker.finished.connect(self.checkThreads)
+            self.list_threads.append(worker)
+
+
+    def checkThreads(self):
+
+        """Method to check the state of each worker.
+        If all the workers are finished, enable the parse action"""
+
+        #Update the view when a worker is finished
+        self.modele.select()
+
+        #Get a list of the workers states
+        list_states = [ worker.isFinished() for worker in self.list_threads ]
+
+        if not False in list_states:
+            self.parseAction.setEnabled(True)
+            self.l.debug("Parsing data finished. Enabling parseAction")
 
 
     def defineActions(self):
@@ -274,6 +307,7 @@ class Fenetre(QtGui.QMainWindow):
 
         pass
 
+
     def displayInfos(self):
 
         try:
@@ -356,7 +390,6 @@ class Fenetre(QtGui.QMainWindow):
             self.window.l.warn("Problem while opening post in browser")
         else:
             self.window.l.info("Opening {0} in browser".format(url))
-
 
 
     def calculatePercentageMatch(self):
