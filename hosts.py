@@ -39,13 +39,15 @@ def getData(journal, entry):
 
         graphical_abstract = None
 
+        abstract = None
+
         soup = BeautifulSoup(entry.summary)
-
         r = soup.find_all("a", attrs={"class": "figZoom"})
-        response, graphical_abstract = downloadPic(r[0]['href'])
 
-        r[0].replaceWith("")
-        abstract = soup.renderContents().decode()
+        if r:
+            response, graphical_abstract = downloadPic(r[0]['href'])
+            r[0].replaceWith("")
+            abstract = soup.renderContents().decode()
 
 
     if journal == "Journal of the American Chemical Society: Latest Articles (ACS Publications)":
@@ -66,7 +68,7 @@ def getData(journal, entry):
 
         try:
             #Dl of the article website page
-            page = requests.get(entry.feedburner_origlink, timeout=3)
+            page = requests.get(entry.feedburner_origlink, timeout=20)
 
             #If the dl went wrong, print an error
             if page.status_code is not requests.codes.ok:
@@ -75,17 +77,19 @@ def getData(journal, entry):
             #Get the abstract
             soup = BeautifulSoup(page.text)
             r = soup.find_all("p", attrs={"class": "articleBody_abstractText"})
-
-            if len(r) == 1:
+            if r:
                 abstract = r[0].text
 
         except requests.exceptions.Timeout:
             print("getData, JACS, timeout")
+        except Exception as e:
+            print("encore")
+            print(e)
 
         soup = BeautifulSoup(entry.summary)
         r = soup.find_all("img", alt="TOC Graphic")
-        response, graphical_abstract = downloadPic(r[0]['src'])
-
+        if r:
+            response, graphical_abstract = downloadPic(r[0]['src'])
 
     return title, journal_abb, date, author, abstract, graphical_abstract, url
 
@@ -118,7 +122,7 @@ def downloadPic(url):
         #car certains sites bloquent l'accès direct aux images
         headers["Referer"]= url
 
-        page = requests.get(url, timeout=3, headers=headers)
+        page = requests.get(url, timeout=20, headers=headers)
 
         #Si la page a bien été récupérée
         if page.status_code == requests.codes.ok:
@@ -141,6 +145,9 @@ def downloadPic(url):
     except requests.exceptions.Timeout:
         print("downloadPic, timeout")
         return "timeOut", None
+    except Exception as e:
+        print("toujours")
+        print(e)
 
 
 

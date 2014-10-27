@@ -89,6 +89,7 @@ class Fenetre(QtGui.QMainWindow):
 
     def parse(self):
 
+        self.parseAction.setEnabled(False)
         worker = Worker(self)
         worker.render()
 
@@ -130,6 +131,10 @@ class Fenetre(QtGui.QMainWindow):
         self.openInBrowserAction = QtGui.QAction('Open post in browser', self)
         self.openInBrowserAction.triggered.connect(self.openInBrowser)
         self.openInBrowserAction.setShortcut('Ctrl+W')
+
+        self.updateAction = QtGui.QAction('Update model', self)
+        self.updateAction.triggered.connect(lambda: self.modele.select())
+        self.updateAction.setShortcut('F7')
 
         ##Action pour enlever un tag
         #self.removeTagAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_207_remove_2.png'), 'Supprimer un tag', self)
@@ -367,7 +372,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to mark a post like"""
 
-        posts_selected, previous_lines = self.vidsSelected(True)
+        posts_selected, previous_lines = self.postsSelected(True)
 
         if not posts_selected:
             return
@@ -399,7 +404,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to mark a post unlike"""
 
-        posts_selected, previous_lines = self.vidsSelected(True)
+        posts_selected, previous_lines = self.postsSelected(True)
 
         if not posts_selected:
             return
@@ -413,14 +418,12 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.selectRow(previous_lines[0])
 
 
-    def vidsSelected(self, previous=False):
+    def postsSelected(self, previous=False):
 
-        """Méthode pr récupérer les id de ttes les vids sélectionnées.
-        Prend en paramètre un booléen pr savoir si on retourne la ligne
-        de la vidéo précédente, pr resélection si effacement d'une vid
-        par ex"""
+        """Method to get the selected posts, and store the current
+        selected line before updating the model"""
 
-        vids_selected = []
+        posts_selected = []
         lignes = []
 
         #On récupère ttes les cells sélectionnées
@@ -438,16 +441,16 @@ class Fenetre(QtGui.QMainWindow):
 
             #Si l'id d'une vid sélectionnée n'est pas ds déjà ds la liste,
             #on l'y ajoute
-            if not new_id in vids_selected:
-                vids_selected.append(new_id)
+            if not new_id in posts_selected:
+                posts_selected.append(new_id)
 
         if previous:
             #On récupère les LIGNES de la vue correspondant
             #aux vids sélectionnées
             lignes = list(set(lignes))
-            return vids_selected, lignes
+            return posts_selected, lignes
         else:
-            return vids_selected
+            return posts_selected
 
 
     def initUI(self):               
@@ -494,6 +497,7 @@ class Fenetre(QtGui.QMainWindow):
         self.toolbar.addAction(self.calculatePercentageMatchAction)
         self.toolbar.addAction(self.likeAction)
         self.toolbar.addAction(self.unLikeAction)
+        self.toolbar.addAction(self.updateAction)
         #self.toolbar.addAction(self.verificationAction)
         #self.toolbar.addAction(self.importAction)
         #self.toolbar.addAction(self.putOnWaitingAction)

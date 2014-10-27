@@ -105,3 +105,25 @@ Item du JACS:
 'author': 'Zhuping Fei, Pichaya Pattanasattayavong, Yang Han, Bob C. Schroeder, Feng Yan, R. Joseph Kline, Thomas D. Anthopoulos and Martin Heeney'
 }
 
+
+--------------------------------------------
+
+JACS: correction entry
+
+{
+'feedburner_origlink': 'http://dx.doi.org/10.1021/ja509060r',
+'links': [{'type': 'text/html', 'href': 'http://feedproxy.google.com/~r/acs/jacsat/~3/E6o-c4erECM/ja509060r', 'rel': 'alternate'}],
+'link': 'http://feedproxy.google.com/~r/acs/jacsat/~3/E6o-c4erECM/ja509060r',
+'updated': '2014-10-22T19:07:33Z', 'published_parsed': time.struct_time(tm_year=2014, tm_mon=10, tm_mday=22, tm_hour=19, tm_min=7, tm_sec=33, tm_wday=2, tm_yday=295, tm_isdst=0),
+'id': 'http://dx.doi.org/10.1021/ja509060r',
+'published': 'Wed, 22 Oct 2014 19:07:33 GMT',
+'author': 'Teng Wang and Ning Jiao',
+'guidislink': False,
+'title_detail': {'type': 'text/plain', 'base': 'http://feeds.feedburner.com/acs/jacsat', 'value': 'Correction\nto “TEMPO-catalyzed Aerobic Oxygenation\nand Nitrogenation of Olefins via C\ue5fbC Double-Bond Cleavage”', 'language': None},
+'authors': [{}],
+'title': 'Correction\nto “TEMPO-catalyzed Aerobic Oxygenation\nand Nitrogenation of Olefins via C\ue5fbC Double-Bond Cleavage”',
+'summary_detail': {'type': 'text/html', 'base': 'http://feeds.feedburner.com/acs/jacsat', 'value': '<div><cite>Journal of the American Chemical Society</cite></div><div>DOI: 10.1021/ja509060r</div><div class="feedflare">\n<a href="http://feeds.feedburner.com/~ff/acs/jacsat?a=E6o-c4erECM:hQWpseoFCmU:yIl2AUoC8zA"><img border="0" src="http://feeds.feedburner.com/~ff/acs/jacsat?d=yIl2AUoC8zA" /></a>\n</div><img height="1" src="http://feeds.feedburner.com/~r/acs/jacsat/~4/E6o-c4erECM" width="1" />', 'language': None},
+'author_detail': {'name': 'Teng Wang and Ning Jiao'},
+'updated_parsed': time.struct_time(tm_year=2014, tm_mon=10, tm_mday=22, tm_hour=19, tm_min=7, tm_sec=33, tm_wday=2, tm_yday=295, tm_isdst=0),
+'summary': '<div><cite>Journal of the American Chemical Society</cite></div><div>DOI: 10.1021/ja509060r</div><div class="feedflare">\n<a href="http://feeds.feedburner.com/~ff/acs/jacsat?a=E6o-c4erECM:hQWpseoFCmU:yIl2AUoC8zA"><img border="0" src="http://feeds.feedburner.com/~ff/acs/jacsat?d=yIl2AUoC8zA" /></a>\n</div><img height="1" src="http://feeds.feedburner.com/~r/acs/jacsat/~4/E6o-c4erECM" width="1" />'
+}

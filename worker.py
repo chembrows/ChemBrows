@@ -31,10 +31,12 @@ class Worker(QtCore.QThread):
 
         """Give the parameters to this function, if needed"""
         self.start()
+        print("done")
 
 
     def __del__(self):
     
+        print("done")
         self.exiting = True
         self.wait()
 
@@ -43,4 +45,4 @@ class Worker(QtCore.QThread):
 
         """Main function. Starts the real business"""
 
-        functions.parse(self.window.l, self.window.modele)
+        functions.parse(self.window.l, self.window)

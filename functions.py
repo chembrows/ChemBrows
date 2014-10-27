@@ -8,15 +8,24 @@ import feedparser
 from PyQt4 import QtSql
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
 
 #Personal modules
 from log import MyLog
 import hosts
 
 
-#bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE");
-#bdd.setDatabaseName("fichiers.sqlite");
+#l = MyLog(total=True)
+#l.setLevel(logging.DEBUG)
+
+#bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+#bdd.setDatabaseName("fichiers.sqlite")
 #bdd.open()
+#
+#query = QtSql.QSqlQuery("fichiers.sqlite")
+#query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
+             #doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
+             #liked INTEGER, url TEXT)")
 
 
 def listDoi():
@@ -104,42 +113,55 @@ def loadPosts(site, logger):
 
     """Gathers the data and put them in database"""
 
-
     feed = feedparser.parse(site)
     journal = feed['feed']['title']
 
-    list_doi = listDoi()
+    print(len(feed.entries))
+
+    i = 0
 
     for entry in feed.entries:
 
         doi = hosts.getDoi(journal, entry)
+        list_doi = listDoi()
 
         if doi in list_doi:
             logger.debug("Post already in db")
-            return
+            continue
+
+        title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
+
+        query = QtSql.QSqlQuery("fichiers.sqlite")
+
+        query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url) VALUES(?, ?, ?, ?, ?, ?, ?, ?)")
+
+        params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url)
+
+        for value in params:
+            query.addBindValue(value)
+
+        retour = query.exec_()
+        #print(retour)
+
+        #logger.debug(query.lastQuery())
+        #logger.debug(query.lastError().text())
+
+        if not retour:
+            for p in params:
+                print(type(p))
+                print(p)
+            logger.debug(query.lastError().text())
+            logger.debug(query.lastQuery())
         else:
-            title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
-
-            print(url)
-
-            request = "INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url) \
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-
-            query = QtSql.QSqlQuery("fichiers.sqlite")
-
-            query.prepare(request)
-
-            params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url)
-
-            for value in params:
-                query.addBindValue(value)
-
-            query.exec_()
-
-            logger.debug("Adding {0} to the database".format(title))
+            i += 1
+            print(i)
+            logger.debug("{1} Adding {0} to the database".format(title, journal))
 
 
-def parse(logger, modele):
+    logger.info("{0}: {1} entries added".format(journal, i))
+
+
+def parse(logger, parent=None):
 
     """Function wich starts a worker on every website"""
 
@@ -153,21 +175,24 @@ def parse(logger, modele):
     flux = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
             "http://feeds.feedburner.com/acs/jacsat"
            ]
+    #flux = ["http://feeds.feedburner.com/acs/jacsat"]
+    #flux = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773"]
 
 
     with ThreadPoolExecutor(max_workers=10) as e:
      
         futures_and_posts = {e.submit(loadPosts, site, logger): site for site in flux}
 
-        for future in as_completed(futures_and_posts):
+        #for future in as_completed(futures_and_posts):
 
-            print("worker completed")
+            #print("worker completed")
 
             #Display the exception if an error occured
             #if future.exception() is not None:
                 #logger.debug((future.exception()))
 
-            modele.select()
+    #parent.modele.select()
+    parent.parseAction.setEnabled(True)
 
     elsapsed_time = datetime.datetime.now() - start_time
     logger.info(elsapsed_time.total_seconds())
@@ -177,7 +202,8 @@ def parse(logger, modele):
 
 
 if __name__ == "__main__":
-    like(1)
-    like(10)
-    like(15)
+    #like(1)
+    #like(10)
+    #like(15)
+    parse(l)
     pass
