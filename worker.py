@@ -56,35 +56,68 @@ class Worker(QtCore.QThread):
 
             #Get the DOI, a unique number for a publication
             doi = hosts.getDoi(journal, entry)
-            list_doi = functions.listDoi()
+            list_doi, list_ok = functions.listDoi()
 
             if doi in list_doi:
                 self.l.debug("Post already in db")
-                continue
+                if list_ok[list_doi.index(doi)]:
+                    continue
+                else:
+                    title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
+                    query.prepare("UPDATE papers SET abstract=?, graphical_abstract=?, verif WHERE doi=?")
 
-            title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
+                    #Checking if the data are complete
+                    if type(abstract) is not str or type(graphical_abstract) is not str:
+                        verif = 0
+                        print("plop")
+                    else:
+                        verif = 1
 
-            query = QtSql.QSqlQuery("fichiers.sqlite")
+                    params = (abstract, graphical_abstract, verif, doi)
 
-            query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url) VALUES(?, ?, ?, ?, ?, ?, ?, ?)")
+                    for value in params:
+                        query.addBindValue(value)
 
-            params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url)
+                    retour = query.exec_()
 
-            for value in params:
-                query.addBindValue(value)
-
-            retour = query.exec_()
-
-            #If the query went wrong, print the details
-            if not retour:
-                self.l.error(query.lastError().text())
-                self.l.debug(query.lastQuery())
+                    #If the query went wrong, print the details
+                    if not retour:
+                        self.l.error(query.lastError().text())
+                        self.l.debug(query.lastQuery())
+                    else:
+                        self.l.debug(i)
+                        self.l.debug("{1} Corrected {0} in the database".format(title, journal))
             else:
-                i += 1
-                self.l.debug(i)
-                self.l.debug("{1} Adding {0} to the database".format(title, journal))
 
-        self.l.info("{0}: {1} entries added".format(journal, i))
+                title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
+
+                query = QtSql.QSqlQuery("fichiers.sqlite")
+
+                query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
+
+                #Checking if the data are complete
+                if type(abstract) is not str or type(graphical_abstract) is not str:
+                    verif = 0
+                else:
+                    verif = 1
+
+                params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif)
+
+                for value in params:
+                    query.addBindValue(value)
+
+                retour = query.exec_()
+
+                #If the query went wrong, print the details
+                if not retour:
+                    self.l.error(query.lastError().text())
+                    self.l.debug(query.lastQuery())
+                else:
+                    i += 1
+                    self.l.debug(i)
+                    #self.l.debug("{1} Adding {0} to the database".format(title, journal))
+
+        #self.l.info("{0}: {1} entries added".format(journal, i))
 
 
 if __name__ == "__main__":

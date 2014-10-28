@@ -58,7 +58,7 @@ class Fenetre(QtGui.QMainWindow):
         query = QtSql.QSqlQuery("fichiers.sqlite")
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
-                     liked INTEGER, url TEXT)")
+                     liked INTEGER, url TEXT, verif INTEGER)")
 
 
         #Création du modèle, issu de la bdd
@@ -234,6 +234,7 @@ class Fenetre(QtGui.QMainWindow):
         #ttes ces tâches immédiatement.
         self.options.sync()
 
+        self.bdd.removeDatabase("fichiers.sqlite")
         self.bdd.close()
 
         QtGui.qApp.quit()
@@ -574,16 +575,18 @@ class Fenetre(QtGui.QMainWindow):
         self.horizontal_header.setDefaultAlignment(QtCore.Qt.AlignLeft) #Aligne à gauche l'étiquette des colonnes
         self.horizontal_header.setClickable(True) #Rend cliquable le header perso
 
-        self.tableau.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        ##Resize to content vertically
+        #self.tableau.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
 
         #Style du tableau
         self.tableau.setHorizontalHeader(self.horizontal_header) #Active le header perso
         self.tableau.hideColumn(0) #Cache la colonne des id
-        self.tableau.hideColumn(2) #Cache la colonne des doi
-        self.tableau.hideColumn(6) #Cache la colonne des auteurs
-        self.tableau.hideColumn(7) #Cache la colonne des abstracts
-        self.tableau.hideColumn(8) #Cache la colonne des graphical abstracts
-        self.tableau.hideColumn(10) #Cache la colonne des graphical abstracts
+        #self.tableau.hideColumn(2) #Cache la colonne des doi
+        #self.tableau.hideColumn(6) #Cache la colonne des auteurs
+        #self.tableau.hideColumn(7) #Cache la colonne des abstracts
+        #self.tableau.hideColumn(8) #Cache la colonne des graphical abstracts
+        self.tableau.hideColumn(10) #Cache la colonne des urls
+        self.tableau.hideColumn(11) #Cache la colonne des verif
         ##self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
         ##self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
         self.tableau.setSortingEnabled(True) #Active le tri

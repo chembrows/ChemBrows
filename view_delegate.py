@@ -25,94 +25,27 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         self.parent = parent
      
 
-    #def paint(self, painter, option, index):    
-        #"""Méthode apppelée case par case pour en dessiner le contenu"""        
+    def paint(self, painter, option, index):    
 
-        ##Booléens pr la coloration des lignes
-        #griser = False
-        #yellow = False
+        """Method called to draw the content of the cells"""        
 
-        ##On récupère l'option qui détermine si on affiche ou pas
-        ##les fichiers qui ne sont pas accessibles
-        #display = self.parent.options.value("display_if_missing", True, bool)
+        #Bool to color lines
+        red = False
 
-        ##On récupère le path du fichier grâce
-        ##à la cell de path (invisible).
-        #ref_index = index.sibling(index.row(), 4)
-        #if not verifAccess(ref_index.data()):
-            #if not display:
-                ##Si l'option dit qu'on affiche pas les fichiers inaccessibles,
-                ##on cache la ligne correspondante et on sort
-                #self.parent.tableau.hideRow(index.row())
-                #return
-            #else:
-                ##Si le fichier n'est pas accessible,
-                ##on grise
-                #griser = True
-
-        ##On récupère la date et on voit si elle est récente
-        #ref_index = index.sibling(index.row(), 9)
-        #if recent(ref_index.data(), self.parent.options.value("recent", 1, int)):
-            ##Si la date est récente, on colorie en jaune
-            #yellow = True
+        ref_index = index.sibling(index.row(), 11)
+        if ref_index.data() == 0:
+            red = True
         
-        ##Index de la miniature
-        #if index.column() == 5:
-            #path_photo = index.data()
+        if index.column() == 0:
+            pass
 
-            #if os.path.exists(path_photo):
-                ##--- la photo existe: on l'affiche dans la case -------------
+        else:
+            #Using default painter
+            QtGui.QStyledItemDelegate.paint(self, painter, option, index)    
 
-                ## on charge la photo dans un QPixmap
-                #pixmap = QtGui.QPixmap(path_photo)
+            if red:
+                painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
 
-                #wcase, hcase = option.rect.width(), option.rect.height()
-                #wpix, hpix =  pixmap.width(), pixmap.height()
-
-                ## redim si nécessaire à la taille de la case sans déformation
-                #if wpix != wcase or hpix != hcase:
-                    #pixmap = pixmap.scaled(wcase, hcase, 
-                                             #QtCore.Qt.KeepAspectRatio, 
-                                             ##Amélioration de l'image avec smooth
-                                             #QtCore.Qt.SmoothTransformation)
-                    #wpix, hpix =  pixmap.width(), pixmap.height() # maj
-
-                ## l'affichage se fera au centre de la case sans déformation
-                #x = option.rect.x() + (wcase-wpix)//2
-                #y = option.rect.y() + (hcase-hpix)//2  
-
-                ## afficher dans le rectagle calculé
-                #painter.drawPixmap(QtCore.QRect(x, y, wpix, hpix), pixmap)
-
-            #else:
-                ##--- la photo n'existe pas: on met un fond vert -------------
-                #painter.fillRect(option.rect, QtGui.QColor("green"))
-
-        ##Si c'est la colonne size, on la formatte pr que ce soit
-        ##humainement lisible
-        #elif index.column() == 8:
-            #size = index.model().data(index)
-            #painter.drawText(option.rect, QtCore.Qt.AlignCenter,
-                    #str(sizeof(size)))
-
-            ##Si on doit griser
-            #if griser:
-                ##On colorie le background en gris
-                #painter.fillRect(option.rect, QtGui.QColor(100, 100, 100, 90))
-
-            #if yellow:
-                ##On colorie le background en jaune
-                #painter.fillRect(option.rect, QtGui.QColor(204, 204, 68, 90))
-
-        #else:
-            ## on utilise le paint par défaut pour les autres colonnes
-            #QtGui.QStyledItemDelegate.paint(self, painter, option, index)    
-
-            #if griser:
-                #painter.fillRect(option.rect, QtGui.QColor(100, 100, 100, 75))
-
-            #if yellow:
-                #painter.fillRect(option.rect, QtGui.QColor(204, 204, 68, 75))
 
 
     #def createEditor(self, parent, option, index):
