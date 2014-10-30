@@ -92,9 +92,11 @@ class Fenetre(QtGui.QMainWindow):
         """Method to start the parsing of the data"""
 
         #flux = ["ang.xml", "jacs.xml"]
-        flux = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
-                "http://feeds.feedburner.com/acs/jacsat"
-               ]
+        #flux = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
+                #"http://feeds.feedburner.com/acs/jacsat"
+               #]
+
+        flux = ["http://feeds.rsc.org/rss/nj"]
 
 
         #Disabling the parse action to avoid double start
@@ -388,9 +390,9 @@ class Fenetre(QtGui.QMainWindow):
         out, err = cmd.communicate()
 
         if cmd.returncode != 0:
-            self.window.l.warn("Problem while opening post in browser")
+            self.l.warn("Problem while opening post in browser")
         else:
-            self.window.l.info("Opening {0} in browser".format(url))
+            self.l.info("Opening {0} in browser".format(url))
 
 
     def calculatePercentageMatch(self):
@@ -493,7 +495,7 @@ class Fenetre(QtGui.QMainWindow):
 
         #On règle les paramètres de la fenêtre
         self.setGeometry(0, 25, 1900 , 1020)
-        self.setWindowTitle('Knowlegator')    
+        self.setWindowTitle('ChemBrows')    
 
 #------------------------- CONSTRUCTION DES MENUS -------------------------------------------------------------
 

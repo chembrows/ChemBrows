@@ -127,3 +127,49 @@ JACS: correction entry
 'updated_parsed': time.struct_time(tm_year=2014, tm_mon=10, tm_mday=22, tm_hour=19, tm_min=7, tm_sec=33, tm_wday=2, tm_yday=295, tm_isdst=0),
 'summary': '<div><cite>Journal of the American Chemical Society</cite></div><div>DOI: 10.1021/ja509060r</div><div class="feedflare">\n<a href="http://feeds.feedburner.com/~ff/acs/jacsat?a=E6o-c4erECM:hQWpseoFCmU:yIl2AUoC8zA"><img border="0" src="http://feeds.feedburner.com/~ff/acs/jacsat?d=yIl2AUoC8zA" /></a>\n</div><img height="1" src="http://feeds.feedburner.com/~r/acs/jacsat/~4/E6o-c4erECM" width="1" />'
 }
+
+
+--------------------------------------------
+
+NJC entry:
+
+
+{
+'feedburner_origlink': 'http://pubs.rsc.org/en/Content/ArticleLanding/2014/NJ/C4NJ01491J',
+'links': [{'href': 'http://feeds.rsc.org/~r/rss/NJ/~3/mRqpVz3B6U0/C4NJ01491J', 'type': 'text/html', 'rel': 'alternate'}],
+'author': 'Yiquan Zhang',
+'updated_parsed': time.struct_time(tm_year=2014, tm_mon=10, tm_mday=28, tm_hour=0, tm_min=0, tm_sec=0, tm_wday=1, tm_yday=301, tm_isdst=0),
+'link': 'http://feeds.rsc.org/~r/rss/NJ/~3/mRqpVz3B6U0/C4NJ01491J',
+'author_detail': {'name': 'Yiquan Zhang'},
+'authors': [{}, {}], 
+'title_detail': {'base': 'http://pubs.rsc.org/en/Content/ArticleLanding/2014/NJ/C4NJ01491J',
+                 'value': 'Origin of the Relaxation Barriers in a Family of MReIV(CN)2 Single-Chain Magnets (M = MnII, NiII, CoII): A Theoretical Investigation',
+                 'type': 'text/plain',
+                 'language': None},
+'guidislink': False,
+
+'summary_detail': {'base': 'http://pubs.rsc.org/en/Content/ArticleLanding/2014/NJ/C4NJ01491J',
+                   'value': '<div><i><b>New J. Chem.</b></i>, 2014, Accepted Manuscript<br /><b>DOI</b>: 10.1039/C4NJ01491J, Paper</div><div>Yiquan Zhang, Chenglin Luo<br />Through investigation of the origin of the relaxation barriers and the magneto-structural correlations in three (DMF)4MReIVCl4(CN)2 (DMF = dimethylformamide; M = MnII (1), NiII (2), CoII (3)) single-chain magnets (SCMs)...<br />The content of this RSS Feed (c) The Royal Society of Chemistry</div><img height="1" src="http://feeds.feedburner.com/~r/rss/NJ/~4/mRqpVz3B6U0" width="1" />',
+                   'type': 'text/html',
+                   'language': None},
+'summary':
+
+'<div>
+    <i><b>New J. Chem.</b></i>, 2014, Accepted Manuscript<br />
+    <b>DOI</b>: 10.1039/C4NJ01491J, Paper
+</div>
+<div>
+    Yiquan Zhang, Chenglin Luo
+    <br />Through investigation of the origin of the relaxation barriers and the magneto-structural correlations in three (DMF)4MReIVCl4(CN)2 (DMF = dimethylformamide; M = MnII (1), NiII (2), CoII (3)) single-chain magnets (SCMs)...
+    <br />
+
+    The content of this RSS Feed (c) The Royal Society of Chemistry
+</div>
+<img height="1" src="http://feeds.feedburner.com/~r/rss/NJ/~4/mRqpVz3B6U0" width="1" />',
+'updated': '2014-10-28T00:00:00Z',
+'title': 'Origin of the Relaxation Barriers in a Family of MReIV(CN)2 Single-Chain Magnets (M = MnII, NiII, CoII): A Theoretical Investigation',
+'id': 'http://pubs.rsc.org/en/Content/ArticleLanding/2014/NJ/C4NJ01491J'
+}
+
+
+[<div><p><img align="center" src="http://pubs.rsc.org/services/images/RSCpubs.ePlatform.Service.FreeContent.ImageService.svc/ImageService/image/GA?id=C4NJ01482K"/></p></div>, <div><i><b>New J. Chem.</b></i>, 2015, Advance Article<br/><b>DOI</b>: 10.1039/C4NJ01482K, Letter</div>, <div>Aude Buffard, Brice Nadal, Hadrien Heuclin, Gilles Patriarche, Benoit Dubertret<br/>Low temperature, scalable and air stable synthesis of ZnS nanowires and nanoplatelets.<br/>To cite this article before page numbers are assigned, use the DOI form of citation above.<br/>The content of this RSS Feed (c) The Royal Society of Chemistry</div>]

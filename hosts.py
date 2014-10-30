@@ -23,8 +23,75 @@ def getData(journal, entry):
     """Get the data. Starts from the data contained in the RSS flux, and if necessary,
     parse the website for supplementary infos. Download the graphical abstract"""
 
-    #This function is called ike this in parse.py:
+    #This function is called like this in parse.py:
     #title, date, authors, abstract, graphical_abstract = hosts.getData(journal, entry)
+
+    #List of the journals
+    rsc = [
+           "RSC - New J. Chem. latest articles"
+          ]
+
+    #Dictionnary journal/journal abbreviation
+    rsc_abb = {
+               "RSC - New J. Chem. latest articles": "New J. Chem."
+              }
+
+
+    #If the journal is edited by the RSC
+    if journal in rsc:
+
+        title = entry.title
+        date = arrow.get(entry.updated).format('YYYY-MM-DD')
+        journal_abb = rsc_abb[journal]
+        url = entry.feedburner_origlink
+
+        abstract = None
+        graphical_abstract = None
+
+        soup = BeautifulSoup(entry.summary)
+
+        r = soup.find_all("div")
+
+        doi = getDoi(journal, entry)
+
+        graphical_abstract = r[0].img
+        if graphical_abstract is not None:
+            graphical_abstract = r[0].img['src']
+            response, graphical_abstract = downloadPic(graphical_abstract)
+
+            #Get the authors
+            for a in r[2].childGenerator():
+                author = a.replace(", ", ",")
+                break
+        else:
+            graphical_abstract = "Empty"
+
+            #Get the authors
+            for a in r[1].childGenerator():
+                author = a.replace(", ", ",")
+                break
+
+        try:
+            #Dl of the article website page
+            #page = requests.get(entry.feedburner_origlink, timeout=20)
+            page = requests.get(url, timeout=20)
+
+            #If the dl went wrong, print an error
+            if page.status_code is not requests.codes.ok:
+                print("{0}, bad return code: {1}".format(journal_abb, page.status_code))
+
+            #Get the abstract
+            soup = BeautifulSoup(page.text)
+            r = soup.find_all("meta", attrs={"name": "citation_abstract"})
+            if r:
+                abstract = r[0]['content']
+
+        except requests.exceptions.Timeout:
+            print("getData, {0}, timeout".format(journal_abb))
+        except Exception as e:
+            print("encore")
+            print(e)
+
 
     if journal == "Angewandte Chemie International Edition":
 
@@ -68,7 +135,7 @@ def getData(journal, entry):
 
         try:
             #Dl of the article website page
-            page = requests.get(entry.feedburner_origlink, timeout=20)
+            page = requests.get(url, timeout=20)
 
             #If the dl went wrong, print an error
             if page.status_code is not requests.codes.ok:
@@ -97,6 +164,18 @@ def getData(journal, entry):
 def getDoi(journal, entry):
 
     """Get the DOI number of a post, to save time"""
+
+    rsc = [
+           "RSC - New J. Chem. latest articles"
+          ]
+
+    if journal in rsc:
+        soup = BeautifulSoup(entry.summary)
+        r = soup.find_all("div")
+        try:
+            doi = r[0].text.split("DOI: ")[1].split(",")[0]
+        except IndexError:
+            doi = r[1].text.split("DOI:")[1].split(",")[0]
 
     if journal == "Angewandte Chemie International Edition":
         doi = entry.prism_doi
@@ -157,21 +236,23 @@ if __name__ == "__main__":
                  #"jacs.xml"
                 #]
     #urls_test = ["jacs.xml"]
-    urls_test = ["ang.xml"]
+    #urls_test = ["http://feeds.rsc.org/rss/nj"]
+    urls_test = ["njc.xml"]
 
     for site in urls_test:
 
         feed = feedparser.parse(site)
 
+        #print(feed)
+
         #Name of the journal
         journal = feed['feed']['title'] 
 
+        print(journal)
+
         for entry in feed.entries:
-            for element in getData(journal, entry):
-                #print(element)
-                #break
-                pass
-            break
+            getData(journal, entry)
+            #break
 
         print("\n\n")
 
