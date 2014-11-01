@@ -28,12 +28,14 @@ def getData(journal, entry):
 
     #List of the journals
     rsc = [
-           "RSC - New J. Chem. latest articles"
+           "RSC - New J. Chem. latest articles",
+           "RSC - Chem. Sci. latest articles"
           ]
 
     #Dictionnary journal/journal abbreviation
     rsc_abb = {
-               "RSC - New J. Chem. latest articles": "New J. Chem."
+               "RSC - New J. Chem. latest articles": "New J. Chem.",
+               "RSC - Chem. Sci. latest articles": "Chem. Sci."
               }
 
 
@@ -54,22 +56,15 @@ def getData(journal, entry):
 
         doi = getDoi(journal, entry)
 
+        author = None
+
         graphical_abstract = r[0].img
         if graphical_abstract is not None:
             graphical_abstract = r[0].img['src']
             response, graphical_abstract = downloadPic(graphical_abstract)
 
-            #Get the authors
-            for a in r[2].childGenerator():
-                author = a.replace(", ", ",")
-                break
         else:
             graphical_abstract = "Empty"
-
-            #Get the authors
-            for a in r[1].childGenerator():
-                author = a.replace(", ", ",")
-                break
 
         try:
             #Dl of the article website page
@@ -85,6 +80,11 @@ def getData(journal, entry):
             r = soup.find_all("meta", attrs={"name": "citation_abstract"})
             if r:
                 abstract = r[0]['content']
+
+            r = soup.find_all("meta", attrs={"name": "citation_author"})
+            if r:
+                author = [ tag['content'] for tag in r ]
+                author = ",".join(author)
 
         except requests.exceptions.Timeout:
             print("getData, {0}, timeout".format(journal_abb))
@@ -166,7 +166,8 @@ def getDoi(journal, entry):
     """Get the DOI number of a post, to save time"""
 
     rsc = [
-           "RSC - New J. Chem. latest articles"
+           "RSC - New J. Chem. latest articles",
+           "RSC - Chem. Sci. latest articles"
           ]
 
     if journal in rsc:
@@ -237,7 +238,8 @@ if __name__ == "__main__":
                 #]
     #urls_test = ["jacs.xml"]
     #urls_test = ["http://feeds.rsc.org/rss/nj"]
-    urls_test = ["njc.xml"]
+    #urls_test = ["njc.xml"]
+    urls_test = ["http://feeds.rsc.org/rss/sc"]
 
     for site in urls_test:
 

@@ -96,7 +96,8 @@ class Fenetre(QtGui.QMainWindow):
                 #"http://feeds.feedburner.com/acs/jacsat"
                #]
 
-        flux = ["http://feeds.rsc.org/rss/nj"]
+        #flux = ["http://feeds.rsc.org/rss/nj"]
+        flux = ["http://feeds.rsc.org/rss/sc"]
 
 
         #Disabling the parse action to avoid double start

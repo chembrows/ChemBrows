@@ -64,16 +64,16 @@ class Worker(QtCore.QThread):
                     continue
                 else:
                     title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
-                    query.prepare("UPDATE papers SET abstract=?, graphical_abstract=?, verif WHERE doi=?")
+                    query.prepare("UPDATE papers SET authors=?, abstract=?, graphical_abstract=?, verif WHERE doi=?")
 
                     #Checking if the data are complete
-                    if type(abstract) is not str or type(graphical_abstract) is not str:
+                    if type(abstract) is not str or type(graphical_abstract) is not str or type(authors) is not str:
                         verif = 0
                         print("plop")
                     else:
                         verif = 1
 
-                    params = (abstract, graphical_abstract, verif, doi)
+                    params = (authors, abstract, graphical_abstract, verif, doi)
 
                     for value in params:
                         query.addBindValue(value)
