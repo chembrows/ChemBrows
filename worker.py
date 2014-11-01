@@ -50,6 +50,8 @@ class Worker(QtCore.QThread):
 
         self.l.debug("{0}: {1}".format(journal, len(feed.entries)))
 
+        query = QtSql.QSqlQuery("fichiers.sqlite")
+
         i = 0
 
         for entry in feed.entries:
@@ -64,7 +66,7 @@ class Worker(QtCore.QThread):
                     continue
                 else:
                     title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
-                    query.prepare("UPDATE papers SET authors=?, abstract=?, graphical_abstract=?, verif WHERE doi=?")
+                    query.prepare("UPDATE papers SET authors=?, abstract=?, graphical_abstract=?, verif=? WHERE doi=?")
 
                     #Checking if the data are complete
                     if type(abstract) is not str or type(graphical_abstract) is not str or type(authors) is not str:
@@ -90,8 +92,6 @@ class Worker(QtCore.QThread):
             else:
 
                 title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
-
-                query = QtSql.QSqlQuery("fichiers.sqlite")
 
                 query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
 

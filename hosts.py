@@ -27,24 +27,15 @@ def getData(journal, entry):
     #title, date, authors, abstract, graphical_abstract = hosts.getData(journal, entry)
 
     #List of the journals
-    rsc = [
-           "RSC - New J. Chem. latest articles",
-           "RSC - Chem. Sci. latest articles"
-          ]
-
-    #Dictionnary journal/journal abbreviation
-    rsc_abb = {
-               "RSC - New J. Chem. latest articles": "New J. Chem.",
-               "RSC - Chem. Sci. latest articles": "Chem. Sci."
-              }
-
+    rsc, rsc_abb = getJournals("rsc")
+    acs, acs_abb = getJournals("acs")
 
     #If the journal is edited by the RSC
     if journal in rsc:
 
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
-        journal_abb = rsc_abb[journal]
+        journal_abb = rsc_abb[rsc.index(journal)]
         url = entry.feedburner_origlink
 
         abstract = None
@@ -117,17 +108,21 @@ def getData(journal, entry):
             abstract = soup.renderContents().decode()
 
 
-    if journal == "Journal of the American Chemical Society: Latest Articles (ACS Publications)":
+    if journal in acs:
 
-        journal_abb = "J. Am. Chem. Soc."
         title = entry.title.replace("\n", " ")
-        abstract = None
+        journal_abb = acs_abb[acs.index(journal)]
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
+        abstract = None
 
-        author = entry.author.split(" and ")
-        author = author[0] + ", " + author[1]
-        author = author.split(", ")
-        author = ",".join(author)
+        #If there is only one author
+        try:
+            author = entry.author.split(" and ")
+            author = author[0] + ", " + author[1]
+            author = author.split(", ")
+            author = ",".join(author)
+        except IndexError:
+            author = entry.author
 
         url = entry.feedburner_origlink
 
@@ -146,6 +141,8 @@ def getData(journal, entry):
             r = soup.find_all("p", attrs={"class": "articleBody_abstractText"})
             if r:
                 abstract = r[0].text
+            else:
+                abstract = "Empty"
 
         except requests.exceptions.Timeout:
             print("getData, JACS, timeout")
@@ -157,6 +154,8 @@ def getData(journal, entry):
         r = soup.find_all("img", alt="TOC Graphic")
         if r:
             response, graphical_abstract = downloadPic(r[0]['src'])
+        else:
+            graphical_abstract = "Empty"
 
     return title, journal_abb, date, author, abstract, graphical_abstract, url
 
@@ -165,10 +164,8 @@ def getDoi(journal, entry):
 
     """Get the DOI number of a post, to save time"""
 
-    rsc = [
-           "RSC - New J. Chem. latest articles",
-           "RSC - Chem. Sci. latest articles"
-          ]
+    rsc, _ = getJournals("rsc")
+    acs, _ = getJournals("acs")
 
     if journal in rsc:
         soup = BeautifulSoup(entry.summary)
@@ -181,7 +178,7 @@ def getDoi(journal, entry):
     if journal == "Angewandte Chemie International Edition":
         doi = entry.prism_doi
 
-    if journal == "Journal of the American Chemical Society: Latest Articles (ACS Publications)":
+    if journal in acs:
         doi = entry.id.split("dx.doi.org/")[1]
 
     return doi
@@ -230,6 +227,21 @@ def downloadPic(url):
         print(e)
 
 
+def getJournals(company):
+
+    """Function to get the journal name and its abbreviation"""
+
+    names = []
+    abb = []
+
+    with open('{0}.ini'.format(company), 'r') as config:
+        for line in config:
+            names.append(line.split(" : ")[0])
+            abb.append(line.split(" : ")[1].replace("\n", ""))
+
+    return names, abb
+
+
 
 if __name__ == "__main__":
 
@@ -239,7 +251,8 @@ if __name__ == "__main__":
     #urls_test = ["jacs.xml"]
     #urls_test = ["http://feeds.rsc.org/rss/nj"]
     #urls_test = ["njc.xml"]
-    urls_test = ["http://feeds.rsc.org/rss/sc"]
+    #urls_test = ["http://feeds.rsc.org/rss/sc"]
+    urls_test = ["http://feeds.feedburner.com/acs/jceda8"]
 
     for site in urls_test:
 

@@ -96,8 +96,20 @@ class Fenetre(QtGui.QMainWindow):
                 #"http://feeds.feedburner.com/acs/jacsat"
                #]
 
+        #flux = [
+                #"http://feeds.feedburner.com/acs/jacsat"
+               #]
+        #RSC
         #flux = ["http://feeds.rsc.org/rss/nj"]
-        flux = ["http://feeds.rsc.org/rss/sc"]
+        #flux = ["http://feeds.rsc.org/rss/sc"]
+        #flux = ["http://feeds.rsc.org/rss/cc"]
+        #flux = ["http://feeds.rsc.org/rss/cs"]
+        #http://feeds.rsc.org/rss/rp
+        #http://feeds.rsc.org/rss/ra
+
+        #ACS
+        flux = ["http://feeds.feedburner.com/acs/jceda8"]
+        flux = ["http://feeds.feedburner.com/acs/joceah"]
 
 
         #Disabling the parse action to avoid double start
