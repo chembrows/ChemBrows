@@ -38,10 +38,13 @@ class Fenetre(QtGui.QMainWindow):
         #Object to store options and preferences
         self.options = QtCore.QSettings("options.ini", QtCore.QSettings.IniFormat)
 
+        self.tags_selected = []
+
         self.connectionBdd()
         self.defineActions()
         self.initUI()
         self.defineSlots()
+        self.displayTags()
         self.restoreSettings()
 
 
@@ -92,9 +95,11 @@ class Fenetre(QtGui.QMainWindow):
         """Method to start the parsing of the data"""
 
         #flux = ["ang.xml", "jacs.xml"]
-        #flux = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
-                #"http://feeds.feedburner.com/acs/jacsat"
-               #]
+        flux = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
+                "http://feeds.feedburner.com/acs/jacsat",
+                "http://feeds.rsc.org/rss/rp",
+                "http://feeds.rsc.org/rss/ra"
+               ]
 
         #flux = [
                 #"http://feeds.feedburner.com/acs/jacsat"
@@ -108,8 +113,8 @@ class Fenetre(QtGui.QMainWindow):
         #http://feeds.rsc.org/rss/ra
 
         #ACS
-        flux = ["http://feeds.feedburner.com/acs/jceda8"]
-        flux = ["http://feeds.feedburner.com/acs/joceah"]
+        #flux = ["http://feeds.feedburner.com/acs/jceda8"]
+        #flux = ["http://feeds.feedburner.com/acs/joceah"]
 
 
         #Disabling the parse action to avoid double start
@@ -374,6 +379,134 @@ class Fenetre(QtGui.QMainWindow):
         self.vision.setScene(self.scene)
 
 
+    def displayTags(self):
+
+        """Slot to display push buttons on the left.
+        One button per journal"""
+
+        abb = []
+
+        for fichier in os.listdir("./journals/"):
+            with open("./journals/{0}".format(fichier), 'r') as config:
+                for line in config:
+                    abb.append(line.split(" : ")[1].replace("\n", ""))
+
+        for journal in abb:
+
+            button = QtGui.QPushButton(journal)
+            button.setCheckable(True)
+            button.adjustSize()
+
+            button.clicked[bool].connect(self.stateButtons)
+            self.vbox_all_tags.addWidget(button)
+
+        self.vbox_all_tags.setAlignment(QtCore.Qt.AlignTop)
+        self.scroll_tags.setWidget(self.scrolling_tags)
+
+
+    def stateButtons(self, pressed):
+
+        """Slot to check the journals push buttons"""
+
+        #Get the button pressed
+        source = self.sender()
+
+        #Build the list of ON buttons
+        if source.parent() == self.scrolling_tags:
+            if pressed:
+                self.tags_selected.append(source.text())
+            else:
+                self.tags_selected.remove(source.text())
+
+        self.searchByButton()
+
+
+    def searchByButton(self):
+
+        """Slot to select articles by journal"""
+
+        #Reset the view when the last button is unchecked
+        if not self.tags_selected:
+            self.resetView()
+            return
+
+        #Save the header state before performing en empty request
+        try:
+            self.header_state
+        except AttributeError:
+            self.header_state = self.tableau.horizontalHeader().saveState() 
+
+        self.query = QtSql.QSqlQuery()
+
+        requete = "SELECT * FROM papers WHERE journal IN ("
+
+        #Building the query
+        for each_journal in self.tags_selected:
+            if self.tags_selected.index(each_journal) != len(self.tags_selected) - 1:
+                requete = requete + "\"" + str(each_journal) + "\"" + ", "
+            #Close the query if last
+            else:
+                requete = requete + "\"" + str(each_journal) + "\"" + ")"
+
+        self.query.prepare(requete)
+        self.query.exec_()
+
+        Update the view
+        self.modele.setTable("papers")
+        self.modele.setQuery(self.query)
+
+        self.proxy.setSourceModel(self.modele)
+        self.tableau.setModel(self.proxy)
+        #self.adjustView()
+
+        #Regenerate the header
+        try:
+            self.tableau.horizontalHeader().restoreState(self.header_state)
+        except AttributeError:
+            self.l.debug("Pas de horizontalHeader. From searchByButton()")
+
+
+    def resetView(self):
+
+        """Slot pour remettre les données affichées à zéro"""
+
+        #Clean graphical abstract area
+        try:
+            self.scene.clear()
+        except AttributeError:
+            self.l.warn("Pas d'objet scene pr l'instant.")
+
+        #Save header
+        try:
+            self.header_state
+        except AttributeError:
+            self.header_state = self.tableau.horizontalHeader().saveState() 
+
+        self.modele.setTable("papers")
+        self.modele.select()
+        #self.adjustView()
+
+        self.proxy.setFilterRegExp(QtCore.QRegExp(''))
+        self.proxy.setFilterKeyColumn(2)
+
+        #On efface la barre de recherche
+        #self.research_bar.clear()
+
+        #On efface la barre de recherche à droite
+        #self.uncheckRightButtons()
+        #self.reshowButtons()
+        #self.actors_tags_line.clear()
+
+        #Restore header
+        self.tableau.horizontalHeader().restoreState(self.header_state)
+
+        #Delete last query
+        try:
+            del self.query
+        except AttributeError:
+            self.l.warn("Pas de requête précédente")
+
+
     def launchFile(self):
 
         """Slot qui lance le fichier double cliqué dans le tableau
@@ -613,9 +746,19 @@ class Fenetre(QtGui.QMainWindow):
 ##------------------------- ZONE DE GAUCHE ------------------------------------------------------------------------
 
         #On crée un widget conteneur pour les tags
-        self.vbox_journals = QtGui.QVBoxLayout()
-        self.dock_journals = QtGui.QWidget()
-        self.dock_journals.setLayout(self.vbox_journals)
+        #self.vbox_journals = QtGui.QVBoxLayout()
+        #self.dock_journals = QtGui.QWidget()
+        #self.dock_journals.setLayout(self.vbox_journals)
+
+        #On crée des scrollarea pr mettre les boutons des tags et des acteurs
+        self.scroll_tags = QtGui.QScrollArea()
+
+        #On crée la zone de scrolling
+        #http://www.mattmurrayanimation.com/archives/tag/how-do-i-use-a-qscrollarea-in-pyqt
+        self.scrolling_tags = QtGui.QWidget()
+        self.vbox_all_tags = QtGui.QVBoxLayout()
+        self.scrolling_tags.setLayout(self.vbox_all_tags)
+
 
 ##------------------------- ZONE DU BAS ---------------------------------------------------------------------------
 
@@ -651,7 +794,7 @@ class Fenetre(QtGui.QMainWindow):
         self.splitter1.addWidget(self.zone_bas)
 
         self.splitter2 = QtGui.QSplitter(QtCore.Qt.Horizontal)
-        self.splitter2.addWidget(self.dock_journals)
+        self.splitter2.addWidget(self.scroll_tags)
         self.splitter2.addWidget(self.onglets)
         self.splitter2.addWidget(self.splitter1)
 

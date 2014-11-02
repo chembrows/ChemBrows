@@ -125,12 +125,15 @@ def checkData():
     bdd.row_factory = sqlite3.Row 
     c = bdd.cursor()
 
-    c.execute("SELECT verif FROM papers")
+    #c.execute("SELECT verif FROM papers")
+    c.execute("SELECT * FROM papers WHERE journal IN (\"J. Org. Chem.\")")
 
     for ligne_bdd in c.fetchall():
 
-        if ligne_bdd['verif'] == 0:
-            print("boum")
+        print(ligne_bdd['title'])
+
+        #if ligne_bdd['verif'] == 0:
+            #print("boum")
 
         #for info in ligne_bdd:
             #print(type(info))
@@ -147,7 +150,7 @@ if __name__ == "__main__":
     #like(1)
     #like(10)
     #like(15)
-    #checkData()
-    _, dois = listDoi()
-    print(dois)
+    checkData()
+    #_, dois = listDoi()
+    #print(dois)
     pass

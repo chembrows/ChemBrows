@@ -234,7 +234,7 @@ def getJournals(company):
     names = []
     abb = []
 
-    with open('{0}.ini'.format(company), 'r') as config:
+    with open('journals/{0}.ini'.format(company), 'r') as config:
         for line in config:
             names.append(line.split(" : ")[0])
             abb.append(line.split(" : ")[1].replace("\n", ""))
