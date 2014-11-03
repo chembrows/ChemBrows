@@ -38,6 +38,8 @@ class Settings(QtGui.QDialog):
             for box in self.check_journals:
                 if box.text() in journals_to_parse:
                     box.setCheckState(2)
+                else:
+                    box.setCheckState(0)
 
 
     def etablirSlots(self):
@@ -103,7 +105,6 @@ class Settings(QtGui.QDialog):
         for box in self.check_journals:
             if box.checkState() == 2:
                 journals_to_parse.append(box.text())
-
 
         if journals_to_parse:
             self.parent.options.remove("journals_to_parse")

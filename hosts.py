@@ -29,6 +29,7 @@ def getData(journal, entry):
     #List of the journals
     rsc, rsc_abb = getJournals("rsc")
     acs, acs_abb = getJournals("acs")
+    wiley, wiley_abb = getJournals("wiley")
 
     #If the journal is edited by the RSC
     if journal in rsc:
@@ -84,9 +85,9 @@ def getData(journal, entry):
             print(e)
 
 
-    if journal == "Angewandte Chemie International Edition":
+    if journal in wiley:
 
-        journal_abb = "Angew. Chem. Int. Ed. Engl."
+        journal_abb = wiley_abb[wiley.index(journal)]
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
 
@@ -166,6 +167,7 @@ def getDoi(journal, entry):
 
     rsc, _ = getJournals("rsc")
     acs, _ = getJournals("acs")
+    wiley, _ = getJournals("wiley")
 
     if journal in rsc:
         soup = BeautifulSoup(entry.summary)
@@ -175,7 +177,7 @@ def getDoi(journal, entry):
         except IndexError:
             doi = r[1].text.split("DOI:")[1].split(",")[0]
 
-    if journal == "Angewandte Chemie International Edition":
+    if journal in wiley:
         doi = entry.prism_doi
 
     if journal in acs:
