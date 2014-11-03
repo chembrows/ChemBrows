@@ -19,6 +19,7 @@ from view_delegate import ViewDelegate
 from tabwidget import TabPerso
 from worker import Worker
 from predictor import Predictor
+from settings import Settings
 import functions
 
 
@@ -94,28 +95,24 @@ class Fenetre(QtGui.QMainWindow):
 
         """Method to start the parsing of the data"""
 
-        #flux = ["ang.xml", "jacs.xml"]
-        flux = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
-                "http://feeds.feedburner.com/acs/jacsat",
-                "http://feeds.rsc.org/rss/rp",
-                "http://feeds.rsc.org/rss/ra"
-               ]
+        journals_to_parse = self.options.value("journals_to_parse", [])
 
-        #flux = [
-                #"http://feeds.feedburner.com/acs/jacsat"
-               #]
-        #RSC
-        #flux = ["http://feeds.rsc.org/rss/nj"]
-        #flux = ["http://feeds.rsc.org/rss/sc"]
-        #flux = ["http://feeds.rsc.org/rss/cc"]
-        #flux = ["http://feeds.rsc.org/rss/cs"]
-        #http://feeds.rsc.org/rss/rp
-        #http://feeds.rsc.org/rss/ra
+        if not journals_to_parse:
+            journals_to_parse = []
+            for company in os.listdir("./journals"):
+                with open('journals/{0}'.format(company), 'r') as config:
+                    for line in config:
+                        journals_to_parse.append(line.split(" : ")[1])
 
-        #ACS
-        #flux = ["http://feeds.feedburner.com/acs/jceda8"]
-        #flux = ["http://feeds.feedburner.com/acs/joceah"]
+            self.options.remove("journals_to_parse")
+            self.options.setValue("journals_to_parse", journals_to_parse)
 
+        urls = []
+        for company in os.listdir("./journals"):
+            with open('journals/{0}'.format(company), 'r') as config:
+                for line in config:
+                    if line.split(" : ")[1] in journals_to_parse:
+                        urls.append(line.split(" : ")[2])
 
         #Disabling the parse action to avoid double start
         self.parseAction.setEnabled(False)
@@ -124,7 +121,7 @@ class Fenetre(QtGui.QMainWindow):
         #The list is cleared when the method is started
         self.list_threads = []
 
-        for site in flux:
+        for site in urls:
             #One worker for each website
             worker = Worker(site, self.l)
             worker.finished.connect(self.checkThreads)
@@ -188,6 +185,9 @@ class Fenetre(QtGui.QMainWindow):
         self.updateAction = QtGui.QAction('Update model', self)
         self.updateAction.triggered.connect(lambda: self.modele.select())
         self.updateAction.setShortcut('F7')
+
+        self.settingsAction = QtGui.QAction('Settings', self)
+        self.settingsAction.triggered.connect(lambda: Settings(self))
 
         ##Action pour enlever un tag
         #self.removeTagAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_207_remove_2.png'), 'Supprimer un tag', self)
@@ -451,7 +451,7 @@ class Fenetre(QtGui.QMainWindow):
         self.query.prepare(requete)
         self.query.exec_()
 
-        Update the view
+        #Update the view
         self.modele.setTable("papers")
         self.modele.setQuery(self.query)
 
@@ -661,6 +661,8 @@ class Fenetre(QtGui.QMainWindow):
         #Building tools menu
         self.toolMenu = self.menubar.addMenu("&Tools")
         self.toolMenu.addAction(self.openInBrowserAction)
+
+        self.menubar.addAction(self.settingsAction)
 
         ##Ajout d'une entrée pr les réglages dans la barre
         ##des menus
