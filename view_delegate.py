@@ -32,13 +32,19 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         #Bool to color lines
         red = False
 
+        #If the data are not complete (i.e 'verif' is False), color red
         ref_index = index.sibling(index.row(), 11)
         if ref_index.data() == 0:
             red = True
+
+        #If the post is new, set font to bold
+        new = index.sibling(index.row(), 12).data()
+        if new == "true":
+            option.font.setWeight(QtGui.QFont.Bold)
         
+        #Condition block to perform actions on specific columns
         if index.column() == 0:
             pass
-
         else:
             #Using default painter
             QtGui.QStyledItemDelegate.paint(self, painter, option, index)    

@@ -62,7 +62,7 @@ class Fenetre(QtGui.QMainWindow):
         query = QtSql.QSqlQuery("fichiers.sqlite")
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
-                     liked INTEGER, url TEXT, verif INTEGER)")
+                     liked INTEGER, url TEXT, verif INTEGER, new INTEGER)")
 
 
         #Création du modèle, issu de la bdd
@@ -292,6 +292,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.tableau.clicked.connect(self.displayInfos)
         self.tableau.clicked.connect(self.displayMosaic)
+        self.tableau.clicked.connect(self.markOneRead)
 
 
     def keyPressEvent(self, e):
@@ -523,6 +524,32 @@ class Fenetre(QtGui.QMainWindow):
         pass
 
 
+    def markOneRead(self, element):
+
+        """Slot to mark an article read"""
+
+        new = self.tableau.model().index(element.row(), 12).data()
+
+        if new == "false":
+            return
+        else:
+            id_bdd = self.tableau.model().index(element.row(), 0).data()
+            line = self.tableau.selectionModel().currentIndex().row()
+
+            query = QtSql.QSqlQuery("fichiers.sqlite")
+
+            query.prepare("UPDATE papers SET new = ? WHERE id = ?")
+            params = (False, id_bdd)
+
+            for value in params:
+                query.addBindValue(value)
+
+            query.exec_()
+
+            self.modele.select() # Remplit le modèle avec les data de la table
+            self.tableau.selectRow(line)
+
+
     def openInBrowser(self):
 
         """Slot to open the post in browser"""
@@ -725,7 +752,7 @@ class Fenetre(QtGui.QMainWindow):
         self.horizontal_header.setDefaultAlignment(QtCore.Qt.AlignLeft) #Aligne à gauche l'étiquette des colonnes
         self.horizontal_header.setClickable(True) #Rend cliquable le header perso
 
-        ##Resize to content vertically
+        #Resize to content vertically
         #self.tableau.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
 
         #Style du tableau
@@ -733,10 +760,10 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.hideColumn(0) #Cache la colonne des id
         #self.tableau.hideColumn(2) #Cache la colonne des doi
         #self.tableau.hideColumn(6) #Cache la colonne des auteurs
-        #self.tableau.hideColumn(7) #Cache la colonne des abstracts
+        self.tableau.hideColumn(7) #Cache la colonne des abstracts
         #self.tableau.hideColumn(8) #Cache la colonne des graphical abstracts
-        self.tableau.hideColumn(10) #Cache la colonne des urls
-        self.tableau.hideColumn(11) #Cache la colonne des verif
+        #self.tableau.hideColumn(10) #Cache la colonne des urls
+        #self.tableau.hideColumn(11) #Cache la colonne des verif
         ##self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
         ##self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
         self.tableau.setSortingEnabled(True) #Active le tri

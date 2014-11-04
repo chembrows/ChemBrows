@@ -66,7 +66,7 @@ class Worker(QtCore.QThread):
                     continue
                 else:
                     title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
-                    query.prepare("UPDATE papers SET authors=?, abstract=?, graphical_abstract=?, verif=? WHERE doi=?")
+                    query.prepare("UPDATE papers SET authors=?, abstract=?, graphical_abstract=?, verif=?, new=? WHERE doi=?")
 
                     #Checking if the data are complete
                     if type(abstract) is not str or type(graphical_abstract) is not str or type(authors) is not str:
@@ -75,7 +75,7 @@ class Worker(QtCore.QThread):
                     else:
                         verif = 1
 
-                    params = (authors, abstract, graphical_abstract, verif, doi)
+                    params = (authors, abstract, graphical_abstract, verif, True, doi)
 
                     for value in params:
                         query.addBindValue(value)
@@ -93,7 +93,8 @@ class Worker(QtCore.QThread):
 
                 title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
 
-                query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new)\
+                               VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
                 #Checking if the data are complete
                 if type(abstract) is not str or type(graphical_abstract) is not str:
@@ -101,7 +102,7 @@ class Worker(QtCore.QThread):
                 else:
                     verif = 1
 
-                params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif)
+                params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, True)
 
                 for value in params:
                     query.addBindValue(value)
