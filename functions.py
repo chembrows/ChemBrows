@@ -126,7 +126,7 @@ def checkData():
     c = bdd.cursor()
 
     #c.execute("SELECT verif FROM papers")
-    c.execute("SELECT * FROM papers WHERE journal IN (\"J. Org. Chem.\")")
+    c.execute("SELECT * FROM papers WHERE new='true'")
 
     for ligne_bdd in c.fetchall():
 

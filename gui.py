@@ -70,7 +70,7 @@ class Fenetre(QtGui.QMainWindow):
 
         #On change la stratégie d'édition de la bdd, les changements
         #sont immédiats
-        self.modele.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
+        self.modele.setEditStrategy(QtSql.QSqlTableModel.OnRowChange)
         self.modele.setTable("papers")
         self.modele.select() # Remplit le modèle avec les data de la table
 
@@ -182,12 +182,18 @@ class Fenetre(QtGui.QMainWindow):
         self.openInBrowserAction.triggered.connect(self.openInBrowser)
         self.openInBrowserAction.setShortcut('Ctrl+W')
 
+        #Action to update the model. For TEST
         self.updateAction = QtGui.QAction('Update model', self)
         self.updateAction.triggered.connect(lambda: self.modele.select())
         self.updateAction.setShortcut('F7')
 
+        #Action to show a settings window
         self.settingsAction = QtGui.QAction('Settings', self)
         self.settingsAction.triggered.connect(lambda: Settings(self))
+
+        #Action so show new articles
+        self.searchNewAction = QtGui.QAction('Search new', self)
+        self.searchNewAction.triggered.connect(self.searchNew)
 
         ##Action pour enlever un tag
         #self.removeTagAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_207_remove_2.png'), 'Supprimer un tag', self)
@@ -332,6 +338,10 @@ class Fenetre(QtGui.QMainWindow):
 
     def displayInfos(self):
 
+        #line = self.tableau.selectionModel().currentIndex().row()
+        #self.modele.select() # Remplit le modèle avec les data de la table
+        #self.tableau.selectRow(line)
+
         try:
             #On essaie de récupérer la description du torrent
             #self.text_abstract.setText(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data())
@@ -467,6 +477,70 @@ class Fenetre(QtGui.QMainWindow):
             self.l.debug("Pas de horizontalHeader. From searchByButton()")
 
 
+    def searchNew(self):
+
+        """Slot to select new articles"""
+
+        #Save the header state before performing en empty request
+        try:
+            self.header_state
+        except AttributeError:
+            self.header_state = self.tableau.horizontalHeader().saveState() 
+
+        self.query = QtSql.QSqlQuery()
+
+        #First, search the new articles id
+        self.query.prepare("SELECT id FROM papers WHERE new='true'")
+        self.query.exec_()
+
+        list_id = []
+        while self.query.next():
+            record = self.query.record()
+            list_id.append(record.value('id'))
+
+
+        #Then, perform the query on the id. This way, the articles
+        #are not erased from the view when they are marked as read
+        requete = "SELECT * FROM papers WHERE id IN ("
+
+        #Building the query
+        for each_id in list_id:
+            if each_id is not list_id[-1]:
+                requete = requete + str(each_id) + ", "
+            #Close the query if last
+            else:
+                requete = requete + str(each_id) + ")"
+
+        self.query.prepare(requete)
+        self.query.exec_()
+
+        #Update the view
+        self.modele.setTable("papers")
+        self.modele.setQuery(self.query)
+
+        self.proxy.setSourceModel(self.modele)
+        self.tableau.setModel(self.proxy)
+        self.adjustView()
+
+        #Regenerate the header
+        try:
+            self.tableau.horizontalHeader().restoreState(self.header_state)
+        except AttributeError:
+            self.l.debug("Pas de horizontalHeader. From searchByButton()")
+
+
+    def adjustView(self):
+
+        self.tableau.hideColumn(0) #Hide id
+        self.tableau.hideColumn(2) #Hide doi
+        self.tableau.hideColumn(6) #Hide authors
+        self.tableau.hideColumn(7) #Hide abstracts
+        self.tableau.hideColumn(8) #Hide abstracts
+        self.tableau.hideColumn(10) #Hide urls
+        self.tableau.hideColumn(11) #Hide verif
+        self.tableau.hideColumn(12) #Hide new
+
+
     def resetView(self):
 
         """Slot pour remettre les données affichées à zéro"""
@@ -546,7 +620,15 @@ class Fenetre(QtGui.QMainWindow):
 
             query.exec_()
 
-            self.modele.select() # Remplit le modèle avec les data de la table
+            self.modele.select()
+
+            try:
+                self.modele.setQuery(self.query)
+                self.proxy.setSourceModel(self.modele)
+                self.tableau.setModel(self.proxy)
+            except AttributeError:
+                pass
+
             self.tableau.selectRow(line)
 
 
@@ -666,7 +748,6 @@ class Fenetre(QtGui.QMainWindow):
 
         """Méthode pour créer la fenêtre et régler ses paramètres"""
 
-        #On règle les paramètres de la fenêtre
         self.setGeometry(0, 25, 1900 , 1020)
         self.setWindowTitle('ChemBrows')    
 
@@ -709,6 +790,7 @@ class Fenetre(QtGui.QMainWindow):
         self.toolbar.addAction(self.likeAction)
         self.toolbar.addAction(self.unLikeAction)
         self.toolbar.addAction(self.updateAction)
+        self.toolbar.addAction(self.searchNewAction)
         #self.toolbar.addAction(self.verificationAction)
         #self.toolbar.addAction(self.importAction)
         #self.toolbar.addAction(self.putOnWaitingAction)
@@ -753,17 +835,18 @@ class Fenetre(QtGui.QMainWindow):
         self.horizontal_header.setClickable(True) #Rend cliquable le header perso
 
         #Resize to content vertically
-        #self.tableau.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        self.tableau.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
 
         #Style du tableau
         self.tableau.setHorizontalHeader(self.horizontal_header) #Active le header perso
-        self.tableau.hideColumn(0) #Cache la colonne des id
-        #self.tableau.hideColumn(2) #Cache la colonne des doi
-        #self.tableau.hideColumn(6) #Cache la colonne des auteurs
-        self.tableau.hideColumn(7) #Cache la colonne des abstracts
-        #self.tableau.hideColumn(8) #Cache la colonne des graphical abstracts
-        #self.tableau.hideColumn(10) #Cache la colonne des urls
-        #self.tableau.hideColumn(11) #Cache la colonne des verif
+        self.tableau.hideColumn(0) #Hide id
+        self.tableau.hideColumn(2) #Hide doi
+        self.tableau.hideColumn(6) #Hide authors
+        self.tableau.hideColumn(7) #Hide abstracts
+        self.tableau.hideColumn(8) #Hide abstracts
+        self.tableau.hideColumn(10) #Hide urls
+        self.tableau.hideColumn(11) #Hide verif
+        self.tableau.hideColumn(12) #Hide new
         ##self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
         ##self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
         self.tableau.setSortingEnabled(True) #Active le tri

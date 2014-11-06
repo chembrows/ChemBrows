@@ -41,6 +41,9 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         new = index.sibling(index.row(), 12).data()
         if new == "true":
             option.font.setWeight(QtGui.QFont.Bold)
+        #else:
+            #self.parent.tableau.hideRow(index.row())
+            #return
         
         #Condition block to perform actions on specific columns
         if index.column() == 0:
