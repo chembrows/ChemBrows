@@ -38,10 +38,11 @@ class Fenetre(QtGui.QMainWindow):
         #Object to store options and preferences
         self.options = QtCore.QSettings("options.ini", QtCore.QSettings.IniFormat)
 
+        #List to store the tags checked
         self.tags_selected = []
 
         #List to store the tags buttons on the left
-        self.buttons_tags_selected = []
+        self.list_buttons_tags = []
 
         self.connectionBdd()
         self.defineActions()
@@ -256,6 +257,11 @@ class Fenetre(QtGui.QMainWindow):
 
         self.options.endGroup()
 
+        #Save the checked journals (on the left)
+        tags_checked = [ button.text() for button in self.list_buttons_tags if button.isChecked() ]
+
+        self.options.setValue("tags_checked", tags_checked)
+
         #On s'assure que self.options finit ttes ces taches.
         #Corrige un bug. self.options semble ne pas effectuer
         #ttes ces tâches immédiatement.
@@ -281,6 +287,16 @@ class Fenetre(QtGui.QMainWindow):
             self.tableau.horizontalHeader().restoreState(self.options.value("Window/header_state"))
             self.splitter1.restoreState(self.options.value("Window/central_splitter"))
             self.splitter2.restoreState(self.options.value("Window/final_splitter"))
+
+        #Restore the selected journals (on the left), and query
+        #the db with these journals
+        tags_checked = self.options.value("tags_checked", [])
+        if tags_checked:
+            for button in self.list_buttons_tags:
+                if button.text() in tags_checked:
+                    button.setChecked(True)
+                    self.tags_selected.append(button.text())
+            self.searchByButton()
 
 
     def defineSlots(self):
@@ -411,7 +427,7 @@ class Fenetre(QtGui.QMainWindow):
             button.clicked[bool].connect(self.stateButtons)
             self.vbox_all_tags.addWidget(button)
 
-            self.buttons_tags_selected.append(button)
+            self.list_buttons_tags.append(button)
 
         self.vbox_all_tags.setAlignment(QtCore.Qt.AlignTop)
         self.scroll_tags.setWidget(self.scrolling_tags)
@@ -554,7 +570,7 @@ class Fenetre(QtGui.QMainWindow):
             self.l.warn("Pas d'objet scene pr l'instant.")
 
         #Uncheck the journals buttons on the left
-        for button in self.buttons_tags_selected:
+        for button in self.list_buttons_tags:
             button.setChecked(False)
 
         #Save header
