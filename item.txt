@@ -173,3 +173,6 @@ NJC entry:
 
 
 [<div><p><img align="center" src="http://pubs.rsc.org/services/images/RSCpubs.ePlatform.Service.FreeContent.ImageService.svc/ImageService/image/GA?id=C4NJ01482K"/></p></div>, <div><i><b>New J. Chem.</b></i>, 2015, Advance Article<br/><b>DOI</b>: 10.1039/C4NJ01482K, Letter</div>, <div>Aude Buffard, Brice Nadal, Hadrien Heuclin, Gilles Patriarche, Benoit Dubertret<br/>Low temperature, scalable and air stable synthesis of ZnS nanowires and nanoplatelets.<br/>To cite this article before page numbers are assigned, use the DOI form of citation above.<br/>The content of this RSS Feed (c) The Royal Society of Chemistry</div>]
+
+
+

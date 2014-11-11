@@ -13,59 +13,25 @@ import batbelt
 import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.svm import LinearSVC
 from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn import preprocessing
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.linear_model import SGDClassifier
 
+from sklearn.feature_extraction import text 
 
-#from sklearn.feature_extraction.text import CountVectorizer
-#from sklearn.feature_extraction.text import TfidfTransformer
-#from sklearn.naive_bayes import MultinomialNB
-
-
-##feed = feedparser.parse("http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773")
-#feed = feedparser.parse("ang.xml")
-
-#print(feed['feed']['title'])
-
-#content = []
-
-#for entry in feed.entries:
-    ##print(entry.title)
-    ##print(entry.author)
-    ##print(entry.content[0].value)
-    ##print(entry.summary)
-    ##print(batbelt.strip_tags(entry.summary))
-    ##print("\n")
-    #content.append(batbelt.strip_tags(entry.summary))
-    ##break
-
-
-##vectorizer = CountVectorizer(min_df=1)
-#vectorizer = CountVectorizer()
-
-#counts = vectorizer.fit_transform(content)
-
-#tfidf_transformer = TfidfTransformer()
-#counts_tfidf = tfidf_transformer.fit_transform(counts)
-#print(counts_tfidf.shape)
-
-#clf = MultinomialNB().fit(counts_tfidf)
+#TEST
+import nltk
+from nltk.stem.porter import PorterStemmer
+import string
 
 
 
 class Predictor():
-
 
     """Object to predict the percentage match of an article,
     based on its abstract"""
 
 
     def __init__(self, bdd=None):
-
 
         self.x_train = []
         self.y_train = []
@@ -76,7 +42,39 @@ class Predictor():
         self.initializePipeline()
 
 
+    def getStopWords(self):
+
+        """Method to get english stop words
+        + a list of personnal stop words"""
+
+        my_additional_stop_words = []
+
+        with open('config/stop_words.txt', 'r') as config:
+            for word in config.readlines():
+                my_additional_stop_words.append(word.replace("\n", ""))
+
+        self.stop_words = text.ENGLISH_STOP_WORDS.union(my_additional_stop_words)
+
+
+    def tokenize(self, text):
+
+        """Method to stem and tokenize the words of a text
+        http://stackoverflow.com/questions/26126442/combining-text-stemming-and-removal-of-punctuation-in-nltk-and-scikit-learn?rq=1
+        """
+
+        stemmer = PorterStemmer()
+
+        tokens = nltk.word_tokenize(text)
+        tokens = [i for i in tokens if i not in string.punctuation]
+
+        stems = [ stemmer.stem(item) for item in tokens ] 
+
+        return stems
+
+
     def initializePipeline(self):
+
+        """Initialize the pipeline for text analysis"""
 
         if self.bdd is None:
             self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE");
@@ -91,21 +89,25 @@ class Predictor():
             record = query.record()
 
             if type(record.value('abstract')) is str:
-                simple_abstract = batbelt.strip_tags(record.value('abstract'))
+                abstract = record.value('abstract')
 
             if type(record.value('liked')) is not int:
                 category = 0
             else:
                 category = 1
 
-            self.x_train.append(simple_abstract)
+            self.x_train.append(abstract)
             self.y_train.append(category)
 
         self.x_train = np.array(self.x_train)
         self.y_train = np.array(self.y_train)
 
+        self.getStopWords()
+
         self.classifier = Pipeline([
-            ('vectorizer', CountVectorizer()),
+            ('vectorizer', CountVectorizer(
+                            tokenizer=self.tokenize,
+                            stop_words=self.stop_words)),
             ('tfidf', TfidfTransformer()),
             ('clf', MultinomialNB())])
 
@@ -113,6 +115,11 @@ class Predictor():
 
 
     def calculatePercentageMatch(self, test=False):
+
+        """Calculate the match percentage for each article,
+        based on the abstract text and the liked articles"""
+
+        print("Starting calculations of match percentages")
 
         query = QtSql.QSqlQuery("fichiers.sqlite")
 
@@ -126,10 +133,10 @@ class Predictor():
             record = query.record()
 
             if type(record.value('abstract')) is str:
-                simple_abstract = batbelt.strip_tags(record.value('abstract'))
+                abstract = record.value('abstract')
 
-            list_id.append(record.value('id'))
-            x_test.append(simple_abstract)
+                list_id.append(record.value('id'))
+                x_test.append(abstract)
 
         x_test = np.array(self.x_train)
 
@@ -151,7 +158,7 @@ class Predictor():
 
                 query.exec_()
 
-
+            print("Done calculating match percentages")
 
 
 
@@ -159,5 +166,6 @@ class Predictor():
 if __name__ == "__main__":
     predictor = Predictor()
     predictor.calculatePercentageMatch(True)
+    predictor.getStopWords()
     pass
 

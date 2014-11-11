@@ -86,37 +86,6 @@ def unLike(id_bdd, logger):
     query.exec_()
 
 
-##def markRead(id_bdd, test=False, logger=None):
-
-    ##"""Fonction pr marquer un torrent comme lu en bdd"""
-
-    ##request = "UPDATE pirate SET new = ? WHERE id = ?"
-    ##params = (False, id_bdd)
-
-    ##if not test:
-        ###On utilise le Sql de PyQt, évite les conflits
-        ##query = QtSql.QSqlQuery("fichiers.sqlite")
-
-        ##query.prepare(request)
-
-        ###On fixe chaque variable à chaque placeholder
-        ##for value in params:
-            ##query.addBindValue(value)
-
-        ##query.exec_()
-
-    ##else:
-        ##bdd = sqlite3.connect("fichiers.sqlite")
-        ##bdd.row_factory = sqlite3.Row 
-        ##c = bdd.cursor()
-
-        ##c.execute(request, params)
-
-        ##bdd.commit()
-        ##c.close()
-        ##bdd.close()
-
-
 def checkData():
 
     """Fct de test uniquement"""
@@ -126,11 +95,11 @@ def checkData():
     c = bdd.cursor()
 
     #c.execute("SELECT verif FROM papers")
-    c.execute("SELECT * FROM papers WHERE new='true'")
+    c.execute("UPDATE papers SET new='true'")
 
-    for ligne_bdd in c.fetchall():
+    #for ligne_bdd in c.fetchall():
 
-        print(ligne_bdd['title'])
+        #print(ligne_bdd['title'])
 
         #if ligne_bdd['verif'] == 0:
             #print("boum")
@@ -142,7 +111,6 @@ def checkData():
     bdd.commit()
     c.close()
     bdd.close()
-
 
 
 

@@ -24,8 +24,6 @@ class ModelPerso(QtSql.QSqlTableModel):
         #http://stackoverflow.com/questions/17879013/
         #reimplementing-qsqltablemodel-setquery
 
-        #self.setTable("videos")
-
         self.query = QtSql.QSqlQuery()
 
         #On rééxécute la requête car la bdd a potentiellement
@@ -34,10 +32,6 @@ class ModelPerso(QtSql.QSqlTableModel):
         self.query.exec_()
 
         results = QtSql.QSqlTableModel.setQuery(self, self.query)
-
-        #self.setHeaderData(5, QtCore.Qt.Horizontal, "", QtCore.Qt.DisplayRole)
-        #self.setHeaderData(6, QtCore.Qt.Horizontal, "Modification")
-        #self.setHeaderData(9, QtCore.Qt.Horizontal, "Ajout")
 
         while self.canFetchMore():
             self.fetchMore()
@@ -51,8 +45,6 @@ class ModelPerso(QtSql.QSqlTableModel):
         de performances"""
         #http://www.developpez.net/forums/d1243418/autres-langages/
         #python-zope/gui/pyside-pyqt/reglage-ascenseur-vertical-qtableview/
-
-        #self.setTable("videos")
 
         results = QtSql.QSqlTableModel.select(self)
 

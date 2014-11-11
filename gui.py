@@ -16,7 +16,6 @@ from model import ModelPerso
 from view import ViewPerso
 from graphicsview import GraphicsViewPerso
 from view_delegate import ViewDelegate
-from tabwidget import TabPerso
 from worker import Worker
 from predictor import Predictor
 from settings import Settings
@@ -40,6 +39,9 @@ class Fenetre(QtGui.QMainWindow):
         self.options = QtCore.QSettings("options.ini", QtCore.QSettings.IniFormat)
 
         self.tags_selected = []
+
+        #List to store the tags buttons on the left
+        self.buttons_tags_selected = []
 
         self.connectionBdd()
         self.defineActions()
@@ -68,9 +70,8 @@ class Fenetre(QtGui.QMainWindow):
         #Création du modèle, issu de la bdd
         self.modele = ModelPerso()
 
-        #On change la stratégie d'édition de la bdd, les changements
-        #sont immédiats
-        self.modele.setEditStrategy(QtSql.QSqlTableModel.OnRowChange)
+        #Changes are effective immediately
+        self.modele.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
         self.modele.setTable("papers")
         self.modele.select() # Remplit le modèle avec les data de la table
 
@@ -88,7 +89,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.setModel(self.proxy)
         self.tableau.setItemDelegate(ViewDelegate(self))
         self.tableau.setSelectionBehavior(self.tableau.SelectRows)
-        #self.adjustView()
+        self.adjustView()
 
 
     def parse(self):
@@ -284,8 +285,7 @@ class Fenetre(QtGui.QMainWindow):
 
     def defineSlots(self):
 
-        """Méthode pour connecter les signaux aux slots. On sépare cette
-        partie de la création de la fenêtre pour plus de lisibilité"""
+        """Connect the slots"""
 
         ##On connecte le signal de double clic sur une cell vers un
         ##slot qui lance le lecteur ac le nom du fichier en paramètre
@@ -299,6 +299,9 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.clicked.connect(self.displayInfos)
         self.tableau.clicked.connect(self.displayMosaic)
         self.tableau.clicked.connect(self.markOneRead)
+
+        #Connect the back button
+        self.button_back.clicked.connect(self.resetView)
 
 
     def keyPressEvent(self, e):
@@ -332,15 +335,12 @@ class Fenetre(QtGui.QMainWindow):
 
         #for plugin in self.plugins:
             #self.plugins[plugin].keyPressed(e)
+        e.ignore()
 
         pass
 
 
     def displayInfos(self):
-
-        #line = self.tableau.selectionModel().currentIndex().row()
-        #self.modele.select() # Remplit le modèle avec les data de la table
-        #self.tableau.selectRow(line)
 
         try:
             #On essaie de récupérer la description du torrent
@@ -411,6 +411,8 @@ class Fenetre(QtGui.QMainWindow):
             button.clicked[bool].connect(self.stateButtons)
             self.vbox_all_tags.addWidget(button)
 
+            self.buttons_tags_selected.append(button)
+
         self.vbox_all_tags.setAlignment(QtCore.Qt.AlignTop)
         self.scroll_tags.setWidget(self.scrolling_tags)
 
@@ -468,7 +470,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.proxy.setSourceModel(self.modele)
         self.tableau.setModel(self.proxy)
-        #self.adjustView()
+        self.adjustView()
 
         #Regenerate the header
         try:
@@ -551,6 +553,10 @@ class Fenetre(QtGui.QMainWindow):
         except AttributeError:
             self.l.warn("Pas d'objet scene pr l'instant.")
 
+        #Uncheck the journals buttons on the left
+        for button in self.buttons_tags_selected:
+            button.setChecked(False)
+
         #Save header
         try:
             self.header_state
@@ -559,7 +565,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.modele.setTable("papers")
         self.modele.select()
-        #self.adjustView()
+        self.adjustView()
 
         self.proxy.setFilterRegExp(QtCore.QRegExp(''))
         self.proxy.setFilterKeyColumn(2)
@@ -607,7 +613,9 @@ class Fenetre(QtGui.QMainWindow):
         if new == "false":
             return
         else:
+
             id_bdd = self.tableau.model().index(element.row(), 0).data()
+
             line = self.tableau.selectionModel().currentIndex().row()
 
             query = QtSql.QSqlQuery("fichiers.sqlite")
@@ -626,8 +634,10 @@ class Fenetre(QtGui.QMainWindow):
                 self.modele.setQuery(self.query)
                 self.proxy.setSourceModel(self.modele)
                 self.tableau.setModel(self.proxy)
+                self.adjustView()
             except AttributeError:
                 pass
+
 
             self.tableau.selectRow(line)
 
@@ -683,10 +693,14 @@ class Fenetre(QtGui.QMainWindow):
             #self.modele.select()
 
         self.modele.select()
-        self.proxy.setSourceModel(self.modele)
-        self.tableau.setModel(self.proxy)
 
-        #self.adjustView()
+        try:
+            self.modele.setQuery(self.query)
+            self.proxy.setSourceModel(self.modele)
+            self.tableau.setModel(self.proxy)
+            self.adjustView()
+        except AttributeError:
+            pass
 
         self.tableau.selectRow(previous_lines[0])
 
@@ -806,8 +820,8 @@ class Fenetre(QtGui.QMainWindow):
         #self.toolbar.addSeparator()
 
         ##On crée un bouton pr tt remettre à zéro
-        #self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_171_fast_backward'), 'Retour')
-        #self.toolbar.addWidget(self.button_back)
+        self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_170_step_backward'), 'Back')
+        self.toolbar.addWidget(self.button_back)
 
         #self.toolbar.addSeparator()
 
@@ -828,7 +842,7 @@ class Fenetre(QtGui.QMainWindow):
         #self.toolbar.addWidget(self.button_untag)
 
 
-##------------------------- TABLEAU CENTRAL ---------------------------------------------------------------------------------------
+##------------------------- MAIN TABLE ---------------------------------------------------------------------------------------
 
         self.horizontal_header = QtGui.QHeaderView(QtCore.Qt.Horizontal) #Déclare le header perso
         self.horizontal_header.setDefaultAlignment(QtCore.Qt.AlignLeft) #Aligne à gauche l'étiquette des colonnes
@@ -846,7 +860,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.hideColumn(8) #Hide abstracts
         self.tableau.hideColumn(10) #Hide urls
         self.tableau.hideColumn(11) #Hide verif
-        self.tableau.hideColumn(12) #Hide new
+        #self.tableau.hideColumn(12) #Hide new
         ##self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
         ##self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
         self.tableau.setSortingEnabled(True) #Active le tri
@@ -855,7 +869,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers) #Empêche l'édition des cells
 
 
-##------------------------- ZONE DE GAUCHE ------------------------------------------------------------------------
+##------------------------- LEFT AREA ------------------------------------------------------------------------
 
         #On crée un widget conteneur pour les tags
         #self.vbox_journals = QtGui.QVBoxLayout()
@@ -872,7 +886,7 @@ class Fenetre(QtGui.QMainWindow):
         self.scrolling_tags.setLayout(self.vbox_all_tags)
 
 
-##------------------------- ZONE DU BAS ---------------------------------------------------------------------------
+##------------------------- BOTTOM AREA ---------------------------------------------------------------------------
 
         #On crée la zone du bas, un simple widget
         self.zone_bas = QtGui.QWidget()
@@ -887,19 +901,18 @@ class Fenetre(QtGui.QMainWindow):
 
         self.zone_bas.setLayout(self.box_mosaic)
 
-#------------------------- ZONE DE DROITE ------------------------------------------------------------------------------------
+#------------------------- RIGHT AREA ------------------------------------------------------------------------------------
 
         self.text_abstract = QtWebKit.QWebView()
         self.web_settings = QtWebKit.QWebSettings.globalSettings()
         self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 20)
 
-##------------------------- ASSEMBLAGE DES ZONES------------------------------------------------------------------------------------
+##------------------------- ASSEMBLING THE AREAS ------------------------------------------------------------------------------------
 
-        #On définit un TabWidget pr la zone centrale.
-        #Cela permettra aux plugins d'ouvrir des onglets.
+        #Main part of the window in a tab.
+        #Allows to create other tabs
         self.onglets = QtGui.QTabWidget()
-        self.onglets = TabPerso()
-        self.onglets.addTab(self.tableau, "New posts")
+        self.onglets.addTab(self.tableau, "All articles")
 
         self.splitter1 = QtGui.QSplitter(QtCore.Qt.Vertical)
         self.splitter1.addWidget(self.text_abstract)
@@ -917,8 +930,7 @@ class Fenetre(QtGui.QMainWindow):
 
 if __name__ == '__main__':
 
-    #Petit hack qui permet de tuer ts 
-    #les subprocesses du programme
+    #Little hack to kill all the pending process
     os.setpgrp() # create new process group, become its leader
     try:
         app = QtGui.QApplication(sys.argv)
