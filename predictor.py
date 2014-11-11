@@ -18,12 +18,6 @@ from sklearn.naive_bayes import MultinomialNB
 
 from sklearn.feature_extraction import text 
 
-#TEST
-import nltk
-from nltk.stem.porter import PorterStemmer
-import string
-
-
 
 class Predictor():
 
@@ -54,22 +48,6 @@ class Predictor():
                 my_additional_stop_words.append(word.replace("\n", ""))
 
         self.stop_words = text.ENGLISH_STOP_WORDS.union(my_additional_stop_words)
-
-
-    def tokenize(self, text):
-
-        """Method to stem and tokenize the words of a text
-        http://stackoverflow.com/questions/26126442/combining-text-stemming-and-removal-of-punctuation-in-nltk-and-scikit-learn?rq=1
-        """
-
-        stemmer = PorterStemmer()
-
-        tokens = nltk.word_tokenize(text)
-        tokens = [i for i in tokens if i not in string.punctuation]
-
-        stems = [ stemmer.stem(item) for item in tokens ] 
-
-        return stems
 
 
     def initializePipeline(self):
@@ -106,7 +84,6 @@ class Predictor():
 
         self.classifier = Pipeline([
             ('vectorizer', CountVectorizer(
-                            tokenizer=self.tokenize,
                             stop_words=self.stop_words)),
             ('tfidf', TfidfTransformer()),
             ('clf', MultinomialNB())])
