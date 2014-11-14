@@ -61,7 +61,7 @@ class Predictor():
 
         query = QtSql.QSqlQuery("fichiers.sqlite")
 
-        query.exec_("SELECT * FROM papers")
+        query.exec_("SELECT * FROM papers WHERE new='false'")
 
         while query.next():
             record = query.record()
@@ -115,7 +115,7 @@ class Predictor():
                 list_id.append(record.value('id'))
                 x_test.append(abstract)
 
-        x_test = np.array(self.x_train)
+        x_test = np.array(x_test)
 
         list_percentages = [ round(float(100 * proba[1]), 2) for proba in self.classifier.predict_proba(x_test) ]
 

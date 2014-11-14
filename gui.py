@@ -418,6 +418,8 @@ class Fenetre(QtGui.QMainWindow):
                 for line in config:
                     abb.append(line.split(" : ")[1].replace("\n", ""))
 
+        abb.sort()
+
         for journal in abb:
 
             button = QtGui.QPushButton(journal)

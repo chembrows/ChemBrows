@@ -17,7 +17,6 @@ class Settings(QtGui.QDialog):
 
         self.parent = parent
 
-        self.urls_to_parse = []
         self.check_journals = []
 
         self.initUI()
@@ -68,24 +67,33 @@ class Settings(QtGui.QDialog):
 
         self.ok_button = QtGui.QPushButton("OK", self)
 
-        self.grid_settings = QtGui.QGridLayout()
+        #Scroll area for the journals to check
+        self.scroll_check_journals = QtGui.QScrollArea()
+        self.scrolling_check_journals = QtGui.QWidget()
+        self.vbox_check_journals = QtGui.QVBoxLayout()
+        self.scrolling_check_journals.setLayout(self.vbox_check_journals)
 
-        i = 0
+        labels_checkboxes = []
+
+        #Get labels of the future check boxes of the journals to be parsed
         for company in os.listdir("./journals"):
             with open('journals/{0}'.format(company), 'r') as config:
-                for line in config:
-                    self.urls_to_parse.append(line.split(" : ")[2])
-                    check_box = QtGui.QCheckBox(line.split(" : ")[1])
-                    check_box.setCheckState(2)
-                    self.check_journals.append(check_box)
-                    self.grid_settings.addWidget(check_box, i, 0)
-                    i += 1
+                labels_checkboxes += [ line.split(" : ")[1] for line in config ]
+
+        labels_checkboxes.sort()
+
+        #Build the checkboxes, and put them in a layout
+        for index, label in enumerate(labels_checkboxes):
+            check_box = QtGui.QCheckBox(label)
+            check_box.setCheckState(2)
+            self.check_journals.append(check_box)
+            self.vbox_check_journals.addWidget(check_box)
 
         self.tabs = QtGui.QTabWidget()
 
-        self.tab_prefs = QtGui.QWidget()
-        self.tab_prefs.setLayout(self.grid_settings)
-        self.tabs.addTab(self.tab_prefs, "Général")
+        self.scroll_check_journals.setWidget(self.scrolling_check_journals)
+
+        self.tabs.addTab(self.scroll_check_journals, "Général")
 
         self.vbox_global = QtGui.QVBoxLayout()
         self.vbox_global.addWidget(self.tabs)
