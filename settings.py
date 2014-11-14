@@ -21,7 +21,7 @@ class Settings(QtGui.QDialog):
 
         self.initUI()
         self.connexion()
-        self.etablirSlots()
+        self.defineSlots()
 
 
     def connexion(self):
@@ -41,12 +41,16 @@ class Settings(QtGui.QDialog):
                     box.setCheckState(0)
 
 
-    def etablirSlots(self):
+    def defineSlots(self):
 
         """Establish the slots"""
 
         #To close the window and save the settings
         self.ok_button.clicked.connect(self.saveSettings)
+
+        #Button "clean database" (erase the unintersting journals from the db)
+        #connected to the method of the main window class
+        self.button_clean_db.clicked.connect(self.parent.cleanDb)
 
 
     def selectBrowser(self):
@@ -66,6 +70,10 @@ class Settings(QtGui.QDialog):
         self.parent.fen_settings.setWindowTitle('Settings')
 
         self.ok_button = QtGui.QPushButton("OK", self)
+
+        self.tabs = QtGui.QTabWidget()
+
+#------------------------ GENERAL TAB ------------------------------------------------
 
         #Scroll area for the journals to check
         self.scroll_check_journals = QtGui.QScrollArea()
@@ -89,11 +97,23 @@ class Settings(QtGui.QDialog):
             self.check_journals.append(check_box)
             self.vbox_check_journals.addWidget(check_box)
 
-        self.tabs = QtGui.QTabWidget()
 
         self.scroll_check_journals.setWidget(self.scrolling_check_journals)
 
-        self.tabs.addTab(self.scroll_check_journals, "Général")
+        self.tabs.addTab(self.scroll_check_journals, "Journals")
+
+#------------------------ DATABASE TAB ------------------------------------------------
+
+        self.widget_database = QtGui.QWidget()
+        self.vbox_database = QtGui.QVBoxLayout()
+
+        self.button_clean_db = QtGui.QPushButton("Clean database")
+
+        self.vbox_database.addWidget(self.button_clean_db)
+        self.widget_database.setLayout(self.vbox_database)
+        self.tabs.addTab(self.widget_database, "Database")
+
+#------------------------ ASSEMBLING ------------------------------------------------
 
         self.vbox_global = QtGui.QVBoxLayout()
         self.vbox_global.addWidget(self.tabs)

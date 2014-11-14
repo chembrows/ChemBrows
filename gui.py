@@ -51,6 +51,9 @@ class Fenetre(QtGui.QMainWindow):
         self.displayTags()
         self.restoreSettings()
 
+        #TEST
+        self.cleanDb()
+
 
     def connectionBdd(self):
 
@@ -62,11 +65,6 @@ class Fenetre(QtGui.QMainWindow):
         self.bdd.setDatabaseName("fichiers.sqlite")
         self.bdd.open()
 
-        query = QtSql.QSqlQuery("fichiers.sqlite")
-        query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
-                     doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
-                     liked INTEGER, url TEXT, verif INTEGER, new INTEGER)")
-
 
         #Création du modèle, issu de la bdd
         self.modele = ModelPerso()
@@ -74,7 +72,14 @@ class Fenetre(QtGui.QMainWindow):
         #Changes are effective immediately
         self.modele.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
         self.modele.setTable("papers")
-        self.modele.select() # Remplit le modèle avec les data de la table
+
+        query = QtSql.QSqlQuery("fichiers.sqlite")
+        query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
+                     doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
+                     liked INTEGER, url TEXT, verif INTEGER, new INTEGER)")
+
+
+        #self.modele.select() # Remplit le modèle avec les data de la table
 
         #On crée un proxy pour filtrer les fichiers lors
         #des recherches
@@ -90,6 +95,25 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.setModel(self.proxy)
         self.tableau.setItemDelegate(ViewDelegate(self))
         self.tableau.setSelectionBehavior(self.tableau.SelectRows)
+
+        #Create a list to store the journals checked in the settings window
+        self.journals_to_care = self.options.value("journals_to_parse", [])
+
+        #If no journals to care in the settings,
+        #take them all. So build a journals_to_care list
+        #with all the journals
+        if not self.journals_to_care:
+            abb = []
+            for company in os.listdir("./journals"):
+                with open('journals/{0}'.format(company), 'r') as config:
+                    for line in config:
+                        #Take the abbreviation
+                        journals_to_care.append(line.split(" : ")[1])
+
+        #print(self.journals_to_care)
+        self.tags_selected = self.journals_to_care
+        self.searchByButton()
+
         self.adjustView()
 
 
@@ -99,6 +123,9 @@ class Fenetre(QtGui.QMainWindow):
 
         journals_to_parse = self.options.value("journals_to_parse", [])
 
+        #If no journals to parse in the settings,
+        #parse them all. So build a journals_to_parse list
+        #with all the journals
         if not journals_to_parse:
             journals_to_parse = []
             for company in os.listdir("./journals"):
@@ -288,15 +315,15 @@ class Fenetre(QtGui.QMainWindow):
             self.splitter1.restoreState(self.options.value("Window/central_splitter"))
             self.splitter2.restoreState(self.options.value("Window/final_splitter"))
 
-        #Restore the selected journals (on the left), and query
-        #the db with these journals
-        tags_checked = self.options.value("tags_checked", [])
-        if tags_checked:
-            for button in self.list_buttons_tags:
-                if button.text() in tags_checked:
-                    button.setChecked(True)
-                    self.tags_selected.append(button.text())
-            self.searchByButton()
+        ##Restore the selected journals (on the left), and query
+        ##the db with these journals
+        #tags_checked = self.options.value("tags_checked", [])
+        #if tags_checked:
+            #for button in self.list_buttons_tags:
+                #if button.text() in tags_checked:
+                    #button.setChecked(True)
+                    #self.tags_selected.append(button.text())
+            #self.searchByButton()
 
 
     def defineSlots(self):
@@ -409,18 +436,12 @@ class Fenetre(QtGui.QMainWindow):
     def displayTags(self):
 
         """Slot to display push buttons on the left.
-        One button per journal"""
+        One button per journal. Only display the journals
+        selected in the settings window"""
 
-        abb = []
+        self.journals_to_care.sort()
 
-        for fichier in os.listdir("./journals/"):
-            with open("./journals/{0}".format(fichier), 'r') as config:
-                for line in config:
-                    abb.append(line.split(" : ")[1].replace("\n", ""))
-
-        abb.sort()
-
-        for journal in abb:
+        for journal in self.journals_to_care:
 
             button = QtGui.QPushButton(journal)
             button.setCheckable(True)
@@ -438,6 +459,9 @@ class Fenetre(QtGui.QMainWindow):
     def stateButtons(self, pressed):
 
         """Slot to check the journals push buttons"""
+
+        if self.tags_selected == self.journals_to_care:
+            self.tags_selected = []
 
         #Get the button pressed
         source = self.sender()
@@ -461,12 +485,6 @@ class Fenetre(QtGui.QMainWindow):
             self.resetView()
             return
 
-        #Save the header state before performing en empty request
-        try:
-            self.header_state
-        except AttributeError:
-            self.header_state = self.tableau.horizontalHeader().saveState() 
-
         self.query = QtSql.QSqlQuery()
 
         requete = "SELECT * FROM papers WHERE journal IN ("
@@ -489,12 +507,6 @@ class Fenetre(QtGui.QMainWindow):
         self.proxy.setSourceModel(self.modele)
         self.tableau.setModel(self.proxy)
         self.adjustView()
-
-        #Regenerate the header
-        try:
-            self.tableau.horizontalHeader().restoreState(self.header_state)
-        except AttributeError:
-            self.l.debug("Pas de horizontalHeader. From searchByButton()")
 
 
     def searchNew(self):
@@ -551,6 +563,8 @@ class Fenetre(QtGui.QMainWindow):
 
     def adjustView(self):
 
+        """Adjust the view, eg: hide the unintersting columns"""
+
         self.tableau.hideColumn(0) #Hide id
         self.tableau.hideColumn(2) #Hide doi
         self.tableau.hideColumn(6) #Hide authors
@@ -581,12 +595,18 @@ class Fenetre(QtGui.QMainWindow):
         except AttributeError:
             self.header_state = self.tableau.horizontalHeader().saveState() 
 
-        self.modele.setTable("papers")
-        self.modele.select()
-        self.adjustView()
+        #self.modele.setTable("papers")
 
-        self.proxy.setFilterRegExp(QtCore.QRegExp(''))
-        self.proxy.setFilterKeyColumn(2)
+        #TODO: ici, restaurer la vue ac seulement les journaux checkés
+        #self.modele.select()
+
+        self.tags_selected = self.journals_to_care
+        self.searchByButton()
+
+
+
+        #self.proxy.setFilterRegExp(QtCore.QRegExp(''))
+        #self.proxy.setFilterKeyColumn(2)
 
         #On efface la barre de recherche
         #self.research_bar.clear()
@@ -604,6 +624,8 @@ class Fenetre(QtGui.QMainWindow):
             del self.query
         except AttributeError:
             self.l.warn("Pas de requête précédente")
+
+        self.adjustView()
 
 
     def launchFile(self):
@@ -658,6 +680,30 @@ class Fenetre(QtGui.QMainWindow):
 
 
             self.tableau.selectRow(line)
+
+
+    def cleanDb(self):
+
+        """Slot to clean the database. Called from
+        the window settings, but better to be here"""
+
+        self.query = QtSql.QSqlQuery()
+
+        #requete = "SELECT * FROM papers WHERE journal IN ("
+        requete = "DELETE FROM papers WHERE journal NOT IN ("
+
+        #Building the query
+        for each_journal in self.journals_to_care:
+            if self.tags_selected.index(each_journal) != len(self.tags_selected) - 1:
+                requete = requete + "\"" + str(each_journal) + "\"" + ", "
+            #Close the query if last
+            else:
+                requete = requete + "\"" + str(each_journal) + "\"" + ")"
+
+        self.query.prepare(requete)
+        self.query.exec_()
+
+        self.l.debug("Removing unintersting journals from the database")
 
 
     def openInBrowser(self):
@@ -878,7 +924,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.hideColumn(8) #Hide abstracts
         self.tableau.hideColumn(10) #Hide urls
         self.tableau.hideColumn(11) #Hide verif
-        #self.tableau.hideColumn(12) #Hide new
+        self.tableau.hideColumn(12) #Hide new
         ##self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
         ##self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
         self.tableau.setSortingEnabled(True) #Active le tri
