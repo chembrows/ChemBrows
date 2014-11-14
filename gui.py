@@ -42,7 +42,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tags_selected = []
 
         #List to store the tags buttons on the left
-        self.list_buttons_tags = []
+        #self.list_buttons_tags = []
 
         self.connectionBdd()
         self.defineActions()
@@ -50,9 +50,6 @@ class Fenetre(QtGui.QMainWindow):
         self.defineSlots()
         self.displayTags()
         self.restoreSettings()
-
-        #TEST
-        self.cleanDb()
 
 
     def connectionBdd(self):
@@ -96,6 +93,16 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.setItemDelegate(ViewDelegate(self))
         self.tableau.setSelectionBehavior(self.tableau.SelectRows)
 
+        self.getJournalsToCare()
+
+        self.tags_selected = self.journals_to_care
+        self.searchByButton()
+
+        self.adjustView()
+
+
+    def getJournalsToCare(self):
+
         #Create a list to store the journals checked in the settings window
         self.journals_to_care = self.options.value("journals_to_parse", [])
 
@@ -103,18 +110,12 @@ class Fenetre(QtGui.QMainWindow):
         #take them all. So build a journals_to_care list
         #with all the journals
         if not self.journals_to_care:
-            abb = []
+            #self.journals_to_care = []
             for company in os.listdir("./journals"):
                 with open('journals/{0}'.format(company), 'r') as config:
                     for line in config:
                         #Take the abbreviation
-                        journals_to_care.append(line.split(" : ")[1])
-
-        #print(self.journals_to_care)
-        self.tags_selected = self.journals_to_care
-        self.searchByButton()
-
-        self.adjustView()
+                        self.journals_to_care.append(line.split(" : ")[1])
 
 
     def parse(self):
@@ -285,9 +286,9 @@ class Fenetre(QtGui.QMainWindow):
         self.options.endGroup()
 
         #Save the checked journals (on the left)
-        tags_checked = [ button.text() for button in self.list_buttons_tags if button.isChecked() ]
+        #tags_checked = [ button.text() for button in self.list_buttons_tags if button.isChecked() ]
 
-        self.options.setValue("tags_checked", tags_checked)
+        #self.options.setValue("tags_checked", tags_checked)
 
         #On s'assure que self.options finit ttes ces taches.
         #Corrige un bug. self.options semble ne pas effectuer
@@ -439,6 +440,12 @@ class Fenetre(QtGui.QMainWindow):
         One button per journal. Only display the journals
         selected in the settings window"""
 
+        self.clearLayout(self.vbox_all_tags)
+
+        self.list_buttons_tags = []
+
+        self.getJournalsToCare()
+
         self.journals_to_care.sort()
 
         for journal in self.journals_to_care:
@@ -454,11 +461,14 @@ class Fenetre(QtGui.QMainWindow):
 
         self.vbox_all_tags.setAlignment(QtCore.Qt.AlignTop)
         self.scroll_tags.setWidget(self.scrolling_tags)
+        self.searchByButton()
 
 
     def stateButtons(self, pressed):
 
         """Slot to check the journals push buttons"""
+
+        self.getJournalsToCare()
 
         if self.tags_selected == self.journals_to_care:
             self.tags_selected = []
@@ -491,7 +501,7 @@ class Fenetre(QtGui.QMainWindow):
 
         #Building the query
         for each_journal in self.tags_selected:
-            if self.tags_selected.index(each_journal) != len(self.tags_selected) - 1:
+            if each_journal is not self.tags_selected[-1]:
                 requete = requete + "\"" + str(each_journal) + "\"" + ", "
             #Close the query if last
             else:
@@ -506,7 +516,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.proxy.setSourceModel(self.modele)
         self.tableau.setModel(self.proxy)
-        self.adjustView()
+        #self.adjustView()
 
 
     def searchNew(self):
@@ -575,6 +585,22 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.hideColumn(12) #Hide new
 
 
+    def clearLayout(self, layout):
+
+        """Method to erase the widgets from a layout"""
+
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+
+                    QtGui.QApplication.processEvents()
+                else:
+                    self.clearLayout(item.layout())
+
+
     def resetView(self):
 
         """Slot pour remettre les données affichées à zéro"""
@@ -595,29 +621,15 @@ class Fenetre(QtGui.QMainWindow):
         except AttributeError:
             self.header_state = self.tableau.horizontalHeader().saveState() 
 
-        #self.modele.setTable("papers")
-
-        #TODO: ici, restaurer la vue ac seulement les journaux checkés
-        #self.modele.select()
 
         self.tags_selected = self.journals_to_care
         self.searchByButton()
-
-
 
         #self.proxy.setFilterRegExp(QtCore.QRegExp(''))
         #self.proxy.setFilterKeyColumn(2)
 
         #On efface la barre de recherche
         #self.research_bar.clear()
-
-        #On efface la barre de recherche à droite
-        #self.uncheckRightButtons()
-        #self.reshowButtons()
-        #self.actors_tags_line.clear()
-
-        #Restore header
-        self.tableau.horizontalHeader().restoreState(self.header_state)
 
         #Delete last query
         try:
@@ -694,7 +706,7 @@ class Fenetre(QtGui.QMainWindow):
 
         #Building the query
         for each_journal in self.journals_to_care:
-            if self.tags_selected.index(each_journal) != len(self.tags_selected) - 1:
+            if each_journal is not self.journals_to_care[-1]:
                 requete = requete + "\"" + str(each_journal) + "\"" + ", "
             #Close the query if last
             else:

@@ -140,6 +140,9 @@ class Settings(QtGui.QDialog):
         else:
             self.parent.options.remove("journals_to_parse")
 
-        #On ferme la fenêtre et on libère la mémoire
+        self.parent.displayTags()
+        self.parent.resetView()
+
+        #Close the settings window and free the memory
         self.parent.fen_settings.close()
         del self.parent.fen_settings
