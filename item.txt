@@ -176,3 +176,58 @@ NJC entry:
 
 
 
+
+--------------------------------------------
+
+
+Nature entry
+
+
+{
+'summary_detail':
+{'type': 'text/html', 'language': None, 'base': '', 'value': 'Chronic stress can cause depression in some individuals, but leaves others untouched. Engagement of a molecular pathway controlling the production of tiny RNA snippets might help to explain the difference.'},
+
+'id': 'http://dx.doi.org/10.1038/nature13942',
+'dc_source': 'Nature(2014)',
+'author_detail': {'name': 'Gerhard Schratt'},
+'updated_parsed': time.struct_time(tm_year=2014, tm_mon=11, tm_mday=12, tm_hour=0, tm_min=0, tm_sec=0, tm_wday=2, tm_yday=316, tm_isdst=0),
+'links': [{'type': 'text/html', 'rel': 'alternate', 'href': 'http://feeds.nature.com/~r/nature/rss/aop/~3/WppVcqlB3-c/nature13942'}],
+'title_detail': {'type': 'text/plain', 'language': None, 'base': '', 'value': 'Neurobiology: A molecular knife to dice depression'},
+'title': 'Neurobiology: A molecular knife to dice depression',
+'updated': '2014-11-12',
+'prism_doi': '10.1038/nature13942',
+'prism_endingpage': '',
+'prism_startingpage': '',
+'authors': [{}], 'prism_url': 'http://dx.doi.org/10.1038/nature13942',
+'prism_publicationdate': '2014-11-12',
+'prism_publicationname': 'Nature',
+'author': 'Gerhard Schratt',
+'link': 'http://feeds.nature.com/~r/nature/rss/aop/~3/WppVcqlB3-c/nature13942',
+'summary': 'Chronic stress can cause depression in some individuals, but leaves others untouched. Engagement of a molecular pathway controlling the production of tiny RNA snippets might help to explain the difference.',
+'prism_section': 'News &amp; Views',
+'dc_identifier': 'doi:10.1038/nature13942',
+
+'content':
+[
+{
+'type': 'text/html',
+'language': None,
+'base': '',
+'value':
+'<p>Nature advance online publication 12 November 2014.
+<a href="http://dx.doi.org/10.1038/nature13942">doi:10.1038/nature13942</a>\n
+</p>\n<p>Author: Gerhard Schratt</p>\n
+<p>Chronic stress can cause depression in some individuals, but leaves others untouched. Engagement of a molecular pathway controlling the production of tiny RNA snippets might help to explain the difference.</p>\n<img height="1" src="http://feeds.feedburner.com/~r/nature/rss/aop/~4/WppVcqlB3-c" width="1" />'
+}
+],
+
+'feedburner_origlink': 'http://dx.doi.org/10.1038/nature13942'}
+
+
+'content': [{'base': '',
+'value': '<p>Nature advance online publication 12 November 2014. <a href="http://dx.doi.org/10.1038/nature13939">doi:10.1038/nature13939</a>\n</p>\n
+<p>Authors: Carmine Settembre &amp; Andrea Ballabio</p>\n
+<p>Two studies find that an intracellular quality-control mechanism called autophagy is regulated by nuclear receptor proteins that govern the expression of autophagy genes.</p>\n
+<img height="1" src="http://feeds.feedburner.com/~r/nature/rss/aop/~4/CPkQJZJxidg" width="1" />',
+'type': 'text/html',
+'language': None}]}

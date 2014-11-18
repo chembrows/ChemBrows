@@ -71,7 +71,6 @@ class Worker(QtCore.QThread):
                     #Checking if the data are complete
                     if type(abstract) is not str or type(graphical_abstract) is not str or type(authors) is not str:
                         verif = 0
-                        print("plop")
                     else:
                         verif = 1
 

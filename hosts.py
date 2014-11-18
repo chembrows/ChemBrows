@@ -30,6 +30,9 @@ def getData(journal, entry):
     rsc, rsc_abb = getJournals("rsc")
     acs, acs_abb = getJournals("acs")
     wiley, wiley_abb = getJournals("wiley")
+    npg , npg_abb = getJournals("npg")
+
+    doi = getDoi(journal, entry)
 
     #If the journal is edited by the RSC
     if journal in rsc:
@@ -46,15 +49,12 @@ def getData(journal, entry):
 
         r = soup.find_all("div")
 
-        doi = getDoi(journal, entry)
-
         author = None
 
         graphical_abstract = r[0].img
         if graphical_abstract is not None:
             graphical_abstract = r[0].img['src']
             response, graphical_abstract = downloadPic(graphical_abstract)
-
         else:
             graphical_abstract = "Empty"
 
@@ -81,7 +81,6 @@ def getData(journal, entry):
         except requests.exceptions.Timeout:
             print("getData, {0}, timeout".format(journal_abb))
         except Exception as e:
-            print("encore")
             print(e)
 
 
@@ -135,7 +134,7 @@ def getData(journal, entry):
 
             #If the dl went wrong, print an error
             if page.status_code is not requests.codes.ok:
-                print("getData, JACS, bad return code: {0}".format(page.status_code))
+                print("getData, {0}, bad return code: {1}".format(journal_abb, page.status_code))
 
             #Get the abstract
             soup = BeautifulSoup(page.text)
@@ -146,9 +145,8 @@ def getData(journal, entry):
                 abstract = "Empty"
 
         except requests.exceptions.Timeout:
-            print("getData, JACS, timeout")
+            print("getData, {0}, timeout".format(journal_abb))
         except Exception as e:
-            print("encore")
             print(e)
 
         soup = BeautifulSoup(entry.summary)
@@ -157,6 +155,60 @@ def getData(journal, entry):
             response, graphical_abstract = downloadPic(r[0]['src'])
         else:
             graphical_abstract = "Empty"
+
+
+    if journal in npg:
+
+        title = entry.title
+        journal_abb = npg_abb[npg.index(journal)]
+        date = entry.date
+        url = entry.id
+        abstract = entry.summary
+        graphical_abstract = None
+        author = None
+
+        soup = BeautifulSoup(entry.content[0].value)
+        r = soup.find_all("p")
+
+        if r:
+            for p in r:
+                if "Authors:" in p.text:
+                    author = p.text.split("Authors: ")[1].split(", ")
+
+                    if "&" in author[-1]:
+                        author = author[:-1] + author[-1].split(" & ")
+
+                    author = ",".join(author)
+
+        try:
+            #Dl of the article website page
+            page = requests.get(url, timeout=20)
+
+            #If the dl went wrong, print an error
+            if page.status_code is not requests.codes.ok:
+                print("getData, {0}, bad return code: {1}".format(journal_abb, page.status_code))
+
+            #Get the abstract
+            soup = BeautifulSoup(page.text)
+            r = soup.find_all("img", attrs={"class": "fig"})
+
+            if r:
+                if "f1.jpg" in r[0]["src"]:
+                    graphical_abstract ="http://www.nature.com" + r[0]["src"]
+
+                    if "carousel" in graphical_abstract:
+                        graphical_abstract = graphical_abstract.replace("carousel", "images_article")
+
+            if graphical_abstract is not None:
+                response, graphical_abstract = downloadPic(graphical_abstract)
+            else:
+                graphical_abstract = "Empty"
+
+        except requests.exceptions.Timeout:
+            print("getData, {0}, timeout".format(journal_abb))
+        except Exception as e:
+            print(e)
+
 
     return title, journal_abb, date, author, abstract, graphical_abstract, url
 
@@ -168,6 +220,7 @@ def getDoi(journal, entry):
     rsc, _ = getJournals("rsc")
     acs, _ = getJournals("acs")
     wiley, _ = getJournals("wiley")
+    npg, _ = getJournals("npg")
 
     if journal in rsc:
         soup = BeautifulSoup(entry.summary)
@@ -182,6 +235,9 @@ def getDoi(journal, entry):
 
     if journal in acs:
         doi = entry.id.split("dx.doi.org/")[1]
+
+    if journal in npg:
+        doi = entry.prism_doi
 
     return doi
 
@@ -247,14 +303,12 @@ def getJournals(company):
 
 if __name__ == "__main__":
 
-    #urls_test = ["ang.xml",
-                 #"jacs.xml"
-                #]
+    #urls_test = ["ang.xml"]
     #urls_test = ["jacs.xml"]
     #urls_test = ["http://feeds.rsc.org/rss/nj"]
     #urls_test = ["njc.xml"]
     #urls_test = ["http://feeds.rsc.org/rss/sc"]
-    urls_test = ["http://feeds.feedburner.com/acs/jceda8"]
+    urls_test = ["nat.xml"]
 
     for site in urls_test:
 
@@ -268,8 +322,10 @@ if __name__ == "__main__":
         print(journal)
 
         for entry in feed.entries:
+            #print(entry.summary)
             getData(journal, entry)
+            print("\n")
             #break
 
-        print("\n\n")
+        #print("\n\n")
 

@@ -690,7 +690,6 @@ class Fenetre(QtGui.QMainWindow):
             except AttributeError:
                 pass
 
-
             self.tableau.selectRow(line)
 
 
