@@ -68,6 +68,8 @@ class Predictor():
 
             if type(record.value('abstract')) is str:
                 abstract = record.value('abstract')
+            else:
+                continue
 
             if type(record.value('liked')) is not int:
                 category = 0
@@ -117,7 +119,8 @@ class Predictor():
 
         x_test = np.array(x_test)
 
-        list_percentages = [ round(float(100 * proba[1]), 2) for proba in self.classifier.predict_proba(x_test) ]
+        #list_percentages = [ round(float(100 * proba[1]), 2) for proba in self.classifier.predict_proba(x_test) ]
+        list_percentages = [ float(100 * proba[1]) for proba in self.classifier.predict_proba(x_test) ]
 
         if test:
             print(list_percentages)

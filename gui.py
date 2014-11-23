@@ -163,13 +163,12 @@ class Fenetre(QtGui.QMainWindow):
         """Method to check the state of each worker.
         If all the workers are finished, enable the parse action"""
 
-        #Update the view when a worker is finished
-        self.modele.select()
-
         #Get a list of the workers states
         list_states = [ worker.isFinished() for worker in self.list_threads ]
 
         if not False in list_states:
+            #Update the view when a worker is finished
+            self.modele.select()
             self.parseAction.setEnabled(True)
             self.l.debug("Parsing data finished. Enabling parseAction")
 
@@ -511,7 +510,7 @@ class Fenetre(QtGui.QMainWindow):
         self.query.exec_()
 
         #Update the view
-        self.modele.setTable("papers")
+        #self.modele.setTable("papers")
         self.modele.setQuery(self.query)
 
         self.proxy.setSourceModel(self.modele)
@@ -557,7 +556,7 @@ class Fenetre(QtGui.QMainWindow):
         self.query.exec_()
 
         #Update the view
-        self.modele.setTable("papers")
+        #self.modele.setTable("papers")
         self.modele.setQuery(self.query)
 
         self.proxy.setSourceModel(self.modele)

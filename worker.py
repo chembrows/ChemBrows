@@ -63,6 +63,9 @@ class Worker(QtCore.QThread):
             if doi in list_doi:
                 self.l.debug("Post already in db")
                 if list_ok[list_doi.index(doi)]:
+
+                    #TODO: si l'article est déjà en bdd, sans ttes les infos, relancer
+                    #le parsing dessus
                     continue
                 else:
                     title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
