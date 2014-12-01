@@ -93,12 +93,8 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.setItemDelegate(ViewDelegate(self))
         self.tableau.setSelectionBehavior(self.tableau.SelectRows)
 
-        self.getJournalsToCare()
 
-        self.tags_selected = self.journals_to_care
-        self.searchByButton()
-
-        self.adjustView()
+        #self.adjustView()
 
 
     def getJournalsToCare(self):
@@ -156,6 +152,8 @@ class Fenetre(QtGui.QMainWindow):
             worker = Worker(site, self.l)
             worker.finished.connect(self.checkThreads)
             self.list_threads.append(worker)
+
+        self.resetView()
 
 
     def checkThreads(self):
@@ -315,15 +313,11 @@ class Fenetre(QtGui.QMainWindow):
             self.splitter1.restoreState(self.options.value("Window/central_splitter"))
             self.splitter2.restoreState(self.options.value("Window/final_splitter"))
 
-        ##Restore the selected journals (on the left), and query
-        ##the db with these journals
-        #tags_checked = self.options.value("tags_checked", [])
-        #if tags_checked:
-            #for button in self.list_buttons_tags:
-                #if button.text() in tags_checked:
-                    #button.setChecked(True)
-                    #self.tags_selected.append(button.text())
-            #self.searchByButton()
+
+        self.getJournalsToCare()
+
+        self.tags_selected = self.journals_to_care
+        self.searchByButton()
 
 
     def defineSlots(self):
@@ -522,16 +516,10 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to select new articles"""
 
-        #Save the header state before performing en empty request
-        try:
-            self.header_state
-        except AttributeError:
-            self.header_state = self.tableau.horizontalHeader().saveState() 
-
         self.query = QtSql.QSqlQuery()
 
         #First, search the new articles id
-        self.query.prepare("SELECT id FROM papers WHERE new='true'")
+        self.query.prepare("SELECT id FROM papers WHERE new=1")
         self.query.exec_()
 
         list_id = []
@@ -561,13 +549,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.proxy.setSourceModel(self.modele)
         self.tableau.setModel(self.proxy)
-        self.adjustView()
-
-        #Regenerate the header
-        try:
-            self.tableau.horizontalHeader().restoreState(self.header_state)
-        except AttributeError:
-            self.l.debug("Pas de horizontalHeader. From searchByButton()")
+        #self.adjustView()
 
 
     def adjustView(self):
@@ -636,7 +618,7 @@ class Fenetre(QtGui.QMainWindow):
         except AttributeError:
             self.l.warn("Pas de requête précédente")
 
-        self.adjustView()
+        #self.adjustView()
 
 
     def launchFile(self):
@@ -661,7 +643,7 @@ class Fenetre(QtGui.QMainWindow):
 
         new = self.tableau.model().index(element.row(), 12).data()
 
-        if new == "false":
+        if new == 0:
             return
         else:
 
@@ -672,7 +654,7 @@ class Fenetre(QtGui.QMainWindow):
             query = QtSql.QSqlQuery("fichiers.sqlite")
 
             query.prepare("UPDATE papers SET new = ? WHERE id = ?")
-            params = (False, id_bdd)
+            params = (0, id_bdd)
 
             for value in params:
                 query.addBindValue(value)
@@ -685,7 +667,7 @@ class Fenetre(QtGui.QMainWindow):
                 self.modele.setQuery(self.query)
                 self.proxy.setSourceModel(self.modele)
                 self.tableau.setModel(self.proxy)
-                self.adjustView()
+                #self.adjustView()
             except AttributeError:
                 pass
 
@@ -712,6 +694,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.query.prepare(requete)
         self.query.exec_()
+
+        self.query.exec_("DELETE FROM papers WHERE verif=0")
 
         self.l.debug("Removing unintersting journals from the database")
 
@@ -772,7 +756,7 @@ class Fenetre(QtGui.QMainWindow):
             self.modele.setQuery(self.query)
             self.proxy.setSourceModel(self.modele)
             self.tableau.setModel(self.proxy)
-            self.adjustView()
+            #self.adjustView()
         except AttributeError:
             pass
 

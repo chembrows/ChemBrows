@@ -231,3 +231,41 @@ Nature entry
 <img height="1" src="http://feeds.feedburner.com/~r/nature/rss/aop/~4/CPkQJZJxidg" width="1" />',
 'type': 'text/html',
 'language': None}]}
+
+
+
+
+------------------------------------------
+
+
+Science entry
+
+
+{
+'author_detail': {'name': 'Jennifer A. Doudna'},
+'updated': '2014-11-28',
+'updated_parsed': time.struct_time(tm_year=2014, tm_mon=11, tm_mday=28, tm_hour=0, tm_min=0, tm_sec=0, tm_wday=4, tm_yday=332, tm_isdst=0),
+'links': [{'type': 'text/html', 'href': 'http://www.sciencemag.org/content/346/6213/1258096.abstract?rss=1', 'rel': 'alternate'}],
+'dc_identifier': '10.1126/science.1258096',
+'authors': [{}],
+'id': 'http://www.sciencemag.org/content/346/6213/1258096.abstract?rss=1',
+'summary_detail':
+{'type': 'text/html',
+'language': None,
+'value': 'The advent of facile genome engineering using the bacterial RNA-guided CRISPR-Cas9 system in animals and plants is transforming biology. We review the history of CRISPR (clustered regularly interspaced palindromic repeat) biology from its initial discovery through the elucidation of the CRISPR-Cas9 enzyme mechanism, which has set the stage for remarkable developments using this technology to modify, regulate, or mark genomic loci in a wide variety of cells and organisms from all three domains of life. These results highlight a new era in which genomic manipulation is no longer a bottleneck to experiments, paving the way toward fundamental discoveries in biology, with applications in all branches of biotechnology, as well as strategies for human therapeutics.
+\nAuthors: Jennifer A. Doudna, Emmanuelle Charpentier',
+'base': 'http://www.sciencemag.org/rss/current.xml'
+},
+'author': 'Jennifer A. Doudna',
+'summary': 'The advent of facile genome engineering using the bacterial RNA-guided CRISPR-Cas9 system in animals and plants is transforming biology. We review the history of CRISPR (clustered regularly interspaced palindromic repeat) biology from its initial discovery through the elucidation of the CRISPR-Cas9 enzyme mechanism, which has set the stage for remarkable developments using this technology to modify, regulate, or mark genomic loci in a wide variety of cells and organisms from all three domains of life. These results highlight a new era in which genomic manipulation is no longer a bottleneck to experiments, paving the way toward fundamental discoveries in biology, with applications in all branches of biotechnology, as well as strategies for human therapeutics.
+\n Authors: Jennifer A. Doudna, Emmanuelle Charpentier',
+'title': '[Review] The new frontier of genome engineering with CRISPR-Cas9',
+'link': 'http://www.sciencemag.org/content/346/6213/1258096.abstract?rss=1',
+
+'title_detail':
+{'type': 'text/plain',
+'language': None,
+'value': '[Review] The new frontier of genome engineering with CRISPR-Cas9',
+'base': 'http://www.sciencemag.org/rss/current.xml'
+}
+}

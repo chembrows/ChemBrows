@@ -39,7 +39,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
         #If the post is new, set font to bold
         new = index.sibling(index.row(), 12).data()
-        if new == "true":
+        if new == 1:
             option.font.setWeight(QtGui.QFont.Bold)
         #else:
             #self.parent.tableau.hideRow(index.row())
@@ -48,6 +48,14 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         #Condition block to perform actions on specific columns
         if index.column() == 0:
             pass
+        elif index.column() == 1:
+            if red:
+                painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
+            percentage = index.model().data(index)
+            if type(percentage) is float:
+                painter.drawText(option.rect, QtCore.Qt.AlignCenter, str(int(round(percentage, 0))))
+            else:
+                painter.drawText(option.rect, QtCore.Qt.AlignCenter, str(0))
         else:
             #Using default painter
             QtGui.QStyledItemDelegate.paint(self, painter, option, index)    

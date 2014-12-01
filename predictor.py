@@ -61,7 +61,7 @@ class Predictor():
 
         query = QtSql.QSqlQuery("fichiers.sqlite")
 
-        query.exec_("SELECT * FROM papers WHERE new='false'")
+        query.exec_("SELECT * FROM papers WHERE new=0")
 
         while query.next():
             record = query.record()

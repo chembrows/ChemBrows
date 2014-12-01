@@ -30,7 +30,8 @@ def getData(journal, entry):
     rsc, rsc_abb = getJournals("rsc")
     acs, acs_abb = getJournals("acs")
     wiley, wiley_abb = getJournals("wiley")
-    npg , npg_abb = getJournals("npg")
+    npg, npg_abb = getJournals("npg")
+    science, science_abb = getJournals("science")
 
     doi = getDoi(journal, entry)
 
@@ -210,6 +211,32 @@ def getData(journal, entry):
             print(e)
 
 
+    if journal in science:
+
+        title = entry.title
+        journal_abb = science_abb[science.index(journal)]
+        date = entry.date
+        url = entry.id
+
+        graphical_abstract = "Empty"
+        author = None
+
+        abstract = entry.summary
+
+        if "Author:" in entry.summary:
+            abstract = entry.summary.split("Author: ")[0]
+            author = entry.summary.split("Author: ")[1]
+        elif "Authors:" in entry.summary:
+            abstract = entry.summary.split("Authors: ")[0]
+            author = entry.summary.split("Authors: ")[1].split(", ")
+            author = ",".join(author)
+        else:
+            abstract = entry.summary
+
+        if not abstract:
+            abstract = "Empty"
+
+
     return title, journal_abb, date, author, abstract, graphical_abstract, url
 
 
@@ -221,6 +248,7 @@ def getDoi(journal, entry):
     acs, _ = getJournals("acs")
     wiley, _ = getJournals("wiley")
     npg, _ = getJournals("npg")
+    science, _ = getJournals("science")
 
     if journal in rsc:
         soup = BeautifulSoup(entry.summary)
@@ -238,6 +266,9 @@ def getDoi(journal, entry):
 
     if journal in npg:
         doi = entry.prism_doi
+
+    if journal in science:
+        doi = entry.dc_identifier
 
     return doi
 
@@ -308,7 +339,7 @@ if __name__ == "__main__":
     #urls_test = ["http://feeds.rsc.org/rss/nj"]
     #urls_test = ["njc.xml"]
     #urls_test = ["http://feeds.rsc.org/rss/sc"]
-    urls_test = ["nat.xml"]
+    urls_test = ["science.xml"]
 
     for site in urls_test:
 
@@ -322,9 +353,9 @@ if __name__ == "__main__":
         print(journal)
 
         for entry in feed.entries:
-            #print(entry.summary)
+            #print(entry.title)
             getData(journal, entry)
-            print("\n")
+            #print("\n")
             #break
 
         #print("\n\n")

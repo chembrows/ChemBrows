@@ -95,7 +95,8 @@ def checkData():
     c = bdd.cursor()
 
     #c.execute("SELECT verif FROM papers")
-    c.execute("UPDATE papers SET new='true'")
+    c.execute("UPDATE papers SET new=1 WHERE new='true'")
+    #c.execute("UPDATE papers SET new=0 WHERE new='false'")
 
     #for ligne_bdd in c.fetchall():
 

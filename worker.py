@@ -62,10 +62,9 @@ class Worker(QtCore.QThread):
 
             if doi in list_doi:
                 self.l.debug("Post already in db")
-                if list_ok[list_doi.index(doi)]:
 
-                    #TODO: si l'article est déjà en bdd, sans ttes les infos, relancer
-                    #le parsing dessus
+                #If the article is in db, with all the data, continue
+                if list_ok[list_doi.index(doi)]:
                     continue
                 else:
                     title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
@@ -77,7 +76,8 @@ class Worker(QtCore.QThread):
                     else:
                         verif = 1
 
-                    params = (authors, abstract, graphical_abstract, verif, True, doi)
+                    #On met new à 1 et non pas à True
+                    params = (authors, abstract, graphical_abstract, verif, 1, doi)
 
                     for value in params:
                         query.addBindValue(value)
@@ -104,7 +104,8 @@ class Worker(QtCore.QThread):
                 else:
                     verif = 1
 
-                params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, True)
+                #On met new à 1 et pas à true
+                params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1)
 
                 for value in params:
                     query.addBindValue(value)
