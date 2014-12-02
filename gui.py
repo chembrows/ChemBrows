@@ -255,8 +255,6 @@ class Fenetre(QtGui.QMainWindow):
         ##http://stackoverflow.com/questions/18441755/hide-an-action-without-disabling-it
         #self.addAction(self.changeTabRightAction)
 
-        pass
-
 
     def closeEvent(self, event):
 
@@ -320,18 +318,41 @@ class Fenetre(QtGui.QMainWindow):
         self.searchByButton()
 
 
+    def popup(self, pos):
+
+        """Method to handle right-click"""
+
+        if not self.tableau.selectionModel().selection().indexes():
+            return
+        #Si une ligne est sélectionnée, on affiche un menu adapté à une
+        #seule sélection
+        #elif len(self.tableau.selectionModel().selection().indexes()) == 11:
+            #self.displayInfos()
+            #self.displayMosaic()
+
+        #Define a new postition for the menu
+        new_pos = QtCore.QPoint(pos.x()+ 240, pos.y() + 120)
+
+        #Create the right-click menu and add the actions
+        menu = QtGui.QMenu()
+        menu.addAction(self.likeAction)
+        menu.addAction(self.unLikeAction)
+        menu.addAction(self.openInBrowserAction)
+        action = menu.exec_(self.mapToGlobal(new_pos))
+
+
     def defineSlots(self):
 
         """Connect the slots"""
 
-        ##On connecte le signal de double clic sur une cell vers un
-        ##slot qui lance le lecteur ac le nom du fichier en paramètre
-        #self.tableau.doubleClicked.connect(self.launchFile)
+        #On connecte le signal de double clic sur une cell vers un
+        #slot qui lance le lecteur ac le nom du fichier en paramètre
+        self.tableau.doubleClicked.connect(self.openInBrowser)
 
-        ##http://www.diotavelli.net/PyQtWiki/Handling%20context%20menus
-        ##Le clic droit est perso
-        #self.tableau.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        #self.tableau.customContextMenuRequested.connect(self.popup)
+        #http://www.diotavelli.net/PyQtWiki/Handling%20context%20menus
+        #Le clic droit est perso
+        self.tableau.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.tableau.customContextMenuRequested.connect(self.popup)
 
         self.tableau.clicked.connect(self.displayInfos)
         self.tableau.clicked.connect(self.displayMosaic)
@@ -379,8 +400,10 @@ class Fenetre(QtGui.QMainWindow):
 
     def displayInfos(self):
 
+        """Method to get the infos of a post.
+        For now, gets only the abstract"""
+
         try:
-            #On essaie de récupérer la description du torrent
             #self.text_abstract.setText(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data())
             self.text_abstract.setHtml(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data())
         except TypeError:
