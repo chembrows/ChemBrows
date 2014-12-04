@@ -324,11 +324,12 @@ class Fenetre(QtGui.QMainWindow):
 
         if not self.tableau.selectionModel().selection().indexes():
             return
+        else:
         #Si une ligne est sélectionnée, on affiche un menu adapté à une
         #seule sélection
         #elif len(self.tableau.selectionModel().selection().indexes()) == 11:
-            #self.displayInfos()
-            #self.displayMosaic()
+            self.displayInfos()
+            self.displayMosaic()
 
         #Define a new postition for the menu
         new_pos = QtCore.QPoint(pos.x()+ 240, pos.y() + 120)
@@ -406,9 +407,14 @@ class Fenetre(QtGui.QMainWindow):
         try:
             #self.text_abstract.setText(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data())
             self.text_abstract.setHtml(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data())
+            title = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 3).data()
+            author = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 6).data()
         except TypeError:
             self.l.debug("No abstract for this post, displayInfos()")
             self.text_abstract.setHtml("")
+
+        self.label_title.setText("<span style='font-size:12pt; font-weight:bold'>{0}</span>".format(title))
+        self.label_author.setText(author)
 
 
     def displayMosaic(self):
@@ -614,6 +620,11 @@ class Fenetre(QtGui.QMainWindow):
             self.scene.clear()
         except AttributeError:
             self.l.warn("Pas d'objet scene pr l'instant.")
+
+        #Cleaning title, authors and abstract
+        self.label_author.setText("")
+        self.label_title.setText("")
+        self.text_abstract.setHtml("")
 
         #Uncheck the journals buttons on the left
         for button in self.list_buttons_tags:
@@ -843,7 +854,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Méthode pour créer la fenêtre et régler ses paramètres"""
 
-        self.setGeometry(0, 25, 1900 , 1020)
+        #self.setGeometry(0, 25, 1900 , 1020)
         self.setWindowTitle('ChemBrows')    
 
 #------------------------- CONSTRUCTION DES MENUS -------------------------------------------------------------
@@ -936,7 +947,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.setHorizontalHeader(self.horizontal_header) #Active le header perso
         self.tableau.hideColumn(0) #Hide id
         self.tableau.hideColumn(2) #Hide doi
-        self.tableau.hideColumn(6) #Hide authors
+        #self.tableau.hideColumn(6) #Hide authors
         self.tableau.hideColumn(7) #Hide abstracts
         self.tableau.hideColumn(8) #Hide abstracts
         self.tableau.hideColumn(10) #Hide urls
@@ -967,26 +978,55 @@ class Fenetre(QtGui.QMainWindow):
         self.scrolling_tags.setLayout(self.vbox_all_tags)
 
 
-##------------------------- BOTTOM AREA ---------------------------------------------------------------------------
+##------------------------- RIGHT BOTTOM AREA ---------------------------------------------------------------------------
 
-        #On crée la zone du bas, un simple widget
-        self.zone_bas = QtGui.QWidget()
+        #The bottom area contains the mosaic (graphical abstract)
 
-        #On utilise un layout pr pouvoir redimensionner
-        #la zone de mosaïque automatiquement
-        self.vision = GraphicsViewPerso(self.zone_bas)
+        #The bottom are is a simple widget
+        self.area_right_bottom = QtGui.QWidget()
+
+        #Personnal graphicsView. Allows the resizing of the mosaic
+        self.vision = GraphicsViewPerso(self.area_right_bottom)
         self.vision.setDragMode(GraphicsViewPerso.ScrollHandDrag)
 
         self.box_mosaic = QtGui.QVBoxLayout()
         self.box_mosaic.addWidget(self.vision)
 
-        self.zone_bas.setLayout(self.box_mosaic)
+        self.area_right_bottom.setLayout(self.box_mosaic)
 
-#------------------------- RIGHT AREA ------------------------------------------------------------------------------------
+#------------------------- RIGHT TOP AREA ------------------------------------------------------------------------------------
 
+        #Creation of a gridLayout to handle the top right area
+        self.area_right_top = QtGui.QWidget()
+        self.grid_area_right_top = QtGui.QGridLayout()
+        self.area_right_top.setLayout(self.grid_area_right_top)
+
+        #Here I set a prelabel: a label w/ just "Title: " to label the title.
+        #I set the sizePolicy of this prelabel to the minimum. It will stretch to
+        #the minimum. Makes the display better with the grid
+        prelabel_title = QtGui.QLabel("Title: ")
+        prelabel_title.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
+        self.label_title = QtGui.QLabel()
+        self.label_title.setWordWrap(True)
+        self.label_title.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+
+        prelabel_author = QtGui.QLabel("Author(s): ")
+        prelabel_author.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
+        self.label_author = QtGui.QLabel()
+        self.label_author.setWordWrap(True)
+        self.label_author.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+
+        #A QWebView to render the sometimes rich text of the abstracts
         self.text_abstract = QtWebKit.QWebView()
         self.web_settings = QtWebKit.QWebSettings.globalSettings()
         self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 20)
+
+        #Building the grid
+        self.grid_area_right_top.addWidget(prelabel_title, 0, 0)
+        self.grid_area_right_top.addWidget(self.label_title, 0, 1)
+        self.grid_area_right_top.addWidget(prelabel_author, 1, 0)
+        self.grid_area_right_top.addWidget(self.label_author, 1, 1)
+        self.grid_area_right_top.addWidget(self.text_abstract, 2, 0, 1, 2)
 
 ##------------------------- ASSEMBLING THE AREAS ------------------------------------------------------------------------------------
 
@@ -996,8 +1036,8 @@ class Fenetre(QtGui.QMainWindow):
         self.onglets.addTab(self.tableau, "All articles")
 
         self.splitter1 = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.splitter1.addWidget(self.text_abstract)
-        self.splitter1.addWidget(self.zone_bas)
+        self.splitter1.addWidget(self.area_right_top)
+        self.splitter1.addWidget(self.area_right_bottom)
 
         self.splitter2 = QtGui.QSplitter(QtCore.Qt.Horizontal)
         self.splitter2.addWidget(self.scroll_tags)

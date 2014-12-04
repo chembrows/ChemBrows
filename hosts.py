@@ -77,7 +77,7 @@ def getData(journal, entry):
             r = soup.find_all("meta", attrs={"name": "citation_author"})
             if r:
                 author = [ tag['content'] for tag in r ]
-                author = ",".join(author)
+                author = ", ".join(author)
 
         except requests.exceptions.Timeout:
             print("getData, {0}, timeout".format(journal_abb))
@@ -92,7 +92,7 @@ def getData(journal, entry):
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
 
         author = entry.author.split(", ")
-        author = ",".join(author)
+        author = ", ".join(author)
 
         url = entry.prism_url
 
@@ -121,7 +121,7 @@ def getData(journal, entry):
             author = entry.author.split(" and ")
             author = author[0] + ", " + author[1]
             author = author.split(", ")
-            author = ",".join(author)
+            author = ", ".join(author)
         except IndexError:
             author = entry.author
 
@@ -179,7 +179,7 @@ def getData(journal, entry):
                     if "&" in author[-1]:
                         author = author[:-1] + author[-1].split(" & ")
 
-                    author = ",".join(author)
+                    author = ", ".join(author)
 
         try:
             #Dl of the article website page
@@ -229,7 +229,7 @@ def getData(journal, entry):
         elif "Authors:" in entry.summary:
             abstract = entry.summary.split("Authors: ")[0]
             author = entry.summary.split("Authors: ")[1].split(", ")
-            author = ",".join(author)
+            author = ", ".join(author)
         else:
             abstract = entry.summary
 

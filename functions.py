@@ -94,13 +94,18 @@ def checkData():
     bdd.row_factory = sqlite3.Row 
     c = bdd.cursor()
 
-    #c.execute("SELECT verif FROM papers")
-    c.execute("UPDATE papers SET new=1 WHERE new='true'")
+    c.execute("SELECT id, authors FROM papers")
+    #c.execute("UPDATE papers SET new=1 WHERE new='true'")
     #c.execute("UPDATE papers SET new=0 WHERE new='false'")
 
-    #for ligne_bdd in c.fetchall():
+    for ligne_bdd in c.fetchall():
 
-        #print(ligne_bdd['title'])
+        print(ligne_bdd['authors'])
+
+        if ligne_bdd['authors']:
+            authors = ligne_bdd['authors'].replace(",", ", ")
+            c.execute("UPDATE papers SET authors=? WHERE id=?", (authors, ligne_bdd['id']))
+            print(authors)
 
         #if ligne_bdd['verif'] == 0:
             #print("boum")
