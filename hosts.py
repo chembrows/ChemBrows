@@ -313,6 +313,8 @@ def getDoi(journal, entry):
     if journal in science:
         doi = entry.dc_identifier
 
+    doi = doi.replace(" ", "")
+
     return doi
 
 

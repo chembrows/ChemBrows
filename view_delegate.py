@@ -7,8 +7,8 @@
 import sys
 import os
 from PyQt4 import QtCore, QtGui, QtSql
-#from liste import renameFile, verifAccess
-#from misc import sizeof, recent
+
+from functions import prettyDate
 
 
 class ViewDelegate(QtGui.QStyledItemDelegate):
@@ -41,21 +41,34 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         new = index.sibling(index.row(), 12).data()
         if new == 1:
             option.font.setWeight(QtGui.QFont.Bold)
-        #else:
-            #self.parent.tableau.hideRow(index.row())
-            #return
+
+        date = index.sibling(index.row(), 4).data()
         
         #Condition block to perform actions on specific columns
-        if index.column() == 0:
-            pass
-        elif index.column() == 1:
-            if red:
-                painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
+        #if index.column() == 0:
+            #pass
+
+        if index.column() == 1:
+
             percentage = index.model().data(index)
+            if new == 1:
+                option.font.setWeight(QtGui.QFont.Bold)
+
             if type(percentage) is float:
                 painter.drawText(option.rect, QtCore.Qt.AlignCenter, str(int(round(percentage, 0))))
             else:
                 painter.drawText(option.rect, QtCore.Qt.AlignCenter, str(0))
+
+            if red:
+                painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
+
+
+        #Actions on the date
+        elif index.column() == 4:
+            if red:
+                painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
+            painter.drawText(option.rect, QtCore.Qt.AlignCenter, prettyDate(date))
+
         else:
             #Using default painter
             QtGui.QStyledItemDelegate.paint(self, painter, option, index)    

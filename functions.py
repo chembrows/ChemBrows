@@ -10,6 +10,10 @@ from PyQt4 import QtSql
 #from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
 import sqlite3
+import arrow
+
+#TEST
+import collections
 
 #Personal modules
 from log import MyLog
@@ -38,13 +42,14 @@ def listDoi():
     list_ok = []
 
     query = QtSql.QSqlQuery("fichiers.sqlite")
-    query.exec_("SELECT doi, verif FROM papers")
+    query.exec_("SELECT * FROM papers")
 
     while query.next():
         record = query.record()
         list_doi.append(record.value('doi'))
 
-        if record.value('verif') == 1:
+        if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
+            #Try to download the images again if it didn't work before
             list_ok.append(True)
         else:
             list_ok.append(False)
@@ -86,6 +91,20 @@ def unLike(id_bdd, logger):
     query.exec_()
 
 
+def prettyDate(date):
+
+    """Prettify a date. Ex: 3 days ago"""
+
+    now = arrow.now()
+    date = arrow.get(date)
+
+    if now.timestamp - date.timestamp < 86400:
+        return "Today"
+    else:
+        return date.humanize(now.naive)
+
+
+
 def checkData():
 
     """Fct de test uniquement"""
@@ -94,27 +113,41 @@ def checkData():
     bdd.row_factory = sqlite3.Row 
     c = bdd.cursor()
 
-    c.execute("SELECT id, authors FROM papers")
+    c.execute("SELECT * FROM papers")
     #c.execute("UPDATE papers SET new=1 WHERE new='true'")
     #c.execute("UPDATE papers SET new=0 WHERE new='false'")
 
+    dois = []
+
     for ligne_bdd in c.fetchall():
 
-        print(ligne_bdd['authors'])
+        dois.append(ligne_bdd['doi'])
 
-        if ligne_bdd['authors']:
-            authors = ligne_bdd['authors'].replace(",", ", ")
-            c.execute("UPDATE papers SET authors=? WHERE id=?", (authors, ligne_bdd['id']))
-            print(authors)
+    for doi in dois:
+        if " " in doi:
+            print(doi)
+            #old_doi = doi
+            #new_doi = doi.replace(" ", "")
+            #c.execute("UPDATE papers SET doi=? WHERE doi=?", (new_doi, old_doi))
 
-        #if ligne_bdd['verif'] == 0:
-            #print("boum")
+    #print(len(dois))
+    #print(len(list(set(dois))))
 
-        #for info in ligne_bdd:
-            #print(type(info))
+    ##print([x for x, y in collections.Counter(dois).items() if y > 1])
+    #duplicates = [x for x, y in collections.Counter(dois).items() if y > 1]
 
 
-    bdd.commit()
+    #titles = []
+    #for doi in duplicates:
+
+        #c.execute("SELECT * FROM papers WHERE doi=?", (doi,))
+        ##c.execute("DELETE FROM papers WHERE doi=?", (doi,))
+        ##titles.append(c.fetchone()['title'])
+
+    #print(len(titles))
+
+
+    #bdd.commit()
     c.close()
     bdd.close()
 
