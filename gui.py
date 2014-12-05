@@ -711,11 +711,11 @@ class Fenetre(QtGui.QMainWindow):
     def cleanDb(self):
 
         """Slot to clean the database. Called from
-        the window settings, but better to be here"""
+        the window settings, but better to be here. Also
+        deletes the unused pictures present in the graphical_abstracts folder"""
 
-        self.query = QtSql.QSqlQuery()
+        query = QtSql.QSqlQuery("fichiers.sqlite")
 
-        #requete = "SELECT * FROM papers WHERE journal IN ("
         requete = "DELETE FROM papers WHERE journal NOT IN ("
 
         #Building the query
@@ -726,12 +726,32 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
-        self.query.prepare(requete)
-        self.query.exec_()
+        query.prepare(requete)
+        query.exec_()
 
-        self.query.exec_("DELETE FROM papers WHERE verif=0")
+        self.l.debug("Removed unintersting journals from the database")
 
-        self.l.debug("Removing unintersting journals from the database")
+        query.exec_("DELETE FROM papers WHERE verif=0")
+
+        self.l.debug("Removed incomplete articles from the database")
+
+        query.exec_("SELECT graphical_abstract FROM papers")
+
+        images_path = []
+        while query.next():
+            record = query.record()
+            images_path.append(record.value('graphical_abstract'))
+
+        images_path = [ path for path in images_path if path != 'Empty' ]
+
+        #Delete all the images which are not in the database (so not
+        #corresponding to any article)
+        for directory in os.walk("./graphical_abstracts/"):
+            for fichier in directory[2]:
+                if fichier not in images_path:
+                    os.remove(os.path.abspath("./graphical_abstracts/{0}".format(fichier)))
+
+        self.l.debug("Deleted all the useless images")
 
 
     def openInBrowser(self):
@@ -947,7 +967,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.setHorizontalHeader(self.horizontal_header) #Active le header perso
         self.tableau.hideColumn(0) #Hide id
         self.tableau.hideColumn(2) #Hide doi
-        #self.tableau.hideColumn(6) #Hide authors
+        self.tableau.hideColumn(6) #Hide authors
         self.tableau.hideColumn(7) #Hide abstracts
         self.tableau.hideColumn(8) #Hide abstracts
         self.tableau.hideColumn(10) #Hide urls

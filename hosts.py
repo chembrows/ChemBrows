@@ -225,19 +225,62 @@ def getData(journal, entry):
 
         if "Author:" in entry.summary:
             abstract = entry.summary.split("Author: ")[0]
-            author = entry.summary.split("Author: ")[1]
+            author = [entry.summary.split("Author: ")[1]]
         elif "Authors:" in entry.summary:
             abstract = entry.summary.split("Authors: ")[0]
             author = entry.summary.split("Authors: ")[1].split(", ")
+            #À commenter si formatName
             author = ", ".join(author)
         else:
             abstract = entry.summary
+
+        #if author:
+            #author = formatName(author)
+            #print(author)
 
         if not abstract:
             abstract = "Empty"
 
 
     return title, journal_abb, date, author, abstract, graphical_abstract, url
+
+
+#def formatName(authors_list, reverse=False):
+
+    #"""Function to ormat the author's name in a specific way. Ex:
+    #Jennifer A. Doudna -> J. A. Doudna"""
+    #print(authors_list)
+
+    ##New string to store all the authors, formatted
+    #new_author = ""
+
+    #for complete_name in authors_list:
+        ##Example
+        ##complete_name: Jennifer A. Doudna
+        #complete_name = complete_name.replace("“", "")
+        #complete_name = complete_name.split(" ")
+        #person = ""
+
+        #for piece_name in complete_name:
+            #if piece_name is not complete_name[-1]:
+
+                ##If the piece is already an abb, add directly
+                #if "." in piece_name and len(piece_name) is 2:
+                    #person += piece_name
+                #else:
+                    #person = person + piece_name[0] + "."
+                #person += " "
+
+            #else:
+                #person += piece_name
+
+        ##Add to the new_author string
+        #if not new_author:
+            #new_author += person
+        #else:
+            #new_author = new_author + ", " + person
+
+    #return new_author
 
 
 def getDoi(journal, entry):
@@ -335,11 +378,11 @@ def getJournals(company):
 if __name__ == "__main__":
 
     #urls_test = ["ang.xml"]
-    #urls_test = ["jacs.xml"]
+    urls_test = ["jacs.xml"]
     #urls_test = ["http://feeds.rsc.org/rss/nj"]
     #urls_test = ["njc.xml"]
     #urls_test = ["http://feeds.rsc.org/rss/sc"]
-    urls_test = ["science.xml"]
+    #urls_test = ["science.xml"]
 
     for site in urls_test:
 
