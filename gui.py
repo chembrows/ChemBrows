@@ -94,9 +94,6 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.setSelectionBehavior(self.tableau.SelectRows)
 
 
-        #self.adjustView()
-
-
     def getJournalsToCare(self):
 
         #Create a list to store the journals checked in the settings window
@@ -222,6 +219,11 @@ class Fenetre(QtGui.QMainWindow):
         self.searchNewAction = QtGui.QAction('Search new', self)
         self.searchNewAction.triggered.connect(self.searchNew)
 
+        #Action to toggle the read state of an article
+        self.toggleReadAction = QtGui.QAction('Toggle read state', self)
+        self.toggleReadAction.setShortcut('M')
+        self.toggleReadAction.triggered.connect(self.toggleRead)
+
         ##Action pour enlever un tag
         #self.removeTagAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_207_remove_2.png'), 'Supprimer un tag', self)
         #self.removeTagAction.setShortcut('R')
@@ -336,6 +338,7 @@ class Fenetre(QtGui.QMainWindow):
 
         #Create the right-click menu and add the actions
         menu = QtGui.QMenu()
+        menu.addAction(self.toggleReadAction)
         menu.addAction(self.likeAction)
         menu.addAction(self.unLikeAction)
         menu.addAction(self.openInBrowserAction)
@@ -351,7 +354,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.doubleClicked.connect(self.openInBrowser)
 
         #http://www.diotavelli.net/PyQtWiki/Handling%20context%20menus
-        #Le clic droit est perso
+        #Personal right-click
         self.tableau.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.tableau.customContextMenuRequested.connect(self.popup)
 
@@ -708,6 +711,40 @@ class Fenetre(QtGui.QMainWindow):
             self.tableau.selectRow(line)
 
 
+    def toggleRead(self):
+
+        """Method to invert the value of new.
+        So, toggle the read/unread state of an article"""
+
+        new = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 12).data()
+        id_bdd = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 0).data()
+        line = self.tableau.selectionModel().currentIndex().row()
+
+        #Invert the value of new
+        new = 1 - new
+
+        query = QtSql.QSqlQuery("fichiers.sqlite")
+
+        query.prepare("UPDATE papers SET new = ? WHERE id = ?")
+        params = (new, id_bdd)
+
+        for value in params:
+            query.addBindValue(value)
+
+        query.exec_()
+
+        self.modele.select()
+
+        try:
+            self.modele.setQuery(self.query)
+            self.proxy.setSourceModel(self.modele)
+            self.tableau.setModel(self.proxy)
+        except AttributeError:
+            pass
+
+        self.tableau.selectRow(line)
+
+
     def cleanDb(self):
 
         """Slot to clean the database. Called from
@@ -889,6 +926,7 @@ class Fenetre(QtGui.QMainWindow):
         self.editMenu = self.menubar.addMenu("&Edition")
         self.editMenu.addAction(self.parseAction)
         self.editMenu.addAction(self.calculatePercentageMatchAction)
+        self.editMenu.addAction(self.toggleReadAction)
         self.editMenu.addAction(self.likeAction)
         self.editMenu.addAction(self.unLikeAction)
 
