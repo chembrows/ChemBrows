@@ -19,6 +19,7 @@ from view_delegate import ViewDelegate
 from worker import Worker
 from predictor import Predictor
 from settings import Settings
+from proxy import ProxyPerso
 import functions
 
 
@@ -81,6 +82,7 @@ class Fenetre(QtGui.QMainWindow):
         #On crée un proxy pour filtrer les fichiers lors
         #des recherches
         self.proxy = QtGui.QSortFilterProxyModel()
+        #self.proxy = ProxyPerso()
         self.proxy.setSourceModel(self.modele)
 
         #Règle le bug du tri après une modif de la bdd
@@ -412,12 +414,14 @@ class Fenetre(QtGui.QMainWindow):
             self.text_abstract.setHtml(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data())
             title = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 3).data()
             author = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 6).data()
+            date = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 4).data()
         except TypeError:
             self.l.debug("No abstract for this post, displayInfos()")
             self.text_abstract.setHtml("")
 
         self.label_title.setText("<span style='font-size:12pt; font-weight:bold'>{0}</span>".format(title))
         self.label_author.setText(author)
+        self.label_date.setText(date)
 
 
     def displayMosaic(self):
@@ -684,21 +688,9 @@ class Fenetre(QtGui.QMainWindow):
             return
         else:
 
-            id_bdd = self.tableau.model().index(element.row(), 0).data()
-
             line = self.tableau.selectionModel().currentIndex().row()
 
-            query = QtSql.QSqlQuery("fichiers.sqlite")
-
-            query.prepare("UPDATE papers SET new = ? WHERE id = ?")
-            params = (0, id_bdd)
-
-            for value in params:
-                query.addBindValue(value)
-
-            query.exec_()
-
-            self.modele.select()
+            self.tableau.model().setData(self.tableau.model().index(line, 12), 0)
 
             try:
                 self.modele.setQuery(self.query)
@@ -717,23 +709,13 @@ class Fenetre(QtGui.QMainWindow):
         So, toggle the read/unread state of an article"""
 
         new = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 12).data()
-        id_bdd = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 0).data()
+        #id_bdd = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 0).data()
         line = self.tableau.selectionModel().currentIndex().row()
 
         #Invert the value of new
         new = 1 - new
-
-        query = QtSql.QSqlQuery("fichiers.sqlite")
-
-        query.prepare("UPDATE papers SET new = ? WHERE id = ?")
-        params = (new, id_bdd)
-
-        for value in params:
-            query.addBindValue(value)
-
-        query.exec_()
-
-        self.modele.select()
+            
+        self.tableau.model().setData(self.tableau.model().index(line, 12), new)
 
         try:
             self.modele.setQuery(self.query)
@@ -1010,7 +992,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.hideColumn(8) #Hide abstracts
         self.tableau.hideColumn(10) #Hide urls
         self.tableau.hideColumn(11) #Hide verif
-        self.tableau.hideColumn(12) #Hide new
+        #self.tableau.hideColumn(12) #Hide new
         ##self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
         ##self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
         self.tableau.setSortingEnabled(True) #Active le tri
@@ -1074,6 +1056,12 @@ class Fenetre(QtGui.QMainWindow):
         self.label_author.setWordWrap(True)
         self.label_author.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
+        prelabel_date = QtGui.QLabel("Published: ")
+        prelabel_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
+        self.label_date = QtGui.QLabel()
+        self.label_date.setWordWrap(True)
+        self.label_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+
         #A QWebView to render the sometimes rich text of the abstracts
         self.text_abstract = QtWebKit.QWebView()
         self.web_settings = QtWebKit.QWebSettings.globalSettings()
@@ -1084,7 +1072,9 @@ class Fenetre(QtGui.QMainWindow):
         self.grid_area_right_top.addWidget(self.label_title, 0, 1)
         self.grid_area_right_top.addWidget(prelabel_author, 1, 0)
         self.grid_area_right_top.addWidget(self.label_author, 1, 1)
-        self.grid_area_right_top.addWidget(self.text_abstract, 2, 0, 1, 2)
+        self.grid_area_right_top.addWidget(prelabel_date, 2, 0)
+        self.grid_area_right_top.addWidget(self.label_date, 2, 1)
+        self.grid_area_right_top.addWidget(self.text_abstract, 3, 0, 1, 2)
 
 ##------------------------- ASSEMBLING THE AREAS ------------------------------------------------------------------------------------
 
