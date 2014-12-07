@@ -405,19 +405,23 @@ class Fenetre(QtGui.QMainWindow):
         """Method to get the infos of a post.
         For now, gets only the abstract"""
 
-        try:
-            #self.text_abstract.setText(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data())
+        abstract = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data()
+        title = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 3).data()
+        author = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 6).data()
+        date = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 4).data()
+
+        self.label_date.setText(date)
+        self.label_title.setText("<span style='font-size:12pt; font-weight:bold'>{0}</span>".format(title))
+
+        if type(abstract) == str:
             self.text_abstract.setHtml(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data())
-            title = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 3).data()
-            author = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 6).data()
-            date = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 4).data()
-        except TypeError:
-            self.l.debug("No abstract for this post, displayInfos()")
+        else:
             self.text_abstract.setHtml("")
 
-        self.label_title.setText("<span style='font-size:12pt; font-weight:bold'>{0}</span>".format(title))
-        self.label_author.setText(author)
-        self.label_date.setText(date)
+        if type(author) == str:
+            self.label_author.setText(author)
+        else:
+            self.label_author.setText("")
 
 
     def displayMosaic(self):
@@ -985,10 +989,10 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.hideColumn(2) #Hide doi
         self.tableau.hideColumn(6) #Hide authors
         self.tableau.hideColumn(7) #Hide abstracts
-        self.tableau.hideColumn(8) #Hide abstracts
+        self.tableau.hideColumn(8) #Hide graphical_abstracts
         self.tableau.hideColumn(10) #Hide urls
         self.tableau.hideColumn(11) #Hide verif
-        #self.tableau.hideColumn(12) #Hide new
+        self.tableau.hideColumn(12) #Hide new
         ##self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
         ##self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
         self.tableau.setSortingEnabled(True) #Active le tri

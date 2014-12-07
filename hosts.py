@@ -223,20 +223,21 @@ def getData(journal, entry):
 
         abstract = entry.summary
 
+        if "Untangling" in title:
+            print("babam")
+            print(entry)
+
         if "Author:" in entry.summary:
             abstract = entry.summary.split("Author: ")[0]
-            author = [entry.summary.split("Author: ")[1]]
+            #author = [entry.summary.split("Author: ")[1]] #To uncomment to get a list of author
+            author = entry.summary.split("Author: ")[1]
         elif "Authors:" in entry.summary:
             abstract = entry.summary.split("Authors: ")[0]
             author = entry.summary.split("Authors: ")[1].split(", ")
-            #À commenter si formatName
-            author = ", ".join(author)
+            author = ", ".join(author) # To comment if formatName
         else:
             abstract = entry.summary
-
-        #if author:
-            #author = formatName(author)
-            #print(author)
+            author = "Empty"
 
         if not abstract:
             abstract = "Empty"
@@ -380,11 +381,11 @@ def getJournals(company):
 if __name__ == "__main__":
 
     #urls_test = ["ang.xml"]
-    urls_test = ["jacs.xml"]
+    #urls_test = ["jacs.xml"]
     #urls_test = ["http://feeds.rsc.org/rss/nj"]
     #urls_test = ["njc.xml"]
     #urls_test = ["http://feeds.rsc.org/rss/sc"]
-    #urls_test = ["science.xml"]
+    urls_test = ["science.xml"]
 
     for site in urls_test:
 
