@@ -3,34 +3,21 @@
 
 import sys
 import os
-import datetime
-import feedparser
+#import datetime
+#import feedparser
 from PyQt4 import QtSql
-#import concurrent.futures
-#from concurrent.futures import ThreadPoolExecutor, as_completed
-import logging
 import sqlite3
 import arrow
+import unidecode
+import re
+
 
 #TEST
-import collections
+from bs4 import BeautifulSoup
 
 #Personal modules
 from log import MyLog
 import hosts
-
-
-#l = MyLog(total=True)
-#l.setLevel(logging.DEBUG)
-
-#bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-#bdd.setDatabaseName("fichiers.sqlite")
-#bdd.open()
-
-#query = QtSql.QSqlQuery("fichiers.sqlite")
-#query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
-             #doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
-             ##liked INTEGER, url TEXT, check INTEGER)")
 
 
 def listDoi():
@@ -104,6 +91,15 @@ def prettyDate(date):
         return date.humanize(now.naive)
 
 
+def simpleChar(string):
+
+    """Sluggify the string"""
+    #http://www.siteduzero.com/forum-83-810635-p1-sqlite-recherche-avec-like-insensible-a-la-casse.html#r7767300
+
+    #http://stackoverflow.com/questions/5574042/string-slugification-in-python
+    string = unidecode.unidecode(string).lower()
+    return re.sub(r'\W+', ' ', string)
+
 
 def checkData():
 
@@ -114,40 +110,21 @@ def checkData():
     c = bdd.cursor()
 
     c.execute("SELECT * FROM papers")
+
     #c.execute("UPDATE papers SET new=1 WHERE new='true'")
     #c.execute("UPDATE papers SET new=0 WHERE new='false'")
 
-    dois = []
 
     for ligne_bdd in c.fetchall():
+        abstract = ligne_bdd['abstract']
+        id_bdd = ligne_bdd['id']
 
-        dois.append(ligne_bdd['doi'])
+        if abstract is not None:
+            abstract_simple = simpleChar(BeautifulSoup(abstract).text)
+            print(abstract_simple)
+            c.execute("UPDATE papers SET abstract_simple=? WHERE id=?", (abstract_simple, id_bdd))
 
-    for doi in dois:
-        if " " in doi:
-            print(doi)
-            #old_doi = doi
-            #new_doi = doi.replace(" ", "")
-            #c.execute("UPDATE papers SET doi=? WHERE doi=?", (new_doi, old_doi))
-
-    #print(len(dois))
-    #print(len(list(set(dois))))
-
-    ##print([x for x, y in collections.Counter(dois).items() if y > 1])
-    #duplicates = [x for x, y in collections.Counter(dois).items() if y > 1]
-
-
-    #titles = []
-    #for doi in duplicates:
-
-        #c.execute("SELECT * FROM papers WHERE doi=?", (doi,))
-        ##c.execute("DELETE FROM papers WHERE doi=?", (doi,))
-        ##titles.append(c.fetchone()['title'])
-
-    #print(len(titles))
-
-
-    #bdd.commit()
+    bdd.commit()
     c.close()
     bdd.close()
 

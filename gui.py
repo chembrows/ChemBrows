@@ -74,7 +74,7 @@ class Fenetre(QtGui.QMainWindow):
         query = QtSql.QSqlQuery("fichiers.sqlite")
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
-                     liked INTEGER, url TEXT, verif INTEGER, new INTEGER)")
+                     liked INTEGER, url TEXT, verif INTEGER, new INTEGER, abstract_simple TEXT)")
 
 
         #Creation of a custom proxy to fix a sorting bug and to filter
@@ -363,6 +363,9 @@ class Fenetre(QtGui.QMainWindow):
         #Connect the back button
         self.button_back.clicked.connect(self.resetView)
 
+        #Launch the research if Enter pressed
+        self.research_bar.returnPressed.connect(self.research)
+
 
     def keyPressEvent(self, e):
 
@@ -588,6 +591,16 @@ class Fenetre(QtGui.QMainWindow):
         #self.adjustView()
 
 
+    def research(self):
+
+        """Slot to search on title and abstract"""
+
+        results = functions.simpleChar(self.research_bar.text())
+        self.proxy.setFilterRegExp(QtCore.QRegExp(results))
+        self.proxy.setFilterKeyColumn(13)
+        #self.adjustView()
+
+
     def adjustView(self):
 
         """Adjust the view, eg: hide the unintersting columns"""
@@ -638,20 +651,20 @@ class Fenetre(QtGui.QMainWindow):
             button.setChecked(False)
 
         #Save header
-        try:
-            self.header_state
-        except AttributeError:
-            self.header_state = self.tableau.horizontalHeader().saveState() 
-
+        #try:
+            #self.header_state
+        #except AttributeError:
+            #self.header_state = self.tableau.horizontalHeader().saveState() 
 
         self.tags_selected = self.journals_to_care
         self.searchByButton()
 
-        #self.proxy.setFilterRegExp(QtCore.QRegExp(''))
-        #self.proxy.setFilterKeyColumn(2)
+        #Reset the proxy fliter
+        self.proxy.setFilterRegExp(QtCore.QRegExp(''))
+        self.proxy.setFilterKeyColumn(2)
 
-        #On efface la barre de recherche
-        #self.research_bar.clear()
+        #Clear the search bar
+        self.research_bar.clear()
 
         #Delete last query
         try:
@@ -924,9 +937,9 @@ class Fenetre(QtGui.QMainWindow):
 
 ##------------------------- TOOLBAR  -----------------------------------------------
 
-        ##On crée une zone de recherche et on fixe sa taille
-        #self.research_bar = QtGui.QLineEdit()
-        #self.research_bar.setFixedSize(self.research_bar.sizeHint())
+        #Create a research bar and set its size
+        self.research_bar = QtGui.QLineEdit()
+        self.research_bar.setFixedSize(self.research_bar.sizeHint())
 
         #On ajoute une toolbar en la nommant pr l'indentifier,
         #Puis on ajoute les widgets
@@ -947,15 +960,15 @@ class Fenetre(QtGui.QMainWindow):
         #self.toolbar.addAction(self.addActorAction)
         #self.toolbar.addAction(self.removeActorAction)
         #self.toolbar.addAction(self.effacerFichierAction)
-        #self.toolbar.addWidget(QtGui.QLabel('Rechercher : '))
-        #self.toolbar.addWidget(self.research_bar)
-        #self.toolbar.addSeparator()
 
-        ##On crée un bouton pr tt remettre à zéro
+        #Create a button to reset everything
         self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_170_step_backward'), 'Back')
         self.toolbar.addWidget(self.button_back)
 
-        #self.toolbar.addSeparator()
+        self.toolbar.addSeparator()
+
+        self.toolbar.addWidget(QtGui.QLabel('Search : '))
+        self.toolbar.addWidget(self.research_bar)
 
         ##Bouton pour afficher la file d'attente
         #self.button_waiting = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_202_shopping_cart'), "File d'attente")
@@ -993,6 +1006,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.hideColumn(10) #Hide urls
         self.tableau.hideColumn(11) #Hide verif
         self.tableau.hideColumn(12) #Hide new
+        self.tableau.hideColumn(13) #Hide abstract_simple
         ##self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
         ##self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
         self.tableau.setSortingEnabled(True) #Active le tri

@@ -10,9 +10,7 @@ from io import open as iopen
 import arrow
 
 #Personal modules
-sys.path.append('/home/djipey/informatique/python/batbelt')
-import batbelt
-
+import functions
 
 #urls = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
         #"http://feeds.feedburner.com/acs/jacsat"
@@ -223,10 +221,6 @@ def getData(journal, entry):
 
         abstract = entry.summary
 
-        if "Untangling" in title:
-            print("babam")
-            print(entry)
-
         if "Author:" in entry.summary:
             abstract = entry.summary.split("Author: ")[0]
             #author = [entry.summary.split("Author: ")[1]] #To uncomment to get a list of author
@@ -243,7 +237,12 @@ def getData(journal, entry):
             abstract = "Empty"
 
 
-    return title, journal_abb, date, author, abstract, graphical_abstract, url
+    if abstract is not None:
+        abstract_simple = functions.simpleChar(BeautifulSoup(abstract).text)
+    else:
+        abstract_simple = None
+
+    return title, journal_abb, date, author, abstract, graphical_abstract, url, abstract_simple
 
 
 #def formatName(authors_list, reverse=False):
@@ -342,13 +341,13 @@ def downloadPic(url):
             path = "./graphical_abstracts/"
 
             #On enregistre la page
-            with iopen(path + batbelt.simpleChar(url), 'wb') as file:
+            with iopen(path + functions.simpleChar(url), 'wb') as file:
                 file.write(page.content)
                 #l.debug("image ok")
 
                 #On sort True si on matche une des possibilités
                 #de l'url
-                return True, batbelt.simpleChar(url)
+                return True, functions.simpleChar(url)
 
         elif page.status_code != requests.codes.ok:
             print("Bad return code: {0}".format(page.status_code))
@@ -383,9 +382,9 @@ if __name__ == "__main__":
     #urls_test = ["ang.xml"]
     #urls_test = ["jacs.xml"]
     #urls_test = ["http://feeds.rsc.org/rss/nj"]
-    #urls_test = ["njc.xml"]
+    urls_test = ["njc.xml"]
     #urls_test = ["http://feeds.rsc.org/rss/sc"]
-    urls_test = ["science.xml"]
+    #urls_test = ["science.xml"]
 
     for site in urls_test:
 
