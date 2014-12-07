@@ -41,7 +41,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         new = index.sibling(index.row(), 12).data()
         font = painter.font()
         if new == 1:
-            Set the font to bold w/ 2 different ways.
+            #Set the font to bold w/ 2 different ways.
             #One for the default painter, and one for the custom painter
             option.font.setWeight(QtGui.QFont.Bold)
             font.setBold(True)
@@ -71,7 +71,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
 
             painter.drawText(option.rect, QtCore.Qt.AlignCenter, prettyDate(date))
-
 
         else:
             #Using default painter

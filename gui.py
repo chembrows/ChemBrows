@@ -77,19 +77,15 @@ class Fenetre(QtGui.QMainWindow):
                      liked INTEGER, url TEXT, verif INTEGER, new INTEGER)")
 
 
-        #self.modele.select() # Remplit le modèle avec les data de la table
-
-        #On crée un proxy pour filtrer les fichiers lors
-        #des recherches
-        self.proxy = QtGui.QSortFilterProxyModel()
-        #self.proxy = ProxyPerso()
+        #Creation of a custom proxy to fix a sorting bug and to filter
+        #articles while researching
+        self.proxy = ProxyPerso(self)
         self.proxy.setSourceModel(self.modele)
 
-        #Règle le bug du tri après une modif de la bdd
+        #To fix a sorting bug
         self.proxy.setDynamicSortFilter(True)
 
-        #On crée la vue (un tableau), et on lui associe le modèle créé
-        #précédemment
+        #Create the view, and give it the model
         self.tableau = ViewPerso(self)
         self.tableau.setModel(self.proxy)
         self.tableau.setItemDelegate(ViewDelegate(self))
