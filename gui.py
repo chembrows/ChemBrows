@@ -19,12 +19,13 @@ from view_delegate import ViewDelegate
 from worker import Worker
 from predictor import Predictor
 from settings import Settings
+from advanced_search import AdvancedSearch
 from proxy import ProxyPerso
 import functions
 
 
-sys.path.append('/home/djipey/informatique/python/batbelt')
-import batbelt
+#sys.path.append('/home/djipey/informatique/python/batbelt')
+#import batbelt
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -221,6 +222,14 @@ class Fenetre(QtGui.QMainWindow):
         self.toggleReadAction = QtGui.QAction('Toggle read state', self)
         self.toggleReadAction.setShortcut('M')
         self.toggleReadAction.triggered.connect(self.toggleRead)
+
+        #Start the search
+        self.searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_027_search'), 'Search', self)
+        self.searchAction.triggered.connect(self.research)
+
+        #Start advanced search
+        self.advanced_searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_025_binoculars'), 'Advanced search', self)
+        self.advanced_searchAction.triggered.connect(lambda: AdvancedSearch(self))
 
         ##Action pour enlever un tag
         #self.removeTagAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_207_remove_2.png'), 'Supprimer un tag', self)
@@ -969,6 +978,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.toolbar.addWidget(QtGui.QLabel('Search : '))
         self.toolbar.addWidget(self.research_bar)
+        self.toolbar.addAction(self.searchAction)
+        self.toolbar.addAction(self.advanced_searchAction)
 
         ##Bouton pour afficher la file d'attente
         #self.button_waiting = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_202_shopping_cart'), "File d'attente")
