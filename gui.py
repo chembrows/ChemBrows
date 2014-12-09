@@ -75,7 +75,7 @@ class Fenetre(QtGui.QMainWindow):
         query = QtSql.QSqlQuery("fichiers.sqlite")
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
-                     liked INTEGER, url TEXT, verif INTEGER, new INTEGER, abstract_simple TEXT)")
+                     liked INTEGER, url TEXT, verif INTEGER, new INTEGER, topic_simple TEXT)")
 
 
         #Creation of a custom proxy to fix a sorting bug and to filter
@@ -215,7 +215,7 @@ class Fenetre(QtGui.QMainWindow):
         self.settingsAction.triggered.connect(lambda: Settings(self))
 
         #Action so show new articles
-        self.searchNewAction = QtGui.QAction('Search new', self)
+        self.searchNewAction = QtGui.QAction('Unread', self)
         self.searchNewAction.triggered.connect(self.searchNew)
 
         #Action to toggle the read state of an article
@@ -1017,7 +1017,7 @@ class Fenetre(QtGui.QMainWindow):
         self.tableau.hideColumn(10) #Hide urls
         self.tableau.hideColumn(11) #Hide verif
         self.tableau.hideColumn(12) #Hide new
-        self.tableau.hideColumn(13) #Hide abstract_simple
+        self.tableau.hideColumn(13) #Hide topic_simple
         ##self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
         ##self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
         self.tableau.setSortingEnabled(True) #Active le tri

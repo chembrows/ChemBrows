@@ -8,14 +8,21 @@ from PyQt4 import QtGui, QtCore
 
 class AdvancedSearch(QtGui.QDialog):
 
-    """Classe pour effectuer les réglages du programme
-    par l'utilisateur. On crée une fenêtre secondaire."""
+    """Class to perform advanced searches"""
 
     def __init__(self, parent):
 
         super(AdvancedSearch, self).__init__(parent)
 
-        print("prout")
+        self.parent = parent
+
+        #List to store the lineEdit, with the value of
+        #the search fields
+        self.fields_list = []
+
+        self.initUI()
+        self.defineSlots()
+
 
     #def connexion(self):
 
@@ -34,87 +41,93 @@ class AdvancedSearch(QtGui.QDialog):
                     #box.setCheckState(0)
 
 
-    #def defineSlots(self):
+    def defineSlots(self):
 
-        #"""Establish the slots"""
+        """Establish the slots"""
 
-        ##To close the window and save the settings
+        #To close the window and save the settings
         #self.ok_button.clicked.connect(self.saveSettings)
 
-        ##Button "clean database" (erase the unintersting journals from the db)
-        ##connected to the method of the main window class
-        #self.button_clean_db.clicked.connect(self.parent.cleanDb)
+        #Button "clean database" (erase the unintersting journals from the db)
+        #connected to the method of the main window class
+        self.button_add.clicked.connect(self.addField)
 
 
-    #def selectBrowser(self):
+    def addField(self):
 
-        #"""Méthode pour retourner le chemin du player"""
+        """Slot to add a research field to the query window.
+        Only deals with the UI"""
 
-        ##path = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
-        ##self.line_path.setText(path)
-        #pass
+        if len(self.fields_list) < 6:
+            line_new_field = QtGui.QLineEdit()
 
+            combo_operator = QtGui.QComboBox()
+            combo_operator.addItems(["AND", "OR", "NOT"])
 
-    #def initUI(self):
+            combo_field_name = QtGui.QComboBox()
+            combo_field_name.addItems(["Topic", "Author(s)"])
 
-        #"""Handles the display"""
+            self.fields_list.append((combo_operator, line_new_field, combo_field_name))
 
-        #self.parent.fen_settings = QtGui.QWidget()
-        #self.parent.fen_settings.setWindowTitle('Settings')
-
-        #self.ok_button = QtGui.QPushButton("OK", self)
-
-        #self.tabs = QtGui.QTabWidget()
-
-##------------------------ GENERAL TAB ------------------------------------------------
-
-        ##Scroll area for the journals to check
-        #self.scroll_check_journals = QtGui.QScrollArea()
-        #self.scrolling_check_journals = QtGui.QWidget()
-        #self.vbox_check_journals = QtGui.QVBoxLayout()
-        #self.scrolling_check_journals.setLayout(self.vbox_check_journals)
-
-        #labels_checkboxes = []
-
-        ##Get labels of the future check boxes of the journals to be parsed
-        #for company in os.listdir("./journals"):
-            #with open('journals/{0}'.format(company), 'r') as config:
-                #labels_checkboxes += [ line.split(" : ")[1] for line in config ]
-
-        #labels_checkboxes.sort()
-
-        ##Build the checkboxes, and put them in a layout
-        #for index, label in enumerate(labels_checkboxes):
-            #check_box = QtGui.QCheckBox(label)
-            #check_box.setCheckState(2)
-            #self.check_journals.append(check_box)
-            #self.vbox_check_journals.addWidget(check_box)
+            self.grid_query.addWidget(combo_operator, 2 + len(self.fields_list), 0)
+            self.grid_query.addWidget(line_new_field, 2 + len(self.fields_list), 1, 1, 2)
+            self.grid_query.addWidget(combo_field_name, 2 + len(self.fields_list), 3)
+        else:
+            return
 
 
-        #self.scroll_check_journals.setWidget(self.scrolling_check_journals)
+    def initUI(self):
 
-        #self.tabs.addTab(self.scroll_check_journals, "Journals")
+        """Handles the display"""
 
-##------------------------ DATABASE TAB ------------------------------------------------
+        self.parent.window_search = QtGui.QWidget()
+        self.parent.window_search.setWindowTitle('Advanced Search')
 
-        #self.widget_database = QtGui.QWidget()
-        #self.vbox_database = QtGui.QVBoxLayout()
+        self.search_button = QtGui.QPushButton("Search !", self)
 
-        #self.button_clean_db = QtGui.QPushButton("Clean database")
+        self.tabs = QtGui.QTabWidget()
 
-        #self.vbox_database.addWidget(self.button_clean_db)
-        #self.widget_database.setLayout(self.vbox_database)
-        #self.tabs.addTab(self.widget_database, "Database")
+#------------------------ NEW SEARCH TAB ------------------------------------------------
+
+        #Main widget of the tab, with a grid layout
+        self.widget_query = QtGui.QWidget()
+        self.grid_query = QtGui.QGridLayout()
+        self.widget_query.setLayout(self.grid_query)
+
+        #Line for the search name, to save
+        self.label_name = QtGui.QLabel("Search name : ")
+        self.line_name = QtGui.QLineEdit()
+
+        self.line_search_main = QtGui.QLineEdit()
+        self.combo_field_main = QtGui.QComboBox()
+        self.combo_field_main.addItems(["Topic", "Author(s)"])
+
+        #Button to add a new research field
+        self.button_add = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_236_zoom_in'), None, self)
+        self.button_add.setToolTip("Add research field")
+
+        #Make more space in the layout for the search name
+        self.grid_query.setRowStretch(1, 2)
+
+        #Build the grid
+        self.grid_query.addWidget(self.label_name, 0, 0)
+        self.grid_query.addWidget(self.line_name, 0, 1, 1, 3)
+        self.grid_query.addWidget(self.line_search_main, 2, 0, 1, 3)
+        self.grid_query.addWidget(self.combo_field_main, 2, 3)
+        self.grid_query.addWidget(self.button_add, 9, 0)
+
+        self.tabs.addTab(self.widget_query, "New query")
 
 ##------------------------ ASSEMBLING ------------------------------------------------
 
-        #self.vbox_global = QtGui.QVBoxLayout()
-        #self.vbox_global.addWidget(self.tabs)
+        #Create a global vbox, and stack the main widget + the search button
+        self.vbox_global = QtGui.QVBoxLayout()
+        self.vbox_global.addWidget(self.tabs)
 
-        #self.vbox_global.addWidget(self.ok_button)
+        self.vbox_global.addWidget(self.search_button)
 
-        #self.parent.fen_settings.setLayout(self.vbox_global)
-        #self.parent.fen_settings.show()
+        self.parent.window_search.setLayout(self.vbox_global)
+        self.parent.window_search.show()
 
 
     #def saveSettings(self):

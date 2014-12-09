@@ -8,8 +8,8 @@ from PyQt4 import QtGui, QtCore
 
 class Settings(QtGui.QDialog):
 
-    """Classe pour effectuer les réglages du programme
-    par l'utilisateur. On crée une fenêtre secondaire."""
+    """Class for the program settings, modifiable by the user.
+    Creates a child window"""
 
     def __init__(self, parent):
 

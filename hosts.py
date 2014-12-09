@@ -238,11 +238,11 @@ def getData(journal, entry):
 
 
     if abstract is not None:
-        abstract_simple = functions.simpleChar(BeautifulSoup(abstract).text)
+        topic = functions.simpleChar(BeautifulSoup(abstract).text) + functions.simpleChar(title)
     else:
-        abstract_simple = None
+        topic = functions.simpleChar(title)
 
-    return title, journal_abb, date, author, abstract, graphical_abstract, url, abstract_simple
+    return title, journal_abb, date, author, abstract, graphical_abstract, url, topic
 
 
 #def formatName(authors_list, reverse=False):

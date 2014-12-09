@@ -111,18 +111,20 @@ def checkData():
 
     c.execute("SELECT * FROM papers")
 
-    #c.execute("UPDATE papers SET new=1 WHERE new='true'")
+    c.execute("ALTER TABLE papers DROP COLUMN abstract_simple")
+    #c.execute("ALTER TABLE papers DROP COLUMN abstract_simple")
     #c.execute("UPDATE papers SET new=0 WHERE new='false'")
 
 
-    for ligne_bdd in c.fetchall():
-        abstract = ligne_bdd['abstract']
-        id_bdd = ligne_bdd['id']
+    #for ligne_bdd in c.fetchall():
+        #title = ligne_bdd['title']
+        #abstract = ligne_bdd['abstract']
+        #id_bdd = ligne_bdd['id']
 
-        if abstract is not None:
-            abstract_simple = simpleChar(BeautifulSoup(abstract).text)
-            print(abstract_simple)
-            c.execute("UPDATE papers SET abstract_simple=? WHERE id=?", (abstract_simple, id_bdd))
+        #if abstract is not None:
+            #topic_simple = simpleChar(BeautifulSoup(abstract).text) + simpleChar(title)
+            #print(topic_simple)
+            #c.execute("UPDATE papers SET topic_simple=? WHERE id=?", (topic_simple, id_bdd))
 
     bdd.commit()
     c.close()

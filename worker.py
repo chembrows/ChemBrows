@@ -66,8 +66,8 @@ class Worker(QtCore.QThread):
                 if list_ok[list_doi.index(doi)]:
                     continue
                 else:
-                    title, journal_abb, date, authors, abstract, graphical_abstract, url, abstract_simple = hosts.getData(journal, entry)
-                    query.prepare("UPDATE papers SET title= ?, authors=?, abstract=?, graphical_abstract=?, verif=?, new=?, abstract_simple=? WHERE doi=?")
+                    title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
+                    query.prepare("UPDATE papers SET title= ?, authors=?, abstract=?, graphical_abstract=?, verif=?, new=?, topic_simple=? WHERE doi=?")
 
                     #Checking if the data are complete
                     if type(abstract) is not str or type(graphical_abstract) is not str or type(authors) is not str:
@@ -76,7 +76,7 @@ class Worker(QtCore.QThread):
                         verif = 1
 
                     #On met new à 1 et non pas à True
-                    params = (title, authors, abstract, graphical_abstract, verif, 1, abstract_simple, doi)
+                    params = (title, authors, abstract, graphical_abstract, verif, 1, topic_simple, doi)
 
                     for value in params:
                         query.addBindValue(value)
@@ -92,9 +92,9 @@ class Worker(QtCore.QThread):
                         self.l.debug("{1} Corrected {0} in the database".format(title, journal))
             else:
 
-                title, journal_abb, date, authors, abstract, graphical_abstract, url = hosts.getData(journal, entry)
+                title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
 
-                query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, abstract_simple)\
+                query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
                                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
                 #Checking if the data are complete
@@ -104,7 +104,7 @@ class Worker(QtCore.QThread):
                     verif = 1
 
                 #On met new à 1 et pas à true
-                params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1, abstract_simple)
+                params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1, topic_simple)
 
                 for value in params:
                     query.addBindValue(value)
