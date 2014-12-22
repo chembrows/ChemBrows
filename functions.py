@@ -109,15 +109,18 @@ def checkData():
     bdd.row_factory = sqlite3.Row 
     c = bdd.cursor()
 
-    c.execute("SELECT * FROM papers")
+    c.execute("SELECT * FROM papers WHERE title LIKE '%%'")
 
-    c.execute("ALTER TABLE papers DROP COLUMN abstract_simple")
+    #c.execute("ALTER TABLE papers DROP COLUMN abstract_simple")
     #c.execute("ALTER TABLE papers DROP COLUMN abstract_simple")
     #c.execute("UPDATE papers SET new=0 WHERE new='false'")
 
+    test = []
 
-    #for ligne_bdd in c.fetchall():
-        #title = ligne_bdd['title']
+    for ligne_bdd in c.fetchall():
+        title = ligne_bdd['title']
+        print(title)
+        test.append(title)
         #abstract = ligne_bdd['abstract']
         #id_bdd = ligne_bdd['id']
 
@@ -126,7 +129,9 @@ def checkData():
             #print(topic_simple)
             #c.execute("UPDATE papers SET topic_simple=? WHERE id=?", (topic_simple, id_bdd))
 
-    bdd.commit()
+    print(len(test))
+
+    #bdd.commit()
     c.close()
     bdd.close()
 
