@@ -5,7 +5,6 @@ from PyQt4 import QtSql, QtCore
 import feedparser
 
 import hosts
-import functions
 
 
 class Worker(QtCore.QThread):
@@ -57,7 +56,7 @@ class Worker(QtCore.QThread):
 
             #Get the DOI, a unique number for a publication
             doi = hosts.getDoi(journal, entry)
-            list_doi, list_ok = functions.listDoi()
+            list_doi, list_ok = self.listDoi()
 
             if doi in list_doi:
                 self.l.debug("Post already in db")
@@ -123,10 +122,34 @@ class Worker(QtCore.QThread):
         #self.l.info("{0}: {1} entries added".format(journal, i))
 
 
+    def listDoi(self):
+
+        """Function to get the doi from the database.
+        Also returns a list of booleans to check if the data are complete"""
+
+        list_doi = []
+        list_ok = []
+
+        query = QtSql.QSqlQuery("fichiers.sqlite")
+        query.exec_("SELECT * FROM papers")
+
+        while query.next():
+            record = query.record()
+            list_doi.append(record.value('doi'))
+
+            if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
+                #Try to download the images again if it didn't work before
+                list_ok.append(True)
+            else:
+                list_ok.append(False)
+
+        return list_doi, list_ok
+
+
+
 if __name__ == "__main__":
 
     worker = Worker()
     worker.render("ang.xml")
 
     pass
-

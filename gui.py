@@ -18,7 +18,7 @@ from worker import Worker
 from predictor import Predictor
 from settings import Settings
 from advanced_search import AdvancedSearch
-from proxy import ProxyPerso
+# from proxy import ProxyPerso
 import functions
 
 # sys.path.append('/home/djipey/informatique/python/batbelt')
@@ -83,11 +83,11 @@ class Fenetre(QtGui.QMainWindow):
 
         # Creation of a custom proxy to fix a sorting bug and to filter
         # articles while researching
-        self.proxy = ProxyPerso(self)
+        # self.proxy = ProxyPerso(self)
         # self.proxy.setSourceModel(self.modele)
 
         # # To fix a sorting bug
-        self.proxy.setDynamicSortFilter(True)
+        # self.proxy.setDynamicSortFilter(True)
 
         # Create the view, and give it the model
         # self.tableau = ViewPerso(self)
@@ -539,7 +539,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.liste_models_in_tabs.append(modele)
 
-        proxy = ProxyPerso(self)
+        # proxy = ProxyPerso(self)
+        proxy = QtGui.QSortFilterProxyModel()
         proxy.setDynamicSortFilter(True)
         proxy.setSourceModel(modele)
         self.liste_proxies_in_tabs.append(proxy)
@@ -648,7 +649,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Update the view
         model.setQuery(self.query)
-        self.proxy.setSourceModel(model)
+        proxy.setSourceModel(model)
         table.setModel(proxy)
 
 
@@ -1230,15 +1231,15 @@ if __name__ == '__main__':
 
     # Little hack to kill all the pending process
     os.setpgrp()  # create new process group, become its leader
-    try:
-        app = QtGui.QApplication(sys.argv)
-        ex = Fenetre()
-        sys.exit(app.exec_())
-    except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        exc_type = type(e).__name__
-        fname = exc_tb.tb_frame.f_code.co_filename
-        print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-        print("{0}: {1}".format(exc_type, e))
-    finally:
-        os.killpg(0, signal.SIGKILL)  # kill all processes in my group
+    # try:
+    app = QtGui.QApplication(sys.argv)
+    ex = Fenetre()
+    sys.exit(app.exec_())
+    # except Exception as e:
+        # exc_type, exc_obj, exc_tb = sys.exc_info()
+        # exc_type = type(e).__name__
+        # fname = exc_tb.tb_frame.f_code.co_filename
+        # print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
+        # print("{0}: {1}".format(exc_type, e))
+    # finally:
+    os.killpg(0, signal.SIGKILL)  # kill all processes in my group

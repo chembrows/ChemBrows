@@ -12,69 +12,11 @@ import unidecode
 import re
 
 #TEST
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 
 #Personal modules
-from log import MyLog
-import hosts
-
-
-def listDoi():
-
-    """Function to get the doi from the database.
-    Also returns a list of booleans to check if the data are complete"""
-
-    list_doi = []
-    list_ok = []
-
-    query = QtSql.QSqlQuery("fichiers.sqlite")
-    query.exec_("SELECT * FROM papers")
-
-    while query.next():
-        record = query.record()
-        list_doi.append(record.value('doi'))
-
-        if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
-            #Try to download the images again if it didn't work before
-            list_ok.append(True)
-        else:
-            list_ok.append(False)
-
-    return list_doi, list_ok
-
-
-def like(id_bdd, logger):
-
-    """Function to like a post"""
-
-    request = "UPDATE papers SET liked = ? WHERE id = ?"
-    params = (1, id_bdd)
-
-    query = QtSql.QSqlQuery("fichiers.sqlite")
-
-    query.prepare(request)
-
-    for value in params:
-        query.addBindValue(value)
-
-    query.exec_()
-
-
-def unLike(id_bdd, logger):
-
-    """Function to unlike a post"""
-
-    request = "UPDATE papers SET liked = ? WHERE id = ?"
-    params = (None, id_bdd)
-
-    query = QtSql.QSqlQuery("fichiers.sqlite")
-
-    query.prepare(request)
-
-    for value in params:
-        query.addBindValue(value)
-
-    query.exec_()
+# from log import MyLog
+# import hosts
 
 
 def prettyDate(date):
@@ -93,9 +35,9 @@ def prettyDate(date):
 def simpleChar(string):
 
     """Sluggify the string"""
-    #http://www.siteduzero.com/forum-83-810635-p1-sqlite-recherche-avec-like-insensible-a-la-casse.html#r7767300
+    # http://www.siteduzero.com/forum-83-810635-p1-sqlite-recherche-avec-like-insensible-a-la-casse.html#r7767300
 
-    #http://stackoverflow.com/questions/5574042/string-slugification-in-python
+    # http://stackoverflow.com/questions/5574042/string-slugification-in-python
     string = unidecode.unidecode(string).lower()
     return re.sub(r'\W+', ' ', string)
 
