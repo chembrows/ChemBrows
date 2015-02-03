@@ -3,18 +3,30 @@
 
 import sys
 # import os
-from PyQt4 import QtGui  # , QtCore
+from PyQt4 import QtGui, QtCore
+from log import MyLog
 
 
 class AdvancedSearch(QtGui.QDialog):
 
     """Class to perform advanced searches"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
 
         super(AdvancedSearch, self).__init__(parent)
 
         self.parent = parent
+
+        # Condition to use a specific logger if
+        # module started in standalone
+        if type(parent) is QtGui.QWidget:
+            self.logger = MyLog()
+            self.test = True
+        else:
+            self.logger = self.parent.l
+            self.test = False
+
+        self.options = QtCore.QSettings("searches.ini", QtCore.QSettings.IniFormat)
 
         # List to store the lineEdit, with the value of
         # the search fields
@@ -22,66 +34,353 @@ class AdvancedSearch(QtGui.QDialog):
 
         self.initUI()
         self.defineSlots()
+        self.restoreSettings()
 
 
-    # def connexion(self):
+    def restoreSettings(self):
 
-        # """Get the settings and restore them"""
+        """Restore the right number of tabs"""
 
-        # journals_to_parse = self.parent.options.value("journals_to_parse", [])
-
-        # # Check the boxe    s
-        # if not journals_to_parse:
-            # return
-        # else:
-            # for box in self.check_journals:
-                # if box.text() in journals_to_parse:
-                    # box.setCheckState(2)
-                # else:
-                    # box.setCheckState(0)
+        for query in self.options.childGroups():
+            self.tabs.addTab(self.createForm(), query)
 
 
     def defineSlots(self):
 
         """Establish the slots"""
 
-        # To close the window and save the settings
-        # self.ok_button.clicked.connect(self.saveSettings)
+        self.button_search.clicked.connect(self.saveSearch)
 
-        # Button for old gui
-        # Button "clean database" (erase the unintersting journals from the db)
-        # connected to the method of the main window class
-        # self.button_add.clicked.connect(self.addField)
+        self.button_search_and_save.clicked.connect(self.saveSearch)
 
-        self.button_search.clicked.connect(self.launchSearch)
+        self.tabs.currentChanged.connect(self.tabChanged)
+
+        self.button_delete_search.clicked.connect(self.deleteSearch)
 
 
-    def launchSearch(self):
-        print("boum")
+    def deleteSearch(self):
+
+        """Slot to delete a query"""
+
+        # Get the title of the search, get the group with
+        # the same name in searches.ini, and clear the group
+        tab_title = self.tabs.tabText(self.tabs.currentIndex())
+        self.options.beginGroup(tab_title)
+        # Re-initialize the keys
+        self.options.remove("")
+        self.options.endGroup()
+
+        self.tabs.removeTab(self.tabs.currentIndex())
+
+        if not self.test:
+            for index in range(self.parent.onglets.count()):
+                if self.parent.onglets.tabText(index) == tab_title:
+                    self.parent.onglets.removeTab(index)
+                    self.parent.onglets.setCurrentIndex(0)
+                    break
 
 
-    # def addField(self):
+    def buildSearch(self):
 
-        # """Slot to add a research field to the query window.
-        # Only deals with the UI"""
+        """Build the query"""
 
-        # if len(self.fields_list) < 6:
-            # line_new_field = QtGui.QLineEdit()
-            # line_new_field.setPlaceholderText("Words to discriminate w/ the operator")
+        # Get all the lineEdit from the current tab
+        lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
 
-            # combo_operator = QtGui.QComboBox()
-            # combo_operator.addItems(["AND", "OR", "NOT"])
+        # name_search = lines[0].text()
+        topic_entries = [line.text() for line in lines[1:4]]
+        author_entries = [line.text() for line in lines[4:8]]
 
-            # combo_field_name = QtGui.QComboBox()
-            # combo_field_name.addItems(["Topic", "Author(s)"])
+        if topic_entries == [''] * 3 and author_entries == [''] * 3:
+            return False
 
-            # self.fields_list.append((combo_operator, line_new_field, combo_field_name))
+        base = "SELECT * FROM papers WHERE "
 
-            # self.grid_query.addWidget(combo_operator, 2 + len(self.fields_list), 0)
-            # self.grid_query.addWidget(line_new_field, 2 + len(self.fields_list), 1, 1, 2)
-            # self.grid_query.addWidget(combo_field_name, 2 + len(self.fields_list), 3)
-        # else:
-            # return
+        first = True
+
+        # TOPIC, AND condition
+        if topic_entries[0]:
+            first = False
+
+            words = [word.lstrip().rstrip() for word in topic_entries[0].split(",")]
+
+            for word in words:
+                if word is words[0]:
+                    base += "topic_simple LIKE '% {0} %'".format(word)
+                else:
+                    base += " AND topic_simple LIKE '% {0} %'".format(word)
+
+        # TOPIC, OR condition
+        if topic_entries[1]:
+            words = [word.lstrip().rstrip() for word in topic_entries[1].split(",")]
+
+            if first:
+                first = False
+                base += "topic_simple LIKE '% {0} %'".format(words[0])
+
+                for word in words[1:]:
+                    base += " OR topic_simple LIKE '% {0} %'".format(word)
+            else:
+                for word in words:
+                    base += " OR topic_simple LIKE '% {0} %'".format(word)
+
+        # TOPIC, NOT condition
+        if topic_entries[2]:
+            words = [word.lstrip().rstrip() for word in topic_entries[2].split(",")]
+
+            if first:
+                first = False
+                base += "topic_simple NOT LIKE '% {0} %'".format(words[0])
+
+                for word in words[1:]:
+                    base += " AND topic_simple NOT LIKE '% {0} %'".format(word)
+            else:
+                for word in words:
+                    base += " AND topic_simple NOT LIKE '% {0} %'".format(word)
+
+        # AUTHOR, AND condition
+        if author_entries[0]:
+            words = [word.lstrip().rstrip() for word in author_entries[0].split(",")]
+
+            if first:
+                first = False
+                base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(words[0])
+
+                for word in words[1:]:
+                    # base += " AND authors LIKE '% {0} %'".format(word)
+                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(word)
+            else:
+                for word in words:
+                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(word)
+
+        # AUTHOR, OR condition
+        if author_entries[1]:
+            words = [word.lstrip().rstrip() for word in author_entries[1].split(",")]
+
+            if first:
+                first = False
+                base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(words[0])
+
+                for word in words[1:]:
+                    # base += " OR authors LIKE '% {0} %'".format(word)
+                    base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(word)
+            else:
+                for word in words:
+                    # base += " OR authors LIKE '% {0} %'".format(word)
+                    base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(word)
+
+        # AUTHOR, NOT condition
+        if author_entries[2]:
+            words = [word.lstrip().rstrip() for word in author_entries[2].split(",")]
+
+            if first:
+                first = False
+                base += "' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '% {0} %'".format(words[0])
+
+                for word in words[1:]:
+                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '% {0} %'".format(word)
+            else:
+                for word in words:
+                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '% {0} %'".format(word)
+
+        print(base)
+
+        return base
+
+
+    def tabChanged(self):
+
+        """Method called when tab is changed.
+        Fill the fields with the good data"""
+
+        # Get the current tab number
+        index = self.tabs.currentIndex()
+        tab_title = self.tabs.tabText(index)
+
+        # Get the lineEdit objects of the current search tab displayed
+        lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
+        name_search = lines[0]
+        topic_entries = [line for line in lines[1:4]]
+        author_entries = [line for line in lines[4:8]]
+
+        if index is not 0:
+
+            name_search.setEnabled(False)
+
+            # Change the buttons at the button if the tab is
+            # a tab dedicated to search edition
+            self.button_delete_search.show()
+            self.button_search.hide()
+
+            # Fill the lineEdit with the data
+            name_search.setText(tab_title)
+
+            topic_entries_options = self.options.value("{0}/topic_entries".format(tab_title), None)
+            if topic_entries_options is not None:
+                topic_entries = [line.setText(value) for line, value in zip(topic_entries, topic_entries_options)]
+            author_entries_options = self.options.value("{0}/author_entries".format(tab_title), None)
+            if author_entries_options is not None:
+                author_entries = [line.setText(value) for line, value in zip(author_entries, author_entries_options)]
+
+        else:
+            self.button_delete_search.hide()
+            self.button_search.show()
+
+
+    def saveSearch(self):
+
+        """Slot to save a query"""
+
+        # TODO: nom obligatoire
+        lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
+
+        # Get the name of the search
+        name_search = lines[0].text()
+        tab_title = self.tabs.tabText(self.tabs.currentIndex())
+
+        topic_entries = [line.text() for line in lines[1:4]]
+        author_entries = [line.text() for line in lines[4:8]]
+
+        base = self.buildSearch()
+
+        if not base:
+            return
+
+        if tab_title == "New query":
+            if name_search in self.options.childGroups():
+                # TODO:
+                    # afficher une dialog box d'erreur pr le nom
+                self.logger.debug("This search name is already used")
+                return
+            else:
+                group_name = name_search
+                self.tabs.addTab(self.createForm(), name_search)
+
+                if not self.test:
+                    self.parent.createSearchTab(name_search, base)
+
+                # Clear the fields when perform search
+                for line in lines:
+                    line.clear()
+        else:
+            group_name = tab_title
+
+            if not self.test:
+                self.parent.createSearchTab(name_search, base, update=True)
+
+        self.logger.debug("Saving the search")
+
+        # Get an int as a unic id for the queries.
+        # Each query is ided with a particular int
+        # id_query = self.options.value("id_query", 0) + 1
+        # self.options.setValue("id_query", id_query)
+
+        self.options.beginGroup(group_name)
+
+        # Re-initialize the keys
+        self.options.remove("")
+        # self.options.setValue("name_search", name_search)
+        if topic_entries != [''] * 3:
+            self.options.setValue("topic_entries", topic_entries)
+        if author_entries != [''] * 3:
+            self.options.setValue("author_entries", author_entries)
+        if base:
+            self.options.setValue("sql_query", base)
+        self.options.endGroup()
+
+
+        # Call the parent's method to add a tab to the main window
+        # self.parent.createSearchTab(name_search, base)
+
+
+
+    def createForm(self):
+
+# ------------------------ NEW SEARCH TAB -------------------------------------
+
+        # Main widget of the tab, with a grid layout
+        widget_query = QtGui.QWidget()
+
+        vbox_query = QtGui.QVBoxLayout()
+        widget_query.setLayout(vbox_query)
+
+
+        # Line for the search name, to save
+        # Create a hbox to put the label and the line
+        hbox_name = QtGui.QHBoxLayout()
+        label_name = QtGui.QLabel("Search name : ")
+        line_name = QtGui.QLineEdit()
+        hbox_name.addWidget(label_name)
+        hbox_name.addWidget(line_name)
+
+        # add the label and the line to the
+        # local vbox
+        vbox_query.addLayout(hbox_name)
+
+        vbox_query.addStretch(1)
+
+        # ------------- TOPIC ----------------------------------
+        # Create a groupbox for the topic
+        group_topic = QtGui.QGroupBox("Topic")
+        grid_topic = QtGui.QGridLayout()
+        group_topic.setLayout(grid_topic)
+
+
+        # Add the topic groupbox to the global vbox
+        vbox_query.addWidget(group_topic)
+
+
+        # Create 3 lines, with their label: AND, OR, NOT
+        label_topic_and = QtGui.QLabel("AND:")
+        line_topic_and = QtGui.QLineEdit()
+
+        label_topic_or = QtGui.QLabel("OR:")
+        line_topic_or = QtGui.QLineEdit()
+
+        label_topic_not = QtGui.QLabel("NOT:")
+        line_topic_not = QtGui.QLineEdit()
+
+        # Organize the lines and the lab within the grid
+        grid_topic.addWidget(label_topic_and, 0, 0)
+        grid_topic.addWidget(line_topic_and, 0, 1, 1, 3)
+        grid_topic.addWidget(label_topic_or, 1, 0)
+        grid_topic.addWidget(line_topic_or, 1, 1, 1, 3)
+        grid_topic.addWidget(label_topic_not, 2, 0)
+        grid_topic.addWidget(line_topic_not, 2, 1, 1, 3)
+
+        vbox_query.addStretch(1)
+
+
+        # ------------- AUTHORS ----------------------------------
+        # Create a groupbox for the authors
+        group_author = QtGui.QGroupBox("Author(s)")
+        grid_author = QtGui.QGridLayout()
+        group_author.setLayout(grid_author)
+
+
+        # Add the author groupbox to the global vbox
+        vbox_query.addWidget(group_author)
+
+
+        label_author_and = QtGui.QLabel("AND:")
+        line_author_and = QtGui.QLineEdit()
+
+        label_author_or = QtGui.QLabel("OR:")
+        line_author_or = QtGui.QLineEdit()
+
+        label_author_not = QtGui.QLabel("NOT:")
+        line_author_not = QtGui.QLineEdit()
+
+        grid_author.addWidget(label_author_and, 0, 0)
+        grid_author.addWidget(line_author_and, 0, 1, 1, 3)
+        grid_author.addWidget(label_author_or, 1, 0)
+        grid_author.addWidget(line_author_or, 1, 1, 1, 3)
+        grid_author.addWidget(label_author_not, 2, 0)
+        grid_author.addWidget(line_author_not, 2, 1, 1, 3)
+
+        vbox_query.addStretch(1)
+
+        return widget_query
 
 
     def initUI(self):
@@ -91,118 +390,19 @@ class AdvancedSearch(QtGui.QDialog):
         self.parent.window_search = QtGui.QWidget()
         self.parent.window_search.setWindowTitle('Advanced Search')
 
-        self.button_search = QtGui.QPushButton("Search !", self)
 
         self.tabs = QtGui.QTabWidget()
 
-# ------------------------ NEW SEARCH TAB -------------------------------------
+        query = self.createForm()
 
-        # Main widget of the tab, with a grid layout
-        self.widget_query = QtGui.QWidget()
-
-        self.vbox_query = QtGui.QVBoxLayout()
-        self.widget_query.setLayout(self.vbox_query)
+        self.tabs.addTab(query, "New query")
 
 
-        # Line for the search name, to save
-        # Create a hbox to put the label and the line
-        hbox_name = QtGui.QHBoxLayout()
-        self.label_name = QtGui.QLabel("Search name : ")
-        self.line_name = QtGui.QLineEdit()
-        hbox_name.addWidget(self.label_name)
-        hbox_name.addWidget(self.line_name)
+# ------------------------ BUTTONS -----------------------------------------
 
-        # add the label and the line to the
-        # local vbox
-        self.vbox_query.addLayout(hbox_name)
-
-        self.vbox_query.addStretch(1)
-
-        # Create a groupbox for the topic
-        self.group_topic = QtGui.QGroupBox("Topic")
-        self.grid_topic = QtGui.QGridLayout()
-        self.group_topic.setLayout(self.grid_topic)
-
-
-        # Add the topic groupbox to the global vbox
-        self.vbox_query.addWidget(self.group_topic)
-
-
-        self.label_topic_and = QtGui.QLabel("AND:")
-        self.line_topic_and = QtGui.QLineEdit()
-
-        self.label_topic_or = QtGui.QLabel("OR:")
-        self.line_topic_or = QtGui.QLineEdit()
-
-        self.label_topic_not = QtGui.QLabel("NOT:")
-        self.line_topic_not = QtGui.QLineEdit()
-
-        self.grid_topic.addWidget(self.label_topic_and, 0, 0)
-        self.grid_topic.addWidget(self.line_topic_and, 0, 1, 1, 3)
-        self.grid_topic.addWidget(self.label_topic_or, 1, 0)
-        self.grid_topic.addWidget(self.line_topic_or, 1, 1, 1, 3)
-        self.grid_topic.addWidget(self.label_topic_not, 2, 0)
-        self.grid_topic.addWidget(self.line_topic_not, 2, 1, 1, 3)
-
-        self.vbox_query.addStretch(1)
-
-
-        # Create a groupbox for the authors
-        self.group_author = QtGui.QGroupBox("Author(s)")
-        self.grid_author = QtGui.QGridLayout()
-        self.group_author.setLayout(self.grid_author)
-
-
-        # Add the author groupbox to the global vbox
-        self.vbox_query.addWidget(self.group_author)
-
-
-        self.label_author_and = QtGui.QLabel("AND:")
-        self.line_author_and = QtGui.QLineEdit()
-
-        self.label_author_or = QtGui.QLabel("OR:")
-        self.line_author_or = QtGui.QLineEdit()
-
-        self.label_author_not = QtGui.QLabel("NOT:")
-        self.line_author_not = QtGui.QLineEdit()
-
-        self.grid_author.addWidget(self.label_author_and, 0, 0)
-        self.grid_author.addWidget(self.line_author_and, 0, 1, 1, 3)
-        self.grid_author.addWidget(self.label_author_or, 1, 0)
-        self.grid_author.addWidget(self.line_author_or, 1, 1, 1, 3)
-        self.grid_author.addWidget(self.label_author_not, 2, 0)
-        self.grid_author.addWidget(self.line_author_not, 2, 1, 1, 3)
-
-        self.vbox_query.addStretch(1)
-
-
-        # # Old gui
-        # self.grid_query = QtGui.QGridLayout()
-        # self.widget_query.setLayout(self.grid_query)
-
-        # self.label_name = QtGui.QLabel("Search name : ")
-        # self.line_name = QtGui.QLineEdit()
-
-        # self.line_search_main = QtGui.QLineEdit()
-        # self.combo_field_main = QtGui.QComboBox()
-        # self.combo_field_main.addItems(["Topic", "Author(s)"])
-
-        # # Button to add a new research field
-        # self.button_add = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_236_zoom_in'), None, self)
-        # self.button_add.setToolTip("Add research field")
-
-        # # Make more space in the layout for the search name
-        # self.grid_query.setRowStretch(1, 2)
-
-        # # Build the grid
-        # self.grid_query.addWidget(self.label_name, 0, 0)
-        # self.grid_query.addWidget(self.line_name, 0, 1, 1, 3)
-        # self.grid_query.addWidget(self.line_search_main, 2, 0, 1, 3)
-        # self.grid_query.addWidget(self.combo_field_main, 2, 3)
-        # self.grid_query.addWidget(self.button_add, 9, 0)
-
-
-        self.tabs.addTab(self.widget_query, "New query")
+        self.button_search = QtGui.QPushButton("Search !", self)
+        self.button_delete_search = QtGui.QPushButton("Delete search", self)
+        self.button_search_and_save = QtGui.QPushButton("Save", self)
 
 # ------------------------ ASSEMBLING -----------------------------------------
 
@@ -211,33 +411,13 @@ class AdvancedSearch(QtGui.QDialog):
         self.vbox_global.addWidget(self.tabs)
 
         self.vbox_global.addWidget(self.button_search)
+        self.vbox_global.addWidget(self.button_delete_search)
+        self.button_delete_search.hide()
+        self.vbox_global.addWidget(self.button_search_and_save)
 
         self.parent.window_search.setLayout(self.vbox_global)
         self.parent.window_search.show()
 
-
-    # def saveSettings(self):
-
-        # """Slot to save the settings"""
-
-        # journals_to_parse = []
-
-        # for box in self.check_journals:
-            # if box.checkState() == 2:
-                # journals_to_parse.append(box.text())
-
-        # if journals_to_parse:
-            # self.parent.options.remove("journals_to_parse")
-            # self.parent.options.setValue("journals_to_parse", journals_to_parse)
-        # else:
-            # self.parent.options.remove("journals_to_parse")
-
-        # self.parent.displayTags()
-        # self.parent.resetView()
-
-        # # Close the settings window and free the memory
-        # self.parent.fen_settings.close()
-        # del self.parent.fen_settings
 
 if __name__ == '__main__':
 

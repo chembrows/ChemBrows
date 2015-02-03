@@ -11,7 +11,6 @@ import arrow
 import unidecode
 import re
 
-
 #TEST
 from bs4 import BeautifulSoup
 
@@ -105,35 +104,66 @@ def checkData():
 
     """Fct de test uniquement"""
 
+    def regexp(expr, item):
+        reg = re.compile(expr)
+        result = reg.search(item)
+
+        if result is not None:
+            return result
+
     bdd = sqlite3.connect("fichiers.sqlite")
-    bdd.row_factory = sqlite3.Row 
+    bdd.row_factory = sqlite3.Row
+    bdd.create_function("REGEXP", 2, regexp)
     c = bdd.cursor()
 
-    c.execute("SELECT * FROM papers WHERE title LIKE '%%'")
+    request = "UPDATE papers SET topic_simple = ? WHERE id = ?"
 
-    #c.execute("ALTER TABLE papers DROP COLUMN abstract_simple")
-    #c.execute("ALTER TABLE papers DROP COLUMN abstract_simple")
-    #c.execute("UPDATE papers SET new=0 WHERE new='false'")
+    # c.execute("SELECT * FROM papers WHERE ' ' || replace(authors, ',', ' ') || ' ' LIKE '% Francoia %'")
+    c.execute("SELECT * FROM papers")
 
-    test = []
+    results = c.fetchall()
 
-    for ligne_bdd in c.fetchall():
-        title = ligne_bdd['title']
-        print(title)
-        test.append(title)
-        #abstract = ligne_bdd['abstract']
-        #id_bdd = ligne_bdd['id']
+    for line in results:
+        if line['topic_simple'] is not None:
+            topic_simple = " " + line['topic_simple'] + " "
+            c.execute(request, (topic_simple, line['id']))
 
-        #if abstract is not None:
-            #topic_simple = simpleChar(BeautifulSoup(abstract).text) + simpleChar(title)
-            #print(topic_simple)
-            #c.execute("UPDATE papers SET topic_simple=? WHERE id=?", (topic_simple, id_bdd))
-
-    print(len(test))
-
-    #bdd.commit()
+    bdd.commit()
     c.close()
     bdd.close()
+
+    # bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+    # bdd.setDatabaseName("fichiers.sqlite")
+
+    # bdd.open()
+
+    # request = "SELECT * FROM papers WHERE authors REGEXP ('.*?')"
+    # # request = "SELECT * FROM papers"
+    # # params = ("'^Jean-Patrick'",)
+
+
+    # query = QtSql.QSqlQuery("fichiers.sqlite")
+
+    # query.prepare(request)
+
+    # # for value in params:
+        # # query.addBindValue(value)
+
+    # query.exec_()
+
+    # print(query.lastError().text())
+
+    # while query.next():
+        # record = query.record()
+
+        # print(record.value('title'))
+
+        # # if type(record.value('abstract')) is str:
+            # # abstract = record.value('abstract')
+        # # else:
+
+
+    # bdd.close()
 
 
 

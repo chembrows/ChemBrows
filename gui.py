@@ -39,6 +39,13 @@ class Fenetre(QtGui.QMainWindow):
         # List to store the tags checked
         self.tags_selected = []
 
+        # List to store all the views
+        self.liste_tables_in_tabs = []
+
+        self.liste_models_in_tabs = []
+
+        self.liste_proxies_in_tabs = []
+
         # List to store the tags buttons on the left
         # self.list_buttons_tags = []
 
@@ -61,12 +68,12 @@ class Fenetre(QtGui.QMainWindow):
 
         self.bdd.open()
 
-        # Création du modèle, issu de la bdd
-        self.modele = ModelPerso()
+        # # Création du modèle, issu de la bdd
+        # self.modele = ModelPerso()
 
         # Changes are effective immediately
-        self.modele.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
-        self.modele.setTable("papers")
+        # self.modele.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
+        # self.modele.setTable("papers")
 
         query = QtSql.QSqlQuery("fichiers.sqlite")
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
@@ -77,19 +84,21 @@ class Fenetre(QtGui.QMainWindow):
         # Creation of a custom proxy to fix a sorting bug and to filter
         # articles while researching
         self.proxy = ProxyPerso(self)
-        self.proxy.setSourceModel(self.modele)
+        # self.proxy.setSourceModel(self.modele)
 
-        # To fix a sorting bug
+        # # To fix a sorting bug
         self.proxy.setDynamicSortFilter(True)
 
         # Create the view, and give it the model
-        self.tableau = ViewPerso(self)
-        self.tableau.setModel(self.proxy)
-        self.tableau.setItemDelegate(ViewDelegate(self))
-        self.tableau.setSelectionBehavior(self.tableau.SelectRows)
+        # self.tableau = ViewPerso(self)
+        # self.tableau.setModel(self.proxy)
+        # self.tableau.setItemDelegate(ViewDelegate(self))
+        # self.tableau.setSelectionBehavior(self.tableau.SelectRows)
 
 
     def getJournalsToCare(self):
+
+        """Get the journals checked in the settings window"""
 
         # Create a list to store the journals checked in the settings window
         self.journals_to_care = self.options.value("journals_to_parse", [])
@@ -153,12 +162,14 @@ class Fenetre(QtGui.QMainWindow):
         """Method to check the state of each worker.
         If all the workers are finished, enable the parse action"""
 
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+
         # Get a list of the workers states
-        list_states = [ worker.isFinished() for worker in self.list_threads ]
+        list_states = [worker.isFinished() for worker in self.list_threads]
 
         if False not in list_states:
             # Update the view when a worker is finished
-            self.modele.select()
+            model.select()
             self.parseAction.setEnabled(True)
             self.l.debug("Parsing data finished. Enabling parseAction")
 
@@ -187,14 +198,9 @@ class Fenetre(QtGui.QMainWindow):
         self.calculatePercentageMatchAction.triggered.connect(self.calculatePercentageMatch)
 
         # Action to like a post
-        self.likeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_343_thumbs_up'), 'Like the post', self)
+        self.likeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_343_thumbs_up'), 'Toggle Like for the post', self)
         self.likeAction.setShortcut('L')
         self.likeAction.triggered.connect(self.like)
-
-        # Action to unlike a post
-        self.unLikeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_344_thumbs_down'), 'unLike the post', self)
-        self.unLikeAction.setShortcut('U')
-        self.unLikeAction.triggered.connect(self.unLike)
 
         # Action to open the post in browser
         self.openInBrowserAction = QtGui.QAction('Open post in browser', self)
@@ -203,7 +209,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Action to update the model. For TEST
         self.updateAction = QtGui.QAction('Update model', self)
-        self.updateAction.triggered.connect(lambda: self.modele.select())
+        self.updateAction.triggered.connect(self.updateModel)
         self.updateAction.setShortcut('F7')
 
         # Action to show a settings window
@@ -227,21 +233,6 @@ class Fenetre(QtGui.QMainWindow):
         self.advanced_searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_025_binoculars'), 'Advanced search', self)
         self.advanced_searchAction.triggered.connect(lambda: AdvancedSearch(self))
 
-        # # Action pour enlever un tag
-        # self.removeTagAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_207_remove_2.png'), 'Supprimer un tag', self)
-        # self.removeTagAction.setShortcut('R')
-        # self.removeTagAction.setStatusTip("Enlever un tag à une vidéo")
-        # self.removeTagAction.triggered.connect(self.removeTag)
-
-        # # Action pour la vérif des pathes en bdd
-        # self.verificationAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_081_refresh.png'), 'Vérification bdd', self)
-        # self.verificationAction.setShortcut('F5')
-        # self.verificationAction.triggered.connect(self.verification)
-
-        # # Action pr ajouter un tag
-        # self.addTagAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_065_tag.png'), '&Ajouter un tag', self)
-        # self.addTagAction.setShortcut('T')
-        # self.addTagAction.triggered.connect(self.addTag)
 
         # # On crée une action qui servira de séparateur
         # self.separatorAction = QtGui.QAction(self)
@@ -259,6 +250,23 @@ class Fenetre(QtGui.QMainWindow):
         # # On ajoute l'action à la fenêtre seulement pr la rendre invisible
         # # http://stackoverflow.com/questions/18441755/hide-an-action-without-disabling-it
         # self.addAction(self.changeTabRightAction)
+
+
+    def updateModel(self):
+
+        """Debug function, allows to update a model
+        with a button, at any time. Will not be used by
+        the final user"""
+
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+
+        model.select()
+
+        model.setQuery(self.query)
+        self.proxy.setSourceModel(model)
+        table.setModel(proxy)
 
 
     def closeEvent(self, event):
@@ -279,7 +287,10 @@ class Fenetre(QtGui.QMainWindow):
         self.l.debug("Sauvegarde de l'état de la fenêtre dans options.ini")
         self.options.setValue("window_geometry", self.saveGeometry())
         self.options.setValue("window_state", self.saveState())
-        self.options.setValue("header_state", self.tableau.horizontalHeader().saveState())
+
+        for index, each_table in enumerate(self.liste_tables_in_tabs):
+            self.options.setValue("header_state{0}".format(index), each_table.horizontalHeader().saveState())
+
         self.options.setValue("central_splitter", self.splitter1.saveState())
         self.options.setValue("final_splitter", self.splitter2.saveState())
 
@@ -307,14 +318,26 @@ class Fenetre(QtGui.QMainWindow):
 
         """Restore the prefs"""
 
+        searches_saved = QtCore.QSettings("searches.ini", QtCore.QSettings.IniFormat)
+
+        # Restore the saved searches
+        for query in searches_saved.childGroups():
+            search_name = query
+            query = searches_saved.value("{0}/sql_query".format(query))
+            self.createSearchTab(search_name, query)
+
         # Si des réglages pour la fenêtre
         # sont disponibles, on les importe et applique
         if "Window" in self.options.childGroups():
             self.restoreGeometry(self.options.value("Window/window_geometry"))
             self.restoreState(self.options.value("Window/window_state"))
-            self.tableau.horizontalHeader().restoreState(self.options.value("Window/header_state"))
+
+            for index, each_table in enumerate(self.liste_tables_in_tabs):
+                each_table.horizontalHeader().restoreState(self.options.value("Window/header_state{0}".format(index)))
+
             self.splitter1.restoreState(self.options.value("Window/central_splitter"))
             self.splitter2.restoreState(self.options.value("Window/final_splitter"))
+
 
 
         self.getJournalsToCare()
@@ -327,7 +350,9 @@ class Fenetre(QtGui.QMainWindow):
 
         """Method to handle right-click"""
 
-        if not self.tableau.selectionModel().selection().indexes():
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+
+        if not table.selectionModel().selection().indexes():
             return
         else:
         # Si une ligne est sélectionnée, on affiche un menu adapté à une
@@ -343,7 +368,6 @@ class Fenetre(QtGui.QMainWindow):
         menu = QtGui.QMenu()
         menu.addAction(self.toggleReadAction)
         menu.addAction(self.likeAction)
-        menu.addAction(self.unLikeAction)
         menu.addAction(self.openInBrowserAction)
 
         menu.exec_(self.mapToGlobal(new_pos))
@@ -355,22 +379,24 @@ class Fenetre(QtGui.QMainWindow):
 
         # On connecte le signal de double clic sur une cell vers un
         # slot qui lance le lecteur ac le nom du fichier en paramètre
-        self.tableau.doubleClicked.connect(self.openInBrowser)
+        # self.tableau.doubleClicked.connect(self.openInBrowser)
 
-        # http://www.diotavelli.net/PyQtWiki/Handling%20context%20menus
-        # Personal right-click
-        self.tableau.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.tableau.customContextMenuRequested.connect(self.popup)
+        # # http://www.diotavelli.net/PyQtWiki/Handling%20context%20menus
+        # # Personal right-click
+        # self.tableau.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        # self.tableau.customContextMenuRequested.connect(self.popup)
 
-        self.tableau.clicked.connect(self.displayInfos)
-        self.tableau.clicked.connect(self.displayMosaic)
-        self.tableau.clicked.connect(self.markOneRead)
+        # self.tableau.clicked.connect(self.displayInfos)
+        # self.tableau.clicked.connect(self.displayMosaic)
+        # self.tableau.clicked.connect(self.markOneRead)
 
         # Connect the back button
         self.button_back.clicked.connect(self.resetView)
 
         # Launch the research if Enter pressed
         self.research_bar.returnPressed.connect(self.research)
+
+        self.onglets.currentChanged.connect(self.tabChanged)
 
 
     def keyPressEvent(self, e):
@@ -414,16 +440,18 @@ class Fenetre(QtGui.QMainWindow):
         """Method to get the infos of a post.
         For now, gets only the abstract"""
 
-        abstract = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data()
-        title = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 3).data()
-        author = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 6).data()
-        date = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 4).data()
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+
+        abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
+        title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
+        author = table.model().index(table.selectionModel().selection().indexes()[0].row(), 6).data()
+        date = table.model().index(table.selectionModel().selection().indexes()[0].row(), 4).data()
 
         self.label_date.setText(date)
         self.label_title.setText("<span style='font-size:12pt; font-weight:bold'>{0}</span>".format(title))
 
         if type(abstract) == str:
-            self.text_abstract.setHtml(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 7).data())
+            self.text_abstract.setHtml(table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data())
         else:
             self.text_abstract.setHtml("")
 
@@ -440,8 +468,10 @@ class Fenetre(QtGui.QMainWindow):
         # infos:
         # http://vincent-vande-vyvre.developpez.com/tutoriels/pyqt/manipulation-images/
 
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+
         try:
-            path_graphical_abstract = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 8).data()
+            path_graphical_abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 8).data()
             if type(path_graphical_abstract) is not str:
                 try:
                     self.scene.clear()
@@ -472,6 +502,62 @@ class Fenetre(QtGui.QMainWindow):
         self.vision.setScene(self.scene)
 
 
+    def tabChanged(self):
+
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+
+        self.query = QtSql.QSqlQuery("fichiers.sqlite")
+
+        self.query.prepare(table.base_query)
+
+        self.query.exec_()
+
+        model.setQuery(self.query)
+
+        model.setQuery(self.query)
+        self.proxy.setSourceModel(model)
+        table.setModel(proxy)
+
+
+    def createSearchTab(self, name_search, query, update=False):
+
+        if update:
+            for index in range(self.onglets.count()):
+                if name_search == self.onglets.tabText(index):
+                    self.liste_tables_in_tabs[index].base_query = query
+                    # TODO: update the view
+                    return
+
+        # Création du modèle, issu de la bdd
+        modele = ModelPerso()
+
+        # Changes are effective immediately
+        modele.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
+        modele.setTable("papers")
+
+        self.liste_models_in_tabs.append(modele)
+
+        proxy = ProxyPerso(self)
+        proxy.setDynamicSortFilter(True)
+        proxy.setSourceModel(modele)
+        self.liste_proxies_in_tabs.append(proxy)
+
+        # Create the view, and give it the model
+        tableau = ViewPerso(self)
+        tableau.base_query = query
+        tableau.setModel(proxy)
+        tableau.setItemDelegate(ViewDelegate(self))
+        tableau.setSelectionBehavior(tableau.SelectRows)
+
+        tableau.initUI()
+
+        self.liste_tables_in_tabs.append(tableau)
+
+        self.onglets.addTab(tableau, name_search)
+
+
     def displayTags(self):
 
         """Slot to display push buttons on the left.
@@ -499,7 +585,9 @@ class Fenetre(QtGui.QMainWindow):
 
         self.vbox_all_tags.setAlignment(QtCore.Qt.AlignTop)
         self.scroll_tags.setWidget(self.scrolling_tags)
-        self.searchByButton()
+
+        # TODO: j'en suis ici, query de base
+        # self.searchByButton()
 
 
     def stateButtons(self, pressed):
@@ -533,9 +621,19 @@ class Fenetre(QtGui.QMainWindow):
             self.resetView()
             return
 
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+
         self.query = QtSql.QSqlQuery()
 
-        requete = "SELECT * FROM papers WHERE journal IN ("
+        # requete = "SELECT * FROM papers WHERE journal IN ("
+
+        # TODO: ajouter à la base_query
+        if "WHERE" in table.base_query:
+            requete = " AND journal IN ("
+        else:
+            requete = " WHERE journal IN ("
 
         # Building the query
         for each_journal in self.tags_selected:
@@ -545,21 +643,22 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
-        self.query.prepare(requete)
+        self.query.prepare(table.base_query + requete)
         self.query.exec_()
 
         # Update the view
-        # self.modele.setTable("papers")
-        self.modele.setQuery(self.query)
-
-        self.proxy.setSourceModel(self.modele)
-        self.tableau.setModel(self.proxy)
-        # self.adjustView()
+        model.setQuery(self.query)
+        self.proxy.setSourceModel(model)
+        table.setModel(proxy)
 
 
     def searchNew(self):
 
         """Slot to select new articles"""
+
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
         self.query = QtSql.QSqlQuery()
 
@@ -571,7 +670,6 @@ class Fenetre(QtGui.QMainWindow):
         while self.query.next():
             record = self.query.record()
             list_id.append(record.value('id'))
-
 
         # Then, perform the query on the id. This way, the articles
         # are not erased from the view when they are marked as read
@@ -588,37 +686,34 @@ class Fenetre(QtGui.QMainWindow):
         self.query.prepare(requete)
         self.query.exec_()
 
-        # Update the view
-        # self.modele.setTable("papers")
-        self.modele.setQuery(self.query)
-
-        self.proxy.setSourceModel(self.modele)
-        self.tableau.setModel(self.proxy)
-        # self.adjustView()
+        model.setQuery(self.query)
+        self.proxy.setSourceModel(model)
+        table.setModel(proxy)
 
 
     def research(self):
 
         """Slot to search on title and abstract"""
 
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
         results = functions.simpleChar(self.research_bar.text())
-        self.proxy.setFilterRegExp(QtCore.QRegExp(results))
-        self.proxy.setFilterKeyColumn(13)
-        # self.adjustView()
+        results = self.research_bar.text().lower()
+        proxy.setFilterRegExp(QtCore.QRegExp(results))
+        proxy.setFilterKeyColumn(13)
 
 
-    def adjustView(self):
+    # def adjustView(self):
 
-        """Adjust the view, eg: hide the unintersting columns"""
+        # """Adjust the view, eg: hide the unintersting columns"""
 
-        self.tableau.hideColumn(0)  # Hide id
-        self.tableau.hideColumn(2)  # Hide doi
-        self.tableau.hideColumn(6)  # Hide authors
-        self.tableau.hideColumn(7)  # Hide abstracts
-        self.tableau.hideColumn(8)  # Hide abstracts
-        self.tableau.hideColumn(10)  # Hide urls
-        self.tableau.hideColumn(11)  # Hide verif
-        self.tableau.hideColumn(12)  # Hide new
+        # self.tableau.hideColumn(0)  # Hide id
+        # self.tableau.hideColumn(2)  # Hide doi
+        # self.tableau.hideColumn(6)  # Hide authors
+        # self.tableau.hideColumn(7)  # Hide abstracts
+        # self.tableau.hideColumn(8)  # Hide abstracts
+        # self.tableau.hideColumn(10)  # Hide urls
+        # self.tableau.hideColumn(11)  # Hide verif
+        # self.tableau.hideColumn(12)  # Hide new
 
 
     def clearLayout(self, layout):
@@ -640,6 +735,8 @@ class Fenetre(QtGui.QMainWindow):
     def resetView(self):
 
         """Slot pour remettre les données affichées à zéro"""
+
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
         # Clean graphical abstract area
         try:
@@ -666,8 +763,8 @@ class Fenetre(QtGui.QMainWindow):
         self.searchByButton()
 
         # Reset the proxy fliter
-        self.proxy.setFilterRegExp(QtCore.QRegExp(''))
-        self.proxy.setFilterKeyColumn(2)
+        proxy.setFilterRegExp(QtCore.QRegExp(''))
+        proxy.setFilterKeyColumn(2)
 
         # Clear the search bar
         self.research_bar.clear()
@@ -678,48 +775,32 @@ class Fenetre(QtGui.QMainWindow):
         except AttributeError:
             self.l.warn("Pas de requête précédente")
 
-        # self.adjustView()
-
-
-    def launchFile(self):
-
-        """Slot qui lance le fichier double cliqué dans le tableau
-        On accède à l'index en rajoutant un argument à la def du slot,
-        même si on ne le spécifie pas ds l'appel"""
-
-        # # TODO: pouvoir choisir le player grâce à un fichier de conf
-        # path = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 4).data()
-        # path_player = self.options.value("player", "/usr/bin/vlc")
-
-        # self.l.info("{0} lancé".format(path))
-        # os.popen("{0} \"{1}\"".format(path_player, path))
-
-        pass
-
 
     def markOneRead(self, element):
 
         """Slot to mark an article read"""
 
-        new = self.tableau.model().index(element.row(), 12).data()
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+        new = table.model().index(element.row(), 12).data()
 
         if new == 0:
             return
         else:
 
-            line = self.tableau.selectionModel().currentIndex().row()
+            line = table.selectionModel().currentIndex().row()
 
-            self.tableau.model().setData(self.tableau.model().index(line, 12), 0)
+            table.model().setData(table.model().index(line, 12), 0)
 
             try:
-                self.modele.setQuery(self.query)
-                self.proxy.setSourceModel(self.modele)
-                self.tableau.setModel(self.proxy)
-                # self.adjustView()
+                model.setQuery(self.query)
+                self.proxy.setSourceModel(model)
+                table.setModel(proxy)
             except AttributeError:
                 pass
 
-            self.tableau.selectRow(line)
+            table.selectRow(line)
 
 
     def toggleRead(self):
@@ -727,23 +808,25 @@ class Fenetre(QtGui.QMainWindow):
         """Method to invert the value of new.
         So, toggle the read/unread state of an article"""
 
-        new = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 12).data()
-        # id_bdd = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 0).data()
-        line = self.tableau.selectionModel().currentIndex().row()
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+        new = table.model().index(table.selectionModel().selection().indexes()[0].row(), 12).data()
+        line = table.selectionModel().currentIndex().row()
 
         # Invert the value of new
         new = 1 - new
 
-        self.tableau.model().setData(self.tableau.model().index(line, 12), new)
+        table.model().setData(table.model().index(line, 12), new)
 
         try:
-            self.modele.setQuery(self.query)
-            self.proxy.setSourceModel(self.modele)
-            self.tableau.setModel(self.proxy)
+            model.setQuery(self.query)
+            self.proxy.setSourceModel(model)
+            table.setModel(proxy)
         except AttributeError:
             pass
 
-        self.tableau.selectRow(line)
+        table.selectRow(line)
 
 
     def cleanDb(self):
@@ -796,7 +879,9 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to open the post in browser"""
 
-        url = self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 10).data()
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+
+        url = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
 
         if not url:
             return
@@ -814,63 +899,84 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to calculate the match percentage"""
 
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+
         self.predictor = Predictor(self.bdd)
         self.predictor.calculatePercentageMatch()
-        self.modele.select()
+        model.select()
 
 
     def like(self):
 
-        """Slot to mark a post like"""
+        """Slot to mark a post liked"""
 
-        posts_selected, previous_lines = self.postsSelected(True)
+        # posts_selected, previous_lines = self.postsSelected(True)
 
-        if not posts_selected:
-            return
+        # if not posts_selected:
+            # return
 
-        functions.like(posts_selected[0], self.l)
+        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        # model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        # proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+
+        # functions.like(posts_selected[0], self.l)
+
+        # model.select()
 
         # try:
-        # # On régènére la vue courante en effectuant la même
-        # # requête que précédemment
-            # self.query.prepare(self.query.executedQuery())
-            # self.query.exec_()
-            # self.modele.setTable("videos")
-            # self.modele.setQuery(self.query)
+            # model.setQuery(self.query)
+            # self.proxy.setSourceModel(model)
+            # table.setModel(proxy)
         # except AttributeError:
-            # self.l.warn("Pas de requête précédente")
-            # self.modele.setTable("videos")
-            # self.modele.select()
+            # pass
 
-        self.modele.select()
+        # table.selectRow(previous_lines[0])
+
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+        like = table.model().index(table.selectionModel().selection().indexes()[0].row(), 9).data()
+        line = table.selectionModel().currentIndex().row()
+
+        # Invert the value of new
+        like = 1 - like
+
+        table.model().setData(table.model().index(line, 9), like)
 
         try:
-            self.modele.setQuery(self.query)
-            self.proxy.setSourceModel(self.modele)
-            self.tableau.setModel(self.proxy)
-            # self.adjustView()
+            model.setQuery(self.query)
+            self.proxy.setSourceModel(model)
+            table.setModel(proxy)
         except AttributeError:
             pass
 
-        self.tableau.selectRow(previous_lines[0])
+        table.selectRow(line)
 
+    # def unLike(self):
 
-    def unLike(self):
+        # """Slot to mark a post unlike"""
 
-        """Slot to mark a post unlike"""
+        # posts_selected, previous_lines = self.postsSelected(True)
 
-        posts_selected, previous_lines = self.postsSelected(True)
+        # if not posts_selected:
+            # return
 
-        if not posts_selected:
-            return
+        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        # model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        # proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        functions.unLike(posts_selected[0], self.l)
+        # functions.unLike(posts_selected[0], self.l)
 
-        self.modele.select()
-        self.proxy.setSourceModel(self.modele)
-        self.tableau.setModel(self.proxy)
+        # model.select()
 
-        self.tableau.selectRow(previous_lines[0])
+        # try:
+            # model.setQuery(self.query)
+            # self.proxy.setSourceModel(model)
+            # table.setModel(proxy)
+        # except AttributeError:
+            # pass
+
+        # table.selectRow(previous_lines[0])
 
 
     def postsSelected(self, previous=False):
@@ -878,11 +984,13 @@ class Fenetre(QtGui.QMainWindow):
         """Method to get the selected posts, and store the current
         selected line before updating the model"""
 
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+
         posts_selected = []
         lignes = []
 
         # On récupère ttes les cells sélectionnées
-        for element in self.tableau.selectionModel().selection().indexes():
+        for element in table.selectionModel().selection().indexes():
             lignes.append(element.row())
             # element est un QModelIndex. Comme on sélectionne des lignes
             # entières, on a ttes les colonnes de ttes les lignes ds
@@ -929,7 +1037,7 @@ class Fenetre(QtGui.QMainWindow):
         self.editMenu.addAction(self.calculatePercentageMatchAction)
         self.editMenu.addAction(self.toggleReadAction)
         self.editMenu.addAction(self.likeAction)
-        self.editMenu.addAction(self.unLikeAction)
+        # self.editMenu.addAction(self.unLikeAction)
 
         # Building tools menu
         self.toolMenu = self.menubar.addMenu("&Tools")
@@ -953,19 +1061,8 @@ class Fenetre(QtGui.QMainWindow):
         self.toolbar.addAction(self.parseAction)
         self.toolbar.addAction(self.calculatePercentageMatchAction)
         self.toolbar.addAction(self.likeAction)
-        self.toolbar.addAction(self.unLikeAction)
         self.toolbar.addAction(self.updateAction)
         self.toolbar.addAction(self.searchNewAction)
-        # self.toolbar.addAction(self.verificationAction)
-        # self.toolbar.addAction(self.importAction)
-        # self.toolbar.addAction(self.putOnWaitingAction)
-        # self.toolbar.addAction(self.removeOfWaitingAction)
-        # self.toolbar.addAction(self.addTagAction)
-        # self.toolbar.addAction(self.removeTagAction)
-        # self.toolbar.addAction(self.removeTagAction)
-        # self.toolbar.addAction(self.addActorAction)
-        # self.toolbar.addAction(self.removeActorAction)
-        # self.toolbar.addAction(self.effacerFichierAction)
 
         # Create a button to reset everything
         self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_170_step_backward'), 'Back')
@@ -997,30 +1094,31 @@ class Fenetre(QtGui.QMainWindow):
 
         # # ------------------------- MAIN TABLE ---------------------------------------------------------------------------------------
 
-        self.horizontal_header = QtGui.QHeaderView(QtCore.Qt.Horizontal) # Déclare le header perso
-        self.horizontal_header.setDefaultAlignment(QtCore.Qt.AlignLeft) # Aligne à gauche l'étiquette des colonnes
-        self.horizontal_header.setClickable(True)  # Rend cliquable le header perso
 
-        # Resize to content vertically
-        self.tableau.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        # self.horizontal_header = QtGui.QHeaderView(QtCore.Qt.Horizontal) # Déclare le header perso
+        # self.horizontal_header.setDefaultAlignment(QtCore.Qt.AlignLeft) # Aligne à gauche l'étiquette des colonnes
+        # self.horizontal_header.setClickable(True)  # Rend cliquable le header perso
 
-        # Style du tableau
-        self.tableau.setHorizontalHeader(self.horizontal_header) # Active le header perso
-        self.tableau.hideColumn(0)  # Hide id
-        self.tableau.hideColumn(2)  # Hide doi
-        self.tableau.hideColumn(6)  # Hide authors
-        self.tableau.hideColumn(7)  # Hide abstracts
-        self.tableau.hideColumn(8)  # Hide graphical_abstracts
-        self.tableau.hideColumn(10)  # Hide urls
-        self.tableau.hideColumn(11)  # Hide verif
-        self.tableau.hideColumn(12)  # Hide new
-        self.tableau.hideColumn(13)  # Hide topic_simple
-        # # self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
-        # # self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
-        self.tableau.setSortingEnabled(True)  # Active le tri
-        self.tableau.verticalHeader().setVisible(False)  # Cache le header vertical
-        # self.tableau.verticalHeader().sectionResizeMode(QHeaderView.ResizeToContents)
-        self.tableau.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)  # Empêche l'édition des cells
+        # # Resize to content vertically
+        # self.tableau.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+
+        # # Style du tableau
+        # self.tableau.setHorizontalHeader(self.horizontal_header) # Active le header perso
+        # self.tableau.hideColumn(0)  # Hide id
+        # self.tableau.hideColumn(2)  # Hide doi
+        # self.tableau.hideColumn(6)  # Hide authors
+        # self.tableau.hideColumn(7)  # Hide abstracts
+        # self.tableau.hideColumn(8)  # Hide graphical_abstracts
+        # self.tableau.hideColumn(10)  # Hide urls
+        # self.tableau.hideColumn(11)  # Hide verif
+        # self.tableau.hideColumn(12)  # Hide new
+        # self.tableau.hideColumn(13)  # Hide topic_simple
+        # # # self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
+        # # # self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
+        # self.tableau.setSortingEnabled(True)  # Active le tri
+        # self.tableau.verticalHeader().setVisible(False)  # Cache le header vertical
+        # # self.tableau.verticalHeader().sectionResizeMode(QHeaderView.ResizeToContents)
+        # self.tableau.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)  # Empêche l'édition des cells
 
 
         # # ------------------------- LEFT AREA ------------------------------------------------------------------------
@@ -1103,7 +1201,9 @@ class Fenetre(QtGui.QMainWindow):
         # Main part of the window in a tab.
         # Allows to create other tabs
         self.onglets = QtGui.QTabWidget()
-        self.onglets.addTab(self.tableau, "All articles")
+        tableau = self.createSearchTab("All articles", "SELECT * FROM papers")
+
+        # self.onglets.addTab(self.tableau, "All articles")
 
         self.splitter1 = QtGui.QSplitter(QtCore.Qt.Vertical)
         self.splitter1.addWidget(self.area_right_top)
@@ -1121,12 +1221,24 @@ class Fenetre(QtGui.QMainWindow):
 
 if __name__ == '__main__':
 
+# File "/home/djipey/informatique/python/ChemBrows/gui.py", line 1011, in initUI
+    # self.fileMenu.addAction(self.exitAction)
+# AttributeError: 'Fenetre' object has no attribute 'exitAction'
+
+
+# <class 'AttributeError'> gui.py 1224
+
     # Little hack to kill all the pending process
-    os.setpgrp() # create new process group, become its leader
+    os.setpgrp()  # create new process group, become its leader
     try:
         app = QtGui.QApplication(sys.argv)
         ex = Fenetre()
         sys.exit(app.exec_())
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        exc_type = type(e).__name__
+        fname = exc_tb.tb_frame.f_code.co_filename
+        print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
+        print("{0}: {1}".format(exc_type, e))
     finally:
-        os.killpg(0, signal.SIGKILL) # kill all processes in my group
-
+        os.killpg(0, signal.SIGKILL)  # kill all processes in my group
