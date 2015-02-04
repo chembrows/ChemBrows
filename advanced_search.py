@@ -6,6 +6,8 @@ import sys
 from PyQt4 import QtGui, QtCore
 from log import MyLog
 
+import functions
+
 
 class AdvancedSearch(QtGui.QDialog):
 
@@ -103,87 +105,88 @@ class AdvancedSearch(QtGui.QDialog):
             first = False
 
             words = [word.lstrip().rstrip() for word in topic_entries[0].split(",")]
+            words = [functions.querySting(word) for word in words]
 
             for word in words:
                 if word is words[0]:
-                    base += "topic_simple LIKE '% {0} %'".format(word)
+                    base += "topic_simple LIKE '{0}'".format(word)
                 else:
-                    base += " AND topic_simple LIKE '% {0} %'".format(word)
+                    base += " AND topic_simple LIKE '{0}'".format(word)
 
         # TOPIC, OR condition
         if topic_entries[1]:
             words = [word.lstrip().rstrip() for word in topic_entries[1].split(",")]
+            words = [functions.querySting(word) for word in words]
 
             if first:
                 first = False
-                base += "topic_simple LIKE '% {0} %'".format(words[0])
+                base += "topic_simple LIKE '{0}'".format(words[0])
 
                 for word in words[1:]:
-                    base += " OR topic_simple LIKE '% {0} %'".format(word)
+                    base += " OR topic_simple LIKE '{0}'".format(word)
             else:
                 for word in words:
-                    base += " OR topic_simple LIKE '% {0} %'".format(word)
+                    base += " OR topic_simple LIKE '{0}'".format(word)
 
         # TOPIC, NOT condition
         if topic_entries[2]:
             words = [word.lstrip().rstrip() for word in topic_entries[2].split(",")]
+            words = [functions.querySting(word) for word in words]
 
             if first:
                 first = False
-                base += "topic_simple NOT LIKE '% {0} %'".format(words[0])
+                base += "topic_simple NOT LIKE '{0}'".format(words[0])
 
                 for word in words[1:]:
-                    base += " AND topic_simple NOT LIKE '% {0} %'".format(word)
+                    base += " AND topic_simple NOT LIKE '{0}'".format(word)
             else:
                 for word in words:
-                    base += " AND topic_simple NOT LIKE '% {0} %'".format(word)
+                    base += " AND topic_simple NOT LIKE '{0}'".format(word)
 
         # AUTHOR, AND condition
         if author_entries[0]:
             words = [word.lstrip().rstrip() for word in author_entries[0].split(",")]
+            words = [functions.querySting(word) for word in words]
 
             if first:
                 first = False
-                base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(words[0])
+                base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(words[0])
 
                 for word in words[1:]:
-                    # base += " AND authors LIKE '% {0} %'".format(word)
-                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(word)
+                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
             else:
                 for word in words:
-                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(word)
+                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
 
         # AUTHOR, OR condition
         if author_entries[1]:
             words = [word.lstrip().rstrip() for word in author_entries[1].split(",")]
+            words = [functions.querySting(word) for word in words]
 
             if first:
                 first = False
-                base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(words[0])
+                base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(words[0])
 
                 for word in words[1:]:
-                    # base += " OR authors LIKE '% {0} %'".format(word)
-                    base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(word)
+                    base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
             else:
                 for word in words:
-                    # base += " OR authors LIKE '% {0} %'".format(word)
-                    base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '% {0} %'".format(word)
+                    base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
 
         # AUTHOR, NOT condition
         if author_entries[2]:
             words = [word.lstrip().rstrip() for word in author_entries[2].split(",")]
+            words = [functions.querySting(word) for word in words]
 
             if first:
                 first = False
-                base += "' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '% {0} %'".format(words[0])
+                base += "' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(words[0])
 
                 for word in words[1:]:
-                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '% {0} %'".format(word)
+                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(word)
             else:
                 for word in words:
-                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '% {0} %'".format(word)
-
-        print(base)
+                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(word)
 
         return base
 

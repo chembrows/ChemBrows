@@ -42,6 +42,36 @@ def simpleChar(string):
     return re.sub(r'\W+', ' ', string)
 
 
+def querySting(word):
+
+    """
+    Function to return a string formatted to be
+    included in a LIKE query
+    Ex:
+    querySting("*sperm*") -> %sperm%
+    querySting("spermine") -> % spermine %
+    """
+
+    word = str(word)
+
+    res = word.replace('*', '')
+
+    if word[0] == '*':
+        res = '%' + res
+    else:
+        res = '% ' + res
+
+    if word[-1] == '*':
+        res = res + '%'
+    else:
+        res = res + ' %'
+
+    if word[0] != '*' and word[-1] != '*':
+        res = '% ' + res + ' %'
+
+    return res
+
+
 def checkData():
 
     """Fct de test uniquement"""
@@ -110,10 +140,11 @@ def checkData():
 
 
 if __name__ == "__main__":
-    #like(1)
-    #like(10)
-    #like(15)
-    checkData()
-    #_, dois = listDoi()
-    #print(dois)
+    # like(10)
+    # checkData()
+    # _, dois = listDoi()
+    # print(dois)
+    querySting("*sperm*")
+    querySting("spermine")
+
     pass

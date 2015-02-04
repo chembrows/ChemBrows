@@ -198,9 +198,9 @@ class Fenetre(QtGui.QMainWindow):
         self.calculatePercentageMatchAction.triggered.connect(self.calculatePercentageMatch)
 
         # Action to like a post
-        self.likeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_343_thumbs_up'), 'Toggle Like for the post', self)
-        self.likeAction.setShortcut('L')
-        self.likeAction.triggered.connect(self.like)
+        self.toggleLikeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_343_thumbs_up'), 'Toggle Like for the post', self)
+        self.toggleLikeAction.setShortcut('L')
+        self.toggleLikeAction.triggered.connect(self.toggleLike)
 
         # Action to open the post in browser
         self.openInBrowserAction = QtGui.QAction('Open post in browser', self)
@@ -367,7 +367,7 @@ class Fenetre(QtGui.QMainWindow):
         # Create the right-click menu and add the actions
         menu = QtGui.QMenu()
         menu.addAction(self.toggleReadAction)
-        menu.addAction(self.likeAction)
+        menu.addAction(self.toggleLikeAction)
         menu.addAction(self.openInBrowserAction)
 
         menu.exec_(self.mapToGlobal(new_pos))
@@ -517,7 +517,7 @@ class Fenetre(QtGui.QMainWindow):
         model.setQuery(self.query)
 
         model.setQuery(self.query)
-        self.proxy.setSourceModel(model)
+        proxy.setSourceModel(model)
         table.setModel(proxy)
 
 
@@ -688,7 +688,7 @@ class Fenetre(QtGui.QMainWindow):
         self.query.exec_()
 
         model.setQuery(self.query)
-        self.proxy.setSourceModel(model)
+        proxy.setSourceModel(model)
         table.setModel(proxy)
 
 
@@ -796,7 +796,7 @@ class Fenetre(QtGui.QMainWindow):
 
             try:
                 model.setQuery(self.query)
-                self.proxy.setSourceModel(model)
+                proxy.setSourceModel(model)
                 table.setModel(proxy)
             except AttributeError:
                 pass
@@ -822,7 +822,7 @@ class Fenetre(QtGui.QMainWindow):
 
         try:
             model.setQuery(self.query)
-            self.proxy.setSourceModel(model)
+            proxy.setSourceModel(model)
             table.setModel(proxy)
         except AttributeError:
             pass
@@ -907,31 +907,9 @@ class Fenetre(QtGui.QMainWindow):
         model.select()
 
 
-    def like(self):
+    def toggleLike(self):
 
         """Slot to mark a post liked"""
-
-        # posts_selected, previous_lines = self.postsSelected(True)
-
-        # if not posts_selected:
-            # return
-
-        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        # model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        # proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
-
-        # functions.like(posts_selected[0], self.l)
-
-        # model.select()
-
-        # try:
-            # model.setQuery(self.query)
-            # self.proxy.setSourceModel(model)
-            # table.setModel(proxy)
-        # except AttributeError:
-            # pass
-
-        # table.selectRow(previous_lines[0])
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
         model = self.liste_models_in_tabs[self.onglets.currentIndex()]
@@ -952,32 +930,6 @@ class Fenetre(QtGui.QMainWindow):
             pass
 
         table.selectRow(line)
-
-    # def unLike(self):
-
-        # """Slot to mark a post unlike"""
-
-        # posts_selected, previous_lines = self.postsSelected(True)
-
-        # if not posts_selected:
-            # return
-
-        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        # model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        # proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
-
-        # functions.unLike(posts_selected[0], self.l)
-
-        # model.select()
-
-        # try:
-            # model.setQuery(self.query)
-            # self.proxy.setSourceModel(model)
-            # table.setModel(proxy)
-        # except AttributeError:
-            # pass
-
-        # table.selectRow(previous_lines[0])
 
 
     def postsSelected(self, previous=False):
@@ -1037,8 +989,7 @@ class Fenetre(QtGui.QMainWindow):
         self.editMenu.addAction(self.parseAction)
         self.editMenu.addAction(self.calculatePercentageMatchAction)
         self.editMenu.addAction(self.toggleReadAction)
-        self.editMenu.addAction(self.likeAction)
-        # self.editMenu.addAction(self.unLikeAction)
+        self.editMenu.addAction(self.toggleLikeAction)
 
         # Building tools menu
         self.toolMenu = self.menubar.addMenu("&Tools")
@@ -1061,7 +1012,7 @@ class Fenetre(QtGui.QMainWindow):
         self.toolbar = self.addToolBar('toolbar')
         self.toolbar.addAction(self.parseAction)
         self.toolbar.addAction(self.calculatePercentageMatchAction)
-        self.toolbar.addAction(self.likeAction)
+        self.toolbar.addAction(self.toggleLikeAction)
         self.toolbar.addAction(self.updateAction)
         self.toolbar.addAction(self.searchNewAction)
 
@@ -1222,24 +1173,17 @@ class Fenetre(QtGui.QMainWindow):
 
 if __name__ == '__main__':
 
-# File "/home/djipey/informatique/python/ChemBrows/gui.py", line 1011, in initUI
-    # self.fileMenu.addAction(self.exitAction)
-# AttributeError: 'Fenetre' object has no attribute 'exitAction'
-
-
-# <class 'AttributeError'> gui.py 1224
-
     # Little hack to kill all the pending process
     os.setpgrp()  # create new process group, become its leader
-    # try:
-    app = QtGui.QApplication(sys.argv)
-    ex = Fenetre()
-    sys.exit(app.exec_())
-    # except Exception as e:
-        # exc_type, exc_obj, exc_tb = sys.exc_info()
-        # exc_type = type(e).__name__
-        # fname = exc_tb.tb_frame.f_code.co_filename
-        # print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-        # print("{0}: {1}".format(exc_type, e))
-    # finally:
-    os.killpg(0, signal.SIGKILL)  # kill all processes in my group
+    try:
+        app = QtGui.QApplication(sys.argv)
+        ex = Fenetre()
+        sys.exit(app.exec_())
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        exc_type = type(e).__name__
+        fname = exc_tb.tb_frame.f_code.co_filename
+        print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
+        print("{0}: {1}".format(exc_type, e))
+    finally:
+        os.killpg(0, signal.SIGKILL)  # kill all processes in my group
