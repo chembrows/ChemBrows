@@ -42,7 +42,7 @@ def simpleChar(string):
     return re.sub(r'\W+', ' ', string)
 
 
-def querySting(word):
+def queryString(word):
 
     """
     Function to return a string formatted to be
@@ -65,9 +65,6 @@ def querySting(word):
         res = res + '%'
     else:
         res = res + ' %'
-
-    if word[0] != '*' and word[-1] != '*':
-        res = '% ' + res + ' %'
 
     return res
 
@@ -144,7 +141,7 @@ if __name__ == "__main__":
     # checkData()
     # _, dois = listDoi()
     # print(dois)
-    querySting("*sperm*")
-    querySting("spermine")
+    queryString("*sperm*")
+    queryString("spermine")
 
     pass

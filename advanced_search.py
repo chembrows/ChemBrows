@@ -51,9 +51,9 @@ class AdvancedSearch(QtGui.QDialog):
 
         """Establish the slots"""
 
-        self.button_search.clicked.connect(self.saveSearch)
+        self.button_search.clicked.connect(self.search)
 
-        self.button_search_and_save.clicked.connect(self.saveSearch)
+        self.button_search_and_save.clicked.connect(self.search)
 
         self.tabs.currentChanged.connect(self.tabChanged)
 
@@ -105,7 +105,7 @@ class AdvancedSearch(QtGui.QDialog):
             first = False
 
             words = [word.lstrip().rstrip() for word in topic_entries[0].split(",")]
-            words = [functions.querySting(word) for word in words]
+            words = [functions.queryString(word) for word in words]
 
             for word in words:
                 if word is words[0]:
@@ -116,7 +116,7 @@ class AdvancedSearch(QtGui.QDialog):
         # TOPIC, OR condition
         if topic_entries[1]:
             words = [word.lstrip().rstrip() for word in topic_entries[1].split(",")]
-            words = [functions.querySting(word) for word in words]
+            words = [functions.queryString(word) for word in words]
 
             if first:
                 first = False
@@ -131,7 +131,7 @@ class AdvancedSearch(QtGui.QDialog):
         # TOPIC, NOT condition
         if topic_entries[2]:
             words = [word.lstrip().rstrip() for word in topic_entries[2].split(",")]
-            words = [functions.querySting(word) for word in words]
+            words = [functions.queryString(word) for word in words]
 
             if first:
                 first = False
@@ -146,7 +146,7 @@ class AdvancedSearch(QtGui.QDialog):
         # AUTHOR, AND condition
         if author_entries[0]:
             words = [word.lstrip().rstrip() for word in author_entries[0].split(",")]
-            words = [functions.querySting(word) for word in words]
+            words = [functions.queryString(word) for word in words]
 
             if first:
                 first = False
@@ -161,7 +161,7 @@ class AdvancedSearch(QtGui.QDialog):
         # AUTHOR, OR condition
         if author_entries[1]:
             words = [word.lstrip().rstrip() for word in author_entries[1].split(",")]
-            words = [functions.querySting(word) for word in words]
+            words = [functions.queryString(word) for word in words]
 
             if first:
                 first = False
@@ -176,7 +176,7 @@ class AdvancedSearch(QtGui.QDialog):
         # AUTHOR, NOT condition
         if author_entries[2]:
             words = [word.lstrip().rstrip() for word in author_entries[2].split(",")]
-            words = [functions.querySting(word) for word in words]
+            words = [functions.queryString(word) for word in words]
 
             if first:
                 first = False
@@ -230,71 +230,76 @@ class AdvancedSearch(QtGui.QDialog):
             self.button_search.show()
 
 
-    def saveSearch(self):
+    def search(self):
 
         """Slot to save a query"""
 
-        # TODO: nom obligatoire
+        if self.sender() == self.button_search:
+            save = False
+        else:
+            save = True
+
         lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
 
-        # Get the name of the search
-        name_search = lines[0].text()
+        # Get the name of the current tab. Used to determine if the current
+        # tab is the "new query" tab
         tab_title = self.tabs.tabText(self.tabs.currentIndex())
 
         topic_entries = [line.text() for line in lines[1:4]]
         author_entries = [line.text() for line in lines[4:8]]
 
+        # Build the query string
         base = self.buildSearch()
 
         if not base:
             return
 
         if tab_title == "New query":
-            if name_search in self.options.childGroups():
-                # TODO:
-                    # afficher une dialog box d'erreur pr le nom
-                self.logger.debug("This search name is already used")
-                return
+
+            # The search is about to be saved
+            if save:
+                # Get the name of the search
+                name_search = lines[0].text()
+                if name_search in self.options.childGroups():
+                    # TODO:
+                        # afficher une dialog box d'erreur pr le nom
+                    self.logger.debug("This search name is already used")
+                    return
+                else:
+                    group_name = name_search
+                    self.tabs.addTab(self.createForm(), name_search)
+
+                    if not self.test:
+                        self.parent.createSearchTab(name_search, base)
+
+                    # Clear the fields when perform search
+                    for line in lines:
+                        line.clear()
             else:
-                group_name = name_search
-                self.tabs.addTab(self.createForm(), name_search)
+                # Perform a simple search, in the first tab
+                self.parent.simpleQuery(base)
 
-                if not self.test:
-                    self.parent.createSearchTab(name_search, base)
-
-                # Clear the fields when perform search
-                for line in lines:
-                    line.clear()
         else:
             group_name = tab_title
 
             if not self.test:
                 self.parent.createSearchTab(name_search, base, update=True)
 
-        self.logger.debug("Saving the search")
+        if save:
+            self.logger.debug("Saving the search")
 
-        # Get an int as a unic id for the queries.
-        # Each query is ided with a particular int
-        # id_query = self.options.value("id_query", 0) + 1
-        # self.options.setValue("id_query", id_query)
+            self.options.beginGroup(group_name)
 
-        self.options.beginGroup(group_name)
-
-        # Re-initialize the keys
-        self.options.remove("")
-        # self.options.setValue("name_search", name_search)
-        if topic_entries != [''] * 3:
-            self.options.setValue("topic_entries", topic_entries)
-        if author_entries != [''] * 3:
-            self.options.setValue("author_entries", author_entries)
-        if base:
-            self.options.setValue("sql_query", base)
-        self.options.endGroup()
-
-
-        # Call the parent's method to add a tab to the main window
-        # self.parent.createSearchTab(name_search, base)
-
+            # Re-initialize the keys
+            self.options.remove("")
+            # self.options.setValue("name_search", name_search)
+            if topic_entries != [''] * 3:
+                self.options.setValue("topic_entries", topic_entries)
+            if author_entries != [''] * 3:
+                self.options.setValue("author_entries", author_entries)
+            if base:
+                self.options.setValue("sql_query", base)
+            self.options.endGroup()
 
 
     def createForm(self):

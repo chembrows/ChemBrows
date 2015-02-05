@@ -504,6 +504,9 @@ class Fenetre(QtGui.QMainWindow):
 
     def tabChanged(self):
 
+        """Slot to perform some actions when the current tab is changed.
+        Mainly sets the tab query to the saved query"""
+
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
         model = self.liste_models_in_tabs[self.onglets.currentIndex()]
         proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
@@ -523,6 +526,11 @@ class Fenetre(QtGui.QMainWindow):
 
     def createSearchTab(self, name_search, query, update=False):
 
+        """Slot called from AdvancedSearch, when a new search is added,
+        or a previous one updated"""
+
+        # If the tab's query is updated from the advancedSearch window,
+        # just update the base_query
         if update:
             for index in range(self.onglets.count()):
                 if name_search == self.onglets.tabText(index):
@@ -530,7 +538,7 @@ class Fenetre(QtGui.QMainWindow):
                     # TODO: update the view
                     return
 
-        # Création du modèle, issu de la bdd
+        # Create the model for the new tab
         modele = ModelPerso()
 
         # Changes are effective immediately
@@ -626,7 +634,7 @@ class Fenetre(QtGui.QMainWindow):
         model = self.liste_models_in_tabs[self.onglets.currentIndex()]
         proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        self.query = QtSql.QSqlQuery()
+        self.query = QtSql.QSqlQuery("fichiers.sqlite")
 
         # requete = "SELECT * FROM papers WHERE journal IN ("
 
@@ -661,7 +669,7 @@ class Fenetre(QtGui.QMainWindow):
         model = self.liste_models_in_tabs[self.onglets.currentIndex()]
         proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        self.query = QtSql.QSqlQuery()
+        self.query = QtSql.QSqlQuery("fichiers.sqlite")
 
         # First, search the new articles id
         self.query.prepare("SELECT id FROM papers WHERE new=1")
@@ -692,16 +700,56 @@ class Fenetre(QtGui.QMainWindow):
         table.setModel(proxy)
 
 
+    def simpleQuery(self, base):
+
+        """Method to perform a simple search.
+        Called from AdvancedSearch, when the user doesn't
+        want to save the search"""
+
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+
+        self.query = QtSql.QSqlQuery("fichiers.sqlite")
+
+        self.query.prepare(base)
+        self.query.exec_()
+
+        # Update the view
+        model.setQuery(self.query)
+        proxy.setSourceModel(model)
+        table.setModel(proxy)
+
+
     def research(self):
 
         """Slot to search on title and abstract"""
 
         proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
         results = functions.simpleChar(self.research_bar.text())
-        results = self.research_bar.text().lower()
         proxy.setFilterRegExp(QtCore.QRegExp(results))
         proxy.setFilterKeyColumn(13)
 
+        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        # model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        # proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+
+        # # results = functions.simpleChar(self.research_bar.text())
+        # results = functions.queryString(self.research_bar.text())
+
+        # self.query = QtSql.QSqlQuery("fichiers.sqlite")
+
+        # base = "SELECT * FROM papers WHERE ' ' || replace(authors, ',', ' ') || ' ' \
+                # LIKE '{0}' OR topic_simple LIKE '{0}'".format(results)
+
+        # self.query.prepare(base)
+        # self.query.exec_()
+
+        # print(self.query.lastQuery())
+
+        # model.setQuery(self.query)
+        # proxy.setSourceModel(model)
+        # table.setModel(proxy)
 
     # def adjustView(self):
 
@@ -753,12 +801,6 @@ class Fenetre(QtGui.QMainWindow):
         # Uncheck the journals buttons on the left
         for button in self.list_buttons_tags:
             button.setChecked(False)
-
-        # Save header
-        # try:
-            # self.header_state
-        # except AttributeError:
-            # self.header_state = self.tableau.horizontalHeader().saveState()
 
         self.tags_selected = self.journals_to_care
         self.searchByButton()
