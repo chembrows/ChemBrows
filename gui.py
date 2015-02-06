@@ -275,8 +275,8 @@ class Fenetre(QtGui.QMainWindow):
         quitter, comme sauver les options dans un fichier
         de conf"""
 
-        # # http://stackoverflow.com/questions/9249500/
-        # # pyside-pyqt-detect-if-user-trying-to-close-window
+        # http://stackoverflow.com/questions/9249500/
+        # pyside-pyqt-detect-if-user-trying-to-close-window
 
         # Record the window state and appearance
         self.options.beginGroup("Window")
@@ -1195,9 +1195,9 @@ class Fenetre(QtGui.QMainWindow):
         # Main part of the window in a tab.
         # Allows to create other tabs
         self.onglets = QtGui.QTabWidget()
-        tableau = self.createSearchTab("All articles", "SELECT * FROM papers")
 
-        # self.onglets.addTab(self.tableau, "All articles")
+        # Create the main table, at index 0
+        self.createSearchTab("All articles", "SELECT * FROM papers")
 
         self.splitter1 = QtGui.QSplitter(QtCore.Qt.Vertical)
         self.splitter1.addWidget(self.area_right_top)

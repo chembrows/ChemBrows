@@ -43,25 +43,29 @@ class ViewPerso(QtGui.QTableView):
         self.horizontal_header.setClickable(True)  # Rend cliquable le header perso
 
         # Resize to content vertically
-        self.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        # self.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
 
-        # Style du
+        # Header style
         self.setHorizontalHeader(self.horizontal_header) # Active le header perso
         self.hideColumn(0)  # Hide id
         self.hideColumn(2)  # Hide doi
         self.hideColumn(6)  # Hide authors
         self.hideColumn(7)  # Hide abstracts
-        self.hideColumn(8)  # Hide graphical_abstracts
         self.hideColumn(10)  # Hide urls
         self.hideColumn(11)  # Hide verif
         self.hideColumn(12)  # Hide new
         self.hideColumn(13)  # Hide topic_simple
-        # # self.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
-        # # self.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
-        self.setSortingEnabled(True)  # Active le tri
-        self.verticalHeader().setVisible(False)  # Cache le header vertical
+        self.horizontalHeader().moveSection(8, 0)
+        self.horizontalHeader().moveSection(2, 8)
+        self.verticalHeader().setDefaultSectionSize(200)
+        self.setColumnWidth(8, 200)
+        self.setSortingEnabled(True)
+        self.verticalHeader().setVisible(False)
         # self.verticalHeader().sectionResizeMode(QHeaderView.ResizeToContents)
         self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)  # Empêche l'édition des cells
+
+        # Move the graphical_abstract column at index x (first column)
+
 
 
 
