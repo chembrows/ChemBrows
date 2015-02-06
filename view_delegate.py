@@ -70,23 +70,32 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
 
         # Actions on the title
-        # elif index.column() == 3:
+        elif index.column() == 3:
+            # Paint normally, but add a picture in the right bottom corner
 
-            # DIMENSION = 25
-            # super(ViewDelegate, self).paint(painter, option, index)
+            super(ViewDelegate, self).paint(painter, option, index)
 
-            # path = "./images/glyphicons_049_star.png"
-            # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
+            DIMENSION = 25
 
-            # pos_x = option.rect.x() + option.rect.width() - DIMENSION
-            # pos_y = option.rect.y() + option.rect.height() - DIMENSION
+            # Get the like state of the post
+            liked = index.sibling(index.row(), 9).data()
 
-            # painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)
+            # If the post is liked, display the like star.
+            # Else, display the unlike star
+            if liked == 1:
+                path = "./images/glyphicons_049_star.png"
+            else:
+                path = "./images/glyphicons_048_dislikes.png"
 
-            # if red:
-                # painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
+            pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
 
+            pos_x = option.rect.x() + option.rect.width() - DIMENSION
+            pos_y = option.rect.y() + option.rect.height() - DIMENSION
 
+            painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)
+
+            if red:
+                painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
 
 
         # Actions on the date
