@@ -42,16 +42,16 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             red = True
 
         # If the post is new, set font to bold
-        new = index.sibling(index.row(), 12).data()
-        font = painter.font()
-        if new == 1:
-            # Set the font to bold w/ 2 different ways.
-            # One for the default painter, and one for the custom painter
-            option.font.setWeight(QtGui.QFont.Bold)
-            font.setBold(True)
-        else:
-            font.setBold(False)
-        painter.setFont(font)
+        # new = index.sibling(index.row(), 12).data()
+        # font = painter.font()
+        # if new == 1:
+            # # Set the font to bold w/ 2 different ways.
+            # # One for the default painter, and one for the custom painter
+            # option.font.setWeight(QtGui.QFont.Bold)
+            # font.setBold(True)
+        # else:
+            # font.setBold(False)
+        # painter.setFont(font)
 
         date = index.sibling(index.row(), 4).data()
 
@@ -69,13 +69,60 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 painter.drawText(option.rect, QtCore.Qt.AlignCenter, str(0))
 
 
+
         # Actions on the title
         elif index.column() == 3:
-            # Paint normally, but add a picture in the right bottom corner
 
-            super(ViewDelegate, self).paint(painter, option, index)
+            # http://stackoverflow.com/questions/23802170/word-wrap-with-html-qtabelview-and-delegates
 
-            DIMENSION = 25
+            # Modify the text to display
+            options = QtGui.QStyleOptionViewItemV4(option)
+            self.initStyleOption(options, index)
+
+            painter.save()
+
+            # Tansform the text into a QDocument
+            doc = QtGui.QTextDocument()
+            text_option = QtGui.QTextOption(doc.defaultTextOption())
+            text_option.setWrapMode(QtGui.QTextOption.WordWrap)  # Enable word wrap
+            doc.setDefaultTextOption(text_option)
+
+            journal = index.sibling(index.row(), 5).data()
+            date = prettyDate(index.sibling(index.row(), 4).data())
+
+            percentage = index.sibling(index.row(), 1).data()
+            if type(percentage) is float:
+                percentage = str(int(round(percentage, 0)))
+            else:
+                percentage = 0
+
+            options.text += "<br><br>"
+            options.text += "<b><font color='gray'>Published in: </font></b><i>{0}</i>, {1}".format(journal, date)
+            options.text += "<br>"
+            options.text += "<b><font color='gray'>Match: </font></b>{0} %".format(percentage)
+
+            doc.setHtml(options.text)
+
+            # Set the width of the text = the width of the rect
+            doc.setTextWidth(options.rect.width())
+
+            options.text = ""
+            options.widget.style().drawControl(QtGui.QStyle.CE_ItemViewItem, options, painter)
+
+            # Center the text vertically
+            height = int(doc.documentLayout().documentSize().height())
+            painter.translate(options.rect.left(), options.rect.top() + options.rect.height() / 2 - height / 2)
+
+            clip = QtCore.QRectF(0, 0, options.rect.width(), options.rect.height())
+            doc.drawContents(painter, clip)
+
+            painter.restore()
+
+            new = index.sibling(index.row(), 12).data()
+
+
+            # Paint a star in the right bottom corner
+            DIMENSION = 40
 
             # Get the like state of the post
             liked = index.sibling(index.row(), 9).data()
@@ -83,9 +130,13 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # If the post is liked, display the like star.
             # Else, display the unlike star
             if liked == 1:
-                path = "./images/glyphicons_049_star.png"
+                # path = "./images/glyphicons_049_star.png"
+                # path = "./images/full1.png"
+                path = "./images/full2.png"
             else:
-                path = "./images/glyphicons_048_dislikes.png"
+                # path = "./images/glyphicons_048_dislikes.png"
+                # path = "./images/empty1.png"
+                path = "./images/empty2.png"
 
             pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
 
@@ -93,6 +144,10 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             pos_y = option.rect.y() + option.rect.height() - DIMENSION
 
             painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)
+
+            if new:
+                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/new.png"))
+                painter.drawPixmap(pos_x - 45, pos_y, DIMENSION, DIMENSION, pixmap)
 
             if red:
                 painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))

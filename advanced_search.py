@@ -234,6 +234,9 @@ class AdvancedSearch(QtGui.QDialog):
 
         """Slot to save a query"""
 
+        # TODO:
+            # updater la vue du parent
+
         if self.sender() == self.button_search:
             save = False
         else:
@@ -248,6 +251,11 @@ class AdvancedSearch(QtGui.QDialog):
         topic_entries = [line.text() for line in lines[1:4]]
         author_entries = [line.text() for line in lines[4:8]]
 
+        # TODO: ajouter une boite de dialogue pour le nom
+        # si user pushed saved
+        # Get the name of the search
+        name_search = lines[0].text()
+
         # Build the query string
         base = self.buildSearch()
 
@@ -258,8 +266,6 @@ class AdvancedSearch(QtGui.QDialog):
 
             # The search is about to be saved
             if save:
-                # Get the name of the search
-                name_search = lines[0].text()
                 if name_search in self.options.childGroups():
                     # TODO:
                         # afficher une dialog box d'erreur pr le nom

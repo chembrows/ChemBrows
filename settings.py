@@ -30,7 +30,7 @@ class Settings(QtGui.QDialog):
 
         journals_to_parse = self.parent.options.value("journals_to_parse", [])
 
-        #Check the boxes
+        # Check the boxes
         if not journals_to_parse:
             return
         else:
@@ -45,11 +45,11 @@ class Settings(QtGui.QDialog):
 
         """Establish the slots"""
 
-        #To close the window and save the settings
+        # To close the window and save the settings
         self.ok_button.clicked.connect(self.saveSettings)
 
-        #Button "clean database" (erase the unintersting journals from the db)
-        #connected to the method of the main window class
+        # Button "clean database" (erase the unintersting journals from the db)
+        # connected to the method of the main window class
         self.button_clean_db.clicked.connect(self.parent.cleanDb)
 
 
@@ -57,8 +57,8 @@ class Settings(QtGui.QDialog):
 
         """Méthode pour retourner le chemin du player"""
 
-        #path = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
-        #self.line_path.setText(path)
+        # path = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
+        # self.line_path.setText(path)
         pass
 
 
@@ -73,9 +73,9 @@ class Settings(QtGui.QDialog):
 
         self.tabs = QtGui.QTabWidget()
 
-#------------------------ GENERAL TAB ------------------------------------------------
+# ------------------------ GENERAL TAB ------------------------------------------------
 
-        #Scroll area for the journals to check
+        # Scroll area for the journals to check
         self.scroll_check_journals = QtGui.QScrollArea()
         self.scrolling_check_journals = QtGui.QWidget()
         self.vbox_check_journals = QtGui.QVBoxLayout()
@@ -83,14 +83,14 @@ class Settings(QtGui.QDialog):
 
         labels_checkboxes = []
 
-        #Get labels of the future check boxes of the journals to be parsed
+        # Get labels of the future check boxes of the journals to be parsed
         for company in os.listdir("./journals"):
             with open('journals/{0}'.format(company), 'r') as config:
-                labels_checkboxes += [ line.split(" : ")[1] for line in config ]
+                labels_checkboxes += [line.split(" : ")[1] for line in config]
 
         labels_checkboxes.sort()
 
-        #Build the checkboxes, and put them in a layout
+        # Build the checkboxes, and put them in a layout
         for index, label in enumerate(labels_checkboxes):
             check_box = QtGui.QCheckBox(label)
             check_box.setCheckState(2)
@@ -102,7 +102,7 @@ class Settings(QtGui.QDialog):
 
         self.tabs.addTab(self.scroll_check_journals, "Journals")
 
-#------------------------ DATABASE TAB ------------------------------------------------
+# ------------------------ DATABASE TAB ------------------------------------------------
 
         self.widget_database = QtGui.QWidget()
         self.vbox_database = QtGui.QVBoxLayout()
@@ -113,7 +113,7 @@ class Settings(QtGui.QDialog):
         self.widget_database.setLayout(self.vbox_database)
         self.tabs.addTab(self.widget_database, "Database")
 
-#------------------------ ASSEMBLING ------------------------------------------------
+# ------------------------ ASSEMBLING ------------------------------------------------
 
         self.vbox_global = QtGui.QVBoxLayout()
         self.vbox_global.addWidget(self.tabs)
@@ -143,6 +143,6 @@ class Settings(QtGui.QDialog):
         self.parent.displayTags()
         self.parent.resetView()
 
-        #Close the settings window and free the memory
+        # Close the settings window and free the memory
         self.parent.fen_settings.close()
         del self.parent.fen_settings

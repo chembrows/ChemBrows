@@ -71,20 +71,27 @@ class ViewPerso(QtGui.QTableView):
         if corner_x and corner_y:
             self.parent.toggleLike()
 
+        # Emit a clicked signal, otherwise the user can like an article
+        # while the article is not marked as read
+        self.clicked.emit(self.selectionModel().currentIndex())
+
 
     def initUI(self):
 
-        self.horizontal_header = QtGui.QHeaderView(QtCore.Qt.Horizontal)  # Déclare le header perso
-        self.horizontal_header.setDefaultAlignment(QtCore.Qt.AlignLeft)  # Aligne à gauche l'étiquette des colonnes
-        self.horizontal_header.setClickable(True)  # Rend cliquable le header perso
+        # self.horizontal_header = QtGui.QHeaderView(QtCore.Qt.Horizontal)  # Déclare le header perso
+        # self.horizontal_header.setDefaultAlignment(QtCore.Qt.AlignLeft)  # Aligne à gauche l'étiquette des colonnes
+        # self.horizontal_header.setClickable(True)  # Rend cliquable le header perso
 
         # Resize to content vertically
         # self.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
 
         # Header style
-        self.setHorizontalHeader(self.horizontal_header)  # Active le header perso
+        # self.setHorizontalHeader(self.horizontal_header)  # Active le header perso
         self.hideColumn(0)  # Hide id
+        self.hideColumn(1)  # Hide percentage match
         self.hideColumn(2)  # Hide doi
+        self.hideColumn(4)  # Hide date
+        self.hideColumn(5)  # Hide journals
         self.hideColumn(6)  # Hide authors
         self.hideColumn(7)  # Hide abstracts
         self.hideColumn(9)  # Hide like
@@ -93,13 +100,17 @@ class ViewPerso(QtGui.QTableView):
         self.hideColumn(12)  # Hide new
         self.hideColumn(13)  # Hide topic_simple
         self.horizontalHeader().moveSection(8, 0)  # Move the graphical abstract to first
-        self.horizontalHeader().moveSection(2, 8)  # Move percentage match at the end
         self.verticalHeader().setDefaultSectionSize(200)
-        self.setColumnWidth(8, 200)
-        self.setSortingEnabled(True)
+        self.setColumnWidth(8, 250)
+        self.setColumnWidth(3, 500)
+        # self.setSortingEnabled(True)
         self.verticalHeader().setVisible(False)
+        self.horizontalHeader().setVisible(False)
         # self.verticalHeader().sectionResizeMode(QHeaderView.ResizeToContents)
+        # self.resizeColumnsToContents()
         self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)  # Empêche l'édition des cells
+
+        self.sortByColumn(1)
 
 
     def keyboardSearch(self, search):

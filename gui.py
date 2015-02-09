@@ -30,6 +30,7 @@ class Fenetre(QtGui.QMainWindow):
     def __init__(self):
 
         super(Fenetre, self).__init__()
+
         self.l = MyLog()
         self.l.info('Starting the program')
 
@@ -297,9 +298,9 @@ class Fenetre(QtGui.QMainWindow):
         self.options.endGroup()
 
         # Save the checked journals (on the left)
-        # tags_checked = [ button.text() for button in self.list_buttons_tags if button.isChecked() ]
+        tags_checked = [button.text() for button in self.list_buttons_tags if button.isChecked()]
 
-        # self.options.setValue("tags_checked", tags_checked)
+        self.options.setValue("tags_checked", tags_checked)
 
         # On s'assure que self.options finit ttes ces taches.
         # Corrige un bug. self.options semble ne pas effectuer
@@ -796,6 +797,7 @@ class Fenetre(QtGui.QMainWindow):
         # Cleaning title, authors and abstract
         self.label_author.setText("")
         self.label_title.setText("")
+        self.label_date.setText("")
         self.text_abstract.setHtml("")
 
         # Uncheck the journals buttons on the left
@@ -959,8 +961,12 @@ class Fenetre(QtGui.QMainWindow):
         like = table.model().index(table.selectionModel().selection().indexes()[0].row(), 9).data()
         line = table.selectionModel().currentIndex().row()
 
+        print(type(like))
         # Invert the value of new
-        like = 1 - like
+        if type(like) == int:
+            like = 1 - like
+        else:
+            like = 1
 
         table.model().setData(table.model().index(line, 9), like)
 
@@ -1179,7 +1185,10 @@ class Fenetre(QtGui.QMainWindow):
         # A QWebView to render the sometimes rich text of the abstracts
         self.text_abstract = QtWebKit.QWebView()
         self.web_settings = QtWebKit.QWebSettings.globalSettings()
-        self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 20)
+
+        # Get the default font and use it for the QWebView
+        self.web_settings.setFontFamily(QtWebKit.QWebSettings.StandardFont, self.font().family())
+        self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 18)
 
         # Building the grid
         self.grid_area_right_top.addWidget(prelabel_title, 0, 0)
