@@ -90,8 +90,8 @@ class AdvancedSearch(QtGui.QDialog):
         lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
 
         # name_search = lines[0].text()
-        topic_entries = [line.text() for line in lines[1:4]]
-        author_entries = [line.text() for line in lines[4:8]]
+        topic_entries = [line.text() for line in lines[0:3]]
+        author_entries = [line.text() for line in lines[3:7]]
 
         if topic_entries == [''] * 3 and author_entries == [''] * 3:
             return False
@@ -202,21 +202,15 @@ class AdvancedSearch(QtGui.QDialog):
 
         # Get the lineEdit objects of the current search tab displayed
         lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
-        name_search = lines[0]
-        topic_entries = [line for line in lines[1:4]]
-        author_entries = [line for line in lines[4:8]]
+        topic_entries = [line for line in lines[0:3]]
+        author_entries = [line for line in lines[3:7]]
 
         if index is not 0:
-
-            name_search.setEnabled(False)
 
             # Change the buttons at the button if the tab is
             # a tab dedicated to search edition
             self.button_delete_search.show()
             self.button_search.hide()
-
-            # Fill the lineEdit with the data
-            name_search.setText(tab_title)
 
             topic_entries_options = self.options.value("{0}/topic_entries".format(tab_title), None)
             if topic_entries_options is not None:
@@ -248,13 +242,8 @@ class AdvancedSearch(QtGui.QDialog):
         # tab is the "new query" tab
         tab_title = self.tabs.tabText(self.tabs.currentIndex())
 
-        topic_entries = [line.text() for line in lines[1:4]]
-        author_entries = [line.text() for line in lines[4:8]]
-
-        # TODO: ajouter une boite de dialogue pour le nom
-        # si user pushed saved
-        # Get the name of the search
-        name_search = lines[0].text()
+        topic_entries = [line.text() for line in lines[0:3]]
+        author_entries = [line.text() for line in lines[3:7]]
 
         # Build the query string
         base = self.buildSearch()
@@ -264,11 +253,21 @@ class AdvancedSearch(QtGui.QDialog):
 
         if tab_title == "New query":
 
+            # Get the search name with a dialogBox, if the user pushed the save button
+            name_search = QtGui.QInputDialog.getText(self, "Search name", "Save your search as:")
+
+            if not name_search[1] or name_search[0] == "":
+                return
+            else:
+                name_search = name_search[0]
+
             # The search is about to be saved
             if save:
                 if name_search in self.options.childGroups():
-                    # TODO:
-                        # afficher une dialog box d'erreur pr le nom
+                    # Display an error message if the search name is already used
+                    QtGui.QMessageBox.critical(self, "Saving search", "You already have a search called like this",
+                                               QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+
                     self.logger.debug("This search name is already used")
                     return
                 else:
@@ -321,15 +320,15 @@ class AdvancedSearch(QtGui.QDialog):
 
         # Line for the search name, to save
         # Create a hbox to put the label and the line
-        hbox_name = QtGui.QHBoxLayout()
-        label_name = QtGui.QLabel("Search name : ")
-        line_name = QtGui.QLineEdit()
-        hbox_name.addWidget(label_name)
-        hbox_name.addWidget(line_name)
+        # hbox_name = QtGui.QHBoxLayout()
+        # label_name = QtGui.QLabel("Search name : ")
+        # line_name = QtGui.QLineEdit()
+        # hbox_name.addWidget(label_name)
+        # hbox_name.addWidget(line_name)
 
         # add the label and the line to the
         # local vbox
-        vbox_query.addLayout(hbox_name)
+        # vbox_query.addLayout(hbox_name)
 
         vbox_query.addStretch(1)
 
@@ -393,6 +392,14 @@ class AdvancedSearch(QtGui.QDialog):
         grid_author.addWidget(line_author_not, 2, 1, 1, 3)
 
         vbox_query.addStretch(1)
+
+        line_topic_and.returnPressed.connect(self.search)
+        line_topic_or.returnPressed.connect(self.search)
+        line_topic_not.returnPressed.connect(self.search)
+        line_author_and.returnPressed.connect(self.search)
+        line_author_or.returnPressed.connect(self.search)
+        line_author_not.returnPressed.connect(self.search)
+
 
         return widget_query
 
