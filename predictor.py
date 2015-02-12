@@ -1,29 +1,23 @@
 #!/usr/bin/python
 # -*-coding:Utf-8 -*
 
-import sys
-import os
 from PyQt4 import QtSql
-
-#Pour les modules persos
-sys.path.append('/home/djipey/informatique/python/batbelt')
-import batbelt
-
 
 import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.feature_extraction import text
 
-from sklearn.feature_extraction import text 
+# DEBUG
+import datetime
 
 
 class Predictor():
 
     """Object to predict the percentage match of an article,
     based on its abstract"""
-
 
     def __init__(self, bdd=None):
 
@@ -33,6 +27,7 @@ class Predictor():
 
         self.bdd = bdd
 
+        self.getStopWords()
         self.initializePipeline()
 
 
@@ -82,8 +77,6 @@ class Predictor():
         self.x_train = np.array(self.x_train)
         self.y_train = np.array(self.y_train)
 
-        self.getStopWords()
-
         self.classifier = Pipeline([
             ('vectorizer', CountVectorizer(
                             stop_words=self.stop_words)),
@@ -99,6 +92,7 @@ class Predictor():
         based on the abstract text and the liked articles"""
 
         print("Starting calculations of match percentages")
+        start_time = datetime.datetime.now()
 
         query = QtSql.QSqlQuery("fichiers.sqlite")
 
@@ -119,33 +113,37 @@ class Predictor():
 
         x_test = np.array(x_test)
 
-        #list_percentages = [ round(float(100 * proba[1]), 2) for proba in self.classifier.predict_proba(x_test) ]
-        list_percentages = [ float(100 * proba[1]) for proba in self.classifier.predict_proba(x_test) ]
+        # list_percentages = [ round(float(100 * proba[1]), 2) for proba in self.classifier.predict_proba(x_test) ]
+        list_percentages = [float(100 * proba[1]) for proba in self.classifier.predict_proba(x_test)]
 
         if test:
             print(list_percentages)
+
         else:
+
+            self.bdd.transaction()
+            query = QtSql.QSqlQuery("fichiers.sqlite")
+
+            request = "UPDATE papers SET percentage_match = ? WHERE id = ?"
+            query.prepare(request)
+
             for id_bdd, percentage in zip(list_id, list_percentages):
-                request = "UPDATE papers SET percentage_match = ? WHERE id = ?"
+
                 params = (percentage, id_bdd)
-
-                query = QtSql.QSqlQuery("fichiers.sqlite")
-
-                query.prepare(request)
 
                 for value in params:
                     query.addBindValue(value)
 
                 query.exec_()
 
-            print("Done calculating match percentages")
+            if self.bdd.commit():
+                print("updates ok")
 
+            elsapsed_time = datetime.datetime.now() - start_time
+            print("Done calculating match percentages in {0} s".format(elsapsed_time))
 
 
 
 if __name__ == "__main__":
     predictor = Predictor()
     predictor.calculatePercentageMatch(True)
-    predictor.getStopWords()
-    pass
-

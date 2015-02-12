@@ -266,7 +266,7 @@ class Fenetre(QtGui.QMainWindow):
         model.select()
 
         model.setQuery(self.query)
-        self.proxy.setSourceModel(model)
+        proxy.setSourceModel(model)
         table.setModel(proxy)
 
 
@@ -397,7 +397,23 @@ class Fenetre(QtGui.QMainWindow):
         # Launch the research if Enter pressed
         self.research_bar.returnPressed.connect(self.research)
 
+        # Perform some stuff when the tab is changed
         self.onglets.currentChanged.connect(self.tabChanged)
+
+        # When the central splitter is moved, perform some actions,
+        # like resizing the cells of the table
+        self.splitter2.splitterMoved.connect(self.updateCellSize)
+
+
+    def updateCellSize(self):
+
+        """Update the cell size when the user moves the central splitter.
+        For a better display"""
+
+        new_size = self.splitter2.sizes()[1]
+
+        for table in self.liste_tables_in_tabs:
+            table.resizeCells(new_size)
 
 
     def keyPressEvent(self, e):
@@ -523,6 +539,10 @@ class Fenetre(QtGui.QMainWindow):
         model.setQuery(self.query)
         proxy.setSourceModel(model)
         table.setModel(proxy)
+
+        # Update the size of the columns of the view if the central
+        # splitter moved
+        self.updateCellSize()
 
 
     def createSearchTab(self, name_search, query, update=False):
@@ -961,7 +981,6 @@ class Fenetre(QtGui.QMainWindow):
         like = table.model().index(table.selectionModel().selection().indexes()[0].row(), 9).data()
         line = table.selectionModel().currentIndex().row()
 
-        print(type(like))
         # Invert the value of new
         if type(like) == int:
             like = 1 - like
@@ -1091,42 +1110,7 @@ class Fenetre(QtGui.QMainWindow):
         # self.button_untag = QtGui.QPushButton("Non tagué")
         # self.toolbar.addWidget(self.button_untag)
 
-
-        # # ------------------------- MAIN TABLE ---------------------------------------------------------------------------------------
-
-
-        # self.horizontal_header = QtGui.QHeaderView(QtCore.Qt.Horizontal) # Déclare le header perso
-        # self.horizontal_header.setDefaultAlignment(QtCore.Qt.AlignLeft) # Aligne à gauche l'étiquette des colonnes
-        # self.horizontal_header.setClickable(True)  # Rend cliquable le header perso
-
-        # # Resize to content vertically
-        # self.tableau.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
-
-        # # Style du tableau
-        # self.tableau.setHorizontalHeader(self.horizontal_header) # Active le header perso
-        # self.tableau.hideColumn(0)  # Hide id
-        # self.tableau.hideColumn(2)  # Hide doi
-        # self.tableau.hideColumn(6)  # Hide authors
-        # self.tableau.hideColumn(7)  # Hide abstracts
-        # self.tableau.hideColumn(8)  # Hide graphical_abstracts
-        # self.tableau.hideColumn(10)  # Hide urls
-        # self.tableau.hideColumn(11)  # Hide verif
-        # self.tableau.hideColumn(12)  # Hide new
-        # self.tableau.hideColumn(13)  # Hide topic_simple
-        # # # self.tableau.verticalHeader().setDefaultSectionSize(72) # On met la hauteur des cells à la hauteur des thumbs
-        # # # self.tableau.setColumnWidth(5, 127) # On met la largeur de la colonne des thumbs à la largeur des thumbs - 1 pixel (plus joli)
-        # self.tableau.setSortingEnabled(True)  # Active le tri
-        # self.tableau.verticalHeader().setVisible(False)  # Cache le header vertical
-        # # self.tableau.verticalHeader().sectionResizeMode(QHeaderView.ResizeToContents)
-        # self.tableau.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)  # Empêche l'édition des cells
-
-
         # # ------------------------- LEFT AREA ------------------------------------------------------------------------
-
-        # On crée un widget conteneur pour les tags
-        # self.vbox_journals = QtGui.QVBoxLayout()
-        # self.dock_journals = QtGui.QWidget()
-        # self.dock_journals.setLayout(self.vbox_journals)
 
         # On crée des scrollarea pr mettre les boutons des tags et des acteurs
         self.scroll_tags = QtGui.QScrollArea()
@@ -1205,9 +1189,6 @@ class Fenetre(QtGui.QMainWindow):
         # Allows to create other tabs
         self.onglets = QtGui.QTabWidget()
 
-        # Create the main table, at index 0
-        self.createSearchTab("All articles", "SELECT * FROM papers")
-
         self.splitter1 = QtGui.QSplitter(QtCore.Qt.Vertical)
         self.splitter1.addWidget(self.area_right_top)
         self.splitter1.addWidget(self.area_right_bottom)
@@ -1216,6 +1197,10 @@ class Fenetre(QtGui.QMainWindow):
         self.splitter2.addWidget(self.scroll_tags)
         self.splitter2.addWidget(self.onglets)
         self.splitter2.addWidget(self.splitter1)
+
+        # Create the main table, at index 0
+        self.createSearchTab("All articles", "SELECT * FROM papers")
+
 
         self.setCentralWidget(self.splitter2)
 

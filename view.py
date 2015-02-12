@@ -22,6 +22,9 @@ class ViewPerso(QtGui.QTableView):
         # Scroll per "pixel". Gives a better impression when scrolling
         self.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
 
+        new_size = self.parent.splitter2.sizes()[1]
+        self.resizeCells(new_size)
+
 
     def defineSlots(self):
 
@@ -76,7 +79,31 @@ class ViewPerso(QtGui.QTableView):
         self.clicked.emit(self.selectionModel().currentIndex())
 
 
+    def resizeCells(self, new_size):
+
+        """Slot triggered by the parent when the central splitter is moved.
+        Allows to resize the columns of the table to optimize space.
+        new_size is the width of the central splitter of the parent"""
+
+        # The thumbnail's size is set to 30 % of the view's width
+        size_thumbnail = new_size * 0.3
+
+        # If the scrollbar is not visible (not enough posts), its width
+        # is set to 100 px. Weird. So if the scrollBar is not visible,
+        # don't substract its size
+        if self.verticalScrollBar().isVisible():
+            size_title = new_size - size_thumbnail - self.verticalScrollBar().width()
+        else:
+            size_title = new_size - size_thumbnail
+
+        self.setColumnWidth(8, size_thumbnail)
+        self.setColumnWidth(3, size_title)
+
+
     def initUI(self):
+
+        # Turn off the horizontal scrollBar. Not necessary, and ugly
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
         # self.horizontal_header = QtGui.QHeaderView(QtCore.Qt.Horizontal)  # Déclare le header perso
         # self.horizontal_header.setDefaultAlignment(QtCore.Qt.AlignLeft)  # Aligne à gauche l'étiquette des colonnes
@@ -101,9 +128,10 @@ class ViewPerso(QtGui.QTableView):
         self.hideColumn(13)  # Hide topic_simple
         self.horizontalHeader().moveSection(8, 0)  # Move the graphical abstract to first
         self.verticalHeader().setDefaultSectionSize(200)
-        self.setColumnWidth(8, 250)
-        self.setColumnWidth(3, 500)
+        # self.setColumnWidth(8, 250)
+        # self.setColumnWidth(3, 500)
         # self.setSortingEnabled(True)
+
         self.verticalHeader().setVisible(False)
         self.horizontalHeader().setVisible(False)
         # self.verticalHeader().sectionResizeMode(QHeaderView.ResizeToContents)
