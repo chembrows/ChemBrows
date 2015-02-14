@@ -138,8 +138,6 @@ class ViewPerso(QtGui.QTableView):
         # self.resizeColumnsToContents()
         self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)  # Empêche l'édition des cells
 
-        self.sortByColumn(1)
-
 
     def keyboardSearch(self, search):
 

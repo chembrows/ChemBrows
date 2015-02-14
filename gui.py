@@ -151,11 +151,11 @@ class Fenetre(QtGui.QMainWindow):
 
         for site in urls:
             # One worker for each website
-            worker = Worker(site, self.l)
+            worker = Worker(site, self.l, self.bdd)
             worker.finished.connect(self.checkThreads)
             self.list_threads.append(worker)
 
-        self.resetView()
+        # self.resetView()
 
 
     def checkThreads(self):
@@ -163,14 +163,15 @@ class Fenetre(QtGui.QMainWindow):
         """Method to check the state of each worker.
         If all the workers are finished, enable the parse action"""
 
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        # model = self.liste_models_in_tabs[self.onglets.currentIndex()]
 
         # Get a list of the workers states
         list_states = [worker.isFinished() for worker in self.list_threads]
 
         if False not in list_states:
             # Update the view when a worker is finished
-            model.select()
+            # model.select()
+            self.calculatePercentageMatch()
             self.parseAction.setEnabled(True)
             self.l.debug("Parsing data finished. Enabling parseAction")
 
@@ -234,23 +235,58 @@ class Fenetre(QtGui.QMainWindow):
         self.advanced_searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_025_binoculars'), 'Advanced search', self)
         self.advanced_searchAction.triggered.connect(lambda: AdvancedSearch(self))
 
+        # Action to change the sorting method of the views
+        self.sortingPercentageAction = QtGui.QAction('By percentage match', self, checkable=True)
+        self.sortingPercentageAction.triggered.connect(lambda: self.changeSortingMethod(1,
+                                                                                        reverse=self.sortingReversedAction.isChecked()))
 
-        # # On crée une action qui servira de séparateur
-        # self.separatorAction = QtGui.QAction(self)
-        # self.separatorAction.setSeparator(True)
+        self.sortingDateAction = QtGui.QAction('By date', self, checkable=True)
+        self.sortingDateAction.triggered.connect(lambda: self.changeSortingMethod(4,
+                                                                                  reverse=self.sortingReversedAction.isChecked()))
 
-        # # On crée une action pour les réglages, et on lui passe en
-        # # paramètres la fenêtre principale, et l'objet pr la sauvegarde
-        # self.settingsAction = QtGui.QAction('Préférences', self)
-        # self.settingsAction.triggered.connect(lambda: Settings(self))
+        self.sortingReversedAction = QtGui.QAction('Reverse order', self, checkable=True)
+        self.sortingReversedAction.triggered.connect(lambda: self.changeSortingMethod(self.sorting_method,
+                                                                                      reverse=self.sortingReversedAction.isChecked()))
 
-        # # Action pr changer d'onglet
-        # self.changeTabRightAction = QtGui.QAction("Changer d'onglet", self)
-        # self.changeTabRightAction.setShortcut('C')
-        # self.changeTabRightAction.triggered.connect(self.changeTabRight)
-        # # On ajoute l'action à la fenêtre seulement pr la rendre invisible
-        # # http://stackoverflow.com/questions/18441755/hide-an-action-without-disabling-it
-        # self.addAction(self.changeTabRightAction)
+        # Action to serve use as a separator
+        self.separatorAction = QtGui.QAction(self)
+        self.separatorAction.setSeparator(True)
+
+
+    def changeSortingMethod(self, method_nbr, reverse):
+
+        """
+        Slot to change the sorting method of the
+        articles. Get an int as a parameter:
+        1 -> percentage match
+        4 -> date
+        reverse -> if True, descending order
+        """
+
+        # Set a class attribute, to save with the QSettings,
+        # to restore the check at boot
+        self.sorting_method = method_nbr
+        self.sorting_reversed = reverse
+
+        if self.sorting_method == 1:
+            self.sortingPercentageAction.setChecked(True)
+            self.sortingDateAction.setChecked(False)
+        elif self.sorting_method == 4:
+            self.sortingPercentageAction.setChecked(False)
+            self.sortingDateAction.setChecked(True)
+
+        if self.sorting_reversed:
+            self.sortingReversedAction.setChecked(True)
+        else:
+            self.sortingReversedAction.setChecked(False)
+
+        for table in self.liste_tables_in_tabs:
+            # Qt.AscendingOrder   0   starts with 'AAA' ends with 'ZZZ'
+            # Qt.DescendingOrder  1   starts with 'ZZZ' ends with 'AAA'
+            # if "reverse order" in unchecked, reverse = False = 0
+            # -> 1 - reverse = 1 -> DescendingOrder -> starts with the
+            # highest percentages
+            table.sortByColumn(method_nbr, 1 - reverse)
 
 
     def updateModel(self):
@@ -295,12 +331,15 @@ class Fenetre(QtGui.QMainWindow):
         self.options.setValue("central_splitter", self.splitter1.saveState())
         self.options.setValue("final_splitter", self.splitter2.saveState())
 
+        self.options.setValue("sorting_method", self.sorting_method)
+        self.options.setValue("sorting_reversed", self.sorting_reversed)
+
         self.options.endGroup()
 
         # Save the checked journals (on the left)
-        tags_checked = [button.text() for button in self.list_buttons_tags if button.isChecked()]
+        # tags_checked = [button.text() for button in self.list_buttons_tags if button.isChecked()]
 
-        self.options.setValue("tags_checked", tags_checked)
+        # self.options.setValue("tags_checked", tags_checked)
 
         # On s'assure que self.options finit ttes ces taches.
         # Corrige un bug. self.options semble ne pas effectuer
@@ -339,7 +378,11 @@ class Fenetre(QtGui.QMainWindow):
             self.splitter1.restoreState(self.options.value("Window/central_splitter"))
             self.splitter2.restoreState(self.options.value("Window/final_splitter"))
 
-
+            # Bloc to restore the check of the sorting method, in the View menu
+            # of the menubar
+            self.sorting_method = self.options.value("Window/sorting_method", 1, int)
+            self.sorting_reversed = self.options.value("Window/sorting_reversed", False, bool)
+            self.changeSortingMethod(self.sorting_method, self.sorting_reversed)
 
         self.getJournalsToCare()
 
@@ -1057,6 +1100,13 @@ class Fenetre(QtGui.QMainWindow):
         self.editMenu.addAction(self.calculatePercentageMatchAction)
         self.editMenu.addAction(self.toggleReadAction)
         self.editMenu.addAction(self.toggleLikeAction)
+
+        self.viewMenu = self.menubar.addMenu("&View")
+        self.sortMenu = self.viewMenu.addMenu("Sorting")
+        self.sortMenu.addAction(self.sortingPercentageAction)
+        self.sortMenu.addAction(self.sortingDateAction)
+        self.sortMenu.addAction(self.separatorAction)
+        self.sortMenu.addAction(self.sortingReversedAction)
 
         # Building tools menu
         self.toolMenu = self.menubar.addMenu("&Tools")
