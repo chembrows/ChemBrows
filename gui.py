@@ -334,12 +334,13 @@ class Fenetre(QtGui.QMainWindow):
         self.options.setValue("sorting_method", self.sorting_method)
         self.options.setValue("sorting_reversed", self.sorting_reversed)
 
+        # Save the checked journals (on the left)
+        tags_checked = [button.text() for button in self.list_buttons_tags if button.isChecked()]
+
+        self.options.setValue("tags_checked", tags_checked)
+
         self.options.endGroup()
 
-        # Save the checked journals (on the left)
-        # tags_checked = [button.text() for button in self.list_buttons_tags if button.isChecked()]
-
-        # self.options.setValue("tags_checked", tags_checked)
 
         # On s'assure que self.options finit ttes ces taches.
         # Corrige un bug. self.options semble ne pas effectuer
@@ -386,7 +387,13 @@ class Fenetre(QtGui.QMainWindow):
 
         self.getJournalsToCare()
 
-        self.tags_selected = self.journals_to_care
+        # Restore the journals selected (buttons pushed)
+        self.tags_selected = self.options.value("Window/tags_checked", [])
+        if self.tags_selected:
+            for button in self.list_buttons_tags:
+                if button.text() in self.tags_selected:
+                    button.setChecked(True)
+
         self.searchByButton()
 
 
@@ -1261,15 +1268,15 @@ if __name__ == '__main__':
 
     # Little hack to kill all the pending process
     os.setpgrp()  # create new process group, become its leader
-    try:
-        app = QtGui.QApplication(sys.argv)
-        ex = Fenetre()
-        sys.exit(app.exec_())
-    except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        exc_type = type(e).__name__
-        fname = exc_tb.tb_frame.f_code.co_filename
-        print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-        print("{0}: {1}".format(exc_type, e))
-    finally:
-        os.killpg(0, signal.SIGKILL)  # kill all processes in my group
+    # try:
+    app = QtGui.QApplication(sys.argv)
+    ex = Fenetre()
+    sys.exit(app.exec_())
+    # except Exception as e:
+        # exc_type, exc_obj, exc_tb = sys.exc_info()
+        # exc_type = type(e).__name__
+        # fname = exc_tb.tb_frame.f_code.co_filename
+        # print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
+        # print("{0}: {1}".format(exc_type, e))
+    # finally:
+        # os.killpg(0, signal.SIGKILL)  # kill all processes in my group

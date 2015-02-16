@@ -285,7 +285,7 @@ class AdvancedSearch(QtGui.QDialog):
                 self.parent.simpleQuery(base)
 
         else:
-            group_name = tab_title
+            name_search = tab_title
 
             if not self.test:
                 self.parent.createSearchTab(name_search, base, update=True)
