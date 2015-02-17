@@ -3,7 +3,7 @@
 
 import sys
 import os
-import signal
+# import signal
 import subprocess
 
 from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
@@ -60,41 +60,19 @@ class Fenetre(QtGui.QMainWindow):
 
     def connectionBdd(self):
 
-        """Méthode qui se connecte à la bdd, crée un modèle, et l'associe
-        à la vue"""
+        """Method to connect to the database. Creates it
+        if it does not exist"""
 
-        # Accès à la base de donnée.
+        # Set the database
         self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         self.bdd.setDatabaseName("fichiers.sqlite")
 
         self.bdd.open()
 
-        # # Création du modèle, issu de la bdd
-        # self.modele = ModelPerso()
-
-        # Changes are effective immediately
-        # self.modele.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
-        # self.modele.setTable("papers")
-
         query = QtSql.QSqlQuery("fichiers.sqlite")
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
                      liked INTEGER, url TEXT, verif INTEGER, new INTEGER, topic_simple TEXT)")
-
-
-        # Creation of a custom proxy to fix a sorting bug and to filter
-        # articles while researching
-        # self.proxy = ProxyPerso(self)
-        # self.proxy.setSourceModel(self.modele)
-
-        # # To fix a sorting bug
-        # self.proxy.setDynamicSortFilter(True)
-
-        # Create the view, and give it the model
-        # self.tableau = ViewPerso(self)
-        # self.tableau.setModel(self.proxy)
-        # self.tableau.setItemDelegate(ViewDelegate(self))
-        # self.tableau.setSelectionBehavior(self.tableau.SelectRows)
 
 
     def getJournalsToCare(self):
@@ -331,28 +309,33 @@ class Fenetre(QtGui.QMainWindow):
         self.options.setValue("central_splitter", self.splitter1.saveState())
         self.options.setValue("final_splitter", self.splitter2.saveState())
 
-        self.options.setValue("sorting_method", self.sorting_method)
-        self.options.setValue("sorting_reversed", self.sorting_reversed)
+        # Save the sorting method
+        try:
+            self.options.setValue("sorting_method", self.sorting_method)
+        except AttributeError:
+            self.options.setValue("sorting_method", 1)
+        try:
+            self.options.setValue("sorting_reversed", self.sorting_reversed)
+        except AttributeError:
+            self.options.setValue("sorting_reversed", False)
 
         # Save the checked journals (on the left)
         tags_checked = [button.text() for button in self.list_buttons_tags if button.isChecked()]
-
         self.options.setValue("tags_checked", tags_checked)
 
         self.options.endGroup()
 
-
-        # On s'assure que self.options finit ttes ces taches.
-        # Corrige un bug. self.options semble ne pas effectuer
-        # ttes ces tâches immédiatement.
+        # Be sure self.options finished its tasks.
+        # Correct a bug
         self.options.sync()
 
+        # Close the database connection
         self.bdd.removeDatabase("fichiers.sqlite")
         self.bdd.close()
 
         QtGui.qApp.quit()
 
-        self.l.info("Fermeture du programme")
+        self.l.info("Closing the program")
 
 
     def restoreSettings(self):
@@ -585,8 +568,6 @@ class Fenetre(QtGui.QMainWindow):
         self.query.exec_()
 
         model.setQuery(self.query)
-
-        model.setQuery(self.query)
         proxy.setSourceModel(model)
         table.setModel(proxy)
 
@@ -801,40 +782,6 @@ class Fenetre(QtGui.QMainWindow):
         proxy.setFilterRegExp(QtCore.QRegExp(results))
         proxy.setFilterKeyColumn(13)
 
-        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        # model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        # proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
-
-        # # results = functions.simpleChar(self.research_bar.text())
-        # results = functions.queryString(self.research_bar.text())
-
-        # self.query = QtSql.QSqlQuery("fichiers.sqlite")
-
-        # base = "SELECT * FROM papers WHERE ' ' || replace(authors, ',', ' ') || ' ' \
-                # LIKE '{0}' OR topic_simple LIKE '{0}'".format(results)
-
-        # self.query.prepare(base)
-        # self.query.exec_()
-
-        # print(self.query.lastQuery())
-
-        # model.setQuery(self.query)
-        # proxy.setSourceModel(model)
-        # table.setModel(proxy)
-
-    # def adjustView(self):
-
-        # """Adjust the view, eg: hide the unintersting columns"""
-
-        # self.tableau.hideColumn(0)  # Hide id
-        # self.tableau.hideColumn(2)  # Hide doi
-        # self.tableau.hideColumn(6)  # Hide authors
-        # self.tableau.hideColumn(7)  # Hide abstracts
-        # self.tableau.hideColumn(8)  # Hide abstracts
-        # self.tableau.hideColumn(10)  # Hide urls
-        # self.tableau.hideColumn(11)  # Hide verif
-        # self.tableau.hideColumn(12)  # Hide new
-
 
     def clearLayout(self, layout):
 
@@ -854,7 +801,7 @@ class Fenetre(QtGui.QMainWindow):
 
     def resetView(self):
 
-        """Slot pour remettre les données affichées à zéro"""
+        """Slot to reset view, clean the graphical abstract, etc"""
 
         proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
@@ -1119,11 +1066,8 @@ class Fenetre(QtGui.QMainWindow):
         self.toolMenu = self.menubar.addMenu("&Tools")
         self.toolMenu.addAction(self.openInBrowserAction)
 
+        # Menu entry for the settings
         self.menubar.addAction(self.settingsAction)
-
-        # # Ajout d'une entrée pr les réglages dans la barre
-        # # des menus
-        # self.menubar.addAction(self.settingsAction)
 
         # # ------------------------- TOOLBAR  -----------------------------------------------
 
