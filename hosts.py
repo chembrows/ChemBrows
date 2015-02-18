@@ -9,37 +9,39 @@ import requests
 from io import open as iopen
 import arrow
 
-#Personal modules
+# Personal modules
 import functions
 
-#urls = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
-        #"http://feeds.feedburner.com/acs/jacsat"
-       #]
+# urls = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
+        # "http://feeds.feedburner.com/acs/jacsat"
+       # ]
 
 def getData(journal, entry):
 
     """Get the data. Starts from the data contained in the RSS flux, and if necessary,
     parse the website for supplementary infos. Download the graphical abstract"""
 
-    #This function is called like this in parse.py:
-    #title, date, authors, abstract, graphical_abstract = hosts.getData(journal, entry)
+    # This function is called like this in parse.py:
+    # title, date, authors, abstract, graphical_abstract = hosts.getData(journal, entry)
 
-    #List of the journals
+    # List of the journals
     rsc, rsc_abb = getJournals("rsc")
     acs, acs_abb = getJournals("acs")
     wiley, wiley_abb = getJournals("wiley")
     npg, npg_abb = getJournals("npg")
     science, science_abb = getJournals("science")
 
-    doi = getDoi(journal, entry)
-
-    #If the journal is edited by the RSC
+    # If the journal is edited by the RSC
     if journal in rsc:
 
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
         journal_abb = rsc_abb[rsc.index(journal)]
-        url = entry.feedburner_origlink
+
+        try:
+            url = entry.feedburner_origlink
+        except AttributeError:
+            url = entry.link
 
         abstract = None
         graphical_abstract = None
@@ -58,15 +60,15 @@ def getData(journal, entry):
             graphical_abstract = "Empty"
 
         try:
-            #Dl of the article website page
-            #page = requests.get(entry.feedburner_origlink, timeout=20)
+            # Dl of the article website page
+            # page = requests.get(entry.feedburner_origlink, timeout=20)
             page = requests.get(url, timeout=20)
 
-            #If the dl went wrong, print an error
+            # If the dl went wrong, print an error
             if page.status_code is not requests.codes.ok:
                 print("{0}, bad return code: {1}".format(journal_abb, page.status_code))
 
-            #Get the abstract
+            # Get the abstract
             soup = BeautifulSoup(page.text)
             r = soup.find_all("meta", attrs={"name": "citation_abstract"})
             if r:
@@ -83,7 +85,7 @@ def getData(journal, entry):
             print(e)
 
 
-    if journal in wiley:
+    elif journal in wiley:
 
         journal_abb = wiley_abb[wiley.index(journal)]
         title = entry.title
@@ -107,14 +109,14 @@ def getData(journal, entry):
             abstract = soup.renderContents().decode()
 
 
-    if journal in acs:
+    elif journal in acs:
 
         title = entry.title.replace("\n", " ")
         journal_abb = acs_abb[acs.index(journal)]
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
         abstract = None
 
-        #If there is only one author
+        # If there is only one author
         try:
             author = entry.author.split(" and ")
             author = author[0] + ", " + author[1]
@@ -123,19 +125,22 @@ def getData(journal, entry):
         except IndexError:
             author = entry.author
 
-        url = entry.feedburner_origlink
+        try:
+            url = entry.feedburner_origlink
+        except AttributeError:
+            url = entry.link
 
         graphical_abstract = None
 
         try:
-            #Dl of the article website page
+            # Dl of the article website page
             page = requests.get(url, timeout=20)
 
-            #If the dl went wrong, print an error
+            # If the dl went wrong, print an error
             if page.status_code is not requests.codes.ok:
                 print("getData, {0}, bad return code: {1}".format(journal_abb, page.status_code))
 
-            #Get the abstract
+            # Get the abstract
             soup = BeautifulSoup(page.text)
             r = soup.find_all("p", attrs={"class": "articleBody_abstractText"})
             if r:
@@ -156,7 +161,7 @@ def getData(journal, entry):
             graphical_abstract = "Empty"
 
 
-    if journal in npg:
+    elif journal in npg:
 
         title = entry.title
         journal_abb = npg_abb[npg.index(journal)]
@@ -180,14 +185,14 @@ def getData(journal, entry):
                     author = ", ".join(author)
 
         try:
-            #Dl of the article website page
+            # Dl of the article website page
             page = requests.get(url, timeout=20)
 
-            #If the dl went wrong, print an error
+            # If the dl went wrong, print an error
             if page.status_code is not requests.codes.ok:
                 print("getData, {0}, bad return code: {1}".format(journal_abb, page.status_code))
 
-            #Get the abstract
+            # Get the abstract
             soup = BeautifulSoup(page.text)
             r = soup.find_all("img", attrs={"class": "fig"})
 
@@ -209,7 +214,7 @@ def getData(journal, entry):
             print(e)
 
 
-    if journal in science:
+    elif journal in science:
 
         title = entry.title
         journal_abb = science_abb[science.index(journal)]
@@ -223,18 +228,22 @@ def getData(journal, entry):
 
         if "Author:" in entry.summary:
             abstract = entry.summary.split("Author: ")[0]
-            #author = [entry.summary.split("Author: ")[1]] #To uncomment to get a list of author
+            # author = [entry.summary.split("Author: ")[1]] # To uncomment to get a list of author
             author = entry.summary.split("Author: ")[1]
         elif "Authors:" in entry.summary:
             abstract = entry.summary.split("Authors: ")[0]
             author = entry.summary.split("Authors: ")[1].split(", ")
-            author = ", ".join(author) # To comment if formatName
+            author = ", ".join(author)  #  To comment if formatName
         else:
             abstract = entry.summary
             author = "Empty"
 
         if not abstract:
             abstract = "Empty"
+
+    else:
+        print("Error: journal not identified")
+        return None
 
 
     if abstract is not None:
@@ -245,42 +254,42 @@ def getData(journal, entry):
     return title, journal_abb, date, author, abstract, graphical_abstract, url, topic_simple
 
 
-#def formatName(authors_list, reverse=False):
+# def formatName(authors_list, reverse=False):
 
-    #"""Function to ormat the author's name in a specific way. Ex:
-    #Jennifer A. Doudna -> J. A. Doudna"""
-    #print(authors_list)
+    # """Function to ormat the author's name in a specific way. Ex:
+    # Jennifer A. Doudna -> J. A. Doudna"""
+    # print(authors_list)
 
-    ##New string to store all the authors, formatted
-    #new_author = ""
+    # # New string to store all the authors, formatted
+    # new_author = ""
 
-    #for complete_name in authors_list:
-        ##Example
-        ##complete_name: Jennifer A. Doudna
-        #complete_name = complete_name.replace("“", "")
-        #complete_name = complete_name.split(" ")
-        #person = ""
+    # for complete_name in authors_list:
+        # # Example
+        # # complete_name: Jennifer A. Doudna
+        # complete_name = complete_name.replace("“", "")
+        # complete_name = complete_name.split(" ")
+        # person = ""
 
-        #for piece_name in complete_name:
-            #if piece_name is not complete_name[-1]:
+        # for piece_name in complete_name:
+            # if piece_name is not complete_name[-1]:
 
-                ##If the piece is already an abb, add directly
-                #if "." in piece_name and len(piece_name) is 2:
-                    #person += piece_name
-                #else:
-                    #person = person + piece_name[0] + "."
-                #person += " "
+                # # If the piece is already an abb, add directly
+                # if "." in piece_name and len(piece_name) is 2:
+                    # person += piece_name
+                # else:
+                    # person = person + piece_name[0] + "."
+                # person += " "
 
-            #else:
-                #person += piece_name
+            # else:
+                # person += piece_name
 
-        ##Add to the new_author string
-        #if not new_author:
-            #new_author += person
-        #else:
-            #new_author = new_author + ", " + person
+        # # Add to the new_author string
+        # if not new_author:
+            # new_author += person
+        # else:
+            # new_author = new_author + ", " + person
 
-    #return new_author
+    # return new_author
 
 
 def getDoi(journal, entry):
@@ -301,19 +310,22 @@ def getDoi(journal, entry):
         except IndexError:
             doi = r[1].text.split("DOI:")[1].split(",")[0]
 
-    if journal in wiley:
-        doi = entry.prism_doi
-
-    if journal in acs:
+    elif journal in acs:
         doi = entry.id.split("dx.doi.org/")[1]
 
-    if journal in npg:
+    elif journal in wiley:
         doi = entry.prism_doi
 
-    if journal in science:
+    elif journal in npg:
+        doi = entry.prism_doi
+
+    elif journal in science:
         doi = entry.dc_identifier
 
-    doi = doi.replace(" ", "")
+    try:
+        doi = doi.replace(" ", "")
+    except UnboundLocalError:
+        print("Erreur in getDoi: {0}".format(journal))
 
     return doi
 
@@ -322,31 +334,31 @@ def downloadPic(url):
 
     """The parameter is a list. The function will be able to evolve"""
 
-    #On essaie de récupérer chaque page correspondant
-    #à chaque url, ac un timeout
+    # On essaie de récupérer chaque page correspondant
+    # à chaque url, ac un timeout
     try:
-        #On utilise un user-agent de browser,
-        #ds le cas où les hébergeurs bloquent les bots
+        # On utilise un user-agent de browser,
+        # ds le cas où les hébergeurs bloquent les bots
         headers = {'User-agent': 'Mozilla/5.0'}
 
-        #On rajoute l'url de base comme referer,
-        #car certains sites bloquent l'accès direct aux images
-        headers["Referer"]= url
+        # On rajoute l'url de base comme referer,
+        # car certains sites bloquent l'accès direct aux images
+        headers["Referer"] = url
 
         page = requests.get(url, timeout=20, headers=headers)
 
-        #Si la page a bien été récupérée
+        # Si la page a bien été récupérée
         if page.status_code == requests.codes.ok:
 
             path = "./graphical_abstracts/"
 
-            #On enregistre la page
+            # On enregistre la page
             with iopen(path + functions.simpleChar(url), 'wb') as file:
                 file.write(page.content)
-                #l.debug("image ok")
+                # l.debug("image ok")
 
-                #On sort True si on matche une des possibilités
-                #de l'url
+                # On sort True si on matche une des possibilités
+                # de l'url
                 return True, functions.simpleChar(url)
 
         elif page.status_code != requests.codes.ok:
@@ -379,29 +391,34 @@ def getJournals(company):
 
 if __name__ == "__main__":
 
-    #urls_test = ["ang.xml"]
-    #urls_test = ["jacs.xml"]
-    #urls_test = ["http://feeds.rsc.org/rss/nj"]
-    urls_test = ["njc.xml"]
-    #urls_test = ["http://feeds.rsc.org/rss/sc"]
-    #urls_test = ["science.xml"]
+    # urls_test = ["ang.xml"]
+    # urls_test = ["debug/jacs.xml"]
+    # urls_test = ["http://feeds.rsc.org/rss/nj"]
+    # urls_test = ["http://feeds.rsc.org/rss/sc"]
+    # urls_test = ["debug/science.xml"]
+    urls_test = ["debug/med_chem.htm"]
+    # urls_test = ["debug/sm.htm"]
 
     for site in urls_test:
 
         feed = feedparser.parse(site)
+        # print(feed)
 
-        #print(feed)
 
-        #Name of the journal
-        journal = feed['feed']['title'] 
+        # print(feed)
+
+        # Name of the journal
+        journal = feed['feed']['title']
 
         print(journal)
 
         for entry in feed.entries:
-            #print(entry.title)
-            getData(journal, entry)
-            #print("\n")
-            #break
+            # print(entry.link)
+            # title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = getData(journal, entry)
+            # print(title)
+            for key in entry:
+                print(key)
+            print("\n")
+            # break
 
-        #print("\n\n")
-
+        # print("\n\n")

@@ -3,7 +3,7 @@
 
 import sys
 import os
-# import signal
+import signal
 import subprocess
 
 from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
@@ -33,6 +33,9 @@ class Fenetre(QtGui.QMainWindow):
 
         self.l = MyLog()
         self.l.info('Starting the program')
+
+        # Set the logging level to Error (debugging)
+        self.l.setLevel(20)
 
         # Object to store options and preferences
         self.options = QtCore.QSettings("options.ini", QtCore.QSettings.IniFormat)

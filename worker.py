@@ -25,7 +25,7 @@ class Worker(QtCore.QThread):
         self.url_feed = url_feed
         self.l = logger
         self.bdd = bdd
-        self.l.debug("Starting parsing of the new articles")
+        self.l.info("Starting parsing of the new articles")
         self.start()
 
 
@@ -45,7 +45,12 @@ class Worker(QtCore.QThread):
         feed = feedparser.parse(self.url_feed)
 
         # Get the journal name
-        journal = feed['feed']['title']
+        try:
+            journal = feed['feed']['title']
+        except KeyError:
+            self.l.error("No title for the journal ! Aborting")
+            self.l.error(feed)
+            return
 
         self.l.debug("{0}: {1}".format(journal, len(feed.entries)))
 
@@ -56,7 +61,7 @@ class Worker(QtCore.QThread):
         query2.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
-        self.bdd.transaction()
+        # self.bdd.transaction()
 
         for entry in feed.entries:
 
@@ -122,8 +127,8 @@ class Worker(QtCore.QThread):
                     self.l.debug("Adding {0} to the database".format(title))
 
         # self.l.info("{0}: {1} entries added".format(journal, i))
-        if self.bdd.commit():
-            self.l.debug("Treatment of new entries done")
+        # if self.bdd.commit():
+            # self.l.debug("Treatment of new entries done")
 
 
 
