@@ -161,14 +161,14 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             painter.drawText(option.rect, QtCore.Qt.AlignCenter, prettyDate(date))
 
-        # #Index de la miniature
+        # Thumbnail's index
         elif index.column() == 8:
 
             if type(index.data()) == str and index.data() != "Empty":
                 path_photo = "./graphical_abstracts/" + index.data()
 
                 if os.path.exists(path_photo):
-                    #--- la photo existe: on l'affiche dans la case -------------
+                    # --- la photo existe: on l'affiche dans la case -------------
 
                     # on charge la photo dans un QPixmap
                     pixmap = QtGui.QPixmap(path_photo)
@@ -180,21 +180,42 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                     if wpix != wcase or hpix != hcase:
                         pixmap = pixmap.scaled(wcase, hcase,
                                                  QtCore.Qt.KeepAspectRatio,
-                                                 #Amélioration de l'image avec smooth
+                                                 # Better image with smoothing
                                                  QtCore.Qt.SmoothTransformation)
-                        wpix, hpix =  pixmap.width(), pixmap.height() # maj
+                        wpix, hpix = pixmap.width(), pixmap.height()
 
-                    # l'affichage se fera au centre de la case sans déformation
-                    x = option.rect.x() + (wcase-wpix)//2
-                    y = option.rect.y() + (hcase-hpix)//2
+                    # Draw the picture at the center
+                    x = option.rect.x() + (wcase - wpix) // 2
+                    y = option.rect.y() + (hcase - hpix) // 2
 
-                    # afficher dans le rectagle calculé
+                    # Draw in the calculated rectangle
                     painter.drawPixmap(QtCore.QRect(x, y, wpix, hpix), pixmap)
 
             else:
-                #--- la photo n'existe pas: on met un fond vert -------------
+                # The picture doesn't exist: grey rectangle
                 # painter.fillRect(option.rect, QtGui.QColor("green"))
-                painter.fillRect(option.rect, QtGui.QColor(100, 100, 100, 90))
+                # painter.fillRect(option.rect, QtGui.QColor(100, 100, 100, 90))
+
+                pixmap = QtGui.QPixmap("images/censored.jpg")
+                # pixmap = QtGui.QPixmap("images/not_available.png")
+
+                wcase, hcase = option.rect.width(), option.rect.height()
+                wpix, hpix =  pixmap.width(), pixmap.height()
+
+                # redim si nécessaire à la taille de la case sans déformation
+                if wpix != wcase or hpix != hcase:
+                    pixmap = pixmap.scaled(wcase, hcase,
+                                             QtCore.Qt.KeepAspectRatio,
+                                             # Better image with smoothing
+                                             QtCore.Qt.SmoothTransformation)
+                    wpix, hpix = pixmap.width(), pixmap.height()
+
+                # Draw the picture at the center
+                x = option.rect.x() + (wcase - wpix) // 2
+                y = option.rect.y() + (hcase - hpix) // 2
+
+                # Draw in the calculated rectangle
+                painter.drawPixmap(QtCore.QRect(x, y, wpix, hpix), pixmap)
 
 
         else:
