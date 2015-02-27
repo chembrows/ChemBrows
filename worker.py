@@ -55,9 +55,9 @@ class Worker(QtCore.QThread):
         self.l.debug("{0}: {1}".format(journal, len(feed.entries)))
 
         # Prepare the queries here, only once
-        query1 = QtSql.QSqlQuery("fichiers.sqlite")
+        query1 = QtSql.QSqlQuery(self.bdd)
         query1.prepare("UPDATE papers SET title= ?, authors=?, abstract=?, graphical_abstract=?, verif=?, new=?, topic_simple=? WHERE doi=?")
-        query2 = QtSql.QSqlQuery("fichiers.sqlite")
+        query2 = QtSql.QSqlQuery(self.bdd)
         query2.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
@@ -140,7 +140,7 @@ class Worker(QtCore.QThread):
         list_doi = []
         list_ok = []
 
-        query = QtSql.QSqlQuery("fichiers.sqlite")
+        query = QtSql.QSqlQuery(self.bdd)
         query.exec_("SELECT * FROM papers")
 
         while query.next():

@@ -72,7 +72,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.bdd.open()
 
-        query = QtSql.QSqlQuery("fichiers.sqlite")
+        query = QtSql.QSqlQuery(self.bdd)
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
                      liked INTEGER, url TEXT, verif INTEGER, new INTEGER, topic_simple TEXT)")
@@ -564,7 +564,7 @@ class Fenetre(QtGui.QMainWindow):
         model = self.liste_models_in_tabs[self.onglets.currentIndex()]
         proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        self.query = QtSql.QSqlQuery("fichiers.sqlite")
+        self.query = QtSql.QSqlQuery(self.bdd)
 
         self.query.prepare(table.base_query)
 
@@ -689,7 +689,7 @@ class Fenetre(QtGui.QMainWindow):
         model = self.liste_models_in_tabs[self.onglets.currentIndex()]
         proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        self.query = QtSql.QSqlQuery("fichiers.sqlite")
+        self.query = QtSql.QSqlQuery(self.bdd)
 
         # requete = "SELECT * FROM papers WHERE journal IN ("
 
@@ -724,7 +724,7 @@ class Fenetre(QtGui.QMainWindow):
         model = self.liste_models_in_tabs[self.onglets.currentIndex()]
         proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        self.query = QtSql.QSqlQuery("fichiers.sqlite")
+        self.query = QtSql.QSqlQuery(self.bdd)
 
         # First, search the new articles id
         self.query.prepare("SELECT id FROM papers WHERE new=1")
@@ -765,7 +765,7 @@ class Fenetre(QtGui.QMainWindow):
         model = self.liste_models_in_tabs[self.onglets.currentIndex()]
         proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        self.query = QtSql.QSqlQuery("fichiers.sqlite")
+        self.query = QtSql.QSqlQuery(self.bdd)
 
         self.query.prepare(base)
         self.query.exec_()
@@ -900,7 +900,7 @@ class Fenetre(QtGui.QMainWindow):
         the window settings, but better to be here. Also
         deletes the unused pictures present in the graphical_abstracts folder"""
 
-        query = QtSql.QSqlQuery("fichiers.sqlite")
+        query = QtSql.QSqlQuery(self.bdd)
 
         requete = "DELETE FROM papers WHERE journal NOT IN ("
 
