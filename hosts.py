@@ -1,22 +1,19 @@
 #!/usr/bin/python
 # -*-coding:Utf-8 -*
 
-import sys
-import os
+# import sys
+# import os
 import feedparser
 from bs4 import BeautifulSoup
 import requests
-from io import open as iopen
+# from io import open as iopen
 import arrow
 
 # Personal modules
 import functions
 
-# urls = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/%28ISSN%291521-3773",
-        # "http://feeds.feedburner.com/acs/jacsat"
-       # ]
 
-def getData(journal, entry):
+def getData(journal, entry, response=None):
 
     """Get the data. Starts from the data contained in the RSS flux, and if necessary,
     parse the website for supplementary infos. Download the graphical abstract"""
@@ -25,11 +22,11 @@ def getData(journal, entry):
     # title, date, authors, abstract, graphical_abstract = hosts.getData(journal, entry)
 
     # List of the journals
-    rsc, rsc_abb = getJournals("rsc")
-    acs, acs_abb = getJournals("acs")
-    wiley, wiley_abb = getJournals("wiley")
-    npg, npg_abb = getJournals("npg")
-    science, science_abb = getJournals("science")
+    rsc, rsc_abb, _ = getJournals("rsc")
+    acs, acs_abb, _ = getJournals("acs")
+    wiley, wiley_abb, _ = getJournals("wiley")
+    npg, npg_abb, _ = getJournals("npg")
+    science, science_abb, _ = getJournals("science")
 
     # If the journal is edited by the RSC
     if journal in rsc:
@@ -55,34 +52,18 @@ def getData(journal, entry):
         graphical_abstract = r[0].img
         if graphical_abstract is not None:
             graphical_abstract = r[0].img['src']
-            response, graphical_abstract = downloadPic(graphical_abstract)
-        else:
-            graphical_abstract = "Empty"
 
-        try:
-            # Dl of the article website page
-            # page = requests.get(entry.feedburner_origlink, timeout=20)
-            page = requests.get(url, timeout=20)
-
-            # If the dl went wrong, print an error
-            if page.status_code is not requests.codes.ok:
-                print("{0}, bad return code: {1}".format(journal_abb, page.status_code))
-
+        if response.status_code is requests.codes.ok:
             # Get the abstract
-            soup = BeautifulSoup(page.text)
+            soup = BeautifulSoup(response.text)
             r = soup.find_all("meta", attrs={"name": "citation_abstract"})
             if r:
                 abstract = r[0]['content']
 
             r = soup.find_all("meta", attrs={"name": "citation_author"})
             if r:
-                author = [ tag['content'] for tag in r ]
+                author = [tag['content'] for tag in r]
                 author = ", ".join(author)
-
-        except requests.exceptions.Timeout:
-            print("getData, {0}, timeout".format(journal_abb))
-        except Exception as e:
-            print(e)
 
 
     elif journal in wiley:
@@ -104,7 +85,8 @@ def getData(journal, entry):
         r = soup.find_all("a", attrs={"class": "figZoom"})
 
         if r:
-            response, graphical_abstract = downloadPic(r[0]['href'])
+            # answer, graphical_abstract = downloadPic(r[0]['href'])
+            graphical_abstract = r[0]['href']
             r[0].replaceWith("")
             abstract = soup.renderContents().decode()
 
@@ -132,33 +114,17 @@ def getData(journal, entry):
 
         graphical_abstract = None
 
-        try:
-            # Dl of the article website page
-            page = requests.get(url, timeout=20)
-
-            # If the dl went wrong, print an error
-            if page.status_code is not requests.codes.ok:
-                print("getData, {0}, bad return code: {1}".format(journal_abb, page.status_code))
-
-            # Get the abstract
-            soup = BeautifulSoup(page.text)
+        # If the dl went wrong, print an error
+        if response.status_code is requests.codes.ok:
+            soup = BeautifulSoup(response.text)
             r = soup.find_all("p", attrs={"class": "articleBody_abstractText"})
             if r:
                 abstract = r[0].text
-            else:
-                abstract = "Empty"
 
-        except requests.exceptions.Timeout:
-            print("getData, {0}, timeout".format(journal_abb))
-        except Exception as e:
-            print(e)
-
-        soup = BeautifulSoup(entry.summary)
-        r = soup.find_all("img", alt="TOC Graphic")
-        if r:
-            response, graphical_abstract = downloadPic(r[0]['src'])
-        else:
-            graphical_abstract = "Empty"
+            soup = BeautifulSoup(entry.summary)
+            r = soup.find_all("img", alt="TOC Graphic")
+            if r:
+                graphical_abstract = r[0]['src']
 
 
     elif journal in npg:
@@ -184,16 +150,9 @@ def getData(journal, entry):
 
                     author = ", ".join(author)
 
-        try:
-            # Dl of the article website page
-            page = requests.get(url, timeout=20)
-
-            # If the dl went wrong, print an error
-            if page.status_code is not requests.codes.ok:
-                print("getData, {0}, bad return code: {1}".format(journal_abb, page.status_code))
-
-            # Get the abstract
-            soup = BeautifulSoup(page.text)
+        # If the dl went wrong, print an error
+        if response.status_code is requests.codes.ok:
+            soup = BeautifulSoup(response.text)
             r = soup.find_all("img", attrs={"class": "fig"})
 
             if r:
@@ -203,17 +162,6 @@ def getData(journal, entry):
                     if "carousel" in graphical_abstract:
                         graphical_abstract = graphical_abstract.replace("carousel", "images_article")
 
-            if graphical_abstract is not None:
-                response, graphical_abstract = downloadPic(graphical_abstract)
-            else:
-                graphical_abstract = "Empty"
-
-        except requests.exceptions.Timeout:
-            print("getData, {0}, timeout".format(journal_abb))
-        except Exception as e:
-            print(e)
-
-
     elif journal in science:
 
         title = entry.title
@@ -221,25 +169,21 @@ def getData(journal, entry):
         date = entry.date
         url = entry.id
 
-        graphical_abstract = "Empty"
+        graphical_abstract = None
         author = None
 
         abstract = entry.summary
 
-        if "Author:" in entry.summary:
-            abstract = entry.summary.split("Author: ")[0]
-            # author = [entry.summary.split("Author: ")[1]] # To uncomment to get a list of author
-            author = entry.summary.split("Author: ")[1]
-        elif "Authors:" in entry.summary:
-            abstract = entry.summary.split("Authors: ")[0]
-            author = entry.summary.split("Authors: ")[1].split(", ")
-            author = ", ".join(author)  #  To comment if formatName
-        else:
-            abstract = entry.summary
-            author = "Empty"
-
         if not abstract:
-            abstract = "Empty"
+            abstract = None
+        else:
+            if "Author:" in entry.summary:
+                abstract = entry.summary.split("Author: ")[0]
+                author = entry.summary.split("Author: ")[1]
+            elif "Authors:" in entry.summary:
+                abstract = entry.summary.split("Authors: ")[0]
+                author = entry.summary.split("Authors: ")[1].split(", ")
+                author = ", ".join(author)  # To comment if formatName
 
     else:
         print("Error: journal not identified")
@@ -250,6 +194,13 @@ def getData(journal, entry):
         topic_simple = " " + functions.simpleChar(BeautifulSoup(abstract).text) + functions.simpleChar(title) + " "
     else:
         topic_simple = " " + functions.simpleChar(title) + " "
+
+    if abstract is None:
+        abstract = "Empty"
+    if graphical_abstract is None:
+        graphical_abstract = "Empty"
+    if author is None:
+        author = "Empty"
 
     return title, journal_abb, date, author, abstract, graphical_abstract, url, topic_simple
 
@@ -296,11 +247,11 @@ def getDoi(journal, entry):
 
     """Get the DOI number of a post, to save time"""
 
-    rsc, _ = getJournals("rsc")
-    acs, _ = getJournals("acs")
-    wiley, _ = getJournals("wiley")
-    npg, _ = getJournals("npg")
-    science, _ = getJournals("science")
+    rsc = getJournals("rsc")[0]
+    acs = getJournals("acs")[0]
+    wiley = getJournals("wiley")[0]
+    npg = getJournals("npg")[0]
+    science = getJournals("science")[0]
 
     if journal in rsc:
         soup = BeautifulSoup(entry.summary)
@@ -330,47 +281,47 @@ def getDoi(journal, entry):
     return doi
 
 
-def downloadPic(url):
+# def downloadPic(url):
 
-    """The parameter is a list. The function will be able to evolve"""
+    # """The parameter is a list. The function will be able to evolve"""
 
-    # On essaie de récupérer chaque page correspondant
-    # à chaque url, ac un timeout
-    try:
-        # On utilise un user-agent de browser,
-        # ds le cas où les hébergeurs bloquent les bots
-        headers = {'User-agent': 'Mozilla/5.0'}
+    # # On essaie de récupérer chaque page correspondant
+    # # à chaque url, ac un timeout
+    # try:
+        # # On utilise un user-agent de browser,
+        # # ds le cas où les hébergeurs bloquent les bots
+        # headers = {'User-agent': 'Mozilla/5.0'}
 
-        # On rajoute l'url de base comme referer,
-        # car certains sites bloquent l'accès direct aux images
-        headers["Referer"] = url
+        # # On rajoute l'url de base comme referer,
+        # # car certains sites bloquent l'accès direct aux images
+        # headers["Referer"] = url
 
-        page = requests.get(url, timeout=20, headers=headers)
+        # page = requests.get(url, timeout=20, headers=headers)
 
-        # Si la page a bien été récupérée
-        if page.status_code == requests.codes.ok:
+        # # Si la page a bien été récupérée
+        # if page.status_code == requests.codes.ok:
 
-            path = "./graphical_abstracts/"
+            # path = "./graphical_abstracts/"
 
-            # On enregistre la page
-            with iopen(path + functions.simpleChar(url), 'wb') as file:
-                file.write(page.content)
-                # l.debug("image ok")
+            # # On enregistre la page
+            # with iopen(path + functions.simpleChar(url), 'wb') as file:
+                # file.write(page.content)
+                # # l.debug("image ok")
 
-                # On sort True si on matche une des possibilités
-                # de l'url
-                return True, functions.simpleChar(url)
+                # # On sort True si on matche une des possibilités
+                # # de l'url
+                # return True, functions.simpleChar(url)
 
-        elif page.status_code != requests.codes.ok:
-            print("Bad return code: {0}".format(page.status_code))
-            return "wrongPage", None
+        # elif page.status_code != requests.codes.ok:
+            # print("Bad return code: {0}".format(page.status_code))
+            # return "wrongPage", None
 
-    except requests.exceptions.Timeout:
-        print("downloadPic, timeout")
-        return "timeOut", None
-    except Exception as e:
-        print("toujours")
-        print(e)
+    # except requests.exceptions.Timeout:
+        # print("downloadPic, timeout")
+        # return "timeOut", None
+    # except Exception as e:
+        # print("toujours")
+        # print(e)
 
 
 def getJournals(company):
@@ -379,46 +330,49 @@ def getJournals(company):
 
     names = []
     abb = []
+    urls = []
 
     with open('journals/{0}.ini'.format(company), 'r') as config:
         for line in config:
             names.append(line.split(" : ")[0])
             abb.append(line.split(" : ")[1].replace("\n", ""))
+            urls.append(line.split(" : ")[2].replace("\n", ""))
 
-    return names, abb
+    return names, abb, urls
 
 
 
 if __name__ == "__main__":
+    from requests_futures.sessions import FuturesSession
+    import functools
 
-    # urls_test = ["ang.xml"]
-    # urls_test = ["debug/jacs.xml"]
+    def print_result(journal, entry, future):
+        response = future.result()
+        # title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = getData(journal, entry, response)
+        # print(title)
+        print(response.content)
+
+
+    # urls_test = ["debug/ang.xml"]
+    urls_test = ["debug/jacs.xml"]
     # urls_test = ["http://feeds.rsc.org/rss/nj"]
     # urls_test = ["http://feeds.rsc.org/rss/sc"]
     # urls_test = ["debug/science.xml"]
-    urls_test = ["debug/med_chem.htm"]
+    # urls_test = ["debug/med_chem.htm"]
     # urls_test = ["debug/sm.htm"]
 
-    for site in urls_test:
 
-        feed = feedparser.parse(site)
-        # print(feed)
+    session = FuturesSession(max_workers=50)
+    # session = FuturesSession()
 
+    list_urls = []
 
-        # print(feed)
+    # for site in urls_test:
 
-        # Name of the journal
-        journal = feed['feed']['title']
+    feed = feedparser.parse(urls_test[0])
+    journal = feed['feed']['title']
 
-        print(journal)
-
-        for entry in feed.entries:
-            # print(entry.link)
-            # title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = getData(journal, entry)
-            # print(title)
-            for key in entry:
-                print(key)
-            print("\n")
-            # break
-
-        # print("\n\n")
+    for entry in feed.entries:
+        url = entry.link
+        future = session.get(url)
+        future.add_done_callback(functools.partial(print_result, journal, entry))

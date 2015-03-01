@@ -8,6 +8,9 @@ import subprocess
 
 from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
 
+# DEBUG
+import datetime
+
 # Personal modules
 from log import MyLog
 from model import ModelPerso
@@ -21,8 +24,6 @@ from advanced_search import AdvancedSearch
 # from proxy import ProxyPerso
 import functions
 
-# sys.path.append('/home/djipey/informatique/python/batbelt')
-# import batbelt
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -50,9 +51,6 @@ class Fenetre(QtGui.QMainWindow):
 
         self.liste_proxies_in_tabs = []
 
-        # List to store the tags buttons on the left
-        # self.list_buttons_tags = []
-
         self.connectionBdd()
         self.defineActions()
         self.initUI()
@@ -68,11 +66,12 @@ class Fenetre(QtGui.QMainWindow):
 
         # Set the database
         self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+        # self.bdd.setDatabaseName("fichiers.sqlite")
         self.bdd.setDatabaseName("fichiers.sqlite")
 
         self.bdd.open()
 
-        query = QtSql.QSqlQuery("fichiers.sqlite")
+        query = QtSql.QSqlQuery(self.bdd)
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
                      liked INTEGER, url TEXT, verif INTEGER, new INTEGER, topic_simple TEXT)")
@@ -130,31 +129,54 @@ class Fenetre(QtGui.QMainWindow):
         # The list is cleared when the method is started
         self.list_threads = []
 
+        self.start_time = datetime.datetime.now()
+
         for site in urls:
             # One worker for each website
             worker = Worker(site, self.l, self.bdd)
-            worker.finished.connect(self.checkThreads)
             self.list_threads.append(worker)
+            worker.finished.connect(self.checkThreads)
 
-        # self.resetView()
+        # Get the optimal nbr of thread. Will vary depending
+        # on the user's computer
+        max_nbr_threads = QtCore.QThread.idealThreadCount()
+
+        # Start a certain nbr of threads
+        for worker in self.list_threads[:max_nbr_threads]:
+            self.l.info("New thread started")
+            worker.start()
 
 
     def checkThreads(self):
 
-        """Method to check the state of each worker.
-        If all the workers are finished, enable the parse action"""
+        """Method to check the state of each thread.
+        If all the threads are finished, enable the parse action.
+        This slot is called when a thread is finished, to start the
+        next one"""
 
-        # model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        elsapsed_time = datetime.datetime.now() - self.start_time
+        self.l.debug(elsapsed_time)
 
         # Get a list of the workers states
         list_states = [worker.isFinished() for worker in self.list_threads]
 
+        # Print the nbr of finished threads
+        self.l.debug("Finis: {}/{}".format(list_states.count(True), len(self.list_threads)))
+
         if False not in list_states:
-            # Update the view when a worker is finished
-            # model.select()
             self.calculatePercentageMatch()
             self.parseAction.setEnabled(True)
             self.l.debug("Parsing data finished. Enabling parseAction")
+
+            # Update the view when a worker is finished
+            self.updateView()
+        else:
+            self.l.info("STARTING NEW THREAD")
+            self.updateView()
+            for worker in self.list_threads:
+                if not worker.isRunning() and not worker.isFinished():
+                    worker.start()
+                    break
 
 
     def defineActions(self):
@@ -228,7 +250,6 @@ class Fenetre(QtGui.QMainWindow):
         self.sortingReversedAction = QtGui.QAction('Reverse order', self, checkable=True)
         self.sortingReversedAction.triggered.connect(lambda: self.changeSortingMethod(self.sorting_method,
                                                                                       reverse=self.sortingReversedAction.isChecked()))
-
         # Action to serve use as a separator
         self.separatorAction = QtGui.QAction(self)
         self.separatorAction.setSeparator(True)
@@ -282,7 +303,7 @@ class Fenetre(QtGui.QMainWindow):
 
         model.select()
 
-        model.setQuery(self.query)
+        model.setQuery(table.base_query)
         proxy.setSourceModel(model)
         table.setModel(proxy)
 
@@ -309,6 +330,9 @@ class Fenetre(QtGui.QMainWindow):
         for index, each_table in enumerate(self.liste_tables_in_tabs):
             self.options.setValue("header_state{0}".format(index), each_table.horizontalHeader().saveState())
 
+        # self.options.setValue("central_splitter", self.splitter1.sizes())
+        # self.options.setValue("final_splitter", self.splitter2.sizes())
+        # print(self.splitter2.sizes())
         self.options.setValue("central_splitter", self.splitter1.saveState())
         self.options.setValue("final_splitter", self.splitter2.saveState())
 
@@ -364,6 +388,14 @@ class Fenetre(QtGui.QMainWindow):
 
             self.splitter1.restoreState(self.options.value("Window/central_splitter"))
             self.splitter2.restoreState(self.options.value("Window/final_splitter"))
+            # sizes_splitter1 = [int(nbr) for nbr in self.options.value("Window/central_splitter", [])]
+            # sizes_splitter2 = [int(nbr) for nbr in self.options.value("Window/final_splitter", [])]
+            # print(sizes_splitter1)
+            # print(sizes_splitter2)
+            # self.splitter1.setSizes(sizes_splitter1)
+            # self.splitter2.setSizes(sizes_splitter2)
+            # self.splitter2.refresh()
+            # print(self.splitter2.sizes())
 
             # Bloc to restore the check of the sorting method, in the View menu
             # of the menubar
@@ -381,6 +413,8 @@ class Fenetre(QtGui.QMainWindow):
                     button.setChecked(True)
 
         self.searchByButton()
+        # print(self.splitter2.sizes())
+        # self.updateCellSize()
 
 
     def popup(self, pos):
@@ -446,46 +480,13 @@ class Fenetre(QtGui.QMainWindow):
         """Update the cell size when the user moves the central splitter.
         For a better display"""
 
+        new_size = self.splitter2.sizes()
+        # print(new_size)
         new_size = self.splitter2.sizes()[1]
+        # print(new_size)
 
         for table in self.liste_tables_in_tabs:
             table.resizeCells(new_size)
-
-
-    def keyPressEvent(self, e):
-
-        """On réimplémente la gestion des évènements
-        dans cette méthode"""
-
-        # # TODO: trouver un moyen de re-sélectionner la cell
-        # # après édition
-
-        # key = e.key()
-
-        # # Si l'event clavier est un appui sur F2
-        # if key == QtCore.Qt.Key_F2 and self.tableau.hasFocus():
-            # # On utilise un try pour le cas où aucune cell n'est sélectionnée
-            # try:
-                # # On édite la cell de nom de la ligne sélectionnée
-                # # http://stackoverflow.com/questions/8157688/
-                # # specifying-an-index-in-qtableview-with-pyqt
-                # self.tableau.edit(self.tableau.model().index(self.tableau.selectionModel().selection().indexes()[0].row(), 1))
-            # except IndexError:
-                # self.l.warn("Pas de cell sélectionnée")
-
-        # # Si on presse la touche entrée, on lance le fichier sélectionné
-        # elif key == QtCore.Qt.Key_Return and self.tableau.hasFocus():
-            # try:
-                # # TODO: si le fichier n'est pas accessible, ne pas lancer
-                # self.launchFile()
-            # except IndexError:
-                # self.l.warn("Aucun fichier sélectionné")
-
-        # for plugin in self.plugins:
-            # self.plugins[plugin].keyPressed(e)
-        e.ignore()
-
-        pass
 
 
     def displayInfos(self):
@@ -561,18 +562,12 @@ class Fenetre(QtGui.QMainWindow):
         Mainly sets the tab query to the saved query"""
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        self.query = QtSql.QSqlQuery("fichiers.sqlite")
-
+        self.query = QtSql.QSqlQuery(self.bdd)
         self.query.prepare(table.base_query)
-
         self.query.exec_()
 
-        model.setQuery(self.query)
-        proxy.setSourceModel(model)
-        table.setModel(proxy)
+        self.updateView()
 
         # Update the size of the columns of the view if the central
         # splitter moved
@@ -650,9 +645,6 @@ class Fenetre(QtGui.QMainWindow):
         self.vbox_all_tags.setAlignment(QtCore.Qt.AlignTop)
         self.scroll_tags.setWidget(self.scrolling_tags)
 
-        # TODO: j'en suis ici, query de base
-        # self.searchByButton()
-
 
     def stateButtons(self, pressed):
 
@@ -686,18 +678,14 @@ class Fenetre(QtGui.QMainWindow):
             return
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        self.query = QtSql.QSqlQuery("fichiers.sqlite")
+        self.query = QtSql.QSqlQuery(self.bdd)
 
-        # requete = "SELECT * FROM papers WHERE journal IN ("
-
-        # TODO: ajouter à la base_query
         if "WHERE" in table.base_query:
-            requete = " AND journal IN ("
+            requete = table.base_query.replace("WHERE ", "WHERE (")
+            requete += ") AND journal IN ("
         else:
-            requete = " WHERE journal IN ("
+            requete = table.base_query + " WHERE journal IN ("
 
         # Building the query
         for each_journal in self.tags_selected:
@@ -707,13 +695,10 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
-        self.query.prepare(table.base_query + requete)
+        self.query.prepare(requete)
         self.query.exec_()
 
-        # Update the view
-        model.setQuery(self.query)
-        proxy.setSourceModel(model)
-        table.setModel(proxy)
+        self.updateView()
 
 
     def searchNew(self):
@@ -721,23 +706,23 @@ class Fenetre(QtGui.QMainWindow):
         """Slot to select new articles"""
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        self.query = QtSql.QSqlQuery("fichiers.sqlite")
+        self.query = QtSql.QSqlQuery(self.bdd)
 
         # First, search the new articles id
         self.query.prepare("SELECT id FROM papers WHERE new=1")
         self.query.exec_()
 
         list_id = []
+
         while self.query.next():
             record = self.query.record()
             list_id.append(record.value('id'))
 
-        # Then, perform the query on the id. This way, the articles
-        # are not erased from the view when they are marked as read
-        requete = "SELECT * FROM papers WHERE id IN ("
+        if "WHERE" in table.base_query:
+            requete = " AND id IN ("
+        else:
+            requete = " WHERE id IN ("
 
         # Building the query
         for each_id in list_id:
@@ -747,12 +732,10 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + str(each_id) + ")"
 
-        self.query.prepare(requete)
+        self.query.prepare(table.base_query + requete)
         self.query.exec_()
 
-        model.setQuery(self.query)
-        proxy.setSourceModel(model)
-        table.setModel(proxy)
+        self.updateView()
 
 
     def simpleQuery(self, base):
@@ -761,19 +744,24 @@ class Fenetre(QtGui.QMainWindow):
         Called from AdvancedSearch, when the user doesn't
         want to save the search"""
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
-
-        self.query = QtSql.QSqlQuery("fichiers.sqlite")
+        self.query = QtSql.QSqlQuery(self.bdd)
 
         self.query.prepare(base)
         self.query.exec_()
 
-        # Update the view
-        model.setQuery(self.query)
-        proxy.setSourceModel(model)
-        table.setModel(proxy)
+        self.updateView()
+
+        # Clean graphical abstract area
+        try:
+            self.scene.clear()
+        except AttributeError:
+            self.l.warn("Pas d'objet scene pr l'instant.")
+
+        # Cleaning title, authors and abstract
+        self.label_author.setText("")
+        self.label_title.setText("")
+        self.label_date.setText("")
+        self.text_abstract.setHtml("")
 
 
     def research(self):
@@ -846,26 +834,63 @@ class Fenetre(QtGui.QMainWindow):
         """Slot to mark an article read"""
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
         new = table.model().index(element.row(), 12).data()
 
         if new == 0:
             return
         else:
 
+            # Save the current line
             line = table.selectionModel().currentIndex().row()
+            selected_id = table.selectionModel().selection().indexes()[0].data()
 
+            # Change the data in the model
             table.model().setData(table.model().index(line, 12), 0)
 
-            try:
-                model.setQuery(self.query)
-                proxy.setSourceModel(model)
-                table.setModel(proxy)
-            except AttributeError:
-                pass
+            # Update the view after the model is updated
+            self.updateView(selected_id)
 
-            table.selectRow(line)
+
+    def updateView(self, current_item_id=None):
+
+        """Method to update the view after a model change.
+        If an item was selected, the item is re-selected"""
+
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+
+        if current_item_id is not None:
+            selected_id = current_item_id
+        else:
+            try:
+                selected_id = table.selectionModel().selection().indexes()[0].data()
+            except IndexError:
+                selected_id = None
+
+        try:
+            # Try to update the model
+            model.setQuery(self.query)
+            proxy.setSourceModel(model)
+            table.setModel(proxy)
+        except AttributeError:
+            print("papam")
+            model.setQuery(table.base_query)
+            proxy.setSourceModel(model)
+            table.setModel(proxy)
+
+        if selected_id is not None:
+            for index in range(1, model.rowCount() + 1):
+                table.selectRow(index)
+                if table.selectionModel().selection().indexes()[0].data() == selected_id:
+                    try:
+                        table.scrollToPerso(table.selectionModel().selection().indexes()[0])
+                    except IndexError:
+                        self.l.debug("updateView, selected_id not None, no item selected")
+                    # If the previously selected item is found, leave
+                    return
+            # If we are still here, the old item wasn't found, so deselect all
+            table.clearSelection()
 
 
     def toggleRead(self):
@@ -874,24 +899,18 @@ class Fenetre(QtGui.QMainWindow):
         So, toggle the read/unread state of an article"""
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
         new = table.model().index(table.selectionModel().selection().indexes()[0].row(), 12).data()
         line = table.selectionModel().currentIndex().row()
 
         # Invert the value of new
         new = 1 - new
 
+        selected_id = table.selectionModel().selection().indexes()[0].data()
+
         table.model().setData(table.model().index(line, 12), new)
 
-        try:
-            model.setQuery(self.query)
-            proxy.setSourceModel(model)
-            table.setModel(proxy)
-        except AttributeError:
-            pass
-
-        table.selectRow(line)
+        # Update the view after the model is updated
+        self.updateView(selected_id)
 
 
     def cleanDb(self):
@@ -900,7 +919,7 @@ class Fenetre(QtGui.QMainWindow):
         the window settings, but better to be here. Also
         deletes the unused pictures present in the graphical_abstracts folder"""
 
-        query = QtSql.QSqlQuery("fichiers.sqlite")
+        query = QtSql.QSqlQuery(self.bdd)
 
         requete = "DELETE FROM papers WHERE journal NOT IN ("
 
@@ -964,11 +983,9 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to calculate the match percentage"""
 
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-
         self.predictor = Predictor(self.bdd)
         self.predictor.calculatePercentageMatch()
-        model.select()
+        self.updateView()
 
 
     def toggleLike(self):
@@ -976,8 +993,6 @@ class Fenetre(QtGui.QMainWindow):
         """Slot to mark a post liked"""
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
         like = table.model().index(table.selectionModel().selection().indexes()[0].row(), 9).data()
         line = table.selectionModel().currentIndex().row()
 
@@ -987,53 +1002,49 @@ class Fenetre(QtGui.QMainWindow):
         else:
             like = 1
 
+        selected_id = table.selectionModel().selection().indexes()[0].data()
+
         table.model().setData(table.model().index(line, 9), like)
 
-        try:
-            model.setQuery(self.query)
-            self.proxy.setSourceModel(model)
-            table.setModel(proxy)
-        except AttributeError:
-            pass
-
-        table.selectRow(line)
+        # Update the view after the model is updated
+        self.updateView(selected_id)
 
 
-    def postsSelected(self, previous=False):
+    # def postsSelected(self, previous=False):
 
-        """Method to get the selected posts, and store the current
-        selected line before updating the model"""
+        # """Method to get the selected posts, and store the current
+        # selected line before updating the model"""
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
 
-        posts_selected = []
-        lignes = []
+        # posts_selected = []
+        # lignes = []
 
-        # On récupère ttes les cells sélectionnées
-        for element in table.selectionModel().selection().indexes():
-            lignes.append(element.row())
-            # element est un QModelIndex. Comme on sélectionne des lignes
-            # entières, on a ttes les colonnes de ttes les lignes ds
-            # cette boucle. Si on n'est pas sur la colonne de l'id, on break
-            # car inutile.
-            if element.column() == 0:
-                # On récupère l'id de la vid sélectionnée
-                new_id = element.data()
-            else:
-                continue
+        # # On récupère ttes les cells sélectionnées
+        # for element in table.selectionModel().selection().indexes():
+            # lignes.append(element.row())
+            # # element est un QModelIndex. Comme on sélectionne des lignes
+            # # entières, on a ttes les colonnes de ttes les lignes ds
+            # # cette boucle. Si on n'est pas sur la colonne de l'id, on break
+            # # car inutile.
+            # if element.column() == 0:
+                # # On récupère l'id de la vid sélectionnée
+                # new_id = element.data()
+            # else:
+                # continue
 
-            # Si l'id d'une vid sélectionnée n'est pas ds déjà ds la liste,
-            # on l'y ajoute
-            if not new_id in posts_selected:
-                posts_selected.append(new_id)
+            # # Si l'id d'une vid sélectionnée n'est pas ds déjà ds la liste,
+            # # on l'y ajoute
+            # if new_id not in posts_selected:
+                # posts_selected.append(new_id)
 
-        if previous:
-            # On récupère les LIGNES de la vue correspondant
-            # aux vids sélectionnées
-            lignes = list(set(lignes))
-            return posts_selected, lignes
-        else:
-            return posts_selected
+        # if previous:
+            # # On récupère les LIGNES de la vue correspondant
+            # # aux vids sélectionnées
+            # lignes = list(set(lignes))
+            # return posts_selected, lignes
+        # else:
+            # return posts_selected
 
 
     def initUI(self):
@@ -1192,6 +1203,7 @@ class Fenetre(QtGui.QMainWindow):
         # Main part of the window in a tab.
         # Allows to create other tabs
         self.onglets = QtGui.QTabWidget()
+        self.onglets.setContentsMargins(0, 0, 0, 0)
 
         self.splitter1 = QtGui.QSplitter(QtCore.Qt.Vertical)
         self.splitter1.addWidget(self.area_right_top)
@@ -1205,7 +1217,6 @@ class Fenetre(QtGui.QMainWindow):
         # Create the main table, at index 0
         self.createSearchTab("All articles", "SELECT * FROM papers")
 
-
         self.setCentralWidget(self.splitter2)
 
         self.show()
@@ -1215,15 +1226,15 @@ if __name__ == '__main__':
 
     # Little hack to kill all the pending process
     os.setpgrp()  # create new process group, become its leader
-    # try:
-    app = QtGui.QApplication(sys.argv)
-    ex = Fenetre()
-    sys.exit(app.exec_())
-    # except Exception as e:
-        # exc_type, exc_obj, exc_tb = sys.exc_info()
-        # exc_type = type(e).__name__
-        # fname = exc_tb.tb_frame.f_code.co_filename
-        # print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-        # print("{0}: {1}".format(exc_type, e))
-    # finally:
-        # os.killpg(0, signal.SIGKILL)  # kill all processes in my group
+    try:
+        app = QtGui.QApplication(sys.argv)
+        ex = Fenetre()
+        sys.exit(app.exec_())
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        exc_type = type(e).__name__
+        fname = exc_tb.tb_frame.f_code.co_filename
+        print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
+        print("{0}: {1}".format(exc_type, e))
+    finally:
+        os.killpg(0, signal.SIGKILL)  # kill all processes in my group

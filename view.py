@@ -19,8 +19,11 @@ class ViewPerso(QtGui.QTableView):
 
         self.base_query = None
 
+        self.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+
         # Scroll per "pixel". Gives a better impression when scrolling
         self.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
+        # self.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerItem)
 
         new_size = self.parent.splitter2.sizes()[1]
         self.resizeCells(new_size)
@@ -40,6 +43,15 @@ class ViewPerso(QtGui.QTableView):
         self.clicked.connect(self.parent.displayInfos)
         self.clicked.connect(self.parent.displayMosaic)
         self.clicked.connect(self.parent.markOneRead)
+        self.clicked.connect(self.scrollToPerso)
+
+    def scrollToPerso(self, element):
+
+        """Personnal slot to do exactly what scrollTo does.
+        The scrollTo method can't be called from this class,
+        otherwise it interfers with updateView from the parent"""
+
+        super(ViewPerso, self).scrollTo(element, QtGui.QAbstractItemView.EnsureVisible)
 
 
     def mousePressEvent(self, e):
@@ -92,6 +104,7 @@ class ViewPerso(QtGui.QTableView):
         # is set to 100 px. Weird. So if the scrollBar is not visible,
         # don't substract its size
         if self.verticalScrollBar().isVisible():
+            print("visible")
             size_title = new_size - size_thumbnail - self.verticalScrollBar().width()
         else:
             size_title = new_size - size_thumbnail
@@ -146,6 +159,11 @@ class ViewPerso(QtGui.QTableView):
 
         pass
 
+
+    def scrollTo(self, index, hint):
+        pass
+
+
     def keyPressEvent(self, e):
 
         """Réimplémentation de la méthode pr que la classe propage
@@ -172,6 +190,7 @@ class ViewPerso(QtGui.QTableView):
                     self.clearSelection()
                     self.setCurrentIndex(current_index)
                     self.clicked.emit(current_index)
+                    super(ViewPerso, self).scrollTo(current_index, QtGui.QAbstractItemView.EnsureVisible)
 
         if key == QtCore.Qt.Key_Up or key == QtCore.Qt.Key_W:
             current_index = self.selectionModel().currentIndex()
@@ -182,6 +201,7 @@ class ViewPerso(QtGui.QTableView):
                 self.clearSelection()
                 self.setCurrentIndex(current_index)
                 self.clicked.emit(current_index)
+                super(ViewPerso, self).scrollTo(current_index, QtGui.QAbstractItemView.EnsureVisible)
 
         # Navigation ac les touches Tab et Ctrl+tab
         if e.modifiers() == QtCore.Qt.ControlModifier:
