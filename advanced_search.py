@@ -151,12 +151,15 @@ class AdvancedSearch(QtGui.QDialog):
             if first:
                 first = False
                 base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(words[0])
+                # base += "authors_simple LIKE '{0}'".format(words[0])
 
                 for word in words[1:]:
                     base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
+                    # base += " AND authors_simple LIKE '{0}'".format(word)
             else:
                 for word in words:
                     base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
+                    # base += " AND authors_simple LIKE '{0}'".format(word)
 
         # AUTHOR, OR condition
         if author_entries[1]:
@@ -166,12 +169,15 @@ class AdvancedSearch(QtGui.QDialog):
             if first:
                 first = False
                 base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(words[0])
+                # base += "authors_simple LIKE '{0}'".format(words[0])
 
                 for word in words[1:]:
                     base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
+                    # base += " OR authors_simple LIKE '{0}'".format(word)
             else:
                 for word in words:
                     base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
+                    # base += " OR authors_simple LIKE '{0}'".format(word)
 
         # AUTHOR, NOT condition
         if author_entries[2]:
@@ -181,12 +187,15 @@ class AdvancedSearch(QtGui.QDialog):
             if first:
                 first = False
                 base += "' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(words[0])
+                # base += "authors_simple NOT LIKE '{0}'".format(words[0])
 
                 for word in words[1:]:
                     base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(word)
+                    # base += " AND authors_simple NOT LIKE '{0}'".format(word)
             else:
                 for word in words:
                     base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(word)
+                    # base += " AND authors_simple NOT LIKE '{0}'".format(word)
 
         return base
 
@@ -252,17 +261,15 @@ class AdvancedSearch(QtGui.QDialog):
             return
 
         if tab_title == "New query":
-
-            # Get the search name with a dialogBox, if the user pushed the save button
-            name_search = QtGui.QInputDialog.getText(self, "Search name", "Save your search as:")
-
-            if not name_search[1] or name_search[0] == "":
-                return
-            else:
-                name_search = name_search[0]
-
             # The search is about to be saved
             if save:
+                # Get the search name with a dialogBox, if the user pushed the save button
+                name_search = QtGui.QInputDialog.getText(self, "Search name", "Save your search as:")
+
+                if not name_search[1] or name_search[0] == "":
+                    return
+                else:
+                    name_search = name_search[0]
                 if name_search in self.options.childGroups():
                     # Display an error message if the search name is already used
                     QtGui.QMessageBox.critical(self, "Saving search", "You already have a search called like this",

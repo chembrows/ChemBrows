@@ -3,8 +3,13 @@
 
 from PyQt4 import QtSql, QtCore
 import feedparser
+import functools
+from requests_futures.sessions import FuturesSession
+import requests
+from io import open as iopen
 
 import hosts
+import functions
 
 
 class Worker(QtCore.QThread):
@@ -21,19 +26,29 @@ class Worker(QtCore.QThread):
 
         QtCore.QThread.__init__(self)
 
-        self.exiting = False
-        self.url_feed = url_feed
         self.l = logger
         self.bdd = bdd
+
+        # Define a path attribute to easily change it
+        # for the tests
+        self.path = "./graphical_abstracts/"
+
+        # DEBUG
+        self.url_feed = url_feed
+
         self.l.info("Starting parsing of the new articles")
-        self.start()
+
+        # List to store the urls of the pages to request
+        self.list_futures_urls = []
+        self.list_futures_images = []
+
+        # self.start()
 
 
     def __del__(self):
 
         """Method to destroy the thread properly"""
 
-        self.exiting = True
         self.wait()
 
 
@@ -42,94 +57,235 @@ class Worker(QtCore.QThread):
         """Main function. Starts the real business"""
 
         # Get the RSS page of the url provided
-        feed = feedparser.parse(self.url_feed)
+        self.feed = feedparser.parse(self.url_feed)
 
         # Get the journal name
         try:
-            journal = feed['feed']['title']
+            journal = self.feed['feed']['title']
         except KeyError:
             self.l.error("No title for the journal ! Aborting")
-            self.l.error(feed)
+            self.l.error(self.url)
             return
 
-        self.l.debug("{0}: {1}".format(journal, len(feed.entries)))
+        self.l.info("{0}: {1}".format(journal, len(self.feed.entries)))
 
-        # Prepare the queries here, only once
-        query1 = QtSql.QSqlQuery(self.bdd)
-        query1.prepare("UPDATE papers SET title= ?, authors=?, abstract=?, graphical_abstract=?, verif=?, new=?, topic_simple=? WHERE doi=?")
-        query2 = QtSql.QSqlQuery(self.bdd)
-        query2.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
-                       VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        # Lists to check if the post is in the db, and if
+        # it has all the infos
+        self.list_doi, self.list_ok = self.listDoi()
+        # self.session_images = FuturesSession(max_workers=len(self.feed))
+        self.session_images = FuturesSession(max_workers=5)
 
-        # self.bdd.transaction()
+        # Load the journals
+        rsc = hosts.getJournals("rsc")[0]
+        acs = hosts.getJournals("acs")[0]
+        wiley = hosts.getJournals("wiley")[0]
+        npg = hosts.getJournals("npg")[0]
+        science = hosts.getJournals("science")[0]
 
-        for entry in feed.entries:
+        query = QtSql.QSqlQuery(self.bdd)
 
-            # Get the DOI, a unique number for a publication
-            doi = hosts.getDoi(journal, entry)
-            list_doi, list_ok = self.listDoi()
+        self.bdd.transaction()
 
-            if doi in list_doi:
+        # The feeds of these journals are complete
+        if journal in wiley + science:
 
-                # If the article is in db, with all the data, continue
-                if list_ok[list_doi.index(doi)]:
-                    self.l.debug("Post already in db and ok")
+            self.list_futures_urls = [True] * len(self.feed.entries)
+
+            for entry in self.feed.entries:
+
+                # Get the DOI, a unique number for a publication
+                doi = hosts.getDoi(journal, entry)
+
+                if doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
+                    self.list_futures_images.append(True)
+                    self.l.info("Skipping")
                     continue
                 else:
                     title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
 
-                    self.l.debug("Updating post {0}".format(journal))
-
                     # Checking if the data are complete
-                    if type(abstract) is not str or type(graphical_abstract) is not str or type(authors) is not str:
+                    # TODO: normally fot these journals, no need to check
+                    if type(abstract) is not str:
                         verif = 0
                     else:
                         verif = 1
 
-                    # On met new à 1 et non pas à True
-                    params = (title, authors, abstract, graphical_abstract, verif, 1, topic_simple, doi)
+                    if doi in self.list_doi and doi not in self.list_ok:
+                        query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
+                        params = (title, date, authors, abstract, verif, topic_simple, doi)
+                        self.l.info("Updating {0} in the database".format(doi))
+                    else:
+                        query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
+                                       VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                        # Set new to 1 and not to true
+                        params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1, topic_simple)
+                        self.l.info("Adding {0} to the database".format(doi))
 
                     for value in params:
-                        query1.addBindValue(value)
+                        query.addBindValue(value)
 
-                    retour = query1.exec_()
 
-                    # If the query went wrong, print the details
-                    if not retour:
-                        self.l.error(query1.lastError().text())
-                        self.l.debug(query1.lastQuery())
+                    query.exec_()
+
+                    if graphical_abstract == "Empty":
+                        self.list_futures_images.append(True)
                     else:
-                        self.l.debug("{1} Corrected {0} in the database".format(title, journal))
+                        # Use a user-agent browser, some journals block bots
+                        headers = {'User-agent': 'Mozilla/5.0'}
+                        headers["Referer"] = url
+
+                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=10)
+                        self.list_futures_images.append(future_image)
+                        future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi))
+
+        else:
+            # session = FuturesSession(max_workers=len(self.feed.entries))
+            session = FuturesSession(max_workers=5)
+
+            for entry in self.feed.entries:
+
+                doi = hosts.getDoi(journal, entry)
+
+                if doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
+                    self.list_futures_urls.append(True)
+                    self.list_futures_images.append(True)
+                    self.l.info("Skipping")
+                    continue
+                else:
+                    try:
+                        url = entry.feedburner_origlink
+                    except AttributeError:
+                        url = entry.link
+
+                    future = session.get(url, timeout=10)
+                    self.list_futures_urls.append(future)
+                    future.add_done_callback(functools.partial(self.completeData, doi, journal, entry))
+
+        while not self.checkFuturesRunning():
+            # self.wait()
+            self.sleep(1)
+            # pass
+
+        if not self.bdd.commit():
+            self.l.error("Problem when comitting data for {}".format(journal))
+
+        self.l.info("Exiting thread for {}".format(journal))
+
+
+    def completeData(self, doi, journal, entry, future):
+
+        try:
+            response = future.result()
+        except requests.exceptions.ReadTimeout:
+            self.l.error("ReadTimeout for {}".format(journal))
+            self.list_futures_images.append(True)
+            return
+        except requests.exceptions.ConnectionError:
+            self.l.error("ConnectionError for {}".format(journal))
+            self.list_futures_images.append(True)
+            return
+
+        query = QtSql.QSqlQuery(self.bdd)
+
+        title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
+
+        # Checking if the data are complete
+        if type(abstract) is not str or type(authors) is not str:
+            verif = 0
+        else:
+            verif = 1
+
+        if doi in self.list_doi and doi not in self.list_ok:
+            query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
+            params = (title, date, authors, abstract, verif, topic_simple, doi)
+            self.l.info("Updating {0} in the database".format(doi))
+        else:
+            query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
+                           VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1, topic_simple)
+            self.l.info("Adding {0} to the database".format(doi))
+
+        for value in params:
+            query.addBindValue(value)
+
+        query.exec_()
+
+        if graphical_abstract == "Empty":
+            self.list_futures_images.append(True)
+        else:
+            headers = {'User-agent': 'Mozilla/5.0'}
+            headers["Referer"] = url
+
+            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=10)
+            self.list_futures_images.append(future_image)
+            future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi))
+
+
+
+    def pictureDownloaded(self, doi, future):
+
+        try:
+            response = future.result()
+        except requests.exceptions.ReadTimeout:
+            self.l.error("ReadTimeout for image")
+            self.list_futures_images.append(True)
+            return
+        except requests.exceptions.ConnectionError:
+            self.l.error("ConnectionError for image")
+            self.list_futures_images.append(True)
+            return
+        except requests.exceptions.MissingSchema:
+            pass
+
+        query = QtSql.QSqlQuery(self.bdd)
+
+        if response.status_code == requests.codes.ok:
+
+            path = self.path
+
+            # Save the page
+            with iopen(path + functions.simpleChar(response.url), 'wb') as file:
+                file.write(response.content)
+                self.l.debug("Image ok")
+
+            query.prepare("UPDATE papers SET graphical_abstract=? WHERE doi=?")
+
+            graphical_abstract = functions.simpleChar(response.url)
+
+            params = (graphical_abstract, doi)
+
+        else:
+            print("Bad return code: {}".format(response.status_code))
+            graphical_abstract = "Empty"
+            verif = 0
+
+            query.prepare("UPDATE papers SET graphical_abstract=?, verif=? WHERE doi=?")
+
+            params = (graphical_abstract, verif, doi)
+
+        for value in params:
+            query.addBindValue(value)
+
+        query.exec_()
+
+        # self.checkFuturesRunning()
+
+
+    def checkFuturesRunning(self):
+
+        total_futures = self.list_futures_images + self.list_futures_urls
+        states_futures = []
+
+        for result in total_futures:
+            if type(result) == bool:
+                states_futures.append(result)
             else:
+                states_futures.append(result.done())
 
-                title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
-
-
-                # Checking if the data are complete
-                if type(abstract) is not str or type(graphical_abstract) is not str:
-                    verif = 0
-                else:
-                    verif = 1
-
-                # On met new à 1 et pas à true
-                params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1, topic_simple)
-
-                for value in params:
-                    query2.addBindValue(value)
-
-                retour = query2.exec_()
-
-                # If the query went wrong, print the details
-                if not retour:
-                    self.l.error(query2.lastError().text())
-                    self.l.debug(query2.lastQuery())
-                else:
-                    self.l.debug("Adding {0} to the database".format(title))
-
-        # self.l.info("{0}: {1} entries added".format(journal, i))
-        # if self.bdd.commit():
-            # self.l.debug("Treatment of new entries done")
-
+        if False not in states_futures and len(total_futures) == len(self.feed.entries) * 2:
+            return True
+        else:
+            return False
 
 
     def listDoi(self):
@@ -154,12 +310,3 @@ class Worker(QtCore.QThread):
                 list_ok.append(False)
 
         return list_doi, list_ok
-
-
-
-if __name__ == "__main__":
-
-    worker = Worker()
-    worker.render("ang.xml")
-
-    pass

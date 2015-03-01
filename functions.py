@@ -73,66 +73,28 @@ def checkData():
 
     """Fct de test uniquement"""
 
-    def regexp(expr, item):
-        reg = re.compile(expr)
-        result = reg.search(item)
-
-        if result is not None:
-            return result
-
-    bdd = sqlite3.connect("fichiers.sqlite")
+    bdd = sqlite3.connect("debug/test.sqlite")
     bdd.row_factory = sqlite3.Row
-    bdd.create_function("REGEXP", 2, regexp)
     c = bdd.cursor()
 
-    request = "UPDATE papers SET topic_simple = ? WHERE id = ?"
+    piece1 = "SELECT * FROM papers WHERE authors_simple LIKE '% cottet %' OR authors_simple LIKE '% chamieh %' OR authors_simple LIKE '% boiteau %' OR authors_simple LIKE '% rossi %' OR authors_simple LIKE '% beaufils %'"
 
-    # c.execute("SELECT * FROM papers WHERE ' ' || replace(authors, ',', ' ') || ' ' LIKE '% Francoia %'")
-    c.execute("SELECT * FROM papers")
+    piece2 = " AND journal='ACS Chem. Biol.'"
+    print(piece1 + piece2)
+
+    # c.execute(piece1)
+    c.execute(piece1 + piece2)
 
     results = c.fetchall()
 
+    i = 0
     for line in results:
-        if line['topic_simple'] is not None:
-            topic_simple = " " + line['topic_simple'] + " "
-            c.execute(request, (topic_simple, line['id']))
-
-    bdd.commit()
+        print(line['title'])
+        print(line['journal'])
+        i += 1
+    print(i)
     c.close()
     bdd.close()
-
-    # bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-    # bdd.setDatabaseName("fichiers.sqlite")
-
-    # bdd.open()
-
-    # request = "SELECT * FROM papers WHERE authors REGEXP ('.*?')"
-    # # request = "SELECT * FROM papers"
-    # # params = ("'^Jean-Patrick'",)
-
-
-    # query = QtSql.QSqlQuery("fichiers.sqlite")
-
-    # query.prepare(request)
-
-    # # for value in params:
-        # # query.addBindValue(value)
-
-    # query.exec_()
-
-    # print(query.lastError().text())
-
-    # while query.next():
-        # record = query.record()
-
-        # print(record.value('title'))
-
-        # # if type(record.value('abstract')) is str:
-            # # abstract = record.value('abstract')
-        # # else:
-
-
-    # bdd.close()
 
 
 
@@ -141,7 +103,8 @@ if __name__ == "__main__":
     # checkData()
     # _, dois = listDoi()
     # print(dois)
-    queryString("*sperm*")
-    queryString("spermine")
+    # queryString("*sperm*")
+    # queryString("spermine")
+    checkData()
 
     pass

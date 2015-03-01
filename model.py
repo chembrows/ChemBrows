@@ -26,9 +26,11 @@ class ModelPerso(QtSql.QSqlTableModel):
 
         self.query = QtSql.QSqlQuery()
 
-        # On rééxécute la requête car la bdd a potentiellement
-        # été modifiée
-        self.query.prepare(query.executedQuery())
+        if type(query) == str:
+            self.query.prepare(query)
+        else:
+            self.query.prepare(query.executedQuery())
+
         self.query.exec_()
 
         results = QtSql.QSqlTableModel.setQuery(self, self.query)
