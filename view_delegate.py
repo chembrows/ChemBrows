@@ -148,7 +148,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             if new:
                 pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/new.png"))
                 painter.drawPixmap(pos_x - 45, pos_y, DIMENSION, DIMENSION, pixmap)
-
             if red:
                 painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
 
@@ -196,8 +195,8 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 # painter.fillRect(option.rect, QtGui.QColor("green"))
                 # painter.fillRect(option.rect, QtGui.QColor(100, 100, 100, 90))
 
-                pixmap = QtGui.QPixmap("images/censored.jpg")
-                # pixmap = QtGui.QPixmap("images/not_available.png")
+                # pixmap = QtGui.QPixmap("images/censored.jpg")
+                pixmap = QtGui.QPixmap("images/not_available.png")
 
                 wcase, hcase = option.rect.width(), option.rect.height()
                 wpix, hpix =  pixmap.width(), pixmap.height()

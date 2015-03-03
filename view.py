@@ -10,7 +10,6 @@ class ViewPerso(QtGui.QTableView):
     Generates a personnal table view, which will be used for each tab in the
     main window"""
 
-
     def __init__(self, parent=None):
         super(ViewPerso, self).__init__(parent)
 
@@ -23,10 +22,6 @@ class ViewPerso(QtGui.QTableView):
 
         # Scroll per "pixel". Gives a better impression when scrolling
         self.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
-        # self.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerItem)
-
-        new_size = self.parent.splitter2.sizes()[1]
-        self.resizeCells(new_size)
 
 
     def defineSlots(self):
@@ -42,16 +37,17 @@ class ViewPerso(QtGui.QTableView):
 
         self.clicked.connect(self.parent.displayInfos)
         self.clicked.connect(self.parent.displayMosaic)
-        self.clicked.connect(self.parent.markOneRead)
-        self.clicked.connect(self.scrollToPerso)
+        self.clicked.connect(self.callParentMarkOneRead)
 
-    def scrollToPerso(self, element):
 
-        """Personnal slot to do exactly what scrollTo does.
-        The scrollTo method can't be called from this class,
-        otherwise it interfers with updateView from the parent"""
+    def callParentMarkOneRead(self, element):
 
-        super(ViewPerso, self).scrollTo(element, QtGui.QAbstractItemView.EnsureVisible)
+        """Slot to call the parent method markOneRead.
+        The parent method is called through a Timer, which allows (more
+        or less) to run the parent method in background. The UI is then
+        more fluid"""
+
+        QtCore.QTimer.singleShot(50, lambda: self.parent.markOneRead(element))
 
 
     def mousePressEvent(self, e):
@@ -97,16 +93,27 @@ class ViewPerso(QtGui.QTableView):
         Allows to resize the columns of the table to optimize space.
         new_size is the width of the central splitter of the parent"""
 
+        row_height = self.rowHeight(0)
+        nbr_rows = self.model().rowCount()
+
+        if row_height * nbr_rows > self.height():
+            scroll_bar_visible = True
+        else:
+            scroll_bar_visible = False
+
         # The thumbnail's size is set to 30 % of the view's width
         size_thumbnail = new_size * 0.3
+
+        # sw = self.verticalScrollBar().sizeHint().width()
 
         # If the scrollbar is not visible (not enough posts), its width
         # is set to 100 px. Weird. So if the scrollBar is not visible,
         # don't substract its size
-        if self.verticalScrollBar().isVisible():
-            print("visible")
-            size_title = new_size - size_thumbnail - self.verticalScrollBar().width()
+        if scroll_bar_visible:
+            print("Scroll Bar visible")
+            size_title = new_size - size_thumbnail - self.verticalScrollBar().sizeHint().width()
         else:
+            print("invisible")
             size_title = new_size - size_thumbnail
 
         self.setColumnWidth(8, size_thumbnail)
@@ -118,15 +125,7 @@ class ViewPerso(QtGui.QTableView):
         # Turn off the horizontal scrollBar. Not necessary, and ugly
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-        # self.horizontal_header = QtGui.QHeaderView(QtCore.Qt.Horizontal)  # Déclare le header perso
-        # self.horizontal_header.setDefaultAlignment(QtCore.Qt.AlignLeft)  # Aligne à gauche l'étiquette des colonnes
-        # self.horizontal_header.setClickable(True)  # Rend cliquable le header perso
-
-        # Resize to content vertically
-        # self.verticalHeader().setResizeMode(QtGui.QHeaderView.ResizeToContents)
-
         # Header style
-        # self.setHorizontalHeader(self.horizontal_header)  # Active le header perso
         self.hideColumn(0)  # Hide id
         self.hideColumn(1)  # Hide percentage match
         self.hideColumn(2)  # Hide doi
@@ -141,41 +140,28 @@ class ViewPerso(QtGui.QTableView):
         self.hideColumn(13)  # Hide topic_simple
         self.horizontalHeader().moveSection(8, 0)  # Move the graphical abstract to first
         self.verticalHeader().setDefaultSectionSize(200)
-        # self.setColumnWidth(8, 250)
-        # self.setColumnWidth(3, 500)
-        # self.setSortingEnabled(True)
 
         self.verticalHeader().setVisible(False)
         self.horizontalHeader().setVisible(False)
-        # self.verticalHeader().sectionResizeMode(QHeaderView.ResizeToContents)
-        # self.resizeColumnsToContents()
         self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)  # Empêche l'édition des cells
 
 
     def keyboardSearch(self, search):
 
-        """Réimplémentation de la méthode, pour désactiver la
-        recherche de texte lors de l'appui sur des touches"""
+        """Reimplementation to deactivate the keyboard search"""
 
-        pass
-
-
-    def scrollTo(self, index, hint):
         pass
 
 
     def keyPressEvent(self, e):
 
-        """Réimplémentation de la méthode pr que la classe propage
-        l'événement au widget parent. L'event n'est pas coincé ici"""
-
-        # super(ViewPerso, self).keyPressEvent(e)
+        """Reaimplementation to propagate the event to the parent
+        widget. Also, defines some special behaviors"""
 
         key = e.key()
 
-        # Navigation parmi les lignes ac les touches haut et bas
-        # On fait des vérifications pr que la sélection reste si on est tout
-        # en haut ou tout en bas du tableau
+        # Browsing with up and down keys. Verifications made for
+        # when the selection is completely at the top or the bottom
         if key == QtCore.Qt.Key_Down or key == QtCore.Qt.Key_X:
             current_index = self.selectionModel().currentIndex()
 
@@ -190,7 +176,6 @@ class ViewPerso(QtGui.QTableView):
                     self.clearSelection()
                     self.setCurrentIndex(current_index)
                     self.clicked.emit(current_index)
-                    super(ViewPerso, self).scrollTo(current_index, QtGui.QAbstractItemView.EnsureVisible)
 
         if key == QtCore.Qt.Key_Up or key == QtCore.Qt.Key_W:
             current_index = self.selectionModel().currentIndex()
@@ -201,13 +186,10 @@ class ViewPerso(QtGui.QTableView):
                 self.clearSelection()
                 self.setCurrentIndex(current_index)
                 self.clicked.emit(current_index)
-                super(ViewPerso, self).scrollTo(current_index, QtGui.QAbstractItemView.EnsureVisible)
 
-        # Navigation ac les touches Tab et Ctrl+tab
-        if e.modifiers() == QtCore.Qt.ControlModifier:
-
-            # On active le Ctrl+a
-            if key == QtCore.Qt.Key_A:
-                super(ViewPerso, self).keyPressEvent(e)
+        # if e.modifiers() == QtCore.Qt.ControlModifier:
+            # # On active le Ctrl+a
+            # if key == QtCore.Qt.Key_A:
+                # super(ViewPerso, self).keyPressEvent(e)
 
         e.ignore()

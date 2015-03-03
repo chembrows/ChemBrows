@@ -163,7 +163,7 @@ class Worker(QtCore.QThread):
 
         while not self.checkFuturesRunning():
             # self.wait()
-            self.sleep(1)
+            self.sleep(3)
             # pass
 
         if not self.bdd.commit():

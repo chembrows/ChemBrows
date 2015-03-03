@@ -278,9 +278,7 @@ class AdvancedSearch(QtGui.QDialog):
                     self.logger.debug("This search name is already used")
                     return
                 else:
-                    group_name = name_search
                     self.tabs.addTab(self.createForm(), name_search)
-
                     if not self.test:
                         self.parent.createSearchTab(name_search, base)
 
@@ -290,7 +288,6 @@ class AdvancedSearch(QtGui.QDialog):
             else:
                 # Perform a simple search, in the first tab
                 self.parent.simpleQuery(base)
-
         else:
             name_search = tab_title
 
@@ -300,7 +297,7 @@ class AdvancedSearch(QtGui.QDialog):
         if save:
             self.logger.debug("Saving the search")
 
-            self.options.beginGroup(group_name)
+            self.options.beginGroup(name_search)
 
             # Re-initialize the keys
             self.options.remove("")

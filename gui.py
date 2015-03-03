@@ -82,18 +82,20 @@ class Fenetre(QtGui.QMainWindow):
         """Get the journals checked in the settings window"""
 
         # Create a list to store the journals checked in the settings window
-        self.journals_to_care = self.options.value("journals_to_parse", [])
+        journals = self.options.value("journals_to_parse", [])
 
         # If no journals to care in the settings,
         # take them all. So build a journals_to_care list
         # with all the journals
-        if not self.journals_to_care:
+        if not journals:
             # self.journals_to_care = []
             for company in os.listdir("./journals"):
                 with open('journals/{0}'.format(company), 'r') as config:
                     for line in config:
                         # Take the abbreviation
-                        self.journals_to_care.append(line.split(" : ")[1])
+                        journals.append(line.split(" : ")[1])
+
+        return journals
 
 
     def parse(self):
@@ -155,13 +157,13 @@ class Fenetre(QtGui.QMainWindow):
         next one"""
 
         elsapsed_time = datetime.datetime.now() - self.start_time
-        self.l.debug(elsapsed_time)
+        self.l.info(elsapsed_time)
 
         # Get a list of the workers states
         list_states = [worker.isFinished() for worker in self.list_threads]
 
         # Print the nbr of finished threads
-        self.l.debug("Finis: {}/{}".format(list_states.count(True), len(self.list_threads)))
+        self.l.info("Finis: {}/{}".format(list_states.count(True), len(self.list_threads)))
 
         if False not in list_states:
             self.calculatePercentageMatch()
@@ -218,7 +220,7 @@ class Fenetre(QtGui.QMainWindow):
         self.updateAction.setShortcut('F7')
 
         # Action to show a settings window
-        self.settingsAction = QtGui.QAction('Settings', self)
+        self.settingsAction = QtGui.QAction('Preferences', self)
         self.settingsAction.triggered.connect(lambda: Settings(self))
 
         # Action so show new articles
@@ -297,15 +299,16 @@ class Fenetre(QtGui.QMainWindow):
         with a button, at any time. Will not be used by
         the final user"""
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        # model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        # proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        model.select()
+        # model.select()
 
-        model.setQuery(table.base_query)
-        proxy.setSourceModel(model)
-        table.setModel(proxy)
+        # model.setQuery(table.base_query)
+        # proxy.setSourceModel(model)
+        # table.setModel(proxy)
+        self.updateView()
 
 
     def closeEvent(self, event):
@@ -330,9 +333,6 @@ class Fenetre(QtGui.QMainWindow):
         for index, each_table in enumerate(self.liste_tables_in_tabs):
             self.options.setValue("header_state{0}".format(index), each_table.horizontalHeader().saveState())
 
-        # self.options.setValue("central_splitter", self.splitter1.sizes())
-        # self.options.setValue("final_splitter", self.splitter2.sizes())
-        # print(self.splitter2.sizes())
         self.options.setValue("central_splitter", self.splitter1.saveState())
         self.options.setValue("final_splitter", self.splitter2.saveState())
 
@@ -347,8 +347,9 @@ class Fenetre(QtGui.QMainWindow):
             self.options.setValue("sorting_reversed", False)
 
         # Save the checked journals (on the left)
-        tags_checked = [button.text() for button in self.list_buttons_tags if button.isChecked()]
-        self.options.setValue("tags_checked", tags_checked)
+        # tags_checked = [button.text() for button in self.list_buttons_tags if button.isChecked()]
+        if self.tags_selected and self.tags_selected != self.getJournalsToCare():
+            self.options.setValue("tags_selected", self.tags_selected)
 
         self.options.endGroup()
 
@@ -367,7 +368,7 @@ class Fenetre(QtGui.QMainWindow):
 
     def restoreSettings(self):
 
-        """Restore the prefs"""
+        """Restore the prefs of the window"""
 
         searches_saved = QtCore.QSettings("searches.ini", QtCore.QSettings.IniFormat)
 
@@ -380,6 +381,7 @@ class Fenetre(QtGui.QMainWindow):
         # Si des réglages pour la fenêtre
         # sont disponibles, on les importe et applique
         if "Window" in self.options.childGroups():
+
             self.restoreGeometry(self.options.value("Window/window_geometry"))
             self.restoreState(self.options.value("Window/window_state"))
 
@@ -388,33 +390,29 @@ class Fenetre(QtGui.QMainWindow):
 
             self.splitter1.restoreState(self.options.value("Window/central_splitter"))
             self.splitter2.restoreState(self.options.value("Window/final_splitter"))
-            # sizes_splitter1 = [int(nbr) for nbr in self.options.value("Window/central_splitter", [])]
-            # sizes_splitter2 = [int(nbr) for nbr in self.options.value("Window/final_splitter", [])]
-            # print(sizes_splitter1)
-            # print(sizes_splitter2)
-            # self.splitter1.setSizes(sizes_splitter1)
-            # self.splitter2.setSizes(sizes_splitter2)
-            # self.splitter2.refresh()
-            # print(self.splitter2.sizes())
 
-            # Bloc to restore the check of the sorting method, in the View menu
-            # of the menubar
+            # # Bloc to restore the check of the sorting method, in the View menu
+            # # of the menubar
             self.sorting_method = self.options.value("Window/sorting_method", 1, int)
             self.sorting_reversed = self.options.value("Window/sorting_reversed", False, bool)
-            self.changeSortingMethod(self.sorting_method, self.sorting_reversed)
+
+            # Restore the journals selected (buttons pushed)
+            self.tags_selected = self.options.value("Window/tags_selected", [])
+            if self.tags_selected == self.getJournalsToCare():
+                self.tags_selected = []
+            if self.tags_selected:
+                for button in self.list_buttons_tags:
+                    if button.text() in self.tags_selected:
+                        button.setChecked(True)
+
+        # Timer of 10 ms to get the dimensions of the window right.
+        # If the window is displayed too fast, I can't get the dimensions right
+        # QtCore.QTimer.singleShot(10, self.finishRestoreSettings)
+        self.changeSortingMethod(self.sorting_method, self.sorting_reversed)
 
         self.getJournalsToCare()
 
-        # Restore the journals selected (buttons pushed)
-        self.tags_selected = self.options.value("Window/tags_checked", [])
-        if self.tags_selected:
-            for button in self.list_buttons_tags:
-                if button.text() in self.tags_selected:
-                    button.setChecked(True)
-
         self.searchByButton()
-        # print(self.splitter2.sizes())
-        # self.updateCellSize()
 
 
     def popup(self, pos):
@@ -475,18 +473,14 @@ class Fenetre(QtGui.QMainWindow):
         self.splitter2.splitterMoved.connect(self.updateCellSize)
 
 
-    def updateCellSize(self):
+    def updateCellSize(self, index_table):
 
         """Update the cell size when the user moves the central splitter.
         For a better display"""
 
-        new_size = self.splitter2.sizes()
-        # print(new_size)
         new_size = self.splitter2.sizes()[1]
-        # print(new_size)
 
-        for table in self.liste_tables_in_tabs:
-            table.resizeCells(new_size)
+        self.liste_tables_in_tabs[index_table].resizeCells(new_size)
 
 
     def displayInfos(self):
@@ -563,6 +557,7 @@ class Fenetre(QtGui.QMainWindow):
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
 
+
         self.query = QtSql.QSqlQuery(self.bdd)
         self.query.prepare(table.base_query)
         self.query.exec_()
@@ -571,7 +566,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Update the size of the columns of the view if the central
         # splitter moved
-        self.updateCellSize()
+        self.updateCellSize(self.onglets.currentIndex())
 
 
     def createSearchTab(self, name_search, query, update=False):
@@ -579,13 +574,21 @@ class Fenetre(QtGui.QMainWindow):
         """Slot called from AdvancedSearch, when a new search is added,
         or a previous one updated"""
 
+
         # If the tab's query is updated from the advancedSearch window,
         # just update the base_query
         if update:
             for index in range(self.onglets.count()):
                 if name_search == self.onglets.tabText(index):
                     self.liste_tables_in_tabs[index].base_query = query
-                    # TODO: update the view
+                    if self.onglets.tabText(self.onglets.currentIndex()) == name_search:
+                        # Update the view
+                        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+                        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+                        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+                        model.setQuery(table.base_query)
+                        proxy.setSourceModel(model)
+                        table.setModel(proxy)
                     return
 
         # Create the model for the new tab
@@ -594,10 +597,10 @@ class Fenetre(QtGui.QMainWindow):
         # Changes are effective immediately
         modele.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
         modele.setTable("papers")
+        modele.select()
 
         self.liste_models_in_tabs.append(modele)
 
-        # proxy = ProxyPerso(self)
         proxy = QtGui.QSortFilterProxyModel()
         proxy.setDynamicSortFilter(True)
         proxy.setSourceModel(modele)
@@ -609,7 +612,6 @@ class Fenetre(QtGui.QMainWindow):
         tableau.setModel(proxy)
         tableau.setItemDelegate(ViewDelegate(self))
         tableau.setSelectionBehavior(tableau.SelectRows)
-
         tableau.initUI()
 
         self.liste_tables_in_tabs.append(tableau)
@@ -627,11 +629,11 @@ class Fenetre(QtGui.QMainWindow):
 
         self.list_buttons_tags = []
 
-        self.getJournalsToCare()
+        journals_to_care = self.getJournalsToCare()
+        journals_to_care.sort()
 
-        self.journals_to_care.sort()
 
-        for journal in self.journals_to_care:
+        for journal in journals_to_care:
 
             button = QtGui.QPushButton(journal)
             button.setCheckable(True)
@@ -650,9 +652,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to check the journals push buttons"""
 
-        self.getJournalsToCare()
-
-        if self.tags_selected == self.journals_to_care:
+        if self.tags_selected == self.getJournalsToCare():
             self.tags_selected = []
 
         # Get the button pressed
@@ -812,7 +812,7 @@ class Fenetre(QtGui.QMainWindow):
         for button in self.list_buttons_tags:
             button.setChecked(False)
 
-        self.tags_selected = self.journals_to_care
+        self.tags_selected = self.getJournalsToCare()
         self.searchByButton()
 
         # Reset the proxy fliter
@@ -833,8 +833,13 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to mark an article read"""
 
+        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        # new = table.model().index(element.row(), 12).data()
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
         new = table.model().index(element.row(), 12).data()
+
 
         if new == 0:
             return
@@ -842,13 +847,25 @@ class Fenetre(QtGui.QMainWindow):
 
             # Save the current line
             line = table.selectionModel().currentIndex().row()
-            selected_id = table.selectionModel().selection().indexes()[0].data()
+            # selected_id = table.selectionModel().selection().indexes()[0].data()
 
             # Change the data in the model
             table.model().setData(table.model().index(line, 12), 0)
 
+            # elsapsed_time = datetime.datetime.now() - start_time
+            # print(elsapsed_time)
+
             # Update the view after the model is updated
-            self.updateView(selected_id)
+            # self.updateView(selected_id)
+            try:
+                model.setQuery(self.query)
+                proxy.setSourceModel(model)
+                table.setModel(proxy)
+            except AttributeError:
+                pass
+
+            table.selectRow(line)
+
 
 
     def updateView(self, current_item_id=None):
@@ -874,7 +891,6 @@ class Fenetre(QtGui.QMainWindow):
             proxy.setSourceModel(model)
             table.setModel(proxy)
         except AttributeError:
-            print("papam")
             model.setQuery(table.base_query)
             proxy.setSourceModel(model)
             table.setModel(proxy)
@@ -883,11 +899,6 @@ class Fenetre(QtGui.QMainWindow):
             for index in range(1, model.rowCount() + 1):
                 table.selectRow(index)
                 if table.selectionModel().selection().indexes()[0].data() == selected_id:
-                    try:
-                        table.scrollToPerso(table.selectionModel().selection().indexes()[0])
-                    except IndexError:
-                        self.l.debug("updateView, selected_id not None, no item selected")
-                    # If the previously selected item is found, leave
                     return
             # If we are still here, the old item wasn't found, so deselect all
             table.clearSelection()
@@ -899,18 +910,31 @@ class Fenetre(QtGui.QMainWindow):
         So, toggle the read/unread state of an article"""
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+
+        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
         new = table.model().index(table.selectionModel().selection().indexes()[0].row(), 12).data()
         line = table.selectionModel().currentIndex().row()
 
         # Invert the value of new
         new = 1 - new
 
-        selected_id = table.selectionModel().selection().indexes()[0].data()
+        # selected_id = table.selectionModel().selection().indexes()[0].data()
 
         table.model().setData(table.model().index(line, 12), new)
 
         # Update the view after the model is updated
-        self.updateView(selected_id)
+        # self.updateView(selected_id)
+
+        try:
+            model.setQuery(self.query)
+            proxy.setSourceModel(model)
+            table.setModel(proxy)
+        except AttributeError:
+            pass
+
+        table.selectRow(line)
 
 
     def cleanDb(self):
@@ -923,9 +947,11 @@ class Fenetre(QtGui.QMainWindow):
 
         requete = "DELETE FROM papers WHERE journal NOT IN ("
 
+        journals_to_care = self.getJournalsToCare()
+
         # Building the query
-        for each_journal in self.journals_to_care:
-            if each_journal is not self.journals_to_care[-1]:
+        for each_journal in self.getJournalsToCare():
+            if each_journal is not journals_to_care[-1]:
                 requete = requete + "\"" + str(each_journal) + "\"" + ", "
             # Close the query if last
             else:
@@ -993,6 +1019,10 @@ class Fenetre(QtGui.QMainWindow):
         """Slot to mark a post liked"""
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
+        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+
+        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
         like = table.model().index(table.selectionModel().selection().indexes()[0].row(), 9).data()
         line = table.selectionModel().currentIndex().row()
 
@@ -1002,12 +1032,21 @@ class Fenetre(QtGui.QMainWindow):
         else:
             like = 1
 
-        selected_id = table.selectionModel().selection().indexes()[0].data()
+        # selected_id = table.selectionModel().selection().indexes()[0].data()
 
         table.model().setData(table.model().index(line, 9), like)
 
         # Update the view after the model is updated
-        self.updateView(selected_id)
+        # self.updateView(selected_id)
+
+        try:
+            model.setQuery(self.query)
+            proxy.setSourceModel(model)
+            table.setModel(proxy)
+        except AttributeError:
+            pass
+
+        table.selectRow(line)
 
 
     # def postsSelected(self, previous=False):
@@ -1052,6 +1091,7 @@ class Fenetre(QtGui.QMainWindow):
         """Méthode pour créer la fenêtre et régler ses paramètres"""
 
         # self.setGeometry(0, 25, 1900 , 1020)
+        # self.showMaximized()
         self.setWindowTitle('ChemBrows')
 
         # ------------------------- CONSTRUCTION DES MENUS -------------------------------------------------------------

@@ -50,11 +50,11 @@ class Predictor():
         """Initialize the pipeline for text analysis"""
 
         if self.bdd is None:
-            self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE");
-            self.bdd.setDatabaseName("fichiers.sqlite");
+            self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            self.bdd.setDatabaseName("fichiers.sqlite")
             self.bdd.open()
 
-        query = QtSql.QSqlQuery("fichiers.sqlite")
+        query = QtSql.QSqlQuery(self.bdd)
 
         query.exec_("SELECT * FROM papers WHERE new=0")
 
@@ -94,7 +94,7 @@ class Predictor():
         print("Starting calculations of match percentages")
         start_time = datetime.datetime.now()
 
-        query = QtSql.QSqlQuery("fichiers.sqlite")
+        query = QtSql.QSqlQuery(self.bdd)
 
         query.exec_("SELECT id, abstract FROM papers")
 
@@ -113,7 +113,6 @@ class Predictor():
 
         x_test = np.array(x_test)
 
-        # list_percentages = [ round(float(100 * proba[1]), 2) for proba in self.classifier.predict_proba(x_test) ]
         list_percentages = [float(100 * proba[1]) for proba in self.classifier.predict_proba(x_test)]
 
         if test:
@@ -122,10 +121,9 @@ class Predictor():
         else:
 
             self.bdd.transaction()
-            query = QtSql.QSqlQuery("fichiers.sqlite")
+            query = QtSql.QSqlQuery(self.bdd)
 
-            request = "UPDATE papers SET percentage_match = ? WHERE id = ?"
-            query.prepare(request)
+            query.prepare("UPDATE papers SET percentage_match = ? WHERE id = ?")
 
             for id_bdd, percentage in zip(list_id, list_percentages):
 
