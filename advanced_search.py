@@ -89,113 +89,10 @@ class AdvancedSearch(QtGui.QDialog):
         # Get all the lineEdit from the current tab
         lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
 
-        # name_search = lines[0].text()
         topic_entries = [line.text() for line in lines[0:3]]
         author_entries = [line.text() for line in lines[3:7]]
 
-        if topic_entries == [''] * 3 and author_entries == [''] * 3:
-            return False
-
-        base = "SELECT * FROM papers WHERE "
-
-        first = True
-
-        # TOPIC, AND condition
-        if topic_entries[0]:
-            first = False
-
-            words = [word.lstrip().rstrip() for word in topic_entries[0].split(",")]
-            words = [functions.queryString(word) for word in words]
-
-            for word in words:
-                if word is words[0]:
-                    base += "topic_simple LIKE '{0}'".format(word)
-                else:
-                    base += " AND topic_simple LIKE '{0}'".format(word)
-
-        # TOPIC, OR condition
-        if topic_entries[1]:
-            words = [word.lstrip().rstrip() for word in topic_entries[1].split(",")]
-            words = [functions.queryString(word) for word in words]
-
-            if first:
-                first = False
-                base += "topic_simple LIKE '{0}'".format(words[0])
-
-                for word in words[1:]:
-                    base += " OR topic_simple LIKE '{0}'".format(word)
-            else:
-                for word in words:
-                    base += " OR topic_simple LIKE '{0}'".format(word)
-
-        # TOPIC, NOT condition
-        if topic_entries[2]:
-            words = [word.lstrip().rstrip() for word in topic_entries[2].split(",")]
-            words = [functions.queryString(word) for word in words]
-
-            if first:
-                first = False
-                base += "topic_simple NOT LIKE '{0}'".format(words[0])
-
-                for word in words[1:]:
-                    base += " AND topic_simple NOT LIKE '{0}'".format(word)
-            else:
-                for word in words:
-                    base += " AND topic_simple NOT LIKE '{0}'".format(word)
-
-        # AUTHOR, AND condition
-        if author_entries[0]:
-            words = [word.lstrip().rstrip() for word in author_entries[0].split(",")]
-            words = [functions.queryString(word) for word in words]
-
-            if first:
-                first = False
-                base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(words[0])
-                # base += "authors_simple LIKE '{0}'".format(words[0])
-
-                for word in words[1:]:
-                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                    # base += " AND authors_simple LIKE '{0}'".format(word)
-            else:
-                for word in words:
-                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                    # base += " AND authors_simple LIKE '{0}'".format(word)
-
-        # AUTHOR, OR condition
-        if author_entries[1]:
-            words = [word.lstrip().rstrip() for word in author_entries[1].split(",")]
-            words = [functions.queryString(word) for word in words]
-
-            if first:
-                first = False
-                base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(words[0])
-                # base += "authors_simple LIKE '{0}'".format(words[0])
-
-                for word in words[1:]:
-                    base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                    # base += " OR authors_simple LIKE '{0}'".format(word)
-            else:
-                for word in words:
-                    base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                    # base += " OR authors_simple LIKE '{0}'".format(word)
-
-        # AUTHOR, NOT condition
-        if author_entries[2]:
-            words = [word.lstrip().rstrip() for word in author_entries[2].split(",")]
-            words = [functions.queryString(word) for word in words]
-
-            if first:
-                first = False
-                base += "' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(words[0])
-                # base += "authors_simple NOT LIKE '{0}'".format(words[0])
-
-                for word in words[1:]:
-                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(word)
-                    # base += " AND authors_simple NOT LIKE '{0}'".format(word)
-            else:
-                for word in words:
-                    base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(word)
-                    # base += " AND authors_simple NOT LIKE '{0}'".format(word)
+        base = functions.buildSearch(topic_entries, author_entries)
 
         return base
 
@@ -237,9 +134,6 @@ class AdvancedSearch(QtGui.QDialog):
 
         """Slot to save a query"""
 
-        # TODO:
-            # updater la vue du parent
-
         if self.sender() == self.button_search:
             save = False
         else:
@@ -280,7 +174,9 @@ class AdvancedSearch(QtGui.QDialog):
                 else:
                     self.tabs.addTab(self.createForm(), name_search)
                     if not self.test:
-                        self.parent.createSearchTab(name_search, base)
+                        self.parent.createSearchTab(name_search, base,
+                                                    topic_options=topic_entries,
+                                                    author_options=author_entries)
 
                     # Clear the fields when perform search
                     for line in lines:
@@ -292,7 +188,10 @@ class AdvancedSearch(QtGui.QDialog):
             name_search = tab_title
 
             if not self.test:
-                self.parent.createSearchTab(name_search, base, update=True)
+                self.parent.createSearchTab(name_search, base,
+                                            topic_options=topic_entries,
+                                            author_options=author_entries,
+                                            update=True)
 
         if save:
             self.logger.debug("Saving the search")
@@ -321,19 +220,6 @@ class AdvancedSearch(QtGui.QDialog):
         vbox_query = QtGui.QVBoxLayout()
         widget_query.setLayout(vbox_query)
 
-
-        # Line for the search name, to save
-        # Create a hbox to put the label and the line
-        # hbox_name = QtGui.QHBoxLayout()
-        # label_name = QtGui.QLabel("Search name : ")
-        # line_name = QtGui.QLineEdit()
-        # hbox_name.addWidget(label_name)
-        # hbox_name.addWidget(line_name)
-
-        # add the label and the line to the
-        # local vbox
-        # vbox_query.addLayout(hbox_name)
-
         vbox_query.addStretch(1)
 
         # ------------- TOPIC ----------------------------------
@@ -342,10 +228,8 @@ class AdvancedSearch(QtGui.QDialog):
         grid_topic = QtGui.QGridLayout()
         group_topic.setLayout(grid_topic)
 
-
         # Add the topic groupbox to the global vbox
         vbox_query.addWidget(group_topic)
-
 
         # Create 3 lines, with their label: AND, OR, NOT
         label_topic_and = QtGui.QLabel("AND:")
@@ -367,17 +251,14 @@ class AdvancedSearch(QtGui.QDialog):
 
         vbox_query.addStretch(1)
 
-
         # ------------- AUTHORS ----------------------------------
         # Create a groupbox for the authors
         group_author = QtGui.QGroupBox("Author(s)")
         grid_author = QtGui.QGridLayout()
         group_author.setLayout(grid_author)
 
-
         # Add the author groupbox to the global vbox
         vbox_query.addWidget(group_author)
-
 
         label_author_and = QtGui.QLabel("AND:")
         line_author_and = QtGui.QLineEdit()
@@ -403,7 +284,6 @@ class AdvancedSearch(QtGui.QDialog):
         line_author_and.returnPressed.connect(self.search)
         line_author_or.returnPressed.connect(self.search)
         line_author_not.returnPressed.connect(self.search)
-
 
         return widget_query
 

@@ -17,6 +17,8 @@ class ViewPerso(QtGui.QTableView):
         self.defineSlots()
 
         self.base_query = None
+        self.topic_entries = None
+        self.author_entries = None
 
         self.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
 
@@ -26,8 +28,7 @@ class ViewPerso(QtGui.QTableView):
 
     def defineSlots(self):
 
-        # On connecte le signal de double clic sur une cell vers un
-        # slot qui lance le lecteur ac le nom du fichier en paramètre
+        # Double-click opens in the browser
         self.doubleClicked.connect(self.parent.openInBrowser)
 
         # http://www.diotavelli.net/PyQtWiki/Handling%20context%20menus
@@ -104,16 +105,12 @@ class ViewPerso(QtGui.QTableView):
         # The thumbnail's size is set to 30 % of the view's width
         size_thumbnail = new_size * 0.3
 
-        # sw = self.verticalScrollBar().sizeHint().width()
-
         # If the scrollbar is not visible (not enough posts), its width
         # is set to 100 px. Weird. So if the scrollBar is not visible,
         # don't substract its size
         if scroll_bar_visible:
-            print("Scroll Bar visible")
             size_title = new_size - size_thumbnail - self.verticalScrollBar().sizeHint().width()
         else:
-            print("invisible")
             size_title = new_size - size_thumbnail
 
         self.setColumnWidth(8, size_thumbnail)
@@ -139,11 +136,10 @@ class ViewPerso(QtGui.QTableView):
         self.hideColumn(12)  # Hide new
         self.hideColumn(13)  # Hide topic_simple
         self.horizontalHeader().moveSection(8, 0)  # Move the graphical abstract to first
-        self.verticalHeader().setDefaultSectionSize(200)
 
         self.verticalHeader().setVisible(False)
         self.horizontalHeader().setVisible(False)
-        self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)  # Empêche l'édition des cells
+        self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)  # No cell editing
 
 
     def keyboardSearch(self, search):

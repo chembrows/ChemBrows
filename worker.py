@@ -73,7 +73,8 @@ class Worker(QtCore.QThread):
         # it has all the infos
         self.list_doi, self.list_ok = self.listDoi()
         # self.session_images = FuturesSession(max_workers=len(self.feed))
-        self.session_images = FuturesSession(max_workers=5)
+        # self.session_images = FuturesSession(max_workers=5)
+        self.session_images = FuturesSession(max_workers=10)
 
         # Load the journals
         rsc = hosts.getJournals("rsc")[0]
@@ -140,7 +141,8 @@ class Worker(QtCore.QThread):
 
         else:
             # session = FuturesSession(max_workers=len(self.feed.entries))
-            session = FuturesSession(max_workers=5)
+            # session = FuturesSession(max_workers=5)
+            session = FuturesSession(max_workers=10)
 
             for entry in self.feed.entries:
 
