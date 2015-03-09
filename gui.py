@@ -12,6 +12,7 @@ import fnmatch
 
 # DEBUG
 import datetime
+import webbrowser
 
 # Personal modules
 from log import MyLog
@@ -414,7 +415,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Change the height of the rows
         for table in self.liste_tables_in_tabs:
-            table.verticalHeader().setDefaultSectionSize(table.height() * 0.15)
+            table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
 
         # Timer to get the dimensions of the window right.
         # If the window is displayed too fast, I can't get the dimensions right
@@ -519,7 +520,7 @@ class Fenetre(QtGui.QMainWindow):
         self.liste_tables_in_tabs[self.onglets.currentIndex()].resizeCells(new_size)
 
         for table in self.liste_tables_in_tabs:
-            table.verticalHeader().setDefaultSectionSize(table.height() * 0.15)
+            table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
 
 
     def displayInfos(self):
@@ -606,7 +607,7 @@ class Fenetre(QtGui.QMainWindow):
         self.updateView()
 
         for table in self.liste_tables_in_tabs:
-            table.verticalHeader().setDefaultSectionSize(table.height() * 0.15)
+            table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
 
         # Update the size of the columns of the view if the central
         # splitter moved
@@ -1143,13 +1144,14 @@ class Fenetre(QtGui.QMainWindow):
         if not url:
             return
 
-        cmd = subprocess.Popen(['firefox', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = cmd.communicate()
+        # cmd = subprocess.Popen(['firefox', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        webbrowser.open(url, new=0, autoraise=True)
+        # out, err = cmd.communicate()
 
-        if cmd.returncode != 0:
-            self.l.warn("Problem while opening post in browser")
-        else:
-            self.l.info("Opening {0} in browser".format(url))
+        # if cmd.returncode != 0:
+            # self.l.warn("Problem while opening post in browser")
+        # else:
+            # self.l.info("Opening {0} in browser".format(url))
 
 
     def calculatePercentageMatch(self):

@@ -70,8 +70,6 @@ def queryString(word):
     else:
         res = res + ' %'
 
-    print(res)
-
     return res
 
 
