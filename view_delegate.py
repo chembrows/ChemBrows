@@ -96,21 +96,31 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             else:
                 percentage = 0
 
-            options.text += "<br><br>"
-            options.text += "<b><font color='gray'>Published in: </font></b><i>{0}</i>, {1}".format(journal, date)
-            options.text += "<br>"
-            options.text += "<b><font color='gray'>Match: </font></b>{0} %".format(percentage)
+            adding_infos = ""
+            adding_infos += "<br><br>"
+            adding_infos += "<b><font color='gray'>Published in: </font></b><i>{0}</i>, {1}".format(journal, date)
+            adding_infos += "<br>"
+            adding_infos += "<b><font color='gray'>Match: </font></b>{0} %".format(percentage)
 
-            doc.setHtml(options.text)
+            doc.setHtml(options.text + adding_infos)
 
             # Set the width of the text = the width of the rect
             doc.setTextWidth(options.rect.width())
+
+            height = doc.documentLayout().documentSize().height()
+
+            if height > options.rect.height():
+                doc.setHtml(options.text)
+                doc.setTextWidth(options.rect.width())
+                height = doc.documentLayout().documentSize().height()
+
+                # while doc.documentLayout().documentSize().height() > options.rect.height():
 
             options.text = ""
             options.widget.style().drawControl(QtGui.QStyle.CE_ItemViewItem, options, painter)
 
             # Center the text vertically
-            height = int(doc.documentLayout().documentSize().height())
+            height = doc.documentLayout().documentSize().height()
             painter.translate(options.rect.left(), options.rect.top() + options.rect.height() / 2 - height / 2)
 
             clip = QtCore.QRectF(0, 0, options.rect.width(), options.rect.height())
@@ -122,7 +132,8 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
 
             # Paint a star in the right bottom corner
-            DIMENSION = 40
+            # DIMENSION = 40
+            DIMENSION = options.rect.width() * 0.07
 
             # Get the like state of the post
             liked = index.sibling(index.row(), 9).data()
@@ -147,7 +158,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             if new:
                 pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/new.png"))
-                painter.drawPixmap(pos_x - 45, pos_y, DIMENSION, DIMENSION, pixmap)
+                painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
             if red:
                 painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
 

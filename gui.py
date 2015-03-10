@@ -1125,7 +1125,7 @@ class Fenetre(QtGui.QMainWindow):
             record = query.record()
             images_path.append(record.value('graphical_abstract'))
 
-        images_path = [ path for path in images_path if path != 'Empty' ]
+        images_path = [path for path in images_path if path != 'Empty']
 
         # Delete all the images which are not in the database (so not
         # corresponding to any article)
