@@ -22,14 +22,16 @@ def test_getJournals():
     wiley = hosts.getJournals("wiley")
     npg = hosts.getJournals("npg")
     science = hosts.getJournals("science")
+    nas = hosts.getJournals("nas")
 
     assert type(rsc) == tuple
     assert type(acs) == tuple
     assert type(wiley) == tuple
     assert type(npg) == tuple
     assert type(science) == tuple
+    assert type(nas) == tuple
 
-    total = rsc + acs + wiley + npg + science
+    total = rsc + acs + wiley + npg + science + nas
 
     for publisher in total:
         for chain in publisher:
@@ -47,6 +49,7 @@ def journalsUrls():
     _, wiley_abb, wiley_urls = hosts.getJournals("wiley")
     _, npg_abb, npg_urls = hosts.getJournals("npg")
     _, science_abb, science_urls = hosts.getJournals("science")
+    _, nas_abb, nas_urls = hosts.getJournals("nas")
 
     # Pick one site from each publisher
     urls.append(random.choice(rsc_urls))
@@ -54,9 +57,10 @@ def journalsUrls():
     urls.append(random.choice(wiley_urls))
     urls.append(random.choice(npg_urls))
     urls.append(random.choice(science_urls))
+    urls.append(random.choice(nas_urls))
 
-    abbs = rsc_abb + acs_abb + wiley_abb + npg_abb + science_abb
-    sites_urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls
+    abbs = rsc_abb + acs_abb + wiley_abb + npg_abb + science_abb + nas_abb
+    sites_urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls + nas_urls
 
     print("\n")
     for site in urls:
@@ -77,6 +81,7 @@ def test_getData(journalsUrls):
     wiley = hosts.getJournals("wiley")[0]
     npg = hosts.getJournals("npg")[0]
     science = hosts.getJournals("science")[0]
+    nas = hosts.getJournals("nas")[0]
 
     i = 1
     for site in list_sites:
@@ -97,7 +102,7 @@ def test_getData(journalsUrls):
                 response = requests.get(url, timeout=10)
                 title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
 
-            print("Sample {} of {}".format(i, 15))
+            print("Sample {} of {}".format(i, 18))
             print(title)
             print(url)
             print(graphical_abstract)

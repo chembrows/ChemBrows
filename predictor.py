@@ -83,7 +83,11 @@ class Predictor():
             ('tfidf', TfidfTransformer()),
             ('clf', MultinomialNB())])
 
-        self.classifier.fit(self.x_train, self.y_train)
+        try:
+            self.classifier.fit(self.x_train, self.y_train)
+        except ValueError:
+            print("Not enough data yet")
+            return
 
 
     def calculatePercentageMatch(self, test=False):
@@ -113,7 +117,11 @@ class Predictor():
 
         x_test = np.array(x_test)
 
-        list_percentages = [float(100 * proba[1]) for proba in self.classifier.predict_proba(x_test)]
+        try:
+            list_percentages = [float(100 * proba[1]) for proba in self.classifier.predict_proba(x_test)]
+        except ValueError:
+            print("Not enough data yet")
+            return
 
         if test:
             print(list_percentages)

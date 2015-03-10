@@ -175,6 +175,7 @@ class Fenetre(QtGui.QMainWindow):
 
             # Update the view when a worker is finished
             self.updateView()
+            self.updateCellSize()
         else:
             self.l.info("STARTING NEW THREAD")
             # self.updateView()
@@ -681,11 +682,20 @@ class Fenetre(QtGui.QMainWindow):
         One button per journal. Only display the journals
         selected in the settings window"""
 
-        self.clearLayout(self.vbox_all_tags)
+
+        try:
+            del self.list_buttons_tags
+            self.clearLayout(self.vbox_all_tags)
+        except AttributeError:
+            pass
 
         self.list_buttons_tags = []
 
         journals_to_care = self.getJournalsToCare()
+
+        if not journals_to_care:
+            return
+
         journals_to_care.sort()
 
         size = 0
@@ -706,9 +716,15 @@ class Fenetre(QtGui.QMainWindow):
 
         self.vbox_all_tags.setAlignment(QtCore.Qt.AlignTop)
         self.scroll_tags.setWidget(self.scrolling_tags)
+
+        # Get the pixles which need to be added
         add = self.vbox_all_tags.getContentsMargins()[0] * 2 + 2 + \
             self.scroll_tags.verticalScrollBar().sizeHint().width()
+
+        # self.scroll_tags.setFixedWidth(size + add)
         self.scroll_tags.setFixedWidth(size + add)
+
+        self.scrolling_tags.adjustSize()
 
 
     def stateButtons(self, pressed):

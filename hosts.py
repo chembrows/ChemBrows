@@ -9,6 +9,9 @@ import requests
 # from io import open as iopen
 import arrow
 
+# TEST
+import re
+
 # Personal modules
 import functions
 
@@ -27,6 +30,7 @@ def getData(journal, entry, response=None):
     wiley, wiley_abb, _ = getJournals("wiley")
     npg, npg_abb, _ = getJournals("npg")
     science, science_abb, _ = getJournals("science")
+    nas, nas_abb, _ = getJournals("nas")
 
     # If the journal is edited by the RSC
     if journal in rsc:
@@ -185,6 +189,40 @@ def getData(journal, entry, response=None):
                 author = entry.summary.split("Authors: ")[1].split(", ")
                 author = ", ".join(author)  # To comment if formatName
 
+
+    elif journal in nas:
+
+        title = entry.title
+        journal_abb = nas_abb[nas.index(journal)]
+        date = entry.prism_publicationdate
+        url = entry.id
+
+        graphical_abstract = None
+        author = None
+
+        abstract = entry.summary
+
+        if response.status_code is requests.codes.ok:
+            # Get the abstract
+            soup = BeautifulSoup(response.text)
+
+            # Get the correct title, no the one in the RSS
+            r = soup.find_all("h1", id="article-title-1")
+            if r:
+                title = r[0].text
+            # print(soup)
+            # r = soup.find_all("p", id=re.compile("p-[1-9]"))
+            # string = [tag.text for tag in r]
+            # string = " ".join(string)
+            # string = " ".join(string.split())
+            # print(string)
+
+            # Get the authors
+            r = soup.find_all("a", attrs={"class": "name-search"})
+            if r:
+                author = [tag.text for tag in r]
+                author = ", ".join(author)
+
     else:
         print("Error: journal not identified")
         return None
@@ -252,6 +290,7 @@ def getDoi(journal, entry):
     wiley = getJournals("wiley")[0]
     npg = getJournals("npg")[0]
     science = getJournals("science")[0]
+    nas = getJournals("nas")[0]
 
     if journal in rsc:
         soup = BeautifulSoup(entry.summary)
@@ -272,6 +311,11 @@ def getDoi(journal, entry):
 
     elif journal in science:
         doi = entry.dc_identifier
+
+    elif journal in nas:
+        base = entry.dc_identifier
+        base = base.split("pnas;")[1]
+        doi = "10.1073/pnas." + base
 
     try:
         doi = doi.replace(" ", "")
@@ -348,13 +392,13 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        # title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = getData(journal, entry, response)
+        title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = getData(journal, entry, response)
+        print(authors)
         # print(title)
-        print(response.content)
 
 
     # urls_test = ["debug/ang.xml"]
-    urls_test = ["debug/jacs.xml"]
+    urls_test = ["debug/pnas.xml"]
     # urls_test = ["http://feeds.rsc.org/rss/nj"]
     # urls_test = ["http://feeds.rsc.org/rss/sc"]
     # urls_test = ["debug/science.xml"]
@@ -371,8 +415,17 @@ if __name__ == "__main__":
 
     feed = feedparser.parse(urls_test[0])
     journal = feed['feed']['title']
+    # print(feed.entries[0:])
 
-    for entry in feed.entries:
+    for entry in feed.entries[1:]:
         url = entry.link
-        future = session.get(url)
-        future.add_done_callback(functools.partial(print_result, journal, entry))
+        title = entry.title
+        if title != "Stress and telomere shortening in central India [Anthropology]":
+            continue
+        else:
+            print(entry)
+            # print(feed.entries.index(entry))
+            # print(entry.id)
+            future = session.get(url)
+            future.add_done_callback(functools.partial(print_result, journal, entry))
+            break
