@@ -449,9 +449,13 @@ class Fenetre(QtGui.QMainWindow):
                         self.scroll_tags.size())
                     if not rect.contains(event.globalPos()):
                         self.scroll_tags.hide()
+                        # Give enough time to the program to get new splitter size,
+                        # before resizing the cells
+                        QtCore.QTimer.singleShot(20, self.updateCellSize)
 
             elif event.type() == QtCore.QEvent.Leave and source is self:
                 self.scroll_tags.hide()
+                self.updateCellSize()
 
         return QtGui.QMainWindow.eventFilter(self, source, event)
 
@@ -1135,23 +1139,18 @@ class Fenetre(QtGui.QMainWindow):
 
     def openInBrowser(self):
 
-        """Slot to open the post in browser"""
+        """Slot to open the post in browser
+        http://stackoverflow.com/questions/4216985/call-to-operating-system-to-open-url
+        """
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-
         url = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
 
         if not url:
             return
-
-        # cmd = subprocess.Popen(['firefox', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        webbrowser.open(url, new=0, autoraise=True)
-        # out, err = cmd.communicate()
-
-        # if cmd.returncode != 0:
-            # self.l.warn("Problem while opening post in browser")
-        # else:
-            # self.l.info("Opening {0} in browser".format(url))
+        else:
+            webbrowser.open(url, new=0, autoraise=True)
+            self.l.info("Opening {0} in browser".format(url))
 
 
     def calculatePercentageMatch(self):
