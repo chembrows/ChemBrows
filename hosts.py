@@ -31,6 +31,7 @@ def getData(journal, entry, response=None):
     npg, npg_abb, _ = getJournals("npg")
     science, science_abb, _ = getJournals("science")
     nas, nas_abb, _ = getJournals("nas")
+    elsevier, elsevier_abb, _ = getJournals("elsevier")
 
     # If the journal is edited by the RSC
     if journal in rsc:
@@ -223,6 +224,34 @@ def getData(journal, entry, response=None):
                 author = [tag.text for tag in r]
                 author = ", ".join(author)
 
+    elif journal in elsevier:
+
+        title = entry.title
+        journal_abb = elsevier_abb[elsevier.index(journal)]
+        # date = entry.updated_parsed
+        date = arrow.get(entry.updated).format('YYYY-MM-DD')
+        url = entry.id
+
+        graphical_abstract = None
+        author = None
+
+        abstract = entry.summary
+
+        if abstract:
+            try:
+                author = abstract.split("Author(s): ")[1].split("<br />")[0]
+                author = author.replace(" , ", ", ")
+                author = author.replace("  ", " ")
+            except IndexError:
+                author = None
+
+            soup = BeautifulSoup(abstract)
+            r = soup.find_all("img")
+            if r:
+                graphical_abstract = r[0]['src']
+
+            abstract = abstract.split("<br />")[3].lstrip()
+
     else:
         print("Error: journal not identified")
         return None
@@ -291,6 +320,7 @@ def getDoi(journal, entry):
     npg = getJournals("npg")[0]
     science = getJournals("science")[0]
     nas = getJournals("nas")[0]
+    elsevier = getJournals("elsevier")[0]
 
     if journal in rsc:
         soup = BeautifulSoup(entry.summary)
@@ -316,6 +346,11 @@ def getDoi(journal, entry):
         base = entry.dc_identifier
         base = base.split("pnas;")[1]
         doi = "10.1073/pnas." + base
+
+    # FUCK !! for this published, the doi is not given
+    # in the RSS flux. It's so replaced by the url
+    elif journal in elsevier:
+        doi = entry.id
 
     try:
         doi = doi.replace(" ", "")
@@ -389,21 +424,25 @@ def getJournals(company):
 if __name__ == "__main__":
     from requests_futures.sessions import FuturesSession
     import functools
+    import collections
 
     def print_result(journal, entry, future):
         response = future.result()
         title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = getData(journal, entry, response)
-        print(authors)
+        # print(authors)
         # print(title)
 
 
     # urls_test = ["debug/ang.xml"]
-    urls_test = ["debug/pnas.xml"]
+    urls_test = ["debug/tet.htm"]
+    # urls_test = ["debug/tet_op.htm"]
     # urls_test = ["http://feeds.rsc.org/rss/nj"]
     # urls_test = ["http://feeds.rsc.org/rss/sc"]
     # urls_test = ["debug/science.xml"]
     # urls_test = ["debug/med_chem.htm"]
     # urls_test = ["debug/sm.htm"]
+    # urls_test = ["http://rss.sciencedirect.com/publication/science/00404020/open-access",
+                 # "http://rss.sciencedirect.com/publication/science/00404020"]
 
 
     session = FuturesSession(max_workers=50)
@@ -417,15 +456,21 @@ if __name__ == "__main__":
     journal = feed['feed']['title']
     # print(feed.entries[0:])
 
-    for entry in feed.entries[1:]:
-        url = entry.link
-        title = entry.title
-        if title != "Stress and telomere shortening in central India [Anthropology]":
-            continue
-        else:
-            print(entry)
+    # for url in urls_test:
+    # print(len(feed.entries))
+
+    # titles = [ entry.title for entry in feed.entries]
+
+    # print([x for x, y in collections.Counter(titles).items() if y > 1])
+
+    # for entry in feed.entries[0:]:
+        # url = entry.link
+        # title = entry.title
+        # print(title)
+        # # print(entry.id)
+        # # print("\n")
             # print(feed.entries.index(entry))
             # print(entry.id)
-            future = session.get(url)
-            future.add_done_callback(functools.partial(print_result, journal, entry))
-            break
+        # future = session.get(url)
+        # future.add_done_callback(functools.partial(print_result, journal, entry))
+        # break

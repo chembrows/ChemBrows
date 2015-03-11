@@ -82,13 +82,15 @@ class Worker(QtCore.QThread):
         wiley = hosts.getJournals("wiley")[0]
         npg = hosts.getJournals("npg")[0]
         science = hosts.getJournals("science")[0]
+        nas = hosts.getJournals("nas")[0]
+        elsevier = hosts.getJournals("elsevier")[0]
 
         query = QtSql.QSqlQuery(self.bdd)
 
         self.bdd.transaction()
 
         # The feeds of these journals are complete
-        if journal in wiley + science:
+        if journal in wiley + science + elsevier:
 
             self.list_futures_urls = [True] * len(self.feed.entries)
 
@@ -169,6 +171,7 @@ class Worker(QtCore.QThread):
             # pass
 
         if not self.bdd.commit():
+            self.l.error(self.bdd.lastError().text())
             self.l.error("Problem when comitting data for {}".format(journal))
 
         self.l.info("Exiting thread for {}".format(journal))

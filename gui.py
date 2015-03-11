@@ -174,6 +174,7 @@ class Fenetre(QtGui.QMainWindow):
             self.l.debug("Parsing data finished. Enabling parseAction")
 
             # Update the view when a worker is finished
+            self.searchByButton()
             self.updateView()
             self.updateCellSize()
         else:
@@ -441,6 +442,7 @@ class Fenetre(QtGui.QMainWindow):
                     rect = self.geometry()
                     rect.setWidth(25)
                     rect.setTop(table_y)
+
                     if rect.contains(event.globalPos()):
                         self.scroll_tags.show()
                 else:
