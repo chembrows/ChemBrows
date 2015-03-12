@@ -64,7 +64,7 @@ class Worker(QtCore.QThread):
             journal = self.feed['feed']['title']
         except KeyError:
             self.l.error("No title for the journal ! Aborting")
-            self.l.error(self.url)
+            self.l.error(self.url_feed)
             return
 
         self.l.info("{0}: {1}".format(journal, len(self.feed.entries)))
@@ -84,6 +84,7 @@ class Worker(QtCore.QThread):
         science = hosts.getJournals("science")[0]
         nas = hosts.getJournals("nas")[0]
         elsevier = hosts.getJournals("elsevier")[0]
+        thieme = hosts.getJournals("thieme")[0]
 
         query = QtSql.QSqlQuery(self.bdd)
 
@@ -137,7 +138,7 @@ class Worker(QtCore.QThread):
                         headers = {'User-agent': 'Mozilla/5.0'}
                         headers["Referer"] = url
 
-                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=10)
+                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=20)
                         self.list_futures_images.append(future_image)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi))
 
@@ -161,7 +162,7 @@ class Worker(QtCore.QThread):
                     except AttributeError:
                         url = entry.link
 
-                    future = session.get(url, timeout=10)
+                    future = session.get(url, timeout=20)
                     self.list_futures_urls.append(future)
                     future.add_done_callback(functools.partial(self.completeData, doi, journal, entry))
 
@@ -221,7 +222,7 @@ class Worker(QtCore.QThread):
             headers = {'User-agent': 'Mozilla/5.0'}
             headers["Referer"] = url
 
-            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=10)
+            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=20)
             self.list_futures_images.append(future_image)
             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi))
 

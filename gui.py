@@ -4,7 +4,6 @@
 import sys
 import os
 import signal
-import subprocess
 
 from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
 
@@ -616,6 +615,7 @@ class Fenetre(QtGui.QMainWindow):
         for table in self.liste_tables_in_tabs:
             table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
 
+        self.searchByButton()
         # Update the size of the columns of the view if the central
         # splitter moved
         self.updateCellSize()

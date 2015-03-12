@@ -53,6 +53,7 @@ def journalsUrls():
     _, science_abb, science_urls = hosts.getJournals("science")
     _, nas_abb, nas_urls = hosts.getJournals("nas")
     _, elsevier_abb, elsevier_urls = hosts.getJournals("elsevier")
+    _, thieme_abb, thieme_urls = hosts.getJournals("thieme")
 
     # Pick one site from each publisher
     urls.append(random.choice(rsc_urls))
@@ -62,9 +63,10 @@ def journalsUrls():
     urls.append(random.choice(science_urls))
     urls.append(random.choice(nas_urls))
     urls.append(random.choice(elsevier_urls))
+    urls.append(random.choice(thieme_urls))
 
-    abbs = rsc_abb + acs_abb + wiley_abb + npg_abb + science_abb + nas_abb + elsevier_abb
-    sites_urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls + nas_urls + elsevier_urls
+    abbs = rsc_abb + acs_abb + wiley_abb + npg_abb + science_abb + nas_abb + elsevier_abb + thieme_abb
+    sites_urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls + nas_urls + elsevier_urls + thieme_urls
 
     print("\n")
     for site in urls:
@@ -87,6 +89,7 @@ def test_getData(journalsUrls):
     science = hosts.getJournals("science")[0]
     nas = hosts.getJournals("nas")[0]
     elsevier = hosts.getJournals("elsevier")[0]
+    thieme = hosts.getJournals("thieme")[0]
 
     i = 1
     for site in list_sites:
@@ -107,7 +110,7 @@ def test_getData(journalsUrls):
                 response = requests.get(url, timeout=10)
                 title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
 
-            print("Sample {} of {}".format(i, 21))
+            print("Sample {}".format(i))
             print(title)
             print(url)
             print(graphical_abstract)

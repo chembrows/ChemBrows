@@ -32,6 +32,7 @@ def getData(journal, entry, response=None):
     science, science_abb, _ = getJournals("science")
     nas, nas_abb, _ = getJournals("nas")
     elsevier, elsevier_abb, _ = getJournals("elsevier")
+    thieme, thieme_abb, _ = getJournals("thieme")
 
     # If the journal is edited by the RSC
     if journal in rsc:
@@ -252,6 +253,41 @@ def getData(journal, entry, response=None):
 
             abstract = abstract.split("<br />")[3].lstrip()
 
+            if abstract == "":
+                abstract = None
+
+
+    elif journal in thieme:
+
+        title = entry.title
+        journal_abb = thieme_abb[thieme.index(journal)]
+        date = arrow.get(entry.updated).format('YYYY-MM-DD')
+        url = entry.id
+
+        abstract = None
+        graphical_abstract = None
+        author = None
+
+        if entry.summary != "":
+            abstract = entry.summary
+            abstract = entry.content[0].value
+            abstract = abstract.split("<br />")[3]
+
+        soup = BeautifulSoup(entry.content[0].value)
+        r = soup.find_all("img")
+        if r:
+            graphical_abstract = r[0]['src']
+
+        if response.status_code is requests.codes.ok:
+            # Get the abstract
+            soup = BeautifulSoup(response.text)
+            r = soup.find_all("span", id="authorlist")
+            if r:
+                author = r[0].text
+                author = author.replace("*a, b", "")
+                author = author.replace("*a", "")
+                author = author.replace("*", "")
+
     else:
         print("Error: journal not identified")
         return None
@@ -321,6 +357,7 @@ def getDoi(journal, entry):
     science = getJournals("science")[0]
     nas = getJournals("nas")[0]
     elsevier = getJournals("elsevier")[0]
+    thieme = getJournals("thieme")[0]
 
     if journal in rsc:
         soup = BeautifulSoup(entry.summary)
@@ -351,6 +388,9 @@ def getDoi(journal, entry):
     # in the RSS flux. It's so replaced by the url
     elif journal in elsevier:
         doi = entry.id
+
+    elif journal in thieme:
+        doi = entry.prism_doi
 
     try:
         doi = doi.replace(" ", "")
@@ -434,7 +474,8 @@ if __name__ == "__main__":
 
 
     # urls_test = ["debug/ang.xml"]
-    urls_test = ["debug/tet.htm"]
+    # urls_test = ["http://rss.sciencedirect.com/publication/science/10745521"]
+    urls_test = ["debug/syn.xml"]
     # urls_test = ["debug/tet_op.htm"]
     # urls_test = ["http://feeds.rsc.org/rss/nj"]
     # urls_test = ["http://feeds.rsc.org/rss/sc"]
@@ -454,23 +495,18 @@ if __name__ == "__main__":
 
     feed = feedparser.parse(urls_test[0])
     journal = feed['feed']['title']
-    # print(feed.entries[0:])
 
-    # for url in urls_test:
-    # print(len(feed.entries))
+    print(journal)
 
     # titles = [ entry.title for entry in feed.entries]
 
     # print([x for x, y in collections.Counter(titles).items() if y > 1])
 
-    # for entry in feed.entries[0:]:
-        # url = entry.link
+    for entry in feed.entries[1:]:
+        # print(entry)
+        url = entry.link
         # title = entry.title
         # print(title)
-        # # print(entry.id)
-        # # print("\n")
-            # print(feed.entries.index(entry))
-            # print(entry.id)
-        # future = session.get(url)
-        # future.add_done_callback(functools.partial(print_result, journal, entry))
-        # break
+        future = session.get(url)
+        future.add_done_callback(functools.partial(print_result, journal, entry))
+        break
