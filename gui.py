@@ -225,7 +225,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Action to show a settings window
         self.settingsAction = QtGui.QAction('Preferences', self)
-        self.settingsAction.triggered.connect(lambda: Settings(self))
+        # self.settingsAction.triggered.connect(lambda: Settings(self))
 
         # Action so show new articles
         self.searchNewAction = QtGui.QAction('Unread', self)
