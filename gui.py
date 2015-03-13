@@ -224,7 +224,7 @@ class Fenetre(QtGui.QMainWindow):
         self.updateAction.setShortcut('F7')
 
         # Action to show a settings window
-        self.settingsAction = QtGui.QAction('Preferences', self)
+        self.settingsAction = QtGui.QAction('Test', self)
         # self.settingsAction.triggered.connect(lambda: Settings(self))
 
         # Action so show new articles
