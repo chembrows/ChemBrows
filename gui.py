@@ -224,8 +224,8 @@ class Fenetre(QtGui.QMainWindow):
         self.updateAction.setShortcut('F7')
 
         # Action to show a settings window
-        self.settingsAction = QtGui.QAction('Test', self)
-        # self.settingsAction.triggered.connect(lambda: Settings(self))
+        self.settingsAction = QtGui.QAction('Preferences', self)
+        self.settingsAction.triggered.connect(lambda: Settings(self))
 
         # Action so show new articles
         self.searchNewAction = QtGui.QAction('Unread', self)
@@ -1244,7 +1244,9 @@ class Fenetre(QtGui.QMainWindow):
         self.toolMenu.addAction(self.openInBrowserAction)
 
         # Menu entry for the settings
-        self.menubar.addAction(self.settingsAction)
+        # self.menubar.addAction(self.settingsAction)
+        self.prefs_menu = self.menubar.addMenu("&Preferences")
+        self.prefs_menu_action = self.prefs_menu.addAction(self.settingsAction)
 
         # # ------------------------- TOOLBAR  -----------------------------------------------
 
