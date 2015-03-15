@@ -191,7 +191,7 @@ class Fenetre(QtGui.QMainWindow):
         appelée à la création de la classe"""
 
         # Action to quit
-        self.exitAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_063_power'), '&Quitter', self)
+        self.exitAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_063_power'), '&Quit', self)
         self.exitAction.setShortcut('Ctrl+Q')
         self.exitAction.setStatusTip("Quit")
         self.exitAction.triggered.connect(self.closeEvent)
@@ -1223,14 +1223,18 @@ class Fenetre(QtGui.QMainWindow):
 
         # Building files menu
         self.fileMenu = self.menubar.addMenu('&Files')
+        self.fileMenu.addAction(self.settingsAction)
         self.fileMenu.addAction(self.exitAction)
 
         # Building edition menu
-        self.editMenu = self.menubar.addMenu("&Edition")
-        self.editMenu.addAction(self.parseAction)
-        self.editMenu.addAction(self.calculatePercentageMatchAction)
-        self.editMenu.addAction(self.toggleReadAction)
-        self.editMenu.addAction(self.toggleLikeAction)
+        # self.editMenu = self.menubar.addMenu("&Edition")
+        # Building tools menu
+        self.toolMenu = self.menubar.addMenu("&Tools")
+        self.toolMenu.addAction(self.parseAction)
+        self.toolMenu.addAction(self.calculatePercentageMatchAction)
+        self.toolMenu.addAction(self.toggleReadAction)
+        self.toolMenu.addAction(self.toggleLikeAction)
+        self.toolMenu.addAction(self.openInBrowserAction)
 
         self.viewMenu = self.menubar.addMenu("&View")
         self.sortMenu = self.viewMenu.addMenu("Sorting")
@@ -1238,15 +1242,6 @@ class Fenetre(QtGui.QMainWindow):
         self.sortMenu.addAction(self.sortingDateAction)
         self.sortMenu.addAction(self.separatorAction)
         self.sortMenu.addAction(self.sortingReversedAction)
-
-        # Building tools menu
-        self.toolMenu = self.menubar.addMenu("&Tools")
-        self.toolMenu.addAction(self.openInBrowserAction)
-
-        # Menu entry for the settings
-        # self.menubar.addAction(self.settingsAction)
-        self.prefs_menu = self.menubar.addMenu("&Preferences")
-        self.prefs_menu_action = self.prefs_menu.addAction(self.settingsAction)
 
         # # ------------------------- TOOLBAR  -----------------------------------------------
 

@@ -17,6 +17,11 @@ class Settings(QtGui.QDialog):
 
         self.parent = parent
 
+        try:
+            self.options = self.parent.options
+        except AttributeError:
+            self.options = QtCore.QSettings("debug/options.ini", QtCore.QSettings.IniFormat)
+
         self.check_journals = []
 
         self.initUI()
@@ -28,7 +33,7 @@ class Settings(QtGui.QDialog):
 
         """Get the settings and restore them"""
 
-        journals_to_parse = self.parent.options.value("journals_to_parse", [])
+        journals_to_parse = self.options.value("journals_to_parse", [])
 
         # Check the boxes
         if not journals_to_parse:
@@ -48,18 +53,20 @@ class Settings(QtGui.QDialog):
         # To close the window and save the settings
         self.ok_button.clicked.connect(self.saveSettings)
 
+        # Checkbox to select/unselect all the journals
+        self.box_select_all.stateChanged.connect(self.selectUnselectAll)
+
         # Button "clean database" (erase the unintersting journals from the db)
         # connected to the method of the main window class
         self.button_clean_db.clicked.connect(self.parent.cleanDb)
 
 
-    def selectBrowser(self):
+    def selectUnselectAll(self, state):
 
-        """Méthode pour retourner le chemin du player"""
+        """Select or unselect all the journals"""
 
-        # path = QtGui.QFileDialog.getOpenFileName(self, 'Open file', '/home')
-        # self.line_path.setText(path)
-        pass
+        for box in self.check_journals:
+            box.setCheckState(state)
 
 
     def initUI(self):
@@ -89,6 +96,10 @@ class Settings(QtGui.QDialog):
                 labels_checkboxes += [line.split(" : ")[1] for line in config]
 
         labels_checkboxes.sort()
+
+        self.box_select_all = QtGui.QCheckBox("Select all")
+        self.box_select_all.setCheckState(0)
+        self.vbox_check_journals.addWidget(self.box_select_all)
 
         # Build the checkboxes, and put them in a layout
         for index, label in enumerate(labels_checkboxes):
@@ -131,14 +142,15 @@ class Settings(QtGui.QDialog):
         journals_to_parse = []
 
         for box in self.check_journals:
-            if box.checkState() == 2:
-                journals_to_parse.append(box.text())
+            if box.text() != "Select all":
+                if box.checkState() == 2:
+                    journals_to_parse.append(box.text())
 
         if journals_to_parse:
-            self.parent.options.remove("journals_to_parse")
-            self.parent.options.setValue("journals_to_parse", journals_to_parse)
+            self.options.remove("journals_to_parse")
+            self.options.setValue("journals_to_parse", journals_to_parse)
         else:
-            self.parent.options.remove("journals_to_parse")
+            self.options.remove("journals_to_parse")
 
         self.parent.displayTags()
         self.parent.resetView()
@@ -146,3 +158,11 @@ class Settings(QtGui.QDialog):
         # Close the settings window and free the memory
         self.parent.fen_settings.close()
         del self.parent.fen_settings
+
+
+if __name__ == '__main__':
+
+    app = QtGui.QApplication(sys.argv)
+    parent = QtGui.QWidget()
+    obj = Settings(parent)
+    sys.exit(app.exec_())
