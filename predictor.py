@@ -83,7 +83,11 @@ class Predictor():
 
         # If there is no liked articles, exit, otherwise
         # causes an uncatchable exception
-        if not self.x_train or 1 not in self.y_train:
+        try:
+            if not self.x_train or 1 not in self.y_train:
+                self.l.debug("Not enough data yet")
+                return None
+        except ValueError:
             self.l.debug("Not enough data yet")
             return None
 
