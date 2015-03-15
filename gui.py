@@ -93,26 +93,26 @@ class Fenetre(QtGui.QMainWindow):
 
         """Method to start the parsing of the data"""
 
-        journals_to_parse = self.options.value("journals_to_parse", [])
+        self.journals_to_parse = self.options.value("journals_to_parse", [])
 
         # If no journals to parse in the settings,
         # parse them all. So build a journals_to_parse list
         # with all the journals
-        if not journals_to_parse:
-            journals_to_parse = []
+        if not self.journals_to_parse:
+            self.journals_to_parse = []
             for company in os.listdir("./journals"):
                 with open('journals/{0}'.format(company), 'r') as config:
                     for line in config:
-                        journals_to_parse.append(line.split(" : ")[1])
+                        self.journals_to_parse.append(line.split(" : ")[1])
 
             self.options.remove("journals_to_parse")
-            self.options.setValue("journals_to_parse", journals_to_parse)
+            self.options.setValue("journals_to_parse", self.journals_to_parse)
 
         urls = []
         for company in os.listdir("./journals"):
             with open('journals/{0}'.format(company), 'r') as config:
                 for line in config:
-                    if line.split(" : ")[1] in journals_to_parse:
+                    if line.split(" : ")[1] in self.journals_to_parse:
                         urls.append(line.split(" : ")[2])
 
         # Disabling the parse action to avoid double start
@@ -123,6 +123,10 @@ class Fenetre(QtGui.QMainWindow):
         self.list_threads = []
 
         self.start_time = datetime.datetime.now()
+
+        # Display the progress bar for the parsing
+        self.action_label_progress.setVisible(True)
+        self.action_progress.setVisible(True)
 
         for site in urls:
             # One worker for each website
@@ -155,12 +159,19 @@ class Fenetre(QtGui.QMainWindow):
         list_states = [worker.isFinished() for worker in self.list_threads]
 
         # Print the nbr of finished threads
-        self.l.info("Finis: {}/{}".format(list_states.count(True), len(self.list_threads)))
+        self.l.info("Done: {}/{}".format(list_states.count(True), len(self.list_threads)))
+
+        # Display the progress of the parsing w/ the progress bar
+        self.progress_parsing.setValue(list_states.count(True) * 100 / len(self.list_threads))
 
         if False not in list_states:
             self.calculatePercentageMatch()
             self.parseAction.setEnabled(True)
             self.l.debug("Parsing data finished. Enabling parseAction")
+
+            # Hide the progress bar when parsing is done
+            self.action_label_progress.setVisible(False)
+            self.action_progress.setVisible(False)
 
             # Update the view when a worker is finished
             self.searchByButton()
@@ -172,6 +183,7 @@ class Fenetre(QtGui.QMainWindow):
             for worker in self.list_threads:
                 if not worker.isRunning() and not worker.isFinished():
                     worker.start()
+                    name = self.journals_to_parse[self.list_threads.index(worker)]
                     break
 
 
@@ -579,7 +591,7 @@ class Fenetre(QtGui.QMainWindow):
 
         w_pix, h_pix = self.pixmap.width(), self.pixmap.height()
 
-        self.scene = QtGui.QGraphicsScene()
+        self.scene = QtGui.QGraphicsScene(self.vision)
 
         # Center the picture
         self.scene.setSceneRect(0, 0, w_pix, h_pix - 10)
@@ -1261,6 +1273,25 @@ class Fenetre(QtGui.QMainWindow):
         self.toolbar.addAction(self.searchAction)
         self.toolbar.addAction(self.advanced_searchAction)
 
+        # Empty widget acting like a spacer
+        self.empty_widget = QtGui.QWidget()
+        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred);
+        self.toolbar.addWidget(self.empty_widget)
+
+        # A QLabel and a progress bar to show how many journals are done parsing
+        self.label_progress = QtGui.QLabel("Collecting articles: ")
+        self.progress_parsing = QtGui.QProgressBar(self)
+        self.progress_parsing.setMaximumWidth(150)
+        self.progress_parsing.setRange(0, 100)
+
+        # Creating actions, because simple widgets are not hidable in the toolbar
+        self.action_label_progress = self.toolbar.addWidget(self.label_progress)
+        self.action_progress = self.toolbar.addWidget(self.progress_parsing)
+
+        # Hiding the actions corresponding to the widgets
+        self.action_label_progress.setVisible(False)
+        self.action_progress.setVisible(False)
+
         # # Bouton pour afficher la file d'attente
         # self.button_waiting = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_202_shopping_cart'), "File d'attente")
         # self.toolbar.addWidget(self.button_waiting)
@@ -1276,6 +1307,8 @@ class Fenetre(QtGui.QMainWindow):
         # # Bouton pr afficher les vids non taguées
         # self.button_untag = QtGui.QPushButton("Non tagué")
         # self.toolbar.addWidget(self.button_untag)
+
+
 
         # # ------------------------- LEFT AREA ------------------------------------------------------------------------
 
@@ -1388,27 +1421,27 @@ class Fenetre(QtGui.QMainWindow):
 
 
 if __name__ == '__main__':
-
-    # Little hack to kill all the pending process
-    # os.setpgrp()  # create new process group, become its leader
-    # app = QtGui.QApplication(sys.argv)
-    # ex = Fenetre()
-    # sys.exit(app.exec_())
-    # os.killpg(0, signal.SIGKILL)  # kill all processes in my group
-
     logger = MyLog()
     try:
         app = QtGui.QApplication(sys.argv)
         ex = Fenetre(logger)
         sys.exit(app.exec_())
+
     except Exception as e:
-        # print(e)
         exc_type, exc_obj, exc_tb = sys.exc_info()
         exc_type = type(e).__name__
         fname = exc_tb.tb_frame.f_code.co_filename
         logger.warning("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
         logger.warning("{0}: {1}".format(exc_type, e))
-        # print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-        # print("{0}: {1}".format(exc_type, e))
-    # finally:
-        # os.killpg(0, signal.SIGKILL)  # kill all processes in my group
+    finally:
+        # Try to kill all the threads
+        try:
+            for worker in ex.list_threads:
+                worker.terminate()
+                to_cancel = worker.list_futures_urls + worker.list_futures_images
+                for future in to_cancel:
+                    if type(future) != bool:
+                        future.cancel()
+            logger.info("Quitting the program, killing all the threads")
+        except AttributeError:
+            logger.info("Quitting the program, no threads")
