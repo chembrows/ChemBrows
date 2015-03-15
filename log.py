@@ -36,13 +36,12 @@ class MyLog(logging.Logger):
         self.file_handler.setLevel(logging.DEBUG)
         self.file_handler.setFormatter(self.formatter)
         self.addHandler(self.file_handler)
-         
-        # création d'un second handler qui va rediriger chaque écriture de log
-        # sur la console
-        self.steam_handler = logging.StreamHandler()
-        self.steam_handler.setLevel(logging.DEBUG)
-        self.addHandler(self.steam_handler)
- 
+
+        # # création d'un second handler qui va rediriger chaque écriture de log
+        # # sur la console
+        # self.steam_handler = logging.StreamHandler()
+        # self.steam_handler.setLevel(logging.DEBUG)
+        # self.addHandler(self.steam_handler)
 
 if __name__ == '__main__':
 

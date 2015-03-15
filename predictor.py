@@ -13,19 +13,23 @@ from sklearn.feature_extraction import text
 # DEBUG
 import datetime
 
+from log import MyLog
+
 
 class Predictor():
 
     """Object to predict the percentage match of an article,
     based on its abstract"""
 
-    def __init__(self, bdd=None):
+    def __init__(self, logger, bdd=None):
 
         self.x_train = []
         self.y_train = []
         self.classifier = None
 
         self.bdd = bdd
+
+        self.l = logger
 
         self.getStopWords()
         self.initializePipeline()
@@ -77,6 +81,12 @@ class Predictor():
         self.x_train = np.array(self.x_train)
         self.y_train = np.array(self.y_train)
 
+        # If there is no liked articles, exit, otherwise
+        # causes an uncatchable exception
+        if not self.x_train or 1 not in self.y_train:
+            self.l.debug("Not enough data yet")
+            return None
+
         self.classifier = Pipeline([
             ('vectorizer', CountVectorizer(
                             stop_words=self.stop_words)),
@@ -86,7 +96,7 @@ class Predictor():
         try:
             self.classifier.fit(self.x_train, self.y_train)
         except ValueError:
-            print("Not enough data yet")
+            self.l.debug("Not enough data yet")
             return
 
 
@@ -95,7 +105,7 @@ class Predictor():
         """Calculate the match percentage for each article,
         based on the abstract text and the liked articles"""
 
-        print("Starting calculations of match percentages")
+        self.l.debug("Starting calculations of match percentages")
         start_time = datetime.datetime.now()
 
         query = QtSql.QSqlQuery(self.bdd)
@@ -120,14 +130,10 @@ class Predictor():
         try:
             list_percentages = [float(100 * proba[1]) for proba in self.classifier.predict_proba(x_test)]
         except ValueError:
-            print("Not enough data yet")
+            self.l.debug("Not enough data yet")
             return
 
-        if test:
-            print(list_percentages)
-
         else:
-
             self.bdd.transaction()
             query = QtSql.QSqlQuery(self.bdd)
 
@@ -143,13 +149,14 @@ class Predictor():
                 query.exec_()
 
             if self.bdd.commit():
-                print("updates ok")
+                self.l.debug("updates ok")
 
             elsapsed_time = datetime.datetime.now() - start_time
-            print("Done calculating match percentages in {0} s".format(elsapsed_time))
+            self.l.debug("Done calculating match percentages in {0} s".format(elsapsed_time))
 
 
 
 if __name__ == "__main__":
-    predictor = Predictor()
+    logger = MyLog()
+    predictor = Predictor(logger)
     predictor.calculatePercentageMatch(True)

@@ -289,7 +289,6 @@ def getData(journal, entry, response=None):
                 author = author.replace("*", "")
 
     else:
-        print("Error: journal not identified")
         return None
 
 
@@ -395,7 +394,8 @@ def getDoi(journal, entry):
     try:
         doi = doi.replace(" ", "")
     except UnboundLocalError:
-        print("Erreur in getDoi: {0}".format(journal))
+        # print("Erreur in getDoi: {0}".format(journal))
+        return None
 
     return doi
 

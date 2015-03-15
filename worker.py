@@ -261,7 +261,7 @@ class Worker(QtCore.QThread):
             params = (graphical_abstract, doi)
 
         else:
-            print("Bad return code: {}".format(response.status_code))
+            self.l.debug("Bad return code: {}".format(response.status_code))
             graphical_abstract = "Empty"
             verif = 0
 
@@ -273,8 +273,6 @@ class Worker(QtCore.QThread):
             query.addBindValue(value)
 
         query.exec_()
-
-        # self.checkFuturesRunning()
 
 
     def checkFuturesRunning(self):

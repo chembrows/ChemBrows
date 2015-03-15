@@ -3,13 +3,8 @@
 
 import sys
 import os
-import signal
-
 from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
-
 import fnmatch
-
-# DEBUG
 import datetime
 import webbrowser
 
@@ -23,22 +18,17 @@ from worker import Worker
 from predictor import Predictor
 from settings import Settings
 from advanced_search import AdvancedSearch
-# from proxy import ProxyPerso
 import functions
-
 
 
 class Fenetre(QtGui.QMainWindow):
 
-    def __init__(self):
+    def __init__(self, logger):
 
         super(Fenetre, self).__init__()
 
-        self.l = MyLog()
+        self.l = logger
         self.l.info('Starting the program')
-
-        # Set the logging level to Error (debugging)
-        self.l.setLevel(20)
 
         # Object to store options and preferences
         self.options = QtCore.QSettings("options.ini", QtCore.QSettings.IniFormat)
@@ -936,7 +926,7 @@ class Fenetre(QtGui.QMainWindow):
         try:
             self.scene.clear()
         except AttributeError:
-            self.l.warn("Pas d'objet scene pr l'instant.")
+            self.l.debug("No scene object for now")
 
         # Cleaning title, authors and abstract
         self.label_author.setText("")
@@ -982,7 +972,7 @@ class Fenetre(QtGui.QMainWindow):
         try:
             self.scene.clear()
         except AttributeError:
-            self.l.warn("Pas d'objet scene pr l'instant.")
+            self.l.debug("No scene object for now")
 
         # Cleaning title, authors and abstract
         self.label_author.setText("")
@@ -1175,9 +1165,11 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to calculate the match percentage"""
 
-        self.predictor = Predictor(self.bdd)
-        self.predictor.calculatePercentageMatch()
-        self.updateView()
+        self.predictor = Predictor(self.l, self.bdd)
+
+        if self.predictor.classifier is not None:
+            self.predictor.calculatePercentageMatch()
+            self.updateView()
 
 
     def toggleLike(self):
@@ -1398,20 +1390,25 @@ class Fenetre(QtGui.QMainWindow):
 if __name__ == '__main__':
 
     # Little hack to kill all the pending process
-    os.setpgrp()  # create new process group, become its leader
+    # os.setpgrp()  # create new process group, become its leader
     # app = QtGui.QApplication(sys.argv)
     # ex = Fenetre()
     # sys.exit(app.exec_())
     # os.killpg(0, signal.SIGKILL)  # kill all processes in my group
+
+    logger = MyLog()
     try:
         app = QtGui.QApplication(sys.argv)
-        ex = Fenetre()
+        ex = Fenetre(logger)
         sys.exit(app.exec_())
     except Exception as e:
+        # print(e)
         exc_type, exc_obj, exc_tb = sys.exc_info()
         exc_type = type(e).__name__
         fname = exc_tb.tb_frame.f_code.co_filename
-        print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-        print("{0}: {1}".format(exc_type, e))
-    finally:
-        os.killpg(0, signal.SIGKILL)  # kill all processes in my group
+        logger.warning("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
+        logger.warning("{0}: {1}".format(exc_type, e))
+        # print("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
+        # print("{0}: {1}".format(exc_type, e))
+    # finally:
+        # os.killpg(0, signal.SIGKILL)  # kill all processes in my group
