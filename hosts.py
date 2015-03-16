@@ -88,13 +88,13 @@ def getData(journal, entry, response=None):
         abstract = None
 
         soup = BeautifulSoup(entry.summary)
-        r = soup.find_all("a", attrs={"class": "figZoom"})
 
         abstract = soup.renderContents().decode()
 
         if abstract == "":
             abstract = None
 
+        r = soup.find_all("a", attrs={"class": "figZoom"})
         if r:
             # answer, graphical_abstract = downloadPic(r[0]['href'])
             graphical_abstract = r[0]['href']
@@ -243,7 +243,7 @@ def getData(journal, entry, response=None):
 
         if abstract:
             try:
-                author = abstract.split("Author(s): ")[1].split("<br />")[0]
+                author = abstract.split("Author(s): ")[1].split("<br")[0].split("<")[0]
                 author = author.replace(" , ", ", ")
                 author = author.replace("  ", " ")
             except IndexError:
@@ -254,7 +254,10 @@ def getData(journal, entry, response=None):
             if r:
                 graphical_abstract = r[0]['src']
 
-            abstract = abstract.split("<br />")[3].lstrip()
+            try:
+                abstract = abstract.split("<br />")[3].lstrip()
+            except IndexError:
+                abstract = ""
 
             if abstract == "":
                 abstract = None
@@ -467,7 +470,6 @@ def getJournals(company):
 if __name__ == "__main__":
     from requests_futures.sessions import FuturesSession
     import functools
-    import collections
 
     def print_result(journal, entry, future):
         response = future.result()
@@ -479,7 +481,7 @@ if __name__ == "__main__":
 
     # urls_test = ["debug/ang.xml"]
     # urls_test = ["http://rss.sciencedirect.com/publication/science/10745521"]
-    urls_test = ["debug/ec.htm"]
+    urls_test = ["debug/jcromaA.htm"]
     # urls_test = ["debug/tet_op.htm"]
     # urls_test = ["http://feeds.rsc.org/rss/nj"]
     # urls_test = ["http://feeds.rsc.org/rss/sc"]
@@ -500,13 +502,13 @@ if __name__ == "__main__":
     feed = feedparser.parse(urls_test[0])
     journal = feed['feed']['title']
 
-    print(journal)
+    # print(journal)
 
     # titles = [ entry.title for entry in feed.entries]
 
     # print([x for x, y in collections.Counter(titles).items() if y > 1])
 
-    for entry in feed.entries[1:]:
+    for entry in feed.entries[2:]:
         # print(entry)
         url = entry.link
         # title = entry.title
