@@ -27,6 +27,15 @@ class Fenetre(QtGui.QMainWindow):
 
         super(Fenetre, self).__init__()
 
+        # Display a splash screen when booting
+        # http://eli.thegreenplace.net/2009/05/09/creating-splash-screens-in-pyqt
+        # CAREFUL, there is a bug with the splash screen
+        # https://bugreports.qt.io/browse/QTBUG-24910
+        splash_pix = QtGui.QPixmap('images/splash_screen.png')
+        splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+        splash.show()
+        app.processEvents()
+
         self.l = logger
         self.l.info('Starting the program')
 
@@ -43,12 +52,22 @@ class Fenetre(QtGui.QMainWindow):
         self.liste_models_in_tabs = []
         self.liste_proxies_in_tabs = []
 
+        # Call processEvents regularly for the splash screen
+        app.processEvents()
         self.connectionBdd()
+        app.processEvents()
         self.defineActions()
+        app.processEvents()
         self.initUI()
         self.defineSlots()
+        app.processEvents()
         self.displayTags()
+        app.processEvents()
         self.restoreSettings()
+        app.processEvents()
+
+        self.show()
+        splash.finish(self)
 
 
     def connectionBdd(self):
@@ -125,6 +144,7 @@ class Fenetre(QtGui.QMainWindow):
         self.start_time = datetime.datetime.now()
 
         # Display the progress bar for the parsing
+        self.progress_parsing.setValue(0)
         self.action_label_progress.setVisible(True)
         self.action_progress.setVisible(True)
 
@@ -1418,14 +1438,16 @@ class Fenetre(QtGui.QMainWindow):
         # self.setCentralWidget(self.splitter2)
         self.setCentralWidget(self.central_widget)
 
-        self.show()
+        # self.show()
 
 
 if __name__ == '__main__':
     logger = MyLog()
     try:
         app = QtGui.QApplication(sys.argv)
+        app.setWindowIcon(QtGui.QIcon('images/icon_main.png'))
         ex = Fenetre(logger)
+        app.processEvents()
         sys.exit(app.exec_())
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
