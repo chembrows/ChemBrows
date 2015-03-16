@@ -297,6 +297,7 @@ class Fenetre(QtGui.QMainWindow):
             # -> 1 - reverse = 1 -> DescendingOrder -> starts with the
             # highest percentages
             table.sortByColumn(method_nbr, 1 - reverse)
+        self.updateView()
 
 
     def updateModel(self):
@@ -1426,7 +1427,6 @@ if __name__ == '__main__':
         app = QtGui.QApplication(sys.argv)
         ex = Fenetre(logger)
         sys.exit(app.exec_())
-
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         exc_type = type(e).__name__

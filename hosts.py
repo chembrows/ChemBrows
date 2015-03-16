@@ -90,12 +90,15 @@ def getData(journal, entry, response=None):
         soup = BeautifulSoup(entry.summary)
         r = soup.find_all("a", attrs={"class": "figZoom"})
 
+        abstract = soup.renderContents().decode()
+
+        if abstract == "":
+            abstract = None
+
         if r:
             # answer, graphical_abstract = downloadPic(r[0]['href'])
             graphical_abstract = r[0]['href']
             r[0].replaceWith("")
-            abstract = soup.renderContents().decode()
-
 
     elif journal in acs:
 
@@ -469,13 +472,14 @@ if __name__ == "__main__":
     def print_result(journal, entry, future):
         response = future.result()
         title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = getData(journal, entry, response)
+        print(abstract)
         # print(authors)
         # print(title)
 
 
     # urls_test = ["debug/ang.xml"]
     # urls_test = ["http://rss.sciencedirect.com/publication/science/10745521"]
-    urls_test = ["debug/syn.xml"]
+    urls_test = ["debug/ec.htm"]
     # urls_test = ["debug/tet_op.htm"]
     # urls_test = ["http://feeds.rsc.org/rss/nj"]
     # urls_test = ["http://feeds.rsc.org/rss/sc"]

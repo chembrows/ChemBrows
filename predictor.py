@@ -78,18 +78,12 @@ class Predictor():
             self.x_train.append(abstract)
             self.y_train.append(category)
 
-        self.x_train = np.array(self.x_train)
-        self.y_train = np.array(self.y_train)
-
-        # If there is no liked articles, exit, otherwise
-        # causes an uncatchable exception
-        try:
-            if not self.x_train or 1 not in self.y_train:
-                self.l.debug("Not enough data yet")
-                return None
-        except ValueError:
+        if not self.x_train or 1 not in self.y_train:
             self.l.debug("Not enough data yet")
             return None
+
+        self.x_train = np.array(self.x_train)
+        self.y_train = np.array(self.y_train)
 
         self.classifier = Pipeline([
             ('vectorizer', CountVectorizer(
