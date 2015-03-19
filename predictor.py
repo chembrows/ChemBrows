@@ -53,6 +53,8 @@ class Predictor():
 
         """Initialize the pipeline for text analysis"""
 
+        start_time = datetime.datetime.now()
+
         if self.bdd is None:
             self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
             self.bdd.setDatabaseName("fichiers.sqlite")
@@ -97,6 +99,9 @@ class Predictor():
             self.l.debug("Not enough data yet")
             return
 
+        elsapsed_time = datetime.datetime.now() - start_time
+        self.l.debug("Initializing classifier in {0} s".format(elsapsed_time))
+
 
     def calculatePercentageMatch(self, test=False):
 
@@ -131,26 +136,25 @@ class Predictor():
             self.l.debug("Not enough data yet")
             return
 
-        else:
-            self.bdd.transaction()
-            query = QtSql.QSqlQuery(self.bdd)
+        self.bdd.transaction()
+        query = QtSql.QSqlQuery(self.bdd)
 
-            query.prepare("UPDATE papers SET percentage_match = ? WHERE id = ?")
+        query.prepare("UPDATE papers SET percentage_match = ? WHERE id = ?")
 
-            for id_bdd, percentage in zip(list_id, list_percentages):
+        for id_bdd, percentage in zip(list_id, list_percentages):
 
-                params = (percentage, id_bdd)
+            params = (percentage, id_bdd)
 
-                for value in params:
-                    query.addBindValue(value)
+            for value in params:
+                query.addBindValue(value)
 
-                query.exec_()
+            query.exec_()
 
-            if self.bdd.commit():
-                self.l.debug("updates ok")
+        if self.bdd.commit():
+            self.l.debug("updates ok")
 
-            elsapsed_time = datetime.datetime.now() - start_time
-            self.l.debug("Done calculating match percentages in {0} s".format(elsapsed_time))
+        elsapsed_time = datetime.datetime.now() - start_time
+        self.l.debug("Done calculating match percentages in {0} s".format(elsapsed_time))
 
 
 
