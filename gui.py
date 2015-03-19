@@ -1395,7 +1395,8 @@ class Fenetre(QtGui.QMainWindow):
 
         # Get the default font and use it for the QWebView
         self.web_settings.setFontFamily(QtWebKit.QWebSettings.StandardFont, self.font().family())
-        self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 18)
+        # self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 18)
+        self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 16)
 
         # Building the grid
         self.grid_area_right_top.addWidget(prelabel_title, 0, 0)
