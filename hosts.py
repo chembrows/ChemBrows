@@ -1,16 +1,11 @@
 #!/usr/bin/python
 # -*-coding:Utf-8 -*
 
-# import sys
-# import os
 import feedparser
 from bs4 import BeautifulSoup
 import requests
-# from io import open as iopen
 import arrow
-
-# TEST
-import re
+from time import mktime
 
 # Personal modules
 import functions
@@ -33,6 +28,7 @@ def getData(journal, entry, response=None):
     nas, nas_abb, _ = getJournals("nas")
     elsevier, elsevier_abb, _ = getJournals("elsevier")
     thieme, thieme_abb, _ = getJournals("thieme")
+    beil, beil_abb, _ = getJournals("beilstein")
 
     # If the journal is edited by the RSC
     if journal in rsc:
@@ -48,23 +44,28 @@ def getData(journal, entry, response=None):
 
         abstract = None
         graphical_abstract = None
+        author = None
 
         soup = BeautifulSoup(entry.summary)
 
-        r = soup.find_all("div")
-
-        author = None
-
-        graphical_abstract = r[0].img
-        if graphical_abstract is not None:
-            graphical_abstract = r[0].img['src']
+        r = soup.find_all("img", align="center")
+        if r:
+            graphical_abstract = r[0]['src']
 
         if response.status_code is requests.codes.ok:
-            # Get the abstract
             soup = BeautifulSoup(response.text)
-            r = soup.find_all("meta", attrs={"name": "citation_abstract"})
+
+            # Get the title (w/ html)
+            title = soup("h2", attrs={"class": "alpH1"})
+            if title:
+                title = title[0].renderContents().decode().lstrip().rstrip()
+
+            # Get the abstrat (w/ html)
+            r = soup.find_all("p", xmlns="http://www.rsc.org/schema/rscart38")
             if r:
-                abstract = r[0]['content']
+                abstract = r[0].renderContents().decode()
+                if abstract == "":
+                    abstract = None
 
             r = soup.find_all("meta", attrs={"name": "citation_author"})
             if r:
@@ -241,6 +242,7 @@ def getData(journal, entry, response=None):
 
         abstract = entry.summary
 
+        # TODO: utiliser renderContents
         if abstract:
             try:
                 author = abstract.split("Author(s): ")[1].split("<br")[0].split("<")[0]
@@ -274,25 +276,56 @@ def getData(journal, entry, response=None):
         graphical_abstract = None
         author = None
 
-        if entry.summary != "":
-            abstract = entry.summary
-            abstract = entry.content[0].value
-            abstract = abstract.split("<br />")[3]
-
-        soup = BeautifulSoup(entry.content[0].value)
-        r = soup.find_all("img")
-        if r:
-            graphical_abstract = r[0]['src']
-
         if response.status_code is requests.codes.ok:
-            # Get the abstract
+
             soup = BeautifulSoup(response.text)
+
+            if entry.summary != "":
+                abstract = soup("section", id="abstract")[0]
+                abstract("div", attrs={"class": "articleFunctions"})[0].extract()
+                [tag.extract() for tag in soup("a", attrs={"name": True})]
+
+                try:
+                    abstract("div", attrs={"class": "articleKeywords"})[0].extract()
+                except IndexError:
+                    pass
+
+                abstract = abstract.renderContents().decode()
+
             r = soup.find_all("span", id="authorlist")
             if r:
                 author = r[0].text
                 author = author.replace("*a, b", "")
                 author = author.replace("*a", "")
                 author = author.replace("*", "")
+
+
+    elif journal in beil:
+
+        title = entry.title
+        journal_abb = beil_abb[beil.index(journal)]
+        date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
+        url = entry.link
+
+        abstract = None
+        graphical_abstract = None
+        author = None
+
+        if entry.summary != "":
+            soup = BeautifulSoup(entry.summary)
+            abstract = [tag.renderContents().decode() for tag in soup("p")[:-2]]
+            abstract = "".join(abstract)
+            print(abstract)
+            # graphical_abstract = soup("p")[-2]
+            # abstract = entry.content[0].value
+            # abstract = abstract.split("<br />")[3]
+
+        # soup = BeautifulSoup(entry.content[0].value)
+        # r = soup.find_all("img")
+        # if r:
+            # graphical_abstract = r[0]['src']
+        # print(abstract)
+        # print(graphical_abstract)
 
     else:
         return None
@@ -363,6 +396,7 @@ def getDoi(journal, entry):
     nas = getJournals("nas")[0]
     elsevier = getJournals("elsevier")[0]
     thieme = getJournals("thieme")[0]
+    beil = getJournals("beilstein")[0]
 
     if journal in rsc:
         soup = BeautifulSoup(entry.summary)
@@ -406,49 +440,6 @@ def getDoi(journal, entry):
     return doi
 
 
-# def downloadPic(url):
-
-    # """The parameter is a list. The function will be able to evolve"""
-
-    # # On essaie de récupérer chaque page correspondant
-    # # à chaque url, ac un timeout
-    # try:
-        # # On utilise un user-agent de browser,
-        # # ds le cas où les hébergeurs bloquent les bots
-        # headers = {'User-agent': 'Mozilla/5.0'}
-
-        # # On rajoute l'url de base comme referer,
-        # # car certains sites bloquent l'accès direct aux images
-        # headers["Referer"] = url
-
-        # page = requests.get(url, timeout=20, headers=headers)
-
-        # # Si la page a bien été récupérée
-        # if page.status_code == requests.codes.ok:
-
-            # path = "./graphical_abstracts/"
-
-            # # On enregistre la page
-            # with iopen(path + functions.simpleChar(url), 'wb') as file:
-                # file.write(page.content)
-                # # l.debug("image ok")
-
-                # # On sort True si on matche une des possibilités
-                # # de l'url
-                # return True, functions.simpleChar(url)
-
-        # elif page.status_code != requests.codes.ok:
-            # print("Bad return code: {0}".format(page.status_code))
-            # return "wrongPage", None
-
-    # except requests.exceptions.Timeout:
-        # print("downloadPic, timeout")
-        # return "timeOut", None
-    # except Exception as e:
-        # print("toujours")
-        # print(e)
-
-
 def getJournals(company):
 
     """Function to get the journal name and its abbreviation"""
@@ -474,45 +465,31 @@ if __name__ == "__main__":
     def print_result(journal, entry, future):
         response = future.result()
         title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = getData(journal, entry, response)
-        print(abstract)
+        # print(abstract)
         # print(authors)
         # print(title)
 
-
-    # urls_test = ["debug/ang.xml"]
-    # urls_test = ["http://rss.sciencedirect.com/publication/science/10745521"]
-    urls_test = ["debug/jcromaA.htm"]
-    # urls_test = ["debug/tet_op.htm"]
-    # urls_test = ["http://feeds.rsc.org/rss/nj"]
-    # urls_test = ["http://feeds.rsc.org/rss/sc"]
-    # urls_test = ["debug/science.xml"]
-    # urls_test = ["debug/med_chem.htm"]
-    # urls_test = ["debug/sm.htm"]
-    # urls_test = ["http://rss.sciencedirect.com/publication/science/00404020/open-access",
-                 # "http://rss.sciencedirect.com/publication/science/00404020"]
-
+    # urls_test = ["debug/bel.xml"]
+    # urls_test = ["debug/syn.xml"]
+    urls_test = ["debug/njc.htm"]
 
     session = FuturesSession(max_workers=50)
-    # session = FuturesSession()
 
     list_urls = []
-
-    # for site in urls_test:
 
     feed = feedparser.parse(urls_test[0])
     journal = feed['feed']['title']
 
-    # print(journal)
+    print(journal)
 
-    # titles = [ entry.title for entry in feed.entries]
-
-    # print([x for x, y in collections.Counter(titles).items() if y > 1])
-
-    for entry in feed.entries[2:]:
-        # print(entry)
+    for entry in feed.entries:
         url = entry.link
-        # title = entry.title
+        title = entry.title
+        # if title != "Three-dimensional graphene hydrogel supported ultrafine RuO2 nanoparticles for supercapacitor electrodes":
+            # continue
+        # print(entry)
+        # print(url)
         # print(title)
         future = session.get(url)
         future.add_done_callback(functools.partial(print_result, journal, entry))
-        break
+        # break

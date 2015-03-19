@@ -107,6 +107,46 @@ class Fenetre(QtGui.QMainWindow):
 
         return journals
 
+    # def importation(self):
+
+        # """Slot pour importer un dossier contenant des fichiers"""
+
+        # dossier = QtGui.QFileDialog.getExistingDirectory(self, 'Open file', '/home')
+
+        # #  création du QProgressDialog
+        # self.progress = QtGui.QProgressDialog("Importation en cours...", None, 0, 100, self)
+        # self.progress.setWindowTitle("Importation")
+
+        # # Execution de l'importation
+        # # On envoie le callback majProgression à la fct d'import de liste.py
+        # self.bdd.close()
+        # liste.importation(dossier, self.l, self.majProgression)
+        # self.bdd.open()
+
+        # # On réinitialise l'affichage
+        # self.resetView()
+
+
+    # def majProgression(self, pourcent, fraction, nom_fichier, dossier_courant):
+
+        # """Callback pour mettre à jour le pourcentage de la progress bar lors
+        # de l'import"""
+
+        # # Affichage du progressDialog
+        # # On ne crée pas la progressBar ici, sinon elle ne disparait pas
+        # # à la fin de l'import
+        # self.progress.show()
+
+        # self.progress.setValue(pourcent)
+        # self.progress.setWindowTitle("Importation du dossier {0}".format(dossier_courant))
+        # self.progress.setLabelText("{0}, ".format(fraction) + nom_fichier)
+
+        # if pourcent >= 100:
+            # self.progress.reset()
+
+        # QtCore.QCoreApplication.processEvents()
+
+
 
     def parse(self):
 
@@ -454,29 +494,32 @@ class Fenetre(QtGui.QMainWindow):
         # do not hide menubar when menu shown
         if QtGui.qApp.activePopupWidget() is None:
             if event.type() == QtCore.QEvent.MouseMove:
-                if self.scroll_tags.isHidden():
-                    try:
-                        # Calculate the top zone where resizing can't happen (menubar, toolbar, etc)
-                        table_y = self.toolbar.rect().height() + self.menubar.rect().height() + \
-                                self.mapToGlobal(QtCore.QPoint(0, 0)).y() + self.hbox_central.getContentsMargins()[1]
-                    except AttributeError:
-                        pass
-                    rect = self.geometry()
-                    rect.setWidth(25)
-                    rect.setTop(table_y)
+                try:
+                    if self.scroll_tags.isHidden():
+                        try:
+                            # Calculate the top zone where resizing can't happen (menubar, toolbar, etc)
+                            table_y = self.toolbar.rect().height() + self.menubar.rect().height() + \
+                                    self.mapToGlobal(QtCore.QPoint(0, 0)).y() + self.hbox_central.getContentsMargins()[1]
+                        except AttributeError:
+                            pass
+                        rect = self.geometry()
+                        rect.setWidth(25)
+                        rect.setTop(table_y)
 
-                    if rect.contains(event.globalPos()):
-                        self.scroll_tags.show()
-                else:
-                    width_layout = self.hbox_central.getContentsMargins()[2]
-                    rect = QtCore.QRect(
-                        self.scroll_tags.mapToGlobal(QtCore.QPoint(-width_layout, 0)),
-                        self.scroll_tags.size())
-                    if not rect.contains(event.globalPos()):
-                        self.scroll_tags.hide()
-                        # Give enough time to the program to get new splitter size,
-                        # before resizing the cells
-                        QtCore.QTimer.singleShot(20, self.updateCellSize)
+                        if rect.contains(event.globalPos()):
+                            self.scroll_tags.show()
+                    else:
+                        width_layout = self.hbox_central.getContentsMargins()[2]
+                        rect = QtCore.QRect(
+                            self.scroll_tags.mapToGlobal(QtCore.QPoint(-width_layout, 0)),
+                            self.scroll_tags.size())
+                        if not rect.contains(event.globalPos()):
+                            self.scroll_tags.hide()
+                            # Give enough time to the program to get new splitter size,
+                            # before resizing the cells
+                            QtCore.QTimer.singleShot(20, self.updateCellSize)
+                except AttributeError:
+                    self.l.debug("Event filter, AttributeError, probably starting the program")
 
             elif event.type() == QtCore.QEvent.Leave and source is self:
                 self.scroll_tags.hide()

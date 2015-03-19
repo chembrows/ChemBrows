@@ -202,22 +202,12 @@ def checkData():
     bdd.row_factory = sqlite3.Row
     c = bdd.cursor()
 
-    piece1 = "SELECT * FROM papers WHERE authors_simple LIKE '% cottet %' OR authors_simple LIKE '% chamieh %' OR authors_simple LIKE '% boiteau %' OR authors_simple LIKE '% rossi %' OR authors_simple LIKE '% beaufils %'"
-
-    piece2 = " AND journal='ACS Chem. Biol.'"
-    print(piece1 + piece2)
-
-    # c.execute(piece1)
-    c.execute(piece1 + piece2)
+    c.execute("SELECT id, abstract FROM papers")
 
     results = c.fetchall()
 
-    i = 0
     for line in results:
-        print(line['title'])
-        print(line['journal'])
-        i += 1
-    print(i)
+        c.execute("UPDATE papers SET percentage_match = ? WHERE id = ?")
     c.close()
     bdd.close()
 
