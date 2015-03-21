@@ -48,7 +48,7 @@ def getData(journal, entry, response=None):
 
         soup = BeautifulSoup(entry.summary)
 
-        r = soup.find_all("img", align="center")
+        r = soup("img", align="center")
         if r:
             graphical_abstract = r[0]['src']
 
@@ -61,13 +61,13 @@ def getData(journal, entry, response=None):
                 title = title[0].renderContents().decode().lstrip().rstrip()
 
             # Get the abstrat (w/ html)
-            r = soup.find_all("p", xmlns="http://www.rsc.org/schema/rscart38")
+            r = soup("p", xmlns="http://www.rsc.org/schema/rscart38")
             if r:
                 abstract = r[0].renderContents().decode()
                 if abstract == "":
                     abstract = None
 
-            r = soup.find_all("meta", attrs={"name": "citation_author"})
+            r = soup("meta", attrs={"name": "citation_author"})
             if r:
                 author = [tag['content'] for tag in r]
                 author = ", ".join(author)
@@ -89,17 +89,41 @@ def getData(journal, entry, response=None):
         abstract = None
 
         soup = BeautifulSoup(entry.summary)
+        try:
+            # Remove the title "Abstract" from the abstract
+            soup("h3")[0].extract()
+        except IndexError:
+            pass
+        r = soup("a", attrs={"class": "figZoom"})
+        if r:
+            # Define the graphical abstract by extracting it
+            # (and deleting it) from the abstract
+            graphical_abstract = r[0].extract()
+            graphical_abstract = graphical_abstract['href']
 
         abstract = soup.renderContents().decode()
 
         if abstract == "":
             abstract = None
 
-        r = soup.find_all("a", attrs={"class": "figZoom"})
-        if r:
-            # answer, graphical_abstract = downloadPic(r[0]['href'])
-            graphical_abstract = r[0]['href']
-            r[0].replaceWith("")
+        if response.status_code is requests.codes.ok:
+            soup = BeautifulSoup(response.text)
+
+            # Get the title (w/ html)
+            r = soup("span", attrs={"class": "mainTitle"})
+            if r:
+                try:
+                    # Remove the sign for the supplementary infos
+                    r[0]("a", href="#nss")[0].extract()
+                except IndexError:
+                    pass
+
+                # Remove the image representing a bond
+                try:
+                    r[0]("img", alt="[BOND]")[0].replaceWith("-")
+                    title = r[0].renderContents().decode().lstrip().rstrip()
+                except IndexError:
+                    title = r[0].renderContents().decode().lstrip().rstrip()
 
     elif journal in acs:
 
@@ -124,17 +148,22 @@ def getData(journal, entry, response=None):
 
         graphical_abstract = None
 
+        soup = BeautifulSoup(entry.summary)
+        r = soup("img", alt="TOC Graphic")
+        if r:
+            graphical_abstract = r[0]['src']
+
         # If the dl went wrong, print an error
         if response.status_code is requests.codes.ok:
             soup = BeautifulSoup(response.text)
-            r = soup.find_all("p", attrs={"class": "articleBody_abstractText"})
-            if r:
-                abstract = r[0].text
 
-            soup = BeautifulSoup(entry.summary)
-            r = soup.find_all("img", alt="TOC Graphic")
+            r = soup("p", attrs={"class": "articleBody_abstractText"})
             if r:
-                graphical_abstract = r[0]['src']
+                abstract = r[0].renderContents().decode()
+
+            r = soup("h1", attrs={"class": "articleTitle"})
+            if r:
+                title = r[0].renderContents().decode()
 
 
     elif journal in npg:
@@ -142,7 +171,8 @@ def getData(journal, entry, response=None):
         title = entry.title
         journal_abb = npg_abb[npg.index(journal)]
         date = entry.date
-        url = entry.id
+        # url = entry.id
+        url = entry.feedburner_origlink
         abstract = entry.summary
         graphical_abstract = None
         author = None
@@ -150,6 +180,7 @@ def getData(journal, entry, response=None):
         soup = BeautifulSoup(entry.content[0].value)
         r = soup.find_all("p")
 
+        # TODO: corrigendum, erratum
         if r:
             for p in r:
                 if "Authors:" in p.text:
@@ -160,17 +191,26 @@ def getData(journal, entry, response=None):
 
                     author = ", ".join(author)
 
-        # If the dl went wrong, print an error
-        if response.status_code is requests.codes.ok:
+        if response.status_code is requests.codes.ok or response.status_code == 401:
             soup = BeautifulSoup(response.text)
-            r = soup.find_all("img", attrs={"class": "fig"})
 
+            r = soup.find_all("h1", attrs={"class": "article-heading"})
+            if r:
+                title = r[0].renderContents().decode()
+
+            r = soup.find_all("div", attrs={"id": "first-paragraph"})
+            if r:
+                # [tag.extract() for tag in r[0]("a", title=True)]
+                abstract = r[0].renderContents().decode()
+
+            r = soup.find_all("img", attrs={"class": "fig"})
             if r:
                 if "f1.jpg" in r[0]["src"]:
                     graphical_abstract ="http://www.nature.com" + r[0]["src"]
 
                     if "carousel" in graphical_abstract:
                         graphical_abstract = graphical_abstract.replace("carousel", "images_article")
+
 
     elif journal in science:
 
@@ -215,7 +255,7 @@ def getData(journal, entry, response=None):
             # Get the correct title, no the one in the RSS
             r = soup.find_all("h1", id="article-title-1")
             if r:
-                title = r[0].text
+                title = r[0].renderContents().decode()
             # print(soup)
             # r = soup.find_all("p", id=re.compile("p-[1-9]"))
             # string = [tag.text for tag in r]
@@ -233,7 +273,6 @@ def getData(journal, entry, response=None):
 
         title = entry.title
         journal_abb = elsevier_abb[elsevier.index(journal)]
-        # date = entry.updated_parsed
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
         url = entry.id
 
@@ -242,7 +281,6 @@ def getData(journal, entry, response=None):
 
         abstract = entry.summary
 
-        # TODO: utiliser renderContents
         if abstract:
             try:
                 author = abstract.split("Author(s): ")[1].split("<br")[0].split("<")[0]
@@ -264,6 +302,19 @@ def getData(journal, entry, response=None):
             if abstract == "":
                 abstract = None
 
+        # NOTE: javascript embedded, impossible
+        # if response.status_code is requests.codes.ok:
+            # url = response.url
+            # print(response.url)
+            # # Get the abstract
+            # soup = BeautifulSoup(response.text)
+
+            # Get the correct title, no the one in the RSS
+            # r = soup.find_all("li", attrs={"class": "originalArticleName"})
+            # print(r)
+            # if r:
+                # title = r[0].renderContents().decode()
+
 
     elif journal in thieme:
 
@@ -281,9 +332,13 @@ def getData(journal, entry, response=None):
             soup = BeautifulSoup(response.text)
 
             if entry.summary != "":
+                # Get the abstract, and clean it
                 abstract = soup("section", id="abstract")[0]
                 abstract("div", attrs={"class": "articleFunctions"})[0].extract()
-                [tag.extract() for tag in soup("a", attrs={"name": True})]
+                [tag.extract() for tag in abstract("a", attrs={"name": True})]
+                [tag.extract() for tag in abstract("h3")]
+                [tag.extract() for tag in abstract("ul", attrs={"class": "linkList"})]
+                [tag.extract() for tag in abstract("a", attrs={"class": "gotolink"})]
 
                 try:
                     abstract("div", attrs={"class": "articleKeywords"})[0].extract()
@@ -400,7 +455,7 @@ def getDoi(journal, entry):
 
     if journal in rsc:
         soup = BeautifulSoup(entry.summary)
-        r = soup.find_all("div")
+        r = soup("div")
         try:
             doi = r[0].text.split("DOI: ")[1].split(",")[0]
         except IndexError:
@@ -466,12 +521,14 @@ if __name__ == "__main__":
         response = future.result()
         title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = getData(journal, entry, response)
         # print(abstract)
+        # print(graphical_abstract)
         # print(authors)
         # print(title)
 
     # urls_test = ["debug/bel.xml"]
     # urls_test = ["debug/syn.xml"]
-    urls_test = ["debug/njc.htm"]
+    # urls_test = ["debug/ang.htm"]
+    urls_test = ["debug/npg.htm"]
 
     session = FuturesSession(max_workers=50)
 
@@ -482,14 +539,22 @@ if __name__ == "__main__":
 
     print(journal)
 
-    for entry in feed.entries:
-        url = entry.link
+    for entry in feed.entries[7:]:
+        # url = entry.link
+        url = entry.feedburner_origlink
         title = entry.title
-        # if title != "Three-dimensional graphene hydrogel supported ultrafine RuO2 nanoparticles for supercapacitor electrodes":
+        # if title != "A Facile and Versatile Approach to Double N-Heterohelicenes: Tandem Oxidative CN Couplings of N-Heteroacenes via Cruciform Dimers":
             # continue
+        if "Atomic" not in title:
+            continue
+        print(url)
+        print(title)
         # print(entry)
         # print(url)
         # print(title)
-        future = session.get(url)
+        # headers = {'User-agent': 'Mozilla/5.0'}
+        # headers["Referer"] = url
+        # future = session.get(url, headers=headers, timeout=20)
+        future = session.get(url, timeout=20)
         future.add_done_callback(functools.partial(print_result, journal, entry))
         # break

@@ -91,7 +91,8 @@ class Worker(QtCore.QThread):
         self.bdd.transaction()
 
         # The feeds of these journals are complete
-        if journal in wiley + science + elsevier:
+        # if journal in wiley + science + elsevier:
+        if journal in science + elsevier:
 
             self.list_futures_urls = [True] * len(self.feed.entries)
 
