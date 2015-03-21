@@ -31,7 +31,8 @@ class Fenetre(QtGui.QMainWindow):
         # http://eli.thegreenplace.net/2009/05/09/creating-splash-screens-in-pyqt
         # CAREFUL, there is a bug with the splash screen
         # https://bugreports.qt.io/browse/QTBUG-24910
-        splash_pix = QtGui.QPixmap('images/splash_screen.png')
+        # splash_pix = QtGui.QPixmap('images/splash_screen.png')
+        splash_pix = QtGui.QPixmap('images/splash.png')
         splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
         splash.show()
         app.processEvents()

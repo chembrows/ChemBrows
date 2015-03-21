@@ -85,13 +85,15 @@ class Worker(QtCore.QThread):
         nas = hosts.getJournals("nas")[0]
         elsevier = hosts.getJournals("elsevier")[0]
         thieme = hosts.getJournals("thieme")[0]
+        beil = hosts.getJournals("beilstein")[0]
 
         query = QtSql.QSqlQuery(self.bdd)
 
         self.bdd.transaction()
 
         # The feeds of these journals are complete
-        if journal in wiley + science + elsevier:
+        # if journal in wiley + science + elsevier:
+        if journal in science + elsevier + beil:
 
             self.list_futures_urls = [True] * len(self.feed.entries)
 

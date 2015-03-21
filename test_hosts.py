@@ -9,8 +9,8 @@ import random
 
 import hosts
 
+LENGTH_SAMPLE = 5
 
-# worker = Worker(site, self.l, self.bdd)
 
 def test_getJournals():
 
@@ -24,6 +24,8 @@ def test_getJournals():
     science = hosts.getJournals("science")
     nas = hosts.getJournals("nas")
     elsevier = hosts.getJournals("elsevier")
+    thieme = hosts.getJournals("thieme")
+    beil = hosts.getJournals("beilstein")
 
     assert type(rsc) == tuple
     assert type(acs) == tuple
@@ -32,12 +34,15 @@ def test_getJournals():
     assert type(science) == tuple
     assert type(nas) == tuple
     assert type(elsevier) == tuple
+    assert type(thieme) == tuple
+    assert type(beil) == tuple
 
-    total = rsc + acs + wiley + npg + science + nas + elsevier
+    total = rsc + acs + wiley + npg + science + nas + elsevier + thieme + beil
 
     for publisher in total:
         for chain in publisher:
             assert type(chain) == str
+
 
 @pytest.fixture()
 def journalsUrls():
@@ -45,7 +50,7 @@ def journalsUrls():
     """Returns a list. One journal per publisher,
     chosen randomly from all the journals of each publisher"""
 
-    urls = []
+    # urls = []
     _, rsc_abb, rsc_urls = hosts.getJournals("rsc")
     _, acs_abb, acs_urls = hosts.getJournals("acs")
     _, wiley_abb, wiley_urls = hosts.getJournals("wiley")
@@ -54,23 +59,25 @@ def journalsUrls():
     _, nas_abb, nas_urls = hosts.getJournals("nas")
     _, elsevier_abb, elsevier_urls = hosts.getJournals("elsevier")
     _, thieme_abb, thieme_urls = hosts.getJournals("thieme")
+    _, beil_abb, beil_urls = hosts.getJournals("beilstein")
 
     # Pick one site from each publisher
-    urls.append(random.choice(rsc_urls))
-    urls.append(random.choice(acs_urls))
-    urls.append(random.choice(wiley_urls))
-    urls.append(random.choice(npg_urls))
-    urls.append(random.choice(science_urls))
-    urls.append(random.choice(nas_urls))
-    urls.append(random.choice(elsevier_urls))
-    urls.append(random.choice(thieme_urls))
+    # urls.append(random.choice(rsc_urls))
+    # urls.append(random.choice(acs_urls))
+    # urls.append(random.choice(wiley_urls))
+    # urls.append(random.choice(npg_urls))
+    # urls.append(random.choice(science_urls))
+    # urls.append(random.choice(nas_urls))
+    # urls.append(random.choice(elsevier_urls))
+    # urls.append(random.choice(thieme_urls))
 
-    abbs = rsc_abb + acs_abb + wiley_abb + npg_abb + science_abb + nas_abb + elsevier_abb + thieme_abb
-    sites_urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls + nas_urls + elsevier_urls + thieme_urls
+    # abbs = rsc_abb + acs_abb + wiley_abb + npg_abb + science_abb + nas_abb + elsevier_abb + thieme_abb
+    urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls + \
+           nas_urls + elsevier_urls + thieme_urls + beil_urls
 
-    print("\n")
-    for site in urls:
-        print(abbs[sites_urls.index(site)])
+    # print("\n")
+    # for site in urls:
+        # print(abbs[sites_urls.index(site)])
 
     return urls
 
@@ -90,16 +97,25 @@ def test_getData(journalsUrls):
     nas = hosts.getJournals("nas")[0]
     elsevier = hosts.getJournals("elsevier")[0]
     thieme = hosts.getJournals("thieme")[0]
+    beil = hosts.getJournals("beilstein")[0]
 
     i = 1
     for site in list_sites:
         feed = feedparser.parse(site)
         journal = feed['feed']['title']
 
-        # Tests 3 entries for a journal, not all of them
-        for entry in random.sample(feed.entries, 3):
+        print("\n")
+        print(journal)
 
-            if journal in science + wiley:
+        if len(feed.entries) < LENGTH_SAMPLE:
+            samples = feed.entries
+        else:
+            samples = random.sample(feed.entries, LENGTH_SAMPLE)
+
+        # Tests 3 entries for a journal, not all of them
+        for entry in samples:
+
+            if journal in science:
                 title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
             else:
                 try:
@@ -137,6 +153,7 @@ def test_getDoi(journalsUrls):
         print("{}: {}".format(site, len(feed.entries)))
 
         # Tests 3 entries for a journal, not all of them
+        # for entry in random.sample(feed.entries, 3):
         for entry in random.sample(feed.entries, 3):
 
             doi = hosts.getDoi(journal, entry)
