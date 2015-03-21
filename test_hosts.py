@@ -25,6 +25,7 @@ def test_getJournals():
     nas = hosts.getJournals("nas")
     elsevier = hosts.getJournals("elsevier")
     thieme = hosts.getJournals("thieme")
+    beil = hosts.getJournals("beilstein")
 
     assert type(rsc) == tuple
     assert type(acs) == tuple
@@ -34,12 +35,14 @@ def test_getJournals():
     assert type(nas) == tuple
     assert type(elsevier) == tuple
     assert type(thieme) == tuple
+    assert type(beil) == tuple
 
-    total = rsc + acs + wiley + npg + science + nas + elsevier + thieme
+    total = rsc + acs + wiley + npg + science + nas + elsevier + thieme + beil
 
     for publisher in total:
         for chain in publisher:
             assert type(chain) == str
+
 
 @pytest.fixture()
 def journalsUrls():
@@ -56,6 +59,7 @@ def journalsUrls():
     _, nas_abb, nas_urls = hosts.getJournals("nas")
     _, elsevier_abb, elsevier_urls = hosts.getJournals("elsevier")
     _, thieme_abb, thieme_urls = hosts.getJournals("thieme")
+    _, beil_abb, beil_urls = hosts.getJournals("beilstein")
 
     # Pick one site from each publisher
     # urls.append(random.choice(rsc_urls))
@@ -68,7 +72,8 @@ def journalsUrls():
     # urls.append(random.choice(thieme_urls))
 
     # abbs = rsc_abb + acs_abb + wiley_abb + npg_abb + science_abb + nas_abb + elsevier_abb + thieme_abb
-    urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls + nas_urls + elsevier_urls + thieme_urls
+    urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls + \
+           nas_urls + elsevier_urls + thieme_urls + beil_urls
 
     # print("\n")
     # for site in urls:
@@ -92,6 +97,7 @@ def test_getData(journalsUrls):
     nas = hosts.getJournals("nas")[0]
     elsevier = hosts.getJournals("elsevier")[0]
     thieme = hosts.getJournals("thieme")[0]
+    beil = hosts.getJournals("beilstein")[0]
 
     i = 1
     for site in list_sites:

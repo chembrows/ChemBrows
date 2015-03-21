@@ -79,8 +79,7 @@ def getData(journal, entry, response=None):
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
 
-        author = entry.author.split(", ")
-        author = ", ".join(author)
+        author = entry.author
 
         url = entry.prism_url
 
@@ -132,14 +131,10 @@ def getData(journal, entry, response=None):
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
         abstract = None
 
-        # If there is only one author
-        try:
-            author = entry.author.split(" and ")
-            author = author[0] + ", " + author[1]
-            author = author.split(", ")
+        author = entry.author
+        author = entry.author.split(" and ")
+        if len(author) > 1:
             author = ", ".join(author)
-        except IndexError:
-            author = entry.author
 
         try:
             url = entry.feedburner_origlink
@@ -171,7 +166,6 @@ def getData(journal, entry, response=None):
         title = entry.title
         journal_abb = npg_abb[npg.index(journal)]
         date = entry.date
-        # url = entry.id
         url = entry.feedburner_origlink
         abstract = entry.summary
         graphical_abstract = None
@@ -364,23 +358,22 @@ def getData(journal, entry, response=None):
 
         abstract = None
         graphical_abstract = None
-        author = None
+
+        author = entry.author
+        author = entry.author.split(" and ")
+        if len(author) > 1:
+            author = ", ".join(author)
 
         if entry.summary != "":
             soup = BeautifulSoup(entry.summary)
-            abstract = [tag.renderContents().decode() for tag in soup("p")[:-2]]
-            abstract = "".join(abstract)
-            print(abstract)
-            # graphical_abstract = soup("p")[-2]
-            # abstract = entry.content[0].value
-            # abstract = abstract.split("<br />")[3]
+            r = soup.find_all("p")
 
-        # soup = BeautifulSoup(entry.content[0].value)
-        # r = soup.find_all("img")
-        # if r:
-            # graphical_abstract = r[0]['src']
-        # print(abstract)
-        # print(graphical_abstract)
+            if r:
+                abstract = r[1].renderContents().decode()
+
+            r = soup.find_all("img")
+            if r:
+                graphical_abstract = r[0]['src']
 
     else:
         return None
@@ -486,6 +479,9 @@ def getDoi(journal, entry):
     elif journal in thieme:
         doi = entry.prism_doi
 
+    elif journal in beil:
+        doi = entry.summary.split("doi:")[1].split("</p>")[0]
+
     try:
         doi = doi.replace(" ", "")
     except UnboundLocalError:
@@ -525,10 +521,10 @@ if __name__ == "__main__":
         # print(authors)
         # print(title)
 
-    # urls_test = ["debug/bel.xml"]
+    urls_test = ["debug/bel.xml"]
     # urls_test = ["debug/syn.xml"]
     # urls_test = ["debug/ang.htm"]
-    urls_test = ["debug/npg.htm"]
+    # urls_test = ["debug/npg.htm"]
 
     session = FuturesSession(max_workers=50)
 
@@ -540,13 +536,13 @@ if __name__ == "__main__":
     print(journal)
 
     for entry in feed.entries[7:]:
-        # url = entry.link
-        url = entry.feedburner_origlink
+        url = entry.link
+        # url = entry.feedburner_origlink
         title = entry.title
         # if title != "A Facile and Versatile Approach to Double N-Heterohelicenes: Tandem Oxidative CN Couplings of N-Heteroacenes via Cruciform Dimers":
             # continue
-        if "Atomic" not in title:
-            continue
+        # if "Atomic" not in title:
+            # continue
         print(url)
         print(title)
         # print(entry)
@@ -557,4 +553,4 @@ if __name__ == "__main__":
         # future = session.get(url, headers=headers, timeout=20)
         future = session.get(url, timeout=20)
         future.add_done_callback(functools.partial(print_result, journal, entry))
-        # break
+        break
