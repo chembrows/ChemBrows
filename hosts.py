@@ -171,22 +171,15 @@ def getData(journal, entry, response=None):
         graphical_abstract = None
         author = None
 
-        soup = BeautifulSoup(entry.content[0].value)
-        r = soup.find_all("p")
-
-        # TODO: corrigendum, erratum
-        if r:
-            for p in r:
-                if "Authors:" in p.text:
-                    author = p.text.split("Authors: ")[1].split(", ")
-
-                    if "&" in author[-1]:
-                        author = author[:-1] + author[-1].split(" & ")
-
-                    author = ", ".join(author)
-
         if response.status_code is requests.codes.ok or response.status_code == 401:
             soup = BeautifulSoup(response.text)
+
+            r = soup.find_all("ul", attrs={"class": "authors citation-authors"})
+            if r:
+                s = r[0].find_all("span", attrs={"class": "fn"})
+                if s:
+                    author = [tag.renderContents().decode() for tag in s]
+                    author = ", ".join(author)
 
             r = soup.find_all("h1", attrs={"class": "article-heading"})
             if r:
@@ -521,9 +514,9 @@ if __name__ == "__main__":
         # print(authors)
         # print(title)
 
-    urls_test = ["debug/bel.xml"]
+    # urls_test = ["debug/bel.xml"]
     # urls_test = ["debug/syn.xml"]
-    # urls_test = ["debug/ang.htm"]
+    urls_test = ["debug/rep.htm"]
     # urls_test = ["debug/npg.htm"]
 
     session = FuturesSession(max_workers=50)
@@ -535,16 +528,16 @@ if __name__ == "__main__":
 
     print(journal)
 
-    for entry in feed.entries[7:]:
+    for entry in feed.entries:
         url = entry.link
         # url = entry.feedburner_origlink
         title = entry.title
         # if title != "A Facile and Versatile Approach to Double N-Heterohelicenes: Tandem Oxidative CN Couplings of N-Heteroacenes via Cruciform Dimers":
             # continue
-        # if "Atomic" not in title:
-            # continue
+        if "Blend" not in title:
+            continue
         print(url)
-        print(title)
+        # print(title)
         # print(entry)
         # print(url)
         # print(title)
@@ -553,4 +546,4 @@ if __name__ == "__main__":
         # future = session.get(url, headers=headers, timeout=20)
         future = session.get(url, timeout=20)
         future.add_done_callback(functools.partial(print_result, journal, entry))
-        break
+        # break
