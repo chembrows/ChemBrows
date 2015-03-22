@@ -22,7 +22,7 @@ class Worker(QtCore.QThread):
     # https://wiki.python.org/moin/PyQt/Threading,_Signals_and_Slots
 
 
-    def __init__(self, url_feed, logger, bdd):
+    def __init__(self, logger, bdd):
 
         QtCore.QThread.__init__(self)
 
@@ -33,9 +33,6 @@ class Worker(QtCore.QThread):
         # for the tests
         self.path = "./graphical_abstracts/"
 
-        # DEBUG
-        self.url_feed = url_feed
-
         self.l.info("Starting parsing of the new articles")
 
         # List to store the urls of the pages to request
@@ -44,12 +41,17 @@ class Worker(QtCore.QThread):
 
         # self.start()
 
+    def setUrl(self, url_feed):
+
+        self.url_feed = url_feed
+
 
     def __del__(self):
 
         """Method to destroy the thread properly"""
 
         self.wait()
+        self.exit()
 
 
     def run(self):
@@ -140,7 +142,7 @@ class Worker(QtCore.QThread):
                         headers = {'User-agent': 'Mozilla/5.0'}
                         headers["Referer"] = url
 
-                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=20)
+                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=10)
                         self.list_futures_images.append(future_image)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi))
 
@@ -164,14 +166,14 @@ class Worker(QtCore.QThread):
                     except AttributeError:
                         url = entry.link
 
-                    future = session.get(url, timeout=20)
+                    future = session.get(url, timeout=10)
                     self.list_futures_urls.append(future)
                     future.add_done_callback(functools.partial(self.completeData, doi, journal, entry))
 
         while not self.checkFuturesRunning():
             # self.wait()
-            self.sleep(3)
-            # pass
+            self.sleep(2)
+            # self.sleep(0.2)
 
         if not self.bdd.commit():
             self.l.error(self.bdd.lastError().text())
@@ -224,7 +226,7 @@ class Worker(QtCore.QThread):
             headers = {'User-agent': 'Mozilla/5.0'}
             headers["Referer"] = url
 
-            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=20)
+            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=10)
             self.list_futures_images.append(future_image)
             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi))
 
@@ -237,11 +239,13 @@ class Worker(QtCore.QThread):
         except requests.exceptions.ReadTimeout:
             self.l.error("ReadTimeout for image")
             self.list_futures_images.append(True)
-            return
+            # return
+            pass
         except requests.exceptions.ConnectionError:
             self.l.error("ConnectionError for image")
             self.list_futures_images.append(True)
-            return
+            # return
+            pass
         except requests.exceptions.MissingSchema:
             pass
 

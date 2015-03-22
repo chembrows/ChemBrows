@@ -40,6 +40,8 @@ class Fenetre(QtGui.QMainWindow):
         self.l = logger
         self.l.info('Starting the program')
 
+        self.parsing = False
+
         # Object to store options and preferences
         self.options = QtCore.QSettings("options.ini", QtCore.QSettings.IniFormat)
 
@@ -108,50 +110,12 @@ class Fenetre(QtGui.QMainWindow):
 
         return journals
 
-    # def importation(self):
-
-        # """Slot pour importer un dossier contenant des fichiers"""
-
-        # dossier = QtGui.QFileDialog.getExistingDirectory(self, 'Open file', '/home')
-
-        # #  création du QProgressDialog
-        # self.progress = QtGui.QProgressDialog("Importation en cours...", None, 0, 100, self)
-        # self.progress.setWindowTitle("Importation")
-
-        # # Execution de l'importation
-        # # On envoie le callback majProgression à la fct d'import de liste.py
-        # self.bdd.close()
-        # liste.importation(dossier, self.l, self.majProgression)
-        # self.bdd.open()
-
-        # # On réinitialise l'affichage
-        # self.resetView()
-
-
-    # def majProgression(self, pourcent, fraction, nom_fichier, dossier_courant):
-
-        # """Callback pour mettre à jour le pourcentage de la progress bar lors
-        # de l'import"""
-
-        # # Affichage du progressDialog
-        # # On ne crée pas la progressBar ici, sinon elle ne disparait pas
-        # # à la fin de l'import
-        # self.progress.show()
-
-        # self.progress.setValue(pourcent)
-        # self.progress.setWindowTitle("Importation du dossier {0}".format(dossier_courant))
-        # self.progress.setLabelText("{0}, ".format(fraction) + nom_fichier)
-
-        # if pourcent >= 100:
-            # self.progress.reset()
-
-        # QtCore.QCoreApplication.processEvents()
-
-
 
     def parse(self):
 
         """Method to start the parsing of the data"""
+
+        self.parsing = True
 
         self.journals_to_parse = self.options.value("journals_to_parse", [])
 
@@ -168,42 +132,47 @@ class Fenetre(QtGui.QMainWindow):
             self.options.remove("journals_to_parse")
             self.options.setValue("journals_to_parse", self.journals_to_parse)
 
-        urls = []
+        self.urls = []
         for company in os.listdir("./journals"):
             with open('journals/{0}'.format(company), 'r') as config:
                 for line in config:
                     if line.split(" : ")[1] in self.journals_to_parse:
-                        urls.append(line.split(" : ")[2])
+                        # self.urls.append(line.split(" : ")[2])
+                        line = line.split(" : ")[2]
+                        line = line.lstrip().rstrip()
+                        self.urls.append(line)
 
         # Disabling the parse action to avoid double start
         self.parseAction.setEnabled(False)
 
-        # List to store the threads.
-        # The list is cleared when the method is started
-        self.list_threads = []
-
         self.start_time = datetime.datetime.now()
 
-        # Display the progress bar for the parsing
-        self.progress_parsing.setValue(0)
-        self.action_label_progress.setVisible(True)
-        self.action_progress.setVisible(True)
+        # Display a progress dialog box
+        self.progress = QtGui.QProgressDialog("Collecting in progress", None, 0, 100, self)
+        self.progress.setWindowTitle("Collectiong articles")
+        self.progress.show()
 
-        for site in urls:
-            # One worker for each website
-            worker = Worker(site, self.l, self.bdd)
-            self.list_threads.append(worker)
-            worker.finished.connect(self.checkThreads)
+        self.urls_max = len(self.urls)
 
         # Get the optimal nbr of thread. Will vary depending
         # on the user's computer
-        # max_nbr_threads = QtCore.QThread.idealThreadCount()
+        max_nbr_threads = QtCore.QThread.idealThreadCount()
+        # max_nbr_threads = 2
 
-        # Start a certain nbr of threads
-        # for worker in self.list_threads[:max_nbr_threads]:
-        for worker in self.list_threads[:2]:
-            self.l.info("New thread started")
-            worker.start()
+        # # List to store the threads.
+        # # The list is cleared when the method is started
+        self.list_threads = []
+        for i in range(max_nbr_threads):
+            try:
+                url = self.urls[i]
+                worker = Worker(self.l, self.bdd)
+                worker.setUrl(url)
+                worker.finished.connect(self.checkThreads)
+                self.urls.pop(self.urls.index(url))
+                self.list_threads.append(worker)
+                worker.start()
+            except IndexError:
+                break
 
 
     def checkThreads(self):
@@ -216,36 +185,39 @@ class Fenetre(QtGui.QMainWindow):
         elsapsed_time = datetime.datetime.now() - self.start_time
         self.l.info(elsapsed_time)
 
-        # Get a list of the workers states
-        list_states = [worker.isFinished() for worker in self.list_threads]
+        # # Print the nbr of finished threads
+        self.l.info("Done: {}/{}".format(self.urls_max - len(self.urls), self.urls_max))
 
-        # Print the nbr of finished threads
-        self.l.info("Done: {}/{}".format(list_states.count(True), len(self.list_threads)))
+        # # Display the progress of the parsing w/ the progress bar
+        percent = (self.urls_max - len(self.urls)) * 100 / self.urls_max
 
-        # Display the progress of the parsing w/ the progress bar
-        self.progress_parsing.setValue(list_states.count(True) * 100 / len(self.list_threads))
+        self.progress.setValue(percent)
+        if percent >= 100:
+            self.progress.reset()
 
-        if False not in list_states:
+        if not self.urls:
+
+            if self.parseAction.isEnabled():
+                return
+
             self.calculatePercentageMatch()
             self.parseAction.setEnabled(True)
             self.l.debug("Parsing data finished. Enabling parseAction")
-
-            # Hide the progress bar when parsing is done
-            self.action_label_progress.setVisible(False)
-            self.action_progress.setVisible(False)
 
             # Update the view when a worker is finished
             self.searchByButton()
             self.updateView()
             self.updateCellSize()
+
+            self.parsing = False
+
         else:
             self.l.info("STARTING NEW THREAD")
-            # self.updateView()
-            for worker in self.list_threads:
-                if not worker.isRunning() and not worker.isFinished():
-                    worker.start()
-                    name = self.journals_to_parse[self.list_threads.index(worker)]
-                    break
+            sender = Worker(self.l, self.bdd)
+            sender.setUrl(self.urls[0])
+            sender.finished.connect(self.checkThreads)
+            self.urls.pop(self.urls.index(sender.url_feed))
+            sender.start()
 
 
     def defineActions(self):
@@ -494,6 +466,15 @@ class Fenetre(QtGui.QMainWindow):
 
         # do not hide menubar when menu shown
         if QtGui.qApp.activePopupWidget() is None:
+            # If parsing running, block some user inputs
+            if self.parsing:
+                forbidden = [QtCore.QEvent.KeyPress, QtCore.QEvent.KeyRelease,
+                             QtCore.QEvent.MouseButtonPress, QtCore.QEvent.MouseButtonDblClick]
+                if event.type() == QtCore.QEvent.Close:
+                    self.progress.reset()
+                    return False
+                elif event.type() in forbidden:
+                    return True
             if event.type() == QtCore.QEvent.MouseMove:
                 try:
                     if self.scroll_tags.isHidden():
@@ -1343,37 +1324,6 @@ class Fenetre(QtGui.QMainWindow):
         self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred);
         self.toolbar.addWidget(self.empty_widget)
 
-        # A QLabel and a progress bar to show how many journals are done parsing
-        self.label_progress = QtGui.QLabel("Collecting articles: ")
-        self.progress_parsing = QtGui.QProgressBar(self)
-        self.progress_parsing.setMaximumWidth(150)
-        self.progress_parsing.setRange(0, 100)
-
-        # Creating actions, because simple widgets are not hidable in the toolbar
-        self.action_label_progress = self.toolbar.addWidget(self.label_progress)
-        self.action_progress = self.toolbar.addWidget(self.progress_parsing)
-
-        # Hiding the actions corresponding to the widgets
-        self.action_label_progress.setVisible(False)
-        self.action_progress.setVisible(False)
-
-        # # Bouton pour afficher la file d'attente
-        # self.button_waiting = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_202_shopping_cart'), "File d'attente")
-        # self.toolbar.addWidget(self.button_waiting)
-
-        # self.toolbar.addSeparator()
-
-        # # Bouton pour mélanger
-        # self.button_shuffle = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_083_random'), "Shuffle")
-        # self.toolbar.addWidget(self.button_shuffle)
-
-        # self.toolbar.addSeparator()
-
-        # # Bouton pr afficher les vids non taguées
-        # self.button_untag = QtGui.QPushButton("Non tagué")
-        # self.toolbar.addWidget(self.button_untag)
-
-
 
         # # ------------------------- LEFT AREA ------------------------------------------------------------------------
 
@@ -1504,11 +1454,11 @@ if __name__ == '__main__':
         # Try to kill all the threads
         try:
             for worker in ex.list_threads:
-                worker.terminate()
                 to_cancel = worker.list_futures_urls + worker.list_futures_images
                 for future in to_cancel:
                     if type(future) != bool:
                         future.cancel()
+                worker.terminate()
             logger.info("Quitting the program, killing all the threads")
         except AttributeError:
             logger.info("Quitting the program, no threads")
