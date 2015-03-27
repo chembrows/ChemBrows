@@ -174,7 +174,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         # Thumbnail's index
         elif index.column() == 8:
 
-            if type(index.data()) == str and index.data() != "Empty":
+            if type(index.data()) is str and index.data() != "Empty":
                 path_photo = "./graphical_abstracts/" + index.data()
 
                 if os.path.exists(path_photo):

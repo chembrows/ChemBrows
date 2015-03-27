@@ -171,6 +171,7 @@ class Fenetre(QtGui.QMainWindow):
                 self.urls.pop(self.urls.index(url))
                 self.list_threads.append(worker)
                 worker.start()
+                app.processEvents()
             except IndexError:
                 break
 
@@ -185,8 +186,10 @@ class Fenetre(QtGui.QMainWindow):
         elsapsed_time = datetime.datetime.now() - self.start_time
         self.l.info(elsapsed_time)
 
+        states = [thread.isFinished() for thread in self.list_threads]
+
         # # Print the nbr of finished threads
-        self.l.info("Done: {}/{}".format(self.urls_max - len(self.urls), self.urls_max))
+        self.l.info("Done: {}/{}".format(states.count(True), self.urls_max))
 
         # # Display the progress of the parsing w/ the progress bar
         percent = (self.urls_max - len(self.urls)) * 100 / self.urls_max
@@ -197,27 +200,27 @@ class Fenetre(QtGui.QMainWindow):
 
         if not self.urls:
 
-            if self.parseAction.isEnabled():
-                return
+            if not False in states:
+                self.calculatePercentageMatch()
+                self.parseAction.setEnabled(True)
+                self.l.debug("Parsing data finished. Enabling parseAction")
 
-            self.calculatePercentageMatch()
-            self.parseAction.setEnabled(True)
-            self.l.debug("Parsing data finished. Enabling parseAction")
+                # Update the view when a worker is finished
+                self.searchByButton()
+                self.updateView()
+                self.updateCellSize()
 
-            # Update the view when a worker is finished
-            self.searchByButton()
-            self.updateView()
-            self.updateCellSize()
-
-            self.parsing = False
+                self.parsing = False
 
         else:
             self.l.info("STARTING NEW THREAD")
-            sender = Worker(self.l, self.bdd)
-            sender.setUrl(self.urls[0])
-            sender.finished.connect(self.checkThreads)
-            self.urls.pop(self.urls.index(sender.url_feed))
-            sender.start()
+            worker = Worker(self.l, self.bdd)
+            worker.setUrl(self.urls[0])
+            worker.finished.connect(self.checkThreads)
+            self.urls.pop(self.urls.index(worker.url_feed))
+            self.list_threads.append(worker)
+            worker.start()
+            app.processEvents()
 
 
     def defineActions(self):
@@ -469,7 +472,8 @@ class Fenetre(QtGui.QMainWindow):
             # If parsing running, block some user inputs
             if self.parsing:
                 forbidden = [QtCore.QEvent.KeyPress, QtCore.QEvent.KeyRelease,
-                             QtCore.QEvent.MouseButtonPress, QtCore.QEvent.MouseButtonDblClick]
+                             QtCore.QEvent.MouseButtonPress, QtCore.QEvent.MouseButtonDblClick,
+                             QtCore.QEvent.MouseMove, QtCore.QEvent.Wheel]
                 if event.type() == QtCore.QEvent.Close:
                     self.progress.reset()
                     return False
@@ -592,12 +596,12 @@ class Fenetre(QtGui.QMainWindow):
         self.label_date.setText(date)
         self.label_title.setText("<span style='font-size:12pt; font-weight:bold'>{0}</span>".format(title))
 
-        if type(abstract) == str:
+        if type(abstract) is str:
             self.text_abstract.setHtml(table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data())
         else:
             self.text_abstract.setHtml("")
 
-        if type(author) == str:
+        if type(author) is str:
             self.label_author.setText(author)
         else:
             self.label_author.setText("")
@@ -788,7 +792,7 @@ class Fenetre(QtGui.QMainWindow):
         source = self.sender()
 
         # Build the list of ON buttons
-        if source.parent() == self.scrolling_tags:
+        if source.parent() is self.scrolling_tags:
             if pressed:
                 self.tags_selected.append(source.text())
             else:
@@ -820,7 +824,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Building the query
         for each_journal in self.tags_selected:
-            if each_journal is not self.tags_selected[-1]:
+            if each_journal != self.tags_selected[-1]:
                 requete = requete + "\"" + str(each_journal) + "\"" + ", "
             # Close the query if last
             else:
@@ -859,7 +863,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Building the query
         for each_id in list_id:
-            if each_id is not list_id[-1]:
+            if each_id != list_id[-1]:
                 requete = requete + str(each_id) + ", "
             # Close the query if last
             else:
@@ -958,7 +962,7 @@ class Fenetre(QtGui.QMainWindow):
 
             # Building the query
             for each_id in list_ids:
-                if each_id is not list_ids[-1]:
+                if each_id != list_ids[-1]:
                     requete = requete + "\"" + str(each_id) + "\"" + ", "
                 # Close the query if last
                 else:
@@ -1169,14 +1173,18 @@ class Fenetre(QtGui.QMainWindow):
 
         # Building the query
         for each_journal in self.getJournalsToCare():
-            if each_journal is not journals_to_care[-1]:
+            if each_journal != journals_to_care[-1]:
                 requete = requete + "\"" + str(each_journal) + "\"" + ", "
             # Close the query if last
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
+        print(requete)
+        # DELETE FROM papers WHERE journal NOT IN ("ACS Chem. Biol.", "ACS Chem. Neurosci.",
+
         query.prepare(requete)
         query.exec_()
+        self.l.error(self.bdd.lastError().text())
 
         self.l.debug("Removed unintersting journals from the database")
 
@@ -1242,7 +1250,7 @@ class Fenetre(QtGui.QMainWindow):
         line = table.selectionModel().currentIndex().row()
 
         # Invert the value of new
-        if type(like) == int:
+        if type(like) is int:
             like = 1 - like
         else:
             like = 1
@@ -1456,7 +1464,7 @@ if __name__ == '__main__':
             for worker in ex.list_threads:
                 to_cancel = worker.list_futures_urls + worker.list_futures_images
                 for future in to_cancel:
-                    if type(future) != bool:
+                    if type(future) is not bool:
                         future.cancel()
                 worker.terminate()
             logger.info("Quitting the program, killing all the threads")

@@ -75,8 +75,8 @@ class Worker(QtCore.QThread):
         # it has all the infos
         self.list_doi, self.list_ok = self.listDoi()
         # self.session_images = FuturesSession(max_workers=len(self.feed))
-        # self.session_images = FuturesSession(max_workers=5)
-        self.session_images = FuturesSession(max_workers=10)
+        self.session_images = FuturesSession(max_workers=20)
+        # self.session_images = FuturesSession(max_workers=10)
 
         # Load the journals
         rsc = hosts.getJournals("rsc")[0]
@@ -132,7 +132,6 @@ class Worker(QtCore.QThread):
                     for value in params:
                         query.addBindValue(value)
 
-
                     query.exec_()
 
                     if graphical_abstract == "Empty":
@@ -148,8 +147,8 @@ class Worker(QtCore.QThread):
 
         else:
             # session = FuturesSession(max_workers=len(self.feed.entries))
-            # session = FuturesSession(max_workers=5)
-            session = FuturesSession(max_workers=10)
+            session = FuturesSession(max_workers=20)
+            # session = FuturesSession(max_workers=10)
 
             for entry in self.feed.entries:
 
@@ -172,8 +171,8 @@ class Worker(QtCore.QThread):
 
         while not self.checkFuturesRunning():
             # self.wait()
-            self.sleep(2)
-            # self.sleep(0.2)
+            # self.sleep(2)
+            self.sleep(0.2)
 
         if not self.bdd.commit():
             self.l.error(self.bdd.lastError().text())
@@ -197,7 +196,12 @@ class Worker(QtCore.QThread):
 
         query = QtSql.QSqlQuery(self.bdd)
 
-        title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
+        try:
+            title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
+        except TypeError:
+            self.l.error("getData returned None for {}".format(journal))
+            self.list_futures_images.append(True)
+            return
 
         # Checking if the data are complete
         if type(abstract) is not str or type(authors) is not str:
@@ -239,19 +243,19 @@ class Worker(QtCore.QThread):
         except requests.exceptions.ReadTimeout:
             self.l.error("ReadTimeout for image")
             self.list_futures_images.append(True)
-            # return
-            pass
+            return
         except requests.exceptions.ConnectionError:
             self.l.error("ConnectionError for image")
             self.list_futures_images.append(True)
-            # return
-            pass
+            return
         except requests.exceptions.MissingSchema:
-            pass
+            self.l.error("MissingSchema for image")
+            self.list_futures_images.append(True)
+            return
 
         query = QtSql.QSqlQuery(self.bdd)
 
-        if response.status_code == requests.codes.ok:
+        if response.status_code is requests.codes.ok:
 
             path = self.path
 
@@ -287,7 +291,7 @@ class Worker(QtCore.QThread):
         states_futures = []
 
         for result in total_futures:
-            if type(result) == bool:
+            if type(result) is bool:
                 states_futures.append(result)
             else:
                 states_futures.append(result.done())

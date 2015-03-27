@@ -89,7 +89,7 @@ def buildSearch(topic_entries, author_entries):
         words = [queryString(word) for word in words]
 
         for word in words:
-            if word is words[0]:
+            if word == words[0]:
                 base += "topic_simple LIKE '{0}'".format(word)
             else:
                 base += " AND topic_simple LIKE '{0}'".format(word)

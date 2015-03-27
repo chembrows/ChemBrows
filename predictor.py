@@ -72,7 +72,7 @@ class Predictor():
             else:
                 continue
 
-            if type(record.value('liked')) is not int:
+            if type(record.value('liked')) is int:
                 category = 0
             else:
                 category = 1

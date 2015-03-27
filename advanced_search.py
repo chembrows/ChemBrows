@@ -111,7 +111,7 @@ class AdvancedSearch(QtGui.QDialog):
         topic_entries = [line for line in lines[0:3]]
         author_entries = [line for line in lines[3:7]]
 
-        if index is not 0:
+        if index != 0:
 
             # Change the buttons at the button if the tab is
             # a tab dedicated to search edition
@@ -134,7 +134,7 @@ class AdvancedSearch(QtGui.QDialog):
 
         """Slot to save a query"""
 
-        if self.sender() == self.button_search:
+        if self.sender() is self.button_search:
             save = False
         else:
             save = True

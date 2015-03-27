@@ -404,7 +404,7 @@ def getData(journal, entry, response=None):
         # person = ""
 
         # for piece_name in complete_name:
-            # if piece_name is not complete_name[-1]:
+            # if piece_name != complete_name[-1]:
 
                 # # If the piece is already an abb, add directly
                 # if "." in piece_name and len(piece_name) is 2:

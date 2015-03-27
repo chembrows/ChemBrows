@@ -26,7 +26,7 @@ class ModelPerso(QtSql.QSqlTableModel):
 
         self.query = QtSql.QSqlQuery()
 
-        if type(query) == str:
+        if type(query) is str:
             self.query.prepare(query)
         else:
             self.query.prepare(query.executedQuery())
