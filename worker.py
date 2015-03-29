@@ -12,6 +12,9 @@ import hosts
 import functions
 
 
+from memory_profiler import profile
+
+
 class Worker(QtCore.QThread):
 
     """Subclassing the class in order to provide a thread.
@@ -54,6 +57,7 @@ class Worker(QtCore.QThread):
         self.exit()
 
 
+    # @profile
     def run(self):
 
         """Main function. Starts the real business"""
@@ -73,24 +77,30 @@ class Worker(QtCore.QThread):
 
         # Lists to check if the post is in the db, and if
         # it has all the infos
-        self.list_doi, self.list_ok = self.listDoi()
-        # self.session_images = FuturesSession(max_workers=len(self.feed))
-        self.session_images = FuturesSession(max_workers=20)
         # self.session_images = FuturesSession(max_workers=10)
+        self.session_images = FuturesSession(max_workers=20)
 
-        # Load the journals
-        rsc = hosts.getJournals("rsc")[0]
-        acs = hosts.getJournals("acs")[0]
-        wiley = hosts.getJournals("wiley")[0]
-        npg = hosts.getJournals("npg")[0]
-        science = hosts.getJournals("science")[0]
-        nas = hosts.getJournals("nas")[0]
-        elsevier = hosts.getJournals("elsevier")[0]
-        thieme = hosts.getJournals("thieme")[0]
-        beil = hosts.getJournals("beilstein")[0]
+        rsc, rsc_abb, _ = hosts.getJournals("rsc")
+        acs, acs_abb, _ = hosts.getJournals("acs")
+        wiley, wiley_abb, _ = hosts.getJournals("wiley")
+        npg, npg_abb, _ = hosts.getJournals("npg")
+        science, science_abb, _ = hosts.getJournals("science")
+        nas, nas_abb, _ = hosts.getJournals("nas")
+        elsevier, elsevier_abb, _ = hosts.getJournals("elsevier")
+        thieme, thieme_abb, _ = hosts.getJournals("thieme")
+        beil, beil_abb, _ = hosts.getJournals("beilstein")
+
+        total_journals = rsc + acs + wiley + npg + science + \
+                         nas + elsevier + thieme + beil
+
+        total_abb = rsc_abb + acs_abb + wiley_abb + npg_abb + science_abb + \
+                    nas_abb + elsevier_abb + thieme_abb + beil_abb
+
+        journal_abb = total_abb[total_journals.index(journal)]
+
+        self.list_doi, self.list_ok = self.listDoi(journal_abb)
 
         query = QtSql.QSqlQuery(self.bdd)
-
         self.bdd.transaction()
 
         # The feeds of these journals are complete
@@ -109,7 +119,8 @@ class Worker(QtCore.QThread):
                     self.l.info("Skipping")
                     continue
                 else:
-                    title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
+                    # title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
+                    title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
 
                     # Checking if the data are complete
                     # TODO: normally fot these journals, no need to check
@@ -146,9 +157,8 @@ class Worker(QtCore.QThread):
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi))
 
         else:
-            # session = FuturesSession(max_workers=len(self.feed.entries))
-            session = FuturesSession(max_workers=20)
             # session = FuturesSession(max_workers=10)
+            session = FuturesSession(max_workers=20)
 
             for entry in self.feed.entries:
 
@@ -167,7 +177,7 @@ class Worker(QtCore.QThread):
 
                     future = session.get(url, timeout=10)
                     self.list_futures_urls.append(future)
-                    future.add_done_callback(functools.partial(self.completeData, doi, journal, entry))
+                    future.add_done_callback(functools.partial(self.completeData, doi, journal, journal_abb, entry))
 
         while not self.checkFuturesRunning():
             # self.wait()
@@ -181,7 +191,7 @@ class Worker(QtCore.QThread):
         self.l.info("Exiting thread for {}".format(journal))
 
 
-    def completeData(self, doi, journal, entry, future):
+    def completeData(self, doi, journal, journal_abb, entry, future):
 
         try:
             response = future.result()
@@ -197,7 +207,8 @@ class Worker(QtCore.QThread):
         query = QtSql.QSqlQuery(self.bdd)
 
         try:
-            title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
+            # title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
+            title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
         except TypeError:
             self.l.error("getData returned None for {}".format(journal))
             self.list_futures_images.append(True)
@@ -285,6 +296,7 @@ class Worker(QtCore.QThread):
         query.exec_()
 
 
+    @profile
     def checkFuturesRunning(self):
 
         total_futures = self.list_futures_images + self.list_futures_urls
@@ -302,7 +314,7 @@ class Worker(QtCore.QThread):
             return False
 
 
-    def listDoi(self):
+    def listDoi(self, journal_abb):
 
         """Function to get the doi from the database.
         Also returns a list of booleans to check if the data are complete"""
@@ -311,7 +323,9 @@ class Worker(QtCore.QThread):
         list_ok = []
 
         query = QtSql.QSqlQuery(self.bdd)
-        query.exec_("SELECT * FROM papers")
+        query.prepare("SELECT * FROM papers WHERE journal=?")
+        query.addBindValue(journal_abb)
+        query.exec_()
 
         while query.next():
             record = query.record()

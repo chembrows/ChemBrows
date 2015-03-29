@@ -20,6 +20,9 @@ from settings import Settings
 from advanced_search import AdvancedSearch
 import functions
 
+# DEBUG
+from memory_profiler import profile
+
 
 class Fenetre(QtGui.QMainWindow):
 
@@ -31,13 +34,13 @@ class Fenetre(QtGui.QMainWindow):
         # http://eli.thegreenplace.net/2009/05/09/creating-splash-screens-in-pyqt
         # CAREFUL, there is a bug with the splash screen
         # https://bugreports.qt.io/browse/QTBUG-24910
-        # splash_pix = QtGui.QPixmap('images/splash_screen.png')
         splash_pix = QtGui.QPixmap('images/splash.png')
         splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
         splash.show()
         app.processEvents()
 
         self.l = logger
+        # self.l.setLevel(40)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -111,7 +114,7 @@ class Fenetre(QtGui.QMainWindow):
         return journals
 
 
-    def parse(self):
+    def parse(self, profiler=None):
 
         """Method to start the parsing of the data"""
 
@@ -183,8 +186,8 @@ class Fenetre(QtGui.QMainWindow):
         This slot is called when a thread is finished, to start the
         next one"""
 
-        elsapsed_time = datetime.datetime.now() - self.start_time
-        self.l.info(elsapsed_time)
+        elapsed_time = datetime.datetime.now() - self.start_time
+        self.l.info(elapsed_time)
 
         states = [thread.isFinished() for thread in self.list_threads]
 
@@ -1179,9 +1182,6 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
-        print(requete)
-        # DELETE FROM papers WHERE journal NOT IN ("ACS Chem. Biol.", "ACS Chem. Neurosci.",
-
         query.prepare(requete)
         query.exec_()
         self.l.error(self.bdd.lastError().text())
@@ -1446,27 +1446,34 @@ class Fenetre(QtGui.QMainWindow):
 
 if __name__ == '__main__':
     logger = MyLog()
-    try:
-        app = QtGui.QApplication(sys.argv)
-        app.setWindowIcon(QtGui.QIcon('images/icon_main.png'))
-        ex = Fenetre(logger)
-        app.processEvents()
-        sys.exit(app.exec_())
-    except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        exc_type = type(e).__name__
-        fname = exc_tb.tb_frame.f_code.co_filename
-        logger.warning("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-        logger.warning("{0}: {1}".format(exc_type, e))
-    finally:
+    # try:
+    app = QtGui.QApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon('images/icon_main.png'))
+    ex = Fenetre(logger)
+    app.processEvents()
+    sys.exit(app.exec_())
+    # except Exception as e:
+        # exc_type, exc_obj, exc_tb = sys.exc_info()
+        # exc_type = type(e).__name__
+        # fname = exc_tb.tb_frame.f_code.co_filename
+        # logger.warning("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
+        # logger.warning("{0}: {1}".format(exc_type, e))
+    # finally:
         # Try to kill all the threads
-        try:
-            for worker in ex.list_threads:
-                to_cancel = worker.list_futures_urls + worker.list_futures_images
-                for future in to_cancel:
-                    if type(future) is not bool:
-                        future.cancel()
-                worker.terminate()
-            logger.info("Quitting the program, killing all the threads")
-        except AttributeError:
-            logger.info("Quitting the program, no threads")
+    try:
+        for worker in ex.list_threads:
+            worker.terminate()
+
+            print("Starting killing the futures")
+            start_time = datetime.datetime.now()
+            to_cancel = worker.list_futures_urls + worker.list_futures_images
+            for future in to_cancel:
+                if type(future) is not bool:
+                    future.cancel()
+            print("Done killing the futures")
+            elapsed_time = datetime.datetime.now() - start_time
+            print(elapsed_time)
+
+        logger.info("Quitting the program, killing all the threads")
+    except AttributeError:
+        logger.info("Quitting the program, no threads")

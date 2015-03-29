@@ -61,23 +61,8 @@ def journalsUrls():
     _, thieme_abb, thieme_urls = hosts.getJournals("thieme")
     _, beil_abb, beil_urls = hosts.getJournals("beilstein")
 
-    # Pick one site from each publisher
-    # urls.append(random.choice(rsc_urls))
-    # urls.append(random.choice(acs_urls))
-    # urls.append(random.choice(wiley_urls))
-    # urls.append(random.choice(npg_urls))
-    # urls.append(random.choice(science_urls))
-    # urls.append(random.choice(nas_urls))
-    # urls.append(random.choice(elsevier_urls))
-    # urls.append(random.choice(thieme_urls))
-
-    # abbs = rsc_abb + acs_abb + wiley_abb + npg_abb + science_abb + nas_abb + elsevier_abb + thieme_abb
     urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls + \
            nas_urls + elsevier_urls + thieme_urls + beil_urls
-
-    # print("\n")
-    # for site in urls:
-        # print(abbs[sites_urls.index(site)])
 
     return urls
 
@@ -116,7 +101,8 @@ def test_getData(journalsUrls):
         for entry in samples:
 
             if journal in science:
-                title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
+                # title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
+                title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
             else:
                 try:
                     url = entry.feedburner_origlink
@@ -124,7 +110,7 @@ def test_getData(journalsUrls):
                     url = entry.link
 
                 response = requests.get(url, timeout=10)
-                title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
+                title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
 
             print("Sample {}".format(i))
             print(title)

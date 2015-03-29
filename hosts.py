@@ -20,22 +20,22 @@ def getData(journal, entry, response=None):
     # title, date, authors, abstract, graphical_abstract = hosts.getData(journal, entry)
 
     # List of the journals
-    rsc, rsc_abb, _ = getJournals("rsc")
-    acs, acs_abb, _ = getJournals("acs")
-    wiley, wiley_abb, _ = getJournals("wiley")
-    npg, npg_abb, _ = getJournals("npg")
-    science, science_abb, _ = getJournals("science")
-    nas, nas_abb, _ = getJournals("nas")
-    elsevier, elsevier_abb, _ = getJournals("elsevier")
-    thieme, thieme_abb, _ = getJournals("thieme")
-    beil, beil_abb, _ = getJournals("beilstein")
+    rsc = getJournals("rsc")[0]
+    acs = getJournals("acs")[0]
+    wiley = getJournals("wiley")[0]
+    npg = getJournals("npg")[0]
+    science = getJournals("science")[0]
+    nas = getJournals("nas")[0]
+    elsevier = getJournals("elsevier")[0]
+    thieme = getJournals("thieme")[0]
+    beil = getJournals("beilstein")[0]
 
     # If the journal is edited by the RSC
     if journal in rsc:
 
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
-        journal_abb = rsc_abb[rsc.index(journal)]
+        # journal_abb = rsc_abb[rsc.index(journal)]
 
         try:
             url = entry.feedburner_origlink
@@ -75,7 +75,7 @@ def getData(journal, entry, response=None):
 
     elif journal in wiley:
 
-        journal_abb = wiley_abb[wiley.index(journal)]
+        # journal_abb = wiley_abb[wiley.index(journal)]
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
 
@@ -127,7 +127,7 @@ def getData(journal, entry, response=None):
     elif journal in acs:
 
         title = entry.title.replace("\n", " ")
-        journal_abb = acs_abb[acs.index(journal)]
+        # journal_abb = acs_abb[acs.index(journal)]
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
         abstract = None
 
@@ -164,9 +164,8 @@ def getData(journal, entry, response=None):
     elif journal in npg:
 
         title = entry.title
-        journal_abb = npg_abb[npg.index(journal)]
         date = entry.date
-        url = entry.feedburner_origlink
+        url = entry.link
         abstract = entry.summary
         graphical_abstract = None
         author = None
@@ -202,7 +201,6 @@ def getData(journal, entry, response=None):
     elif journal in science:
 
         title = entry.title
-        journal_abb = science_abb[science.index(journal)]
         date = entry.date
         url = entry.id
 
@@ -226,7 +224,6 @@ def getData(journal, entry, response=None):
     elif journal in nas:
 
         title = entry.title
-        journal_abb = nas_abb[nas.index(journal)]
         date = entry.prism_publicationdate
         url = entry.id
 
@@ -259,7 +256,6 @@ def getData(journal, entry, response=None):
     elif journal in elsevier:
 
         title = entry.title
-        journal_abb = elsevier_abb[elsevier.index(journal)]
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
         url = entry.id
 
@@ -306,7 +302,6 @@ def getData(journal, entry, response=None):
     elif journal in thieme:
 
         title = entry.title
-        journal_abb = thieme_abb[thieme.index(journal)]
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
         url = entry.id
 
@@ -345,7 +340,6 @@ def getData(journal, entry, response=None):
     elif journal in beil:
 
         title = entry.title
-        journal_abb = beil_abb[beil.index(journal)]
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
         url = entry.link
 
@@ -384,7 +378,7 @@ def getData(journal, entry, response=None):
     if author is None:
         author = "Empty"
 
-    return title, journal_abb, date, author, abstract, graphical_abstract, url, topic_simple
+    return title, date, author, abstract, graphical_abstract, url, topic_simple
 
 
 # def formatName(authors_list, reverse=False):
@@ -497,6 +491,7 @@ def getJournals(company):
             names.append(line.split(" : ")[0])
             abb.append(line.split(" : ")[1].replace("\n", ""))
             urls.append(line.split(" : ")[2].replace("\n", ""))
+        config.close()
 
     return names, abb, urls
 
@@ -508,7 +503,7 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = getData(journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData(journal, entry, response)
         # print(abstract)
         # print(graphical_abstract)
         # print(authors)
@@ -516,8 +511,7 @@ if __name__ == "__main__":
 
     # urls_test = ["debug/bel.xml"]
     # urls_test = ["debug/syn.xml"]
-    urls_test = ["debug/rep.htm"]
-    # urls_test = ["debug/npg.htm"]
+    urls_test = ["http://feeds.nature.com/srep/rss/current"]
 
     session = FuturesSession(max_workers=50)
 
@@ -528,22 +522,24 @@ if __name__ == "__main__":
 
     print(journal)
 
-    for entry in feed.entries:
+    for entry in feed.entries[2:]:
+        # print(entry)
         url = entry.link
         # url = entry.feedburner_origlink
-        title = entry.title
+        # title = entry.title
+        # getDoi(journal, entry)
         # if title != "A Facile and Versatile Approach to Double N-Heterohelicenes: Tandem Oxidative CN Couplings of N-Heteroacenes via Cruciform Dimers":
             # continue
-        if "Blend" not in title:
-            continue
-        print(url)
+        # if "Blend" not in title:
+            # continue
+        # print(url)
         # print(title)
         # print(entry)
-        # print(url)
+        print(url)
         # print(title)
         # headers = {'User-agent': 'Mozilla/5.0'}
         # headers["Referer"] = url
         # future = session.get(url, headers=headers, timeout=20)
-        future = session.get(url, timeout=20)
-        future.add_done_callback(functools.partial(print_result, journal, entry))
+        # future = session.get(url, timeout=20)
+        # future.add_done_callback(functools.partial(print_result, journal, entry))
         # break
