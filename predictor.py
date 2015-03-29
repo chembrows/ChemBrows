@@ -131,7 +131,7 @@ class Predictor():
         x_test = np.array(x_test)
 
         try:
-            list_percentages = [float(100 * proba[1]) for proba in self.classifier.predict_proba(x_test)]
+            list_percentages = [float(100 * proba[0]) for proba in self.classifier.predict_proba(x_test)]
         except ValueError:
             self.l.debug("Not enough data yet")
             return
