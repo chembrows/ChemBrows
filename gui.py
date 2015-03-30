@@ -20,9 +20,6 @@ from settings import Settings
 from advanced_search import AdvancedSearch
 import functions
 
-# DEBUG
-from memory_profiler import profile
-
 
 class Fenetre(QtGui.QMainWindow):
 
@@ -114,7 +111,7 @@ class Fenetre(QtGui.QMainWindow):
         return journals
 
 
-    def parse(self, profiler=None):
+    def parse(self):
 
         """Method to start the parsing of the data"""
 

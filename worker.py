@@ -12,9 +12,6 @@ import hosts
 import functions
 
 
-from memory_profiler import profile
-
-
 class Worker(QtCore.QThread):
 
     """Subclassing the class in order to provide a thread.
@@ -57,7 +54,6 @@ class Worker(QtCore.QThread):
         self.exit()
 
 
-    # @profile
     def run(self):
 
         """Main function. Starts the real business"""
