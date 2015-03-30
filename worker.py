@@ -302,7 +302,6 @@ class Worker(QtCore.QThread):
         total_futures = self.list_futures_images + self.list_futures_urls
         states_futures = []
 
-        # LÀ !!!
         for result in total_futures:
             if type(result) is bool:
                 states_futures.append(result)
