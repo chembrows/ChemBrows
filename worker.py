@@ -292,7 +292,6 @@ class Worker(QtCore.QThread):
         query.exec_()
 
 
-    @profile
     def checkFuturesRunning(self):
 
         total_futures = self.list_futures_images + self.list_futures_urls
