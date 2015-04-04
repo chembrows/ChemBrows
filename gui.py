@@ -40,7 +40,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        self.l.setLevel(40)
+        # self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -114,7 +114,7 @@ class Fenetre(QtGui.QMainWindow):
         return journals
 
 
-    def parse(self, profiler=None):
+    def parse(self):
 
         """Method to start the parsing of the data"""
 
@@ -152,7 +152,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Display a progress dialog box
         self.progress = QtGui.QProgressDialog("Collecting in progress", None, 0, 100, self)
-        self.progress.setWindowTitle("Collectiong articles")
+        self.progress.setWindowTitle("Collecting articles")
         self.progress.show()
 
         self.urls_max = len(self.urls)
@@ -195,35 +195,42 @@ class Fenetre(QtGui.QMainWindow):
         self.l.info("Done: {}/{}".format(states.count(True), self.urls_max))
 
         # # Display the progress of the parsing w/ the progress bar
-        percent = (self.urls_max - len(self.urls)) * 100 / self.urls_max
+        percent = states.count(True) * 100 / self.urls_max
 
-        self.progress.setValue(percent)
+        self.progress.setValue(round(percent, 0))
         if percent >= 100:
+            # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
+            # If the range is set to 0, get a busy progress bar,
+            # without percentage
+            self.progress.setValue(0)
+            self.progress.setRange(0, 0)
+            self.progress.setLabelText("Calculating matches...")
+            app.processEvents()
+
+        if False not in states and len(states) == self.urls_max:
+            self.calculatePercentageMatch()
+            self.parseAction.setEnabled(True)
+            self.l.info("Parsing data finished. Enabling parseAction")
+
+            # Update the view when a worker is finished
+            self.searchByButton()
+            self.updateView()
+            self.updateCellSize()
+
             self.progress.reset()
 
-        if not self.urls:
-
-            if not False in states:
-                self.calculatePercentageMatch()
-                self.parseAction.setEnabled(True)
-                self.l.debug("Parsing data finished. Enabling parseAction")
-
-                # Update the view when a worker is finished
-                self.searchByButton()
-                self.updateView()
-                self.updateCellSize()
-
-                self.parsing = False
+            self.parsing = False
 
         else:
-            self.l.info("STARTING NEW THREAD")
-            worker = Worker(self.l, self.bdd)
-            worker.setUrl(self.urls[0])
-            worker.finished.connect(self.checkThreads)
-            self.urls.pop(self.urls.index(worker.url_feed))
-            self.list_threads.append(worker)
-            worker.start()
-            app.processEvents()
+            if self.urls:
+                self.l.info("STARTING NEW THREAD")
+                worker = Worker(self.l, self.bdd)
+                worker.setUrl(self.urls[0])
+                worker.finished.connect(self.checkThreads)
+                self.urls.pop(self.urls.index(worker.url_feed))
+                self.list_threads.append(worker)
+                worker.start()
+                app.processEvents()
 
 
     def defineActions(self):

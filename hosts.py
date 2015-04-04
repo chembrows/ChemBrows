@@ -11,31 +11,16 @@ from time import mktime
 import functions
 
 
-def getData(journal, entry, response=None):
+def getData(company, journal, entry, response=None):
 
     """Get the data. Starts from the data contained in the RSS flux, and if necessary,
     parse the website for supplementary infos. Download the graphical abstract"""
 
-    # This function is called like this in parse.py:
-    # title, date, authors, abstract, graphical_abstract = hosts.getData(journal, entry)
-
-    # List of the journals
-    rsc = getJournals("rsc")[0]
-    acs = getJournals("acs")[0]
-    wiley = getJournals("wiley")[0]
-    npg = getJournals("npg")[0]
-    science = getJournals("science")[0]
-    nas = getJournals("nas")[0]
-    elsevier = getJournals("elsevier")[0]
-    thieme = getJournals("thieme")[0]
-    beil = getJournals("beilstein")[0]
-
     # If the journal is edited by the RSC
-    if journal in rsc:
+    if company == 'rsc':
 
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
-        # journal_abb = rsc_abb[rsc.index(journal)]
 
         try:
             url = entry.feedburner_origlink
@@ -73,9 +58,8 @@ def getData(journal, entry, response=None):
                 author = ", ".join(author)
 
 
-    elif journal in wiley:
+    elif company == 'wiley':
 
-        # journal_abb = wiley_abb[wiley.index(journal)]
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
 
@@ -124,10 +108,9 @@ def getData(journal, entry, response=None):
                 except IndexError:
                     title = r[0].renderContents().decode().lstrip().rstrip()
 
-    elif journal in acs:
+    elif company == 'acs':
 
         title = entry.title.replace("\n", " ")
-        # journal_abb = acs_abb[acs.index(journal)]
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
         abstract = None
 
@@ -161,7 +144,7 @@ def getData(journal, entry, response=None):
                 title = r[0].renderContents().decode()
 
 
-    elif journal in npg:
+    elif company == 'npg':
 
         title = entry.title
         date = entry.date
@@ -198,7 +181,7 @@ def getData(journal, entry, response=None):
                         graphical_abstract = graphical_abstract.replace("carousel", "images_article")
 
 
-    elif journal in science:
+    elif company == 'science':
 
         title = entry.title
         date = entry.date
@@ -221,7 +204,7 @@ def getData(journal, entry, response=None):
                 author = ", ".join(author)  # To comment if formatName
 
 
-    elif journal in nas:
+    elif company == 'nas':
 
         title = entry.title
         date = entry.prism_publicationdate
@@ -253,7 +236,7 @@ def getData(journal, entry, response=None):
                 author = [tag.text for tag in r]
                 author = ", ".join(author)
 
-    elif journal in elsevier:
+    elif company == 'elsevier':
 
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
@@ -299,7 +282,7 @@ def getData(journal, entry, response=None):
                 # title = r[0].renderContents().decode()
 
 
-    elif journal in thieme:
+    elif company == 'thieme':
 
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
@@ -337,7 +320,7 @@ def getData(journal, entry, response=None):
                 author = author.replace("*", "")
 
 
-    elif journal in beil:
+    elif company == 'beil':
 
         title = entry.title
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
@@ -419,21 +402,11 @@ def getData(journal, entry, response=None):
     # return new_author
 
 
-def getDoi(journal, entry):
+def getDoi(company, journal, entry):
 
     """Get the DOI number of a post, to save time"""
 
-    rsc = getJournals("rsc")[0]
-    acs = getJournals("acs")[0]
-    wiley = getJournals("wiley")[0]
-    npg = getJournals("npg")[0]
-    science = getJournals("science")[0]
-    nas = getJournals("nas")[0]
-    elsevier = getJournals("elsevier")[0]
-    thieme = getJournals("thieme")[0]
-    beil = getJournals("beilstein")[0]
-
-    if journal in rsc:
+    if company == 'rsc':
         soup = BeautifulSoup(entry.summary)
         r = soup("div")
         try:
@@ -441,32 +414,32 @@ def getDoi(journal, entry):
         except IndexError:
             doi = r[1].text.split("DOI:")[1].split(",")[0]
 
-    elif journal in acs:
+    elif company == 'acs':
         doi = entry.id.split("dx.doi.org/")[1]
 
-    elif journal in wiley:
+    elif company == 'wiley':
         doi = entry.prism_doi
 
-    elif journal in npg:
+    elif company == 'npg':
         doi = entry.prism_doi
 
-    elif journal in science:
+    elif company == 'science':
         doi = entry.dc_identifier
 
-    elif journal in nas:
+    elif company == 'nas':
         base = entry.dc_identifier
         base = base.split("pnas;")[1]
         doi = "10.1073/pnas." + base
 
     # FUCK !! for this published, the doi is not given
     # in the RSS flux. It's so replaced by the url
-    elif journal in elsevier:
+    elif company == 'elsevier':
         doi = entry.id
 
-    elif journal in thieme:
+    elif company == 'thieme':
         doi = entry.prism_doi
 
-    elif journal in beil:
+    elif company == 'beil':
         doi = entry.summary.split("doi:")[1].split("</p>")[0]
 
     try:
@@ -491,7 +464,7 @@ def getJournals(company):
             names.append(line.split(" : ")[0])
             abb.append(line.split(" : ")[1].replace("\n", ""))
             urls.append(line.split(" : ")[2].replace("\n", ""))
-        config.close()
+    config.close()
 
     return names, abb, urls
 

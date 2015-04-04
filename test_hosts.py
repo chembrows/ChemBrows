@@ -89,6 +89,25 @@ def test_getData(journalsUrls):
         feed = feedparser.parse(site)
         journal = feed['feed']['title']
 
+        if journal in rsc:
+            company = 'rsc'
+        elif journal in acs:
+            company = 'acs'
+        elif journal in wiley:
+            company = 'wiley'
+        elif journal in npg:
+            company = 'npg'
+        elif journal in science:
+            company = 'science'
+        elif journal in nas:
+            company = 'nas'
+        elif journal in elsevier:
+            company = 'elsevier'
+        elif journal in thieme:
+            company = 'thieme'
+        elif journal in beil:
+            company = 'beil'
+
         print("\n")
         print(journal)
 
@@ -100,9 +119,8 @@ def test_getData(journalsUrls):
         # Tests 3 entries for a journal, not all of them
         for entry in samples:
 
-            if journal in science:
-                # title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
-                title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
+            if journal in science + elsevier + beil:
+                title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry)
             else:
                 try:
                     url = entry.feedburner_origlink
@@ -110,7 +128,7 @@ def test_getData(journalsUrls):
                     url = entry.link
 
                 response = requests.get(url, timeout=10)
-                title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
+                title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry, response)
 
             print("Sample {}".format(i))
             print(title)
@@ -130,11 +148,40 @@ def test_getDoi(journalsUrls):
     print("\n")
     print("Starting test getDoi")
 
+    rsc = hosts.getJournals("rsc")[0]
+    acs = hosts.getJournals("acs")[0]
+    wiley = hosts.getJournals("wiley")[0]
+    npg = hosts.getJournals("npg")[0]
+    science = hosts.getJournals("science")[0]
+    nas = hosts.getJournals("nas")[0]
+    elsevier = hosts.getJournals("elsevier")[0]
+    thieme = hosts.getJournals("thieme")[0]
+    beil = hosts.getJournals("beilstein")[0]
+
     list_sites = journalsUrls
 
     for site in list_sites:
         feed = feedparser.parse(site)
         journal = feed['feed']['title']
+
+        if journal in rsc:
+            company = 'rsc'
+        elif journal in acs:
+            company = 'acs'
+        elif journal in wiley:
+            company = 'wiley'
+        elif journal in npg:
+            company = 'npg'
+        elif journal in science:
+            company = 'science'
+        elif journal in nas:
+            company = 'nas'
+        elif journal in elsevier:
+            company = 'elsevier'
+        elif journal in thieme:
+            company = 'thieme'
+        elif journal in beil:
+            company = 'beil'
 
         print("{}: {}".format(site, len(feed.entries)))
 
@@ -142,7 +189,7 @@ def test_getDoi(journalsUrls):
         # for entry in random.sample(feed.entries, 3):
         for entry in random.sample(feed.entries, 3):
 
-            doi = hosts.getDoi(journal, entry)
+            doi = hosts.getDoi(company, journal, entry)
             print(doi)
 
             assert type(doi) == str
