@@ -100,7 +100,7 @@ class Predictor():
             return
 
         elsapsed_time = datetime.datetime.now() - start_time
-        self.l.debug("Initializing classifier in {0} s".format(elsapsed_time))
+        self.l.debug("Initializing classifier in {0}".format(elsapsed_time))
 
 
     def calculatePercentageMatch(self, test=False):

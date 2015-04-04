@@ -33,7 +33,7 @@ class Worker(QtCore.QThread):
         # for the tests
         self.path = "./graphical_abstracts/"
 
-        self.l.info("Starting parsing of the new articles")
+        # self.l.info("Starting parsing of the new articles")
 
         # List to store the urls of the pages to request
         self.list_futures_urls = []
@@ -74,7 +74,8 @@ class Worker(QtCore.QThread):
         # Lists to check if the post is in the db, and if
         # it has all the infos
         # self.session_images = FuturesSession(max_workers=10)
-        self.session_images = FuturesSession(max_workers=20)
+        # self.session_images = FuturesSession(max_workers=20)
+        self.session_images = FuturesSession(max_workers=40)
 
         rsc, rsc_abb, _ = hosts.getJournals("rsc")
         acs, acs_abb, _ = hosts.getJournals("acs")
@@ -96,6 +97,26 @@ class Worker(QtCore.QThread):
 
         self.list_doi, self.list_ok = self.listDoi(journal_abb)
 
+        # Get the company as a simple string
+        if journal in rsc:
+            company = 'rsc'
+        elif journal in acs:
+            company = 'acs'
+        elif journal in wiley:
+            company = 'wiley'
+        elif journal in npg:
+            company = 'npg'
+        elif journal in science:
+            company = 'science'
+        elif journal in nas:
+            company = 'nas'
+        elif journal in elsevier:
+            company = 'elsevier'
+        elif journal in thieme:
+            company = 'thieme'
+        elif journal in beil:
+            company = 'beil'
+
         query = QtSql.QSqlQuery(self.bdd)
         self.bdd.transaction()
 
@@ -108,15 +129,14 @@ class Worker(QtCore.QThread):
             for entry in self.feed.entries:
 
                 # Get the DOI, a unique number for a publication
-                doi = hosts.getDoi(journal, entry)
+                doi = hosts.getDoi(company, journal, entry)
 
                 if doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
                     self.list_futures_images.append(True)
-                    self.l.info("Skipping")
+                    self.l.debug("Skipping")
                     continue
                 else:
-                    # title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
-                    title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry)
+                    title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry)
 
                     # Checking if the data are complete
                     # TODO: normally fot these journals, no need to check
@@ -128,13 +148,13 @@ class Worker(QtCore.QThread):
                     if doi in self.list_doi and doi not in self.list_ok:
                         query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
                         params = (title, date, authors, abstract, verif, topic_simple, doi)
-                        self.l.info("Updating {0} in the database".format(doi))
+                        self.l.debug("Updating {0} in the database".format(doi))
                     else:
                         query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
                                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                         # Set new to 1 and not to true
                         params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1, topic_simple)
-                        self.l.info("Adding {0} to the database".format(doi))
+                        self.l.debug("Adding {0} to the database".format(doi))
 
                     for value in params:
                         query.addBindValue(value)
@@ -150,20 +170,21 @@ class Worker(QtCore.QThread):
 
                         future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=10)
                         self.list_futures_images.append(future_image)
-                        future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi))
+                        future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
         else:
             # session = FuturesSession(max_workers=10)
-            session = FuturesSession(max_workers=20)
+            # session = FuturesSession(max_workers=20)
+            session = FuturesSession(max_workers=40)
 
             for entry in self.feed.entries:
 
-                doi = hosts.getDoi(journal, entry)
+                doi = hosts.getDoi(company, journal, entry)
 
                 if doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
                     self.list_futures_urls.append(True)
                     self.list_futures_images.append(True)
-                    self.l.info("Skipping")
+                    self.l.debug("Skipping")
                     continue
                 else:
                     try:
@@ -173,9 +194,9 @@ class Worker(QtCore.QThread):
 
                     future = session.get(url, timeout=10)
                     self.list_futures_urls.append(future)
-                    future.add_done_callback(functools.partial(self.completeData, doi, journal, journal_abb, entry))
+                    future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
-        while not self.checkFuturesRunning():
+        while not self.checkFuturesRunning(company):
             # self.wait()
             # self.sleep(2)
             self.sleep(0.2)
@@ -187,7 +208,10 @@ class Worker(QtCore.QThread):
         self.l.info("Exiting thread for {}".format(journal))
 
 
-    def completeData(self, doi, journal, journal_abb, entry, future):
+    def completeData(self, doi, company, journal, journal_abb, entry, future):
+
+        """Callback to handle the response of the futures trying to
+        download the page of the articles"""
 
         try:
             response = future.result()
@@ -203,8 +227,7 @@ class Worker(QtCore.QThread):
         query = QtSql.QSqlQuery(self.bdd)
 
         try:
-            # title, journal_abb, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
-            title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(journal, entry, response)
+            title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry, response)
         except TypeError:
             self.l.error("getData returned None for {}".format(journal))
             self.list_futures_images.append(True)
@@ -219,12 +242,12 @@ class Worker(QtCore.QThread):
         if doi in self.list_doi and doi not in self.list_ok:
             query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
             params = (title, date, authors, abstract, verif, topic_simple, doi)
-            self.l.info("Updating {0} in the database".format(doi))
+            self.l.debug("Updating {0} in the database".format(doi))
         else:
             query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
                            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
             params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1, topic_simple)
-            self.l.info("Adding {0} to the database".format(doi))
+            self.l.debug("Adding {0} to the database".format(doi))
 
         for value in params:
             query.addBindValue(value)
@@ -239,25 +262,24 @@ class Worker(QtCore.QThread):
 
             future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=10)
             self.list_futures_images.append(future_image)
-            future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi))
+            future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
 
+    def pictureDownloaded(self, doi, entry_url, future):
 
-    def pictureDownloaded(self, doi, future):
+        """Callback to handle the response of the futures
+        downloading a picture"""
 
         try:
             response = future.result()
         except requests.exceptions.ReadTimeout:
-            self.l.error("ReadTimeout for image")
-            self.list_futures_images.append(True)
+            self.l.error("ReadTimeout for image: {}".format(entry_url))
             return
         except requests.exceptions.ConnectionError:
-            self.l.error("ConnectionError for image")
-            self.list_futures_images.append(True)
+            self.l.error("ConnectionError for image: {}".format(entry_url))
             return
         except requests.exceptions.MissingSchema:
-            self.l.error("MissingSchema for image")
-            self.list_futures_images.append(True)
+            self.l.error("MissingSchema for image: {}".format(entry_url))
             return
 
         query = QtSql.QSqlQuery(self.bdd)
@@ -292,7 +314,14 @@ class Worker(QtCore.QThread):
         query.exec_()
 
 
-    def checkFuturesRunning(self):
+<<<<<<< HEAD
+=======
+    # @profile
+    def checkFuturesRunning(self, company):
+
+        """Method to check if some futures are still running.
+        Returns True if all the futures are done"""
+>>>>>>> memory
 
         total_futures = self.list_futures_images + self.list_futures_urls
         states_futures = []
