@@ -196,25 +196,19 @@ class Fenetre(QtGui.QMainWindow):
 
         self.progress.setValue(round(percent, 0))
         if percent >= 100:
-            # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
-            # If the range is set to 0, get a busy progress bar,
-            # without percentage
-            self.progress.setValue(0)
-            self.progress.setRange(0, 0)
-            self.progress.setLabelText("Calculating matches...")
+            self.progress.reset()
             app.processEvents()
 
         if False not in states and len(states) == self.urls_max:
-            self.calculatePercentageMatch()
+            self.calculatePercentageMatch(update=False)
             self.parseAction.setEnabled(True)
             self.l.info("Parsing data finished. Enabling parseAction")
 
             # Update the view when a worker is finished
             self.searchByButton()
-            self.updateView()
+            # self.updateView()
             self.updateCellSize()
 
-            self.progress.reset()
 
             self.parsing = False
 
@@ -1231,15 +1225,38 @@ class Fenetre(QtGui.QMainWindow):
             self.l.info("Opening {0} in browser".format(url))
 
 
-    def calculatePercentageMatch(self):
+    def calculatePercentageMatch(self, update=True):
 
-        """Slot to calculate the match percentage"""
+        """Slot to calculate the match percentage.
+        If update= False, does not update the view"""
 
         self.predictor = Predictor(self.l, self.bdd)
 
         if self.predictor.classifier is not None:
-            self.predictor.calculatePercentageMatch()
-            self.updateView()
+
+            def whenDone():
+                self.progress.reset()
+
+                if update:
+                    self.updateView()
+
+                self.parsing = False
+
+            self.parsing = True
+
+            # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
+            # If the range is set to 0, get a busy progress bar,
+            # without percentage
+            app.processEvents()
+            self.progress = QtGui.QProgressDialog("Calculating match percentages...", None, 0, 0, self)
+            self.progress.setWindowTitle("Percentages calculation")
+            self.progress.show()
+            app.processEvents()
+
+            # self.predictor.calculatePercentageMatch()
+            self.predictor.start()
+
+            self.predictor.finished.connect(whenDone)
 
 
     def toggleLike(self):

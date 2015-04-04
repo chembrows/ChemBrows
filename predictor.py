@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*-coding:Utf-8 -*
 
-from PyQt4 import QtSql
+from PyQt4 import QtSql, QtCore
 
 import numpy as np
 from sklearn.pipeline import Pipeline
@@ -16,12 +16,14 @@ import datetime
 from log import MyLog
 
 
-class Predictor():
+class Predictor(QtCore.QThread):
 
     """Object to predict the percentage match of an article,
     based on its abstract"""
 
     def __init__(self, logger, bdd=None):
+
+        QtCore.QThread.__init__(self)
 
         self.x_train = []
         self.y_train = []
@@ -103,7 +105,8 @@ class Predictor():
         self.l.debug("Initializing classifier in {0}".format(elsapsed_time))
 
 
-    def calculatePercentageMatch(self, test=False):
+    # def calculatePercentageMatch(self, test=False):
+    def run(self):
 
         """Calculate the match percentage for each article,
         based on the abstract text and the liked articles"""
