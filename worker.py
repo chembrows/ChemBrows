@@ -314,14 +314,11 @@ class Worker(QtCore.QThread):
         query.exec_()
 
 
-<<<<<<< HEAD
-=======
     # @profile
     def checkFuturesRunning(self):
 
         """Method to check if some futures are still running.
         Returns True if all the futures are done"""
->>>>>>> memory
 
         total_futures = self.list_futures_images + self.list_futures_urls
         states_futures = []
