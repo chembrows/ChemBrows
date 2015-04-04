@@ -200,7 +200,7 @@ class Worker(QtCore.QThread):
                     self.list_futures_urls.append(future)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
-        while not self.checkFuturesRunning(company):
+        while not self.checkFuturesRunning():
             # self.wait()
             # self.sleep(2)
             self.sleep(0.2)
@@ -319,7 +319,7 @@ class Worker(QtCore.QThread):
 
 
     # @profile
-    def checkFuturesRunning(self, company):
+    def checkFuturesRunning(self):
 
         """Method to check if some futures are still running.
         Returns True if all the futures are done"""
