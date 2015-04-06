@@ -889,6 +889,8 @@ class Fenetre(QtGui.QMainWindow):
             authors = record.value('authors').split(', ')
             authors = [element.lower() for element in authors]
 
+            print(authors)
+
             adding = True
             list_adding_or = []
 
@@ -918,6 +920,9 @@ class Fenetre(QtGui.QMainWindow):
                             if matching:
                                 list_adding_or.append(True)
                                 break
+                            else:
+                                list_adding_or.append(False)
+
                         else:
                             # Tips for any()
                             # http://stackoverflow.com/questions/4843158/check-if-a-python-list-item-contains-a-string-inside-another-string
