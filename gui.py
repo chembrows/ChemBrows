@@ -206,10 +206,7 @@ class Fenetre(QtGui.QMainWindow):
 
             # Update the view when a worker is finished
             self.searchByButton()
-            # self.updateView()
             self.updateCellSize()
-
-
             self.parsing = False
 
         else:
@@ -258,9 +255,9 @@ class Fenetre(QtGui.QMainWindow):
         self.openInBrowserAction.setShortcut('Ctrl+W')
 
         # Action to update the model. For TEST
-        self.updateAction = QtGui.QAction('Update model', self)
-        self.updateAction.triggered.connect(self.updateModel)
-        self.updateAction.setShortcut('F7')
+        # self.updateAction = QtGui.QAction('Update model', self)
+        # self.updateAction.triggered.connect(self.updateModel)
+        # self.updateAction.setShortcut('F7')
 
         # Action to show a settings window
         self.settingsAction = QtGui.QAction('Preferences', self)
@@ -655,15 +652,6 @@ class Fenetre(QtGui.QMainWindow):
         """Slot to perform some actions when the current tab is changed.
         Mainly sets the tab query to the saved query"""
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-
-        self.query = QtSql.QSqlQuery(self.bdd)
-        self.query.prepare(self.refineBaseQuery(table))
-        self.query.exec_()
-
-        table.clearSelection()
-
-        self.updateView()
 
         for table in self.liste_tables_in_tabs:
             table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
@@ -1334,7 +1322,7 @@ class Fenetre(QtGui.QMainWindow):
         self.toolbar.addAction(self.parseAction)
         self.toolbar.addAction(self.calculatePercentageMatchAction)
         self.toolbar.addAction(self.toggleLikeAction)
-        self.toolbar.addAction(self.updateAction)
+        # self.toolbar.addAction(self.updateAction)
         self.toolbar.addAction(self.searchNewAction)
 
         # Create a button to reset everything
