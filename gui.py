@@ -683,8 +683,7 @@ class Fenetre(QtGui.QMainWindow):
                         model = self.liste_models_in_tabs[self.onglets.currentIndex()]
                         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
                         proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
-                        # model.setQuery(table.base_query)
-                        model.setQuery(self.refineBaseQuery(table))
+                        model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
                         proxy.setSourceModel(model)
                         table.setModel(proxy)
                     return
@@ -803,7 +802,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.query = QtSql.QSqlQuery(self.bdd)
 
-        refined_query = self.refineBaseQuery(table)
+        refined_query = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
 
         if "WHERE" in refined_query:
             requete = refined_query.replace("WHERE ", "WHERE (")
@@ -843,7 +842,7 @@ class Fenetre(QtGui.QMainWindow):
             record = self.query.record()
             list_id.append(record.value('id'))
 
-        refined_query = self.refineBaseQuery(table)
+        refined_query = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
 
         if "WHERE" in refined_query:
             requete = " AND id IN ("
@@ -864,20 +863,20 @@ class Fenetre(QtGui.QMainWindow):
         self.updateView()
 
 
-    def refineBaseQuery(self, table):
+    def refineBaseQuery(self, base_query, topic_options, author_options):
 
         """Method to refine the base_query of a view.
         A normal SQL query can't search a comma-separated list, so
         the results of the SQL query are filtered afterwords"""
 
-        author_entries = table.author_entries
+        author_entries = author_options
 
         # If no * in the SQL query, return
         if author_entries is None or not any('*' in element for element in author_entries):
-            return table.base_query
+            return base_query
 
         query = QtSql.QSqlQuery(self.bdd)
-        query.prepare(table.base_query)
+        query.prepare(base_query)
         query.exec_()
 
         # Prepare a list to store the filtered items
@@ -960,7 +959,7 @@ class Fenetre(QtGui.QMainWindow):
             return requete
 
 
-    def simpleQuery(self, base):
+    def simpleQuery(self, base, topic_options=None, author_options=None):
 
         """Method to perform a simple search.
         Called from AdvancedSearch, when the user doesn't
@@ -968,8 +967,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.query = QtSql.QSqlQuery(self.bdd)
 
-        self.query.prepare(base)
-        self.query.exec_()
+        self.query.prepare(self.refineBaseQuery(base, topic_options, author_options))
 
         self.updateView()
 
@@ -1107,7 +1105,7 @@ class Fenetre(QtGui.QMainWindow):
             proxy.setSourceModel(model)
             table.setModel(proxy)
         except AttributeError:
-            model.setQuery(self.refineBaseQuery(table))
+            model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
             proxy.setSourceModel(model)
             table.setModel(proxy)
 

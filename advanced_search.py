@@ -175,23 +175,21 @@ class AdvancedSearch(QtGui.QDialog):
                     self.tabs.addTab(self.createForm(), name_search)
                     if not self.test:
                         self.parent.createSearchTab(name_search, base,
-                                                    topic_options=topic_entries,
-                                                    author_options=author_entries)
+                                                    topic_entries,
+                                                    author_entries)
 
                     # Clear the fields when perform search
                     for line in lines:
                         line.clear()
             else:
                 # Perform a simple search, in the first tab
-                self.parent.simpleQuery(base)
+                self.parent.simpleQuery(base, topic_entries, author_entries)
         else:
             name_search = tab_title
 
             if not self.test:
-                self.parent.createSearchTab(name_search, base,
-                                            topic_options=topic_entries,
-                                            author_options=author_entries,
-                                            update=True)
+                self.parent.createSearchTab(name_search, base, topic_entries,
+                                            author_entries, update=True)
 
         if save:
             self.logger.debug("Saving the search")
