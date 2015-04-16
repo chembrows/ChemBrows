@@ -38,7 +38,9 @@ class ViewPerso(QtGui.QTableView):
 
         self.clicked.connect(self.parent.displayInfos)
         self.clicked.connect(self.parent.displayMosaic)
+
         self.clicked.connect(self.callParentMarkOneRead)
+        # self.clicked.connect(self.parent.markOneRead)
 
 
     def callParentMarkOneRead(self, element):
@@ -48,7 +50,7 @@ class ViewPerso(QtGui.QTableView):
         or less) to run the parent method in background. The UI is then
         more fluid"""
 
-        QtCore.QTimer.singleShot(50, lambda: self.parent.markOneRead(element))
+        QtCore.QTimer.singleShot(20, lambda: self.parent.markOneRead(element))
 
 
     def mousePressEvent(self, e):

@@ -20,6 +20,9 @@ from settings import Settings
 from advanced_search import AdvancedSearch
 import functions
 
+# DEBUG
+# from memory_profiler import profile
+
 
 class Fenetre(QtGui.QMainWindow):
 
@@ -188,7 +191,7 @@ class Fenetre(QtGui.QMainWindow):
 
         states = [thread.isFinished() for thread in self.list_threads]
 
-        # # Print the nbr of finished threads
+        # Display the nbr of finished threads
         self.l.info("Done: {}/{}".format(states.count(True), self.urls_max))
 
         # # Display the progress of the parsing w/ the progress bar
@@ -692,7 +695,11 @@ class Fenetre(QtGui.QMainWindow):
         modele = ModelPerso()
 
         # Changes are effective immediately
-        modele.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
+        # modele.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
+
+        # Changes are not effective immediately, but it doesn't matter
+        # because the view is updated each time a change is made
+        modele.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
         modele.setTable("papers")
         modele.select()
 
@@ -793,6 +800,8 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to select articles by journal"""
 
+        start_time = datetime.datetime.now()
+
         # Reset the view when the last button is unchecked
         if not self.tags_selected:
             self.resetView()
@@ -818,10 +827,23 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
+        elapsed_time = datetime.datetime.now() - start_time
+        print("preparing req")
+        print(elapsed_time)
+
         self.query.prepare(requete)
         self.query.exec_()
 
+        elapsed_time = datetime.datetime.now() - start_time
+        print("ex req")
+        print(elapsed_time)
+
+        # TODO: à décommenter absolument
         self.updateView()
+
+        print("update view")
+        elapsed_time = datetime.datetime.now() - start_time
+        print(elapsed_time)
 
 
     def searchNew(self):
@@ -888,8 +910,6 @@ class Fenetre(QtGui.QMainWindow):
             # Normalize the authors string of the item
             authors = record.value('authors').split(', ')
             authors = [element.lower() for element in authors]
-
-            print(authors)
 
             adding = True
             list_adding_or = []
@@ -1062,10 +1082,7 @@ class Fenetre(QtGui.QMainWindow):
         """Slot to mark an article read"""
 
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
         new = table.model().index(element.row(), 12).data()
-
 
         if new == 0:
             return
@@ -1077,12 +1094,7 @@ class Fenetre(QtGui.QMainWindow):
             # Change the data in the model
             table.model().setData(table.model().index(line, 12), 0)
 
-            try:
-                model.setQuery(self.query)
-                proxy.setSourceModel(model)
-                table.setModel(proxy)
-            except AttributeError:
-                pass
+            self.searchByButton()
 
             table.selectRow(line)
 
@@ -1096,14 +1108,6 @@ class Fenetre(QtGui.QMainWindow):
         table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
         proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
 
-        if current_item_id is not None:
-            selected_id = current_item_id
-        else:
-            try:
-                selected_id = table.selectionModel().selection().indexes()[0].data()
-            except IndexError:
-                selected_id = None
-
         try:
             # Try to update the model
             model.setQuery(self.query)
@@ -1113,14 +1117,6 @@ class Fenetre(QtGui.QMainWindow):
             model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
             proxy.setSourceModel(model)
             table.setModel(proxy)
-
-        if selected_id is not None:
-            for index in range(1, model.rowCount() + 1):
-                table.selectRow(index)
-                if table.selectionModel().selection().indexes()[0].data() == selected_id:
-                    return
-            # If we are still here, the old item wasn't found, so deselect all
-            table.clearSelection()
 
 
     def toggleRead(self):
@@ -1476,15 +1472,12 @@ if __name__ == '__main__':
         for worker in ex.list_threads:
             worker.terminate()
 
-            print("Starting killing the futures")
-            start_time = datetime.datetime.now()
+            logger.debug("Starting killing the futures")
             to_cancel = worker.list_futures_urls + worker.list_futures_images
             for future in to_cancel:
                 if type(future) is not bool:
                     future.cancel()
-            print("Done killing the futures")
-            elapsed_time = datetime.datetime.now() - start_time
-            print(elapsed_time)
+            logger.debug("Done killing the futures")
 
         logger.info("Quitting the program, killing all the threads")
     except AttributeError:

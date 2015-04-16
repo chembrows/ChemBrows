@@ -11,6 +11,8 @@ from io import open as iopen
 import hosts
 import functions
 
+# from memory_profiler import profile
+
 
 class Worker(QtCore.QThread):
 
@@ -74,8 +76,8 @@ class Worker(QtCore.QThread):
         # Lists to check if the post is in the db, and if
         # it has all the infos
         # self.session_images = FuturesSession(max_workers=10)
-        # self.session_images = FuturesSession(max_workers=20)
-        self.session_images = FuturesSession(max_workers=40)
+        self.session_images = FuturesSession(max_workers=20)
+        # self.session_images = FuturesSession(max_workers=40)
 
         rsc, rsc_abb, _ = hosts.getJournals("rsc")
         acs, acs_abb, _ = hosts.getJournals("acs")
@@ -174,8 +176,8 @@ class Worker(QtCore.QThread):
 
         else:
             # session = FuturesSession(max_workers=10)
-            # session = FuturesSession(max_workers=20)
-            session = FuturesSession(max_workers=40)
+            session = FuturesSession(max_workers=20)
+            # session = FuturesSession(max_workers=40)
 
             for entry in self.feed.entries:
 
