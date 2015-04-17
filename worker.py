@@ -11,7 +11,7 @@ from io import open as iopen
 import hosts
 import functions
 
-from memory_profiler import profile
+# from memory_profiler import profile
 # import itertools
 
 class Worker(QtCore.QThread):
@@ -153,7 +153,7 @@ class Worker(QtCore.QThread):
                         headers = {'User-agent': 'Mozilla/5.0'}
                         headers["Referer"] = url
 
-                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=10)
+                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=20)
                         self.list_futures_images.append(future_image)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
@@ -177,7 +177,7 @@ class Worker(QtCore.QThread):
                     except AttributeError:
                         url = entry.link
 
-                    future = session.get(url, timeout=10)
+                    future = session.get(url, timeout=20)
                     self.list_futures_urls.append(future)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
@@ -255,48 +255,44 @@ class Worker(QtCore.QThread):
         """Callback to handle the response of the futures
         downloading a picture"""
 
+        query = QtSql.QSqlQuery(self.bdd)
+
         try:
             response = future.result()
         except requests.exceptions.ReadTimeout:
             self.l.error("ReadTimeout for image: {}".format(entry_url))
-            return
+            params = ("Empty", 0, doi)
         except requests.exceptions.ConnectionError:
             self.l.error("ConnectionError for image: {}".format(entry_url))
-            return
+            params = ("Empty", 0, doi)
         except requests.exceptions.MissingSchema:
             self.l.error("MissingSchema for image: {}".format(entry_url))
-            return
-
-        query = QtSql.QSqlQuery(self.bdd)
-
-        if response.status_code is requests.codes.ok:
-
-            path = self.path
-
-            # Save the page
-            with iopen(path + functions.simpleChar(response.url), 'wb') as file:
-                file.write(response.content)
-                self.l.debug("Image ok")
-
-            query.prepare("UPDATE papers SET graphical_abstract=? WHERE doi=?")
-
-            graphical_abstract = functions.simpleChar(response.url)
-
-            params = (graphical_abstract, doi)
-
+            params = ("Empty", 0, doi)
         else:
-            self.l.debug("Bad return code: {}".format(response.status_code))
-            graphical_abstract = "Empty"
-            verif = 0
+            if response.status_code is requests.codes.ok:
 
+                path = self.path
+
+                # Save the page
+                with iopen(path + functions.simpleChar(response.url), 'wb') as file:
+                    file.write(response.content)
+                    self.l.debug("Image ok")
+
+                # query.prepare("UPDATE papers SET graphical_abstract=? WHERE doi=?")
+                graphical_abstract = functions.simpleChar(response.url)
+                params = (graphical_abstract, 1, doi)
+            else:
+                self.l.debug("Bad return code: {}".format(response.status_code))
+                # query.prepare("UPDATE papers SET graphical_abstract='Empty', verif=0 WHERE doi=?")
+                params = ("Empty", 0, doi)
+
+        finally:
             query.prepare("UPDATE papers SET graphical_abstract=?, verif=? WHERE doi=?")
 
-            params = (graphical_abstract, verif, doi)
+            for value in params:
+                query.addBindValue(value)
 
-        for value in params:
-            query.addBindValue(value)
-
-        query.exec_()
+            query.exec_()
 
 
     # @profile
