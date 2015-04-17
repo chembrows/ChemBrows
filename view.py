@@ -38,8 +38,8 @@ class ViewPerso(QtGui.QTableView):
 
         self.clicked.connect(self.parent.displayInfos)
         self.clicked.connect(self.parent.displayMosaic)
-
         self.clicked.connect(self.parent.markOneRead)
+
 
     def mousePressEvent(self, e):
 
@@ -148,7 +148,7 @@ class ViewPerso(QtGui.QTableView):
 
         # Browsing with up and down keys. Verifications made for
         # when the selection is completely at the top or the bottom
-        if key == QtCore.Qt.Key_Down or key == QtCore.Qt.Key_X:
+        if key == QtCore.Qt.Key_Down:
             current_index = self.selectionModel().currentIndex()
 
             if not current_index.isValid():
@@ -159,17 +159,15 @@ class ViewPerso(QtGui.QTableView):
 
                 if new_index.isValid():
                     current_index = new_index
-                    self.clearSelection()
                     self.setCurrentIndex(current_index)
                     self.clicked.emit(current_index)
 
-        if key == QtCore.Qt.Key_Up or key == QtCore.Qt.Key_W:
+        if key == QtCore.Qt.Key_Up:
             current_index = self.selectionModel().currentIndex()
             new_index = current_index.sibling(current_index.row() - 1, current_index.column())
 
             if new_index.isValid():
                 current_index = new_index
-                self.clearSelection()
                 self.setCurrentIndex(current_index)
                 self.clicked.emit(current_index)
 

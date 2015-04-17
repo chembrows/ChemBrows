@@ -41,37 +41,10 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         if verif == 0:
             red = True
 
-        # If the post is new, set font to bold
-        # new = index.sibling(index.row(), 12).data()
-        # font = painter.font()
-        # if new == 1:
-            # # Set the font to bold w/ 2 different ways.
-            # # One for the default painter, and one for the custom painter
-            # option.font.setWeight(QtGui.QFont.Bold)
-            # font.setBold(True)
-        # else:
-            # font.setBold(False)
-        # painter.setFont(font)
-
         date = index.sibling(index.row(), 4).data()
 
-        # Percentage column, round the percentage
-        if index.column() == 1:
-
-            if red:
-                painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
-
-            percentage = index.model().data(index)
-
-            if type(percentage) is float:
-                painter.drawText(option.rect, QtCore.Qt.AlignCenter, str(int(round(percentage, 0))))
-            else:
-                painter.drawText(option.rect, QtCore.Qt.AlignCenter, str(0))
-
-
-
         # Actions on the title
-        elif index.column() == 3:
+        if index.column() == 3:
 
             # http://stackoverflow.com/questions/23802170/word-wrap-with-html-qtabelview-and-delegates
 

@@ -557,7 +557,7 @@ class Fenetre(QtGui.QMainWindow):
             self.displayMosaic()
 
         # Define a new postition for the menu
-        new_pos = QtCore.QPoint(pos.x() + 240, pos.y() + 120)
+        new_pos = QtCore.QPoint(pos.x() + 10, pos.y() + 107)
 
         # Create the right-click menu and add the actions
         menu = QtGui.QMenu()
@@ -1130,8 +1130,6 @@ class Fenetre(QtGui.QMainWindow):
         So, toggle the read/unread state of an article"""
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
-
-        # table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         new = table.model().index(table.selectionModel().currentIndex().row(), 12).data()
         line = table.selectionModel().currentIndex().row()
 
@@ -1141,6 +1139,7 @@ class Fenetre(QtGui.QMainWindow):
         table.model().setData(table.model().index(line, 12), new)
         index = table.model().index(line, 12)
         table.model().dataChanged.emit(index, index)
+        table.viewport().update()
 
         table.selectRow(line)
 
@@ -1263,6 +1262,7 @@ class Fenetre(QtGui.QMainWindow):
 
         index = table.model().index(line, 9)
         table.model().dataChanged.emit(index, index)
+        table.viewport().update()
 
         table.selectRow(line)
 
