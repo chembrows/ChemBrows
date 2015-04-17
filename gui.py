@@ -20,6 +20,8 @@ from settings import Settings
 from advanced_search import AdvancedSearch
 import functions
 
+import hosts
+
 # DEBUG
 # from memory_profiler import profile
 
@@ -145,6 +147,19 @@ class Fenetre(QtGui.QMainWindow):
                         line = line.lstrip().rstrip()
                         self.urls.append(line)
 
+        # Create a dictionnary w/ all the data concerning the journals
+        # implemented in the program: names, abbreviations, urls
+        self.dict_journals = {}
+        self.dict_journals["rsc"] = hosts.getJournals("rsc")
+        self.dict_journals["acs"] = hosts.getJournals("acs")
+        self.dict_journals["wiley"] = hosts.getJournals("wiley")
+        self.dict_journals["npg"] = hosts.getJournals("npg")
+        self.dict_journals["science"] = hosts.getJournals("science")
+        self.dict_journals["nas"] = hosts.getJournals("nas")
+        self.dict_journals["elsevier"] = hosts.getJournals("elsevier")
+        self.dict_journals["thieme"] = hosts.getJournals("thieme")
+        self.dict_journals["beilstein"] = hosts.getJournals("beilstein")
+
         # Disabling the parse action to avoid double start
         self.parseAction.setEnabled(False)
 
@@ -168,7 +183,7 @@ class Fenetre(QtGui.QMainWindow):
         for i in range(max_nbr_threads):
             try:
                 url = self.urls[i]
-                worker = Worker(self.l, self.bdd)
+                worker = Worker(self.l, self.bdd, self.dict_journals)
                 worker.setUrl(url)
                 worker.finished.connect(self.checkThreads)
                 self.urls.pop(self.urls.index(url))
@@ -215,7 +230,7 @@ class Fenetre(QtGui.QMainWindow):
         else:
             if self.urls:
                 self.l.info("STARTING NEW THREAD")
-                worker = Worker(self.l, self.bdd)
+                worker = Worker(self.l, self.bdd, self.dict_journals)
                 worker.setUrl(self.urls[0])
                 worker.finished.connect(self.checkThreads)
                 self.urls.pop(self.urls.index(worker.url_feed))

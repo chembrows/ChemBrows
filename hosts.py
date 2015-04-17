@@ -404,7 +404,7 @@ def getData(company, journal, entry, response=None):
 
 def getDoi(company, journal, entry):
 
-    """Get the DOI number of a post, to save time"""
+    """Get the DOI id of a post, to save time"""
 
     if company == 'rsc':
         soup = BeautifulSoup(entry.summary)

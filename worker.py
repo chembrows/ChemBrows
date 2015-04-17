@@ -11,8 +11,8 @@ from io import open as iopen
 import hosts
 import functions
 
-# from memory_profiler import profile
-
+from memory_profiler import profile
+# import itertools
 
 class Worker(QtCore.QThread):
 
@@ -24,12 +24,13 @@ class Worker(QtCore.QThread):
     # https://wiki.python.org/moin/PyQt/Threading,_Signals_and_Slots
 
 
-    def __init__(self, logger, bdd):
+    def __init__(self, logger, bdd, dict_journals):
 
         QtCore.QThread.__init__(self)
 
         self.l = logger
         self.bdd = bdd
+        self.dict_journals = dict_journals
 
         # Define a path attribute to easily change it
         # for the tests
@@ -41,7 +42,6 @@ class Worker(QtCore.QThread):
         self.list_futures_urls = []
         self.list_futures_images = []
 
-        # self.start()
 
     def setUrl(self, url_feed):
 
@@ -79,52 +79,31 @@ class Worker(QtCore.QThread):
         self.session_images = FuturesSession(max_workers=20)
         # self.session_images = FuturesSession(max_workers=40)
 
-        rsc, rsc_abb, _ = hosts.getJournals("rsc")
-        acs, acs_abb, _ = hosts.getJournals("acs")
-        wiley, wiley_abb, _ = hosts.getJournals("wiley")
-        npg, npg_abb, _ = hosts.getJournals("npg")
-        science, science_abb, _ = hosts.getJournals("science")
-        nas, nas_abb, _ = hosts.getJournals("nas")
-        elsevier, elsevier_abb, _ = hosts.getJournals("elsevier")
-        thieme, thieme_abb, _ = hosts.getJournals("thieme")
-        beil, beil_abb, _ = hosts.getJournals("beilstein")
-
-        total_journals = rsc + acs + wiley + npg + science + \
-                         nas + elsevier + thieme + beil
-
-        total_abb = rsc_abb + acs_abb + wiley_abb + npg_abb + science_abb + \
-                    nas_abb + elsevier_abb + thieme_abb + beil_abb
-
-        journal_abb = total_abb[total_journals.index(journal)]
+        # Get the company and the journal_abb by scrolling the dictionnary
+        # containing all the data regarding the journals implemented in the
+        # program. This dictionnary is built in gui.py, to avoid multiple calls
+        # to hosts.getJournals
+        for key, tuple_data in self.dict_journals.items():
+            if journal in tuple_data[0]:
+                company = key
+                index = tuple_data[0].index(journal)
+                journal_abb = tuple_data[1][index]
+                break
 
         self.list_doi, self.list_ok = self.listDoi(journal_abb)
 
-        # Get the company as a simple string
-        if journal in rsc:
-            company = 'rsc'
-        elif journal in acs:
-            company = 'acs'
-        elif journal in wiley:
-            company = 'wiley'
-        elif journal in npg:
-            company = 'npg'
-        elif journal in science:
-            company = 'science'
-        elif journal in nas:
-            company = 'nas'
-        elif journal in elsevier:
-            company = 'elsevier'
-        elif journal in thieme:
-            company = 'thieme'
-        elif journal in beil:
-            company = 'beil'
+        # Create a list for the journals which a dl of the article
+        # page is not required. All the data are in the rss page
+        journals_no_dl = self.dict_journals['science'][0] + \
+                         self.dict_journals['elsevier'][0] + \
+                         self.dict_journals['beilstein'][0]
 
         query = QtSql.QSqlQuery(self.bdd)
         self.bdd.transaction()
 
         # The feeds of these journals are complete
         # if journal in wiley + science + elsevier:
-        if journal in science + elsevier + beil:
+        if journal in journals_no_dl:
 
             self.list_futures_urls = [True] * len(self.feed.entries)
 
@@ -335,6 +314,19 @@ class Worker(QtCore.QThread):
             return True
         else:
             return False
+
+
+        # # On ne créé pas une nouvelle liste avec la somme des deux listes,
+        # # on itère juste sur les deux chainées
+        # total_futures = itertools.chain(self.list_futures_images, self.list_futures_urls)
+
+        # no_false_result = False
+        # for i, result in enumerate(total_futures):
+            # result = result if type(result) is bool else result
+            # if not result:
+                # no_false_result = True
+
+        # return no_false_result and i == len(self.feed.entries) * 2
 
 
     def listDoi(self, journal_abb):
