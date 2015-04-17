@@ -90,7 +90,11 @@ class Worker(QtCore.QThread):
                 journal_abb = tuple_data[1][index]
                 break
 
-        self.list_doi, self.list_ok = self.listDoi(journal_abb)
+        try:
+            self.list_doi, self.list_ok = self.listDoi(journal_abb)
+        except UnboundLocalError:
+            self.l.error("Journal not recognized ! Aborting")
+            return
 
         # Create a list for the journals which a dl of the article
         # page is not required. All the data are in the rss page
