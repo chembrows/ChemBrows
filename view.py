@@ -39,19 +39,7 @@ class ViewPerso(QtGui.QTableView):
         self.clicked.connect(self.parent.displayInfos)
         self.clicked.connect(self.parent.displayMosaic)
 
-        self.clicked.connect(self.callParentMarkOneRead)
-        # self.clicked.connect(self.parent.markOneRead)
-
-
-    def callParentMarkOneRead(self, element):
-
-        """Slot to call the parent method markOneRead.
-        The parent method is called through a Timer, which allows (more
-        or less) to run the parent method in background. The UI is then
-        more fluid"""
-
-        QtCore.QTimer.singleShot(50, lambda: self.parent.markOneRead(element))
-
+        self.clicked.connect(self.parent.markOneRead)
 
     def mousePressEvent(self, e):
 
@@ -62,7 +50,7 @@ class ViewPerso(QtGui.QTableView):
 
         # Constant to set the size of the zone in the bottom right
         # corner, where the user can click to toggle liked state
-        DIMENSION = 25
+        DIMENSION = self.columnWidth(3) * 0.07
 
         # Call the parent class function
         super(ViewPerso, self).mousePressEvent(e)

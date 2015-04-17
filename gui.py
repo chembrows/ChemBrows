@@ -56,9 +56,9 @@ class Fenetre(QtGui.QMainWindow):
         self.tags_selected = []
 
         # List to store all the views, models and proxies
-        self.liste_tables_in_tabs = []
-        self.liste_models_in_tabs = []
-        self.liste_proxies_in_tabs = []
+        self.list_tables_in_tabs = []
+        self.list_models_in_tabs = []
+        self.list_proxies_in_tabs = []
 
         # Call processEvents regularly for the splash screen
         app.processEvents()
@@ -342,7 +342,7 @@ class Fenetre(QtGui.QMainWindow):
         else:
             self.sortingReversedAction.setChecked(False)
 
-        for table in self.liste_tables_in_tabs:
+        for table in self.list_tables_in_tabs:
             # Qt.AscendingOrder   0   starts with 'AAA' ends with 'ZZZ'
             # Qt.DescendingOrder  1   starts with 'ZZZ' ends with 'AAA'
             # if "reverse order" in unchecked, reverse = False = 0
@@ -380,7 +380,7 @@ class Fenetre(QtGui.QMainWindow):
         self.options.setValue("window_geometry", self.saveGeometry())
         self.options.setValue("window_state", self.saveState())
 
-        for index, each_table in enumerate(self.liste_tables_in_tabs):
+        for index, each_table in enumerate(self.list_tables_in_tabs):
             self.options.setValue("header_state{0}".format(index), each_table.horizontalHeader().saveState())
 
         # Save the states of the splitters of the window
@@ -406,6 +406,9 @@ class Fenetre(QtGui.QMainWindow):
         # Be sure self.options finished its tasks.
         # Correct a bug
         self.options.sync()
+
+        for model in self.list_models_in_tabs:
+            model.submitAll()
 
         # Close the database connection
         self.bdd.removeDatabase("fichiers.sqlite")
@@ -438,7 +441,7 @@ class Fenetre(QtGui.QMainWindow):
             self.restoreGeometry(self.options.value("Window/window_geometry"))
             self.restoreState(self.options.value("Window/window_state"))
 
-            for index, each_table in enumerate(self.liste_tables_in_tabs):
+            for index, each_table in enumerate(self.list_tables_in_tabs):
                 header_state = self.options.value("Window/header_state{0}".format(index))
                 if header_state is not None:
                     each_table.horizontalHeader().restoreState(self.options.value("Window/header_state{0}".format(index)))
@@ -470,7 +473,7 @@ class Fenetre(QtGui.QMainWindow):
         self.searchByButton()
 
         # Change the height of the rows
-        for table in self.liste_tables_in_tabs:
+        for table in self.list_tables_in_tabs:
             table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
 
         # Timer to get the dimensions of the window right.
@@ -545,7 +548,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Method to handle right-click"""
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
         if not table.selectionModel().selection().indexes():
             return
@@ -591,9 +594,9 @@ class Fenetre(QtGui.QMainWindow):
         # Get the size of the main splitter
         new_size = self.splitter2.sizes()[0]
 
-        self.liste_tables_in_tabs[self.onglets.currentIndex()].resizeCells(new_size)
+        self.list_tables_in_tabs[self.onglets.currentIndex()].resizeCells(new_size)
 
-        for table in self.liste_tables_in_tabs:
+        for table in self.list_tables_in_tabs:
             table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
 
 
@@ -602,7 +605,7 @@ class Fenetre(QtGui.QMainWindow):
         """Method to get the infos of a post.
         For now, gets only the abstract"""
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
         abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
         title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
@@ -630,7 +633,7 @@ class Fenetre(QtGui.QMainWindow):
         # infos:
         # http://vincent-vande-vyvre.developpez.com/tutoriels/pyqt/manipulation-images/
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
         try:
             path_graphical_abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 8).data()
@@ -671,7 +674,7 @@ class Fenetre(QtGui.QMainWindow):
         Mainly sets the tab query to the saved query"""
 
 
-        for table in self.liste_tables_in_tabs:
+        for table in self.list_tables_in_tabs:
             table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
 
         self.searchByButton()
@@ -691,16 +694,16 @@ class Fenetre(QtGui.QMainWindow):
         if update:
             for index in range(self.onglets.count()):
                 if name_search == self.onglets.tabText(index):
-                    self.liste_tables_in_tabs[index].base_query = query
+                    self.list_tables_in_tabs[index].base_query = query
 
-                    self.liste_tables_in_tabs[index].topic_entries = topic_options
-                    self.liste_tables_in_tabs[index].author_entries = author_options
+                    self.list_tables_in_tabs[index].topic_entries = topic_options
+                    self.list_tables_in_tabs[index].author_entries = author_options
 
                     if self.onglets.tabText(self.onglets.currentIndex()) == name_search:
                         # Update the view
-                        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-                        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-                        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+                        model = self.list_models_in_tabs[self.onglets.currentIndex()]
+                        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+                        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
                         model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
                         proxy.setSourceModel(model)
                         table.setModel(proxy)
@@ -709,21 +712,20 @@ class Fenetre(QtGui.QMainWindow):
         # Create the model for the new tab
         modele = ModelPerso()
 
-        # Changes are effective immediately
-        # modele.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
+        # Changes are not effective immediately
+        modele.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
 
         # Changes are not effective immediately, but it doesn't matter
         # because the view is updated each time a change is made
-        modele.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
         modele.setTable("papers")
         modele.select()
 
-        self.liste_models_in_tabs.append(modele)
+        self.list_models_in_tabs.append(modele)
 
         proxy = QtGui.QSortFilterProxyModel()
         proxy.setDynamicSortFilter(True)
         proxy.setSourceModel(modele)
-        self.liste_proxies_in_tabs.append(proxy)
+        self.list_proxies_in_tabs.append(proxy)
 
         # Create the view, and give it the model
         tableau = ViewPerso(self)
@@ -735,7 +737,7 @@ class Fenetre(QtGui.QMainWindow):
         tableau.setSelectionBehavior(tableau.SelectRows)
         tableau.initUI()
 
-        self.liste_tables_in_tabs.append(tableau)
+        self.list_tables_in_tabs.append(tableau)
 
         self.onglets.addTab(tableau, name_search)
 
@@ -822,7 +824,7 @@ class Fenetre(QtGui.QMainWindow):
             self.resetView()
             return
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
         self.query = QtSql.QSqlQuery(self.bdd)
 
@@ -842,30 +844,18 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
-        elapsed_time = datetime.datetime.now() - start_time
-        print("preparing req")
-        print(elapsed_time)
-
         self.query.prepare(requete)
         self.query.exec_()
 
-        elapsed_time = datetime.datetime.now() - start_time
-        print("ex req")
-        print(elapsed_time)
-
         # TODO: à décommenter absolument
         self.updateView()
-
-        print("update view")
-        elapsed_time = datetime.datetime.now() - start_time
-        print(elapsed_time)
 
 
     def searchNew(self):
 
         """Slot to select new articles"""
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
         self.query = QtSql.QSqlQuery(self.bdd)
 
@@ -1028,7 +1018,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to search on title and abstract"""
 
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
         results = functions.simpleChar(self.research_bar.text())
         proxy.setFilterRegExp(QtCore.QRegExp(results))
         proxy.setFilterKeyColumn(13)
@@ -1055,7 +1045,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to reset view, clean the graphical abstract, etc"""
 
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
 
         # Clean graphical abstract area
         try:
@@ -1096,7 +1086,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to mark an article read"""
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         new = table.model().index(element.row(), 12).data()
 
         if new == 0:
@@ -1108,8 +1098,8 @@ class Fenetre(QtGui.QMainWindow):
 
             # Change the data in the model
             table.model().setData(table.model().index(line, 12), 0)
-
-            self.searchByButton()
+            index = table.model().index(line, 12)
+            table.model().dataChanged.emit(index, index)
 
             table.selectRow(line)
 
@@ -1119,9 +1109,9 @@ class Fenetre(QtGui.QMainWindow):
         """Method to update the view after a model change.
         If an item was selected, the item is re-selected"""
 
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+        model = self.list_models_in_tabs[self.onglets.currentIndex()]
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
 
         try:
             # Try to update the model
@@ -1139,25 +1129,18 @@ class Fenetre(QtGui.QMainWindow):
         """Method to invert the value of new.
         So, toggle the read/unread state of an article"""
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
-        # table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        new = table.model().index(table.selectionModel().selection().indexes()[0].row(), 12).data()
+        # table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        new = table.model().index(table.selectionModel().currentIndex().row(), 12).data()
         line = table.selectionModel().currentIndex().row()
 
         # Invert the value of new
         new = 1 - new
 
         table.model().setData(table.model().index(line, 12), new)
-
-        try:
-            model.setQuery(self.query)
-            proxy.setSourceModel(model)
-            table.setModel(proxy)
-        except AttributeError:
-            pass
+        index = table.model().index(line, 12)
+        table.model().dataChanged.emit(index, index)
 
         table.selectRow(line)
 
@@ -1217,7 +1200,7 @@ class Fenetre(QtGui.QMainWindow):
         http://stackoverflow.com/questions/4216985/call-to-operating-system-to-open-url
         """
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         url = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
 
         if not url:
@@ -1265,11 +1248,9 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to mark a post liked"""
 
-        table = self.liste_tables_in_tabs[self.onglets.currentIndex()]
-        model = self.liste_models_in_tabs[self.onglets.currentIndex()]
-        proxy = self.liste_proxies_in_tabs[self.onglets.currentIndex()]
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
-        like = table.model().index(table.selectionModel().selection().indexes()[0].row(), 9).data()
+        like = table.model().index(table.selectionModel().currentIndex().row(), 9).data()
         line = table.selectionModel().currentIndex().row()
 
         # Invert the value of new
@@ -1280,12 +1261,8 @@ class Fenetre(QtGui.QMainWindow):
 
         table.model().setData(table.model().index(line, 9), like)
 
-        try:
-            model.setQuery(self.query)
-            proxy.setSourceModel(model)
-            table.setModel(proxy)
-        except AttributeError:
-            pass
+        index = table.model().index(line, 9)
+        table.model().dataChanged.emit(index, index)
 
         table.selectRow(line)
 
