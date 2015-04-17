@@ -46,6 +46,7 @@ class Fenetre(QtGui.QMainWindow):
         self.l.info('Starting the program')
 
         self.parsing = False
+        self.watching_new = False
 
         # Object to store options and preferences
         self.options = QtCore.QSettings("options.ini", QtCore.QSettings.IniFormat)
@@ -817,8 +818,6 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to select articles by journal"""
 
-        start_time = datetime.datetime.now()
-
         # Reset the view when the last button is unchecked
         if not self.tags_selected:
             self.resetView()
@@ -844,6 +843,31 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
+        if self.watching_new:
+            query = QtSql.QSqlQuery(self.bdd)
+            query.prepare("SELECT id FROM papers WHERE new=1")
+            query.exec_()
+
+            list_id = []
+
+            while query.next():
+                record = query.record()
+                list_id.append(record.value('id'))
+
+            if "WHERE" in requete:
+                requete += " AND id IN ("
+            else:
+                requete += " WHERE id IN ("
+
+            # Building the query
+            for each_id in list_id:
+                if each_id != list_id[-1]:
+                    requete = requete + str(each_id) + ", "
+                # Close the query if last
+                else:
+                    requete = requete + str(each_id) + ")"
+
+        print(requete)
         self.query.prepare(requete)
         self.query.exec_()
 
@@ -855,39 +879,13 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to select new articles"""
 
-        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        # Use a boolean, usable in searchByButton
+        self.watching_new = True
 
-        self.query = QtSql.QSqlQuery(self.bdd)
+        model = self.list_models_in_tabs[self.onglets.currentIndex()]
+        model.submitAll()
 
-        # First, search the new articles id
-        self.query.prepare("SELECT id FROM papers WHERE new=1")
-        self.query.exec_()
-
-        list_id = []
-
-        while self.query.next():
-            record = self.query.record()
-            list_id.append(record.value('id'))
-
-        refined_query = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
-
-        if "WHERE" in refined_query:
-            requete = " AND id IN ("
-        else:
-            requete = " WHERE id IN ("
-
-        # Building the query
-        for each_id in list_id:
-            if each_id != list_id[-1]:
-                requete = requete + str(each_id) + ", "
-            # Close the query if last
-            else:
-                requete = requete + str(each_id) + ")"
-
-        self.query.prepare(refined_query + requete)
-        self.query.exec_()
-
-        self.updateView()
+        self.searchByButton()
 
 
     def refineBaseQuery(self, base_query, topic_options, author_options):
@@ -1044,6 +1042,8 @@ class Fenetre(QtGui.QMainWindow):
     def resetView(self):
 
         """Slot to reset view, clean the graphical abstract, etc"""
+
+        self.watching_new = False
 
         proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
 
