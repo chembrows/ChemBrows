@@ -867,11 +867,9 @@ class Fenetre(QtGui.QMainWindow):
                 else:
                     requete = requete + str(each_id) + ")"
 
-        print(requete)
         self.query.prepare(requete)
         self.query.exec_()
 
-        # TODO: à décommenter absolument
         self.updateView()
 
 
