@@ -23,7 +23,7 @@ import functions
 import hosts
 
 # DEBUG
-# from memory_profiler import profile
+from memory_profiler import profile
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -222,6 +222,29 @@ class Fenetre(QtGui.QMainWindow):
             self.calculatePercentageMatch(update=False)
             self.parseAction.setEnabled(True)
             self.l.info("Parsing data finished. Enabling parseAction")
+
+            # # # TO USE for the notifications
+            # count_query = QtSql.QSqlQuery(self.bdd)
+            # for table in self.list_tables_in_tabs:
+                # temp_list = []
+                # req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
+                # count_req = req_str.split("WHERE")[1]
+                # count_req = "SELECT COUNT(*) FROM papers WHERE new=1 AND" + count_req
+                # count_req = "SELECT id FROM papers WHERE new=1 AND" + count_req
+                # print(count_req)
+                # count_query.exec_(count_req)
+
+                # while count_query.next():
+                    # record = count_query.record()
+                    # temp_list.append(record.value('id'))
+
+            # self.options.setValue("list_new", list_temp)
+
+            # print("after")
+            # elapsed_time = datetime.datetime.now() - self.start_time
+            # print(elapsed_time)
+
+            # print(nbr_new)
 
             # Update the view when a worker is finished
             self.searchByButton()
@@ -685,6 +708,7 @@ class Fenetre(QtGui.QMainWindow):
 
 
 
+    @profile
     def createSearchTab(self, name_search, query, topic_options=None, author_options=None, update=False):
 
         """Slot called from AdvancedSearch, when a new search is added,
@@ -713,11 +737,10 @@ class Fenetre(QtGui.QMainWindow):
         # Create the model for the new tab
         modele = ModelPerso()
 
-        # Changes are not effective immediately
-        modele.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
-
         # Changes are not effective immediately, but it doesn't matter
         # because the view is updated each time a change is made
+        modele.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
+
         modele.setTable("papers")
         modele.select()
 
@@ -868,7 +891,7 @@ class Fenetre(QtGui.QMainWindow):
                     requete = requete + str(each_id) + ")"
 
         self.query.prepare(requete)
-        self.query.exec_()
+        self.query.exec_
 
         self.updateView()
 
