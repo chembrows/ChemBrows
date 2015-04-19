@@ -11,7 +11,7 @@ from io import open as iopen
 import hosts
 import functions
 
-# from memory_profiler import profile
+from memory_profiler import profile
 # import itertools
 
 class Worker(QtCore.QThread):
@@ -121,7 +121,12 @@ class Worker(QtCore.QThread):
                     self.l.debug("Skipping")
                     continue
                 else:
-                    title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry)
+                    try:
+                        title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry)
+                    except TypeError:
+                        self.l.error("getData returned None for {}".format(journal))
+                        self.list_futures_images.append(True)
+                        return
 
                     # Checking if the data are complete
                     # TODO: normally fot these journals, no need to check
@@ -295,7 +300,7 @@ class Worker(QtCore.QThread):
             query.exec_()
 
 
-    # @profile
+    @profile
     def checkFuturesRunning(self):
 
         """Method to check if some futures are still running.

@@ -58,7 +58,6 @@ class Fenetre(QtGui.QMainWindow):
 
         # List to store all the views, models and proxies
         self.list_tables_in_tabs = []
-        self.list_models_in_tabs = []
         self.list_proxies_in_tabs = []
 
         # Call processEvents regularly for the splash screen
@@ -94,6 +93,16 @@ class Fenetre(QtGui.QMainWindow):
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
                      liked INTEGER, url TEXT, verif INTEGER, new INTEGER, topic_simple TEXT)")
+
+        # Create the model for the new tab
+        self.model = ModelPerso()
+
+        # Changes are not effective immediately, but it doesn't matter
+        # because the view is updated each time a change is made
+        self.model.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
+
+        self.model.setTable("papers")
+        self.model.select()
 
 
     def getJournalsToCare(self):
@@ -431,8 +440,7 @@ class Fenetre(QtGui.QMainWindow):
         # Correct a bug
         self.options.sync()
 
-        for model in self.list_models_in_tabs:
-            model.submitAll()
+        self.model.submitAll()
 
         # Close the database connection
         self.bdd.removeDatabase("fichiers.sqlite")
@@ -707,8 +715,6 @@ class Fenetre(QtGui.QMainWindow):
         self.updateCellSize()
 
 
-
-    @profile
     def createSearchTab(self, name_search, query, topic_options=None, author_options=None, update=False):
 
         """Slot called from AdvancedSearch, when a new search is added,
@@ -726,29 +732,16 @@ class Fenetre(QtGui.QMainWindow):
 
                     if self.onglets.tabText(self.onglets.currentIndex()) == name_search:
                         # Update the view
-                        model = self.list_models_in_tabs[self.onglets.currentIndex()]
                         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
                         proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
-                        model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
-                        proxy.setSourceModel(model)
+                        self.model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
+                        proxy.setSourceModel(self.model)
                         table.setModel(proxy)
                     return
 
-        # Create the model for the new tab
-        modele = ModelPerso()
-
-        # Changes are not effective immediately, but it doesn't matter
-        # because the view is updated each time a change is made
-        modele.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
-
-        modele.setTable("papers")
-        modele.select()
-
-        self.list_models_in_tabs.append(modele)
-
         proxy = QtGui.QSortFilterProxyModel()
         proxy.setDynamicSortFilter(True)
-        proxy.setSourceModel(modele)
+        proxy.setSourceModel(self.model)
         self.list_proxies_in_tabs.append(proxy)
 
         # Create the view, and give it the model
@@ -903,8 +896,7 @@ class Fenetre(QtGui.QMainWindow):
         # Use a boolean, usable in searchByButton
         self.watching_new = True
 
-        model = self.list_models_in_tabs[self.onglets.currentIndex()]
-        model.submitAll()
+        self.model.submitAll()
 
         self.searchByButton()
 
@@ -1130,18 +1122,18 @@ class Fenetre(QtGui.QMainWindow):
         """Method to update the view after a model change.
         If an item was selected, the item is re-selected"""
 
-        model = self.list_models_in_tabs[self.onglets.currentIndex()]
+        # model = self.list_models_in_tabs[self.onglets.currentIndex()]
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
 
         try:
             # Try to update the model
-            model.setQuery(self.query)
-            proxy.setSourceModel(model)
+            self.model.setQuery(self.query)
+            proxy.setSourceModel(self.model)
             table.setModel(proxy)
         except AttributeError:
-            model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
-            proxy.setSourceModel(model)
+            self.model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
+            proxy.setSourceModel(self.model)
             table.setModel(proxy)
 
 
