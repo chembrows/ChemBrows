@@ -232,7 +232,7 @@ class Fenetre(QtGui.QMainWindow):
             self.parseAction.setEnabled(True)
             self.l.info("Parsing data finished. Enabling parseAction")
 
-            # # # TO USE for the notifications
+            # # TO USE for the notifications
             # count_query = QtSql.QSqlQuery(self.bdd)
             # for table in self.list_tables_in_tabs:
                 # temp_list = []

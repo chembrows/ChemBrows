@@ -52,6 +52,11 @@ class Worker(QtCore.QThread):
 
         """Method to destroy the thread properly"""
 
+        # try:
+            # self.session_pages.shutdown()
+        # except AttributeError:
+            # pass
+        # self.session_images.shutdown()
         self.wait()
         self.exit()
 
@@ -61,7 +66,11 @@ class Worker(QtCore.QThread):
         """Main function. Starts the real business"""
 
         # Get the RSS page of the url provided
-        self.feed = feedparser.parse(self.url_feed)
+        try:
+            self.feed = feedparser.parse(self.url_feed)
+        except OSError:
+            self.l.error("Too many files open, could not start the thread !")
+            return
 
         # Get the journal name
         try:
@@ -155,7 +164,8 @@ class Worker(QtCore.QThread):
                         self.list_futures_images.append(True)
                     else:
                         # Use a user-agent browser, some journals block bots
-                        headers = {'User-agent': 'Mozilla/5.0'}
+                        headers = {'User-agent': 'Mozilla/5.0',
+                                   'Connection': 'close'}
                         headers["Referer"] = url
 
                         future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=20)
@@ -163,9 +173,9 @@ class Worker(QtCore.QThread):
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
         else:
-            # session = FuturesSession(max_workers=10)
-            session = FuturesSession(max_workers=20)
-            # session = FuturesSession(max_workers=40)
+
+            self.session_pages = FuturesSession(max_workers=20)
+            # self.session_pages = FuturesSession(max_workers=40)
 
             for entry in self.feed.entries:
 
@@ -182,7 +192,7 @@ class Worker(QtCore.QThread):
                     except AttributeError:
                         url = entry.link
 
-                    future = session.get(url, timeout=20)
+                    future = self.session_pages.get(url, timeout=20, headers={'Connection':'close'})
                     self.list_futures_urls.append(future)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
@@ -247,10 +257,11 @@ class Worker(QtCore.QThread):
         if graphical_abstract == "Empty":
             self.list_futures_images.append(True)
         else:
-            headers = {'User-agent': 'Mozilla/5.0'}
+            headers = {'User-agent': 'Mozilla/5.0',
+                       'Connection': 'close'}
             headers["Referer"] = url
 
-            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=10)
+            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=20)
             self.list_futures_images.append(future_image)
             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
@@ -278,17 +289,18 @@ class Worker(QtCore.QThread):
 
                 path = self.path
 
-                # Save the page
-                with iopen(path + functions.simpleChar(response.url), 'wb') as file:
-                    file.write(response.content)
-                    self.l.debug("Image ok")
-
-                # query.prepare("UPDATE papers SET graphical_abstract=? WHERE doi=?")
-                graphical_abstract = functions.simpleChar(response.url)
-                params = (graphical_abstract, 1, doi)
+                try:
+                    # Save the page
+                    with iopen(path + functions.simpleChar(response.url), 'wb') as file:
+                        file.write(response.content)
+                        self.l.debug("Image ok")
+                except OSError:
+                    params = ("Empty", 0, doi)
+                else:
+                    graphical_abstract = functions.simpleChar(response.url)
+                    params = (graphical_abstract, 1, doi)
             else:
                 self.l.debug("Bad return code: {}".format(response.status_code))
-                # query.prepare("UPDATE papers SET graphical_abstract='Empty', verif=0 WHERE doi=?")
                 params = ("Empty", 0, doi)
 
         finally:
@@ -300,7 +312,7 @@ class Worker(QtCore.QThread):
             query.exec_()
 
 
-    @profile
+    # @profile
     def checkFuturesRunning(self):
 
         """Method to check if some futures are still running.
