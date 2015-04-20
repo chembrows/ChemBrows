@@ -168,7 +168,7 @@ class Worker(QtCore.QThread):
                                    'Connection': 'close'}
                         headers["Referer"] = url
 
-                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=20)
+                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=30)
                         self.list_futures_images.append(future_image)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
@@ -192,7 +192,7 @@ class Worker(QtCore.QThread):
                     except AttributeError:
                         url = entry.link
 
-                    future = self.session_pages.get(url, timeout=20, headers={'Connection':'close'})
+                    future = self.session_pages.get(url, timeout=30, headers={'Connection':'close'})
                     self.list_futures_urls.append(future)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
@@ -261,7 +261,7 @@ class Worker(QtCore.QThread):
                        'Connection': 'close'}
             headers["Referer"] = url
 
-            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=20)
+            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=30)
             self.list_futures_images.append(future_image)
             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
