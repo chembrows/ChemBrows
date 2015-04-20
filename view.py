@@ -16,9 +16,12 @@ class ViewPerso(QtGui.QTableView):
         self.parent = parent
         self.defineSlots()
 
+        self.name_search = None
         self.base_query = None
         self.topic_entries = None
         self.author_entries = None
+        self.list_new_ids = []
+        self.list_id_articles = []
 
         self.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
 

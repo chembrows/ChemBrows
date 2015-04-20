@@ -18,6 +18,7 @@ from worker import Worker
 from predictor import Predictor
 from settings import Settings
 from advanced_search import AdvancedSearch
+from tab import TabPerso
 import functions
 
 import hosts
@@ -42,7 +43,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        # self.l.setLevel(20)
+        self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -232,28 +233,7 @@ class Fenetre(QtGui.QMainWindow):
             self.parseAction.setEnabled(True)
             self.l.info("Parsing data finished. Enabling parseAction")
 
-            # # TO USE for the notifications
-            # count_query = QtSql.QSqlQuery(self.bdd)
-            # for table in self.list_tables_in_tabs:
-                # temp_list = []
-                # req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
-                # count_req = req_str.split("WHERE")[1]
-                # count_req = "SELECT COUNT(*) FROM papers WHERE new=1 AND" + count_req
-                # count_req = "SELECT id FROM papers WHERE new=1 AND" + count_req
-                # print(count_req)
-                # count_query.exec_(count_req)
-
-                # while count_query.next():
-                    # record = count_query.record()
-                    # temp_list.append(record.value('id'))
-
-            # self.options.setValue("list_new", list_temp)
-
-            # print("after")
-            # elapsed_time = datetime.datetime.now() - self.start_time
-            # print(elapsed_time)
-
-            # print(nbr_new)
+            self.loadNotifications()
 
             # Update the view when a worker is finished
             self.searchByButton()
@@ -451,6 +431,51 @@ class Fenetre(QtGui.QMainWindow):
         self.l.info("Closing the program")
 
 
+    def loadNotifications(self):
+
+        """Method to find the number of unread articles,
+        for each search. Load a list of id, for the unread articles,
+        in each table. And a list of id, for the concerned articles, for
+        each table"""
+
+        count_query = QtSql.QSqlQuery(self.bdd)
+        for table in self.list_tables_in_tabs:
+            temp_list = []
+
+            req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
+
+            # First, execute the normal search query, and get all the id of
+            # the concerned articles
+            if table != self.list_tables_in_tabs[0]:
+                count_query.exec_(req_str)
+                while count_query.next():
+                    record = count_query.record()
+                    temp_list.append(record.value('id'))
+                table.list_id_articles = temp_list
+
+            temp_list = []
+
+            # Then, get a list of the unread articles, for each search query
+            if table != self.list_tables_in_tabs[0]:
+                count_req = req_str.split("WHERE")[1]
+                count_req = "SELECT id FROM papers WHERE new=1 AND" + count_req
+            else:
+                count_req = "SELECT id FROM papers WHERE new=1"
+
+            count_query.exec_(count_req)
+
+            while count_query.next():
+                record = count_query.record()
+                temp_list.append(record.value('id'))
+
+            table.list_new_ids = temp_list
+
+        # Set the notifications for each tab
+        for index in range(self.onglets.count()):
+            notifs = len(self.onglets.widget(index).list_new_ids)
+            self.onglets.setNotifications(index, notifs)
+
+
     def restoreSettings(self):
 
         """Restore the prefs of the window"""
@@ -465,6 +490,9 @@ class Fenetre(QtGui.QMainWindow):
             self.createSearchTab(search_name, query,
                                  topic_options=topic_entries,
                                  author_options=author_entries)
+
+        # Load the unread articles, and display it for each tab
+        self.loadNotifications()
 
         # Si des réglages pour la fenêtre
         # sont disponibles, on les importe et applique
@@ -737,6 +765,8 @@ class Fenetre(QtGui.QMainWindow):
                         self.model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
                         proxy.setSourceModel(self.model)
                         table.setModel(proxy)
+
+                    self.loadNotifications()
                     return
 
         proxy = QtGui.QSortFilterProxyModel()
@@ -746,6 +776,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Create the view, and give it the model
         tableau = ViewPerso(self)
+        tableau.name_search = name_search
         tableau.base_query = query
         tableau.topic_entries = topic_options
         tableau.author_entries = author_options
@@ -1095,11 +1126,36 @@ class Fenetre(QtGui.QMainWindow):
         self.updateCellSize()
 
 
+    def updateNotifications(self, id_bdd, remove=True):
+
+        """Slot to update the number of unread articles,
+        in each tab. Called by markOneRead and toggleRead"""
+
+        for index in range(self.onglets.count()):
+
+            # remove the id of the list of the new articles
+            if id_bdd in self.onglets.widget(index).list_new_ids and remove:
+                self.onglets.widget(index).list_new_ids.remove(id_bdd)
+
+            # Add the id to the list of new articles
+            elif id_bdd in self.onglets.widget(index).list_id_articles and not remove:
+                self.onglets.widget(index).list_new_ids.append(id_bdd)
+
+            # The tab is the main tab, with all the articles.
+            # The article is concerned for sure
+            elif index == 0 and not remove:
+                self.onglets.widget(index).list_new_ids.append(id_bdd)
+
+            notifs = len(self.onglets.widget(index).list_new_ids)
+            self.onglets.setNotifications(index, notifs)
+
+
     def markOneRead(self, element):
 
         """Slot to mark an article read"""
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        id_bdd = table.model().index(element.row(), 0).data()
         new = table.model().index(element.row(), 12).data()
 
         if new == 0:
@@ -1115,6 +1171,8 @@ class Fenetre(QtGui.QMainWindow):
             table.model().dataChanged.emit(index, index)
 
             table.selectRow(line)
+
+            self.updateNotifications(id_bdd)
 
 
     def updateView(self, current_item_id=None):
@@ -1143,6 +1201,7 @@ class Fenetre(QtGui.QMainWindow):
         So, toggle the read/unread state of an article"""
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        id_bdd = table.model().index(table.selectionModel().currentIndex().row(), 0).data()
         new = table.model().index(table.selectionModel().currentIndex().row(), 12).data()
         line = table.selectionModel().currentIndex().row()
 
@@ -1155,6 +1214,11 @@ class Fenetre(QtGui.QMainWindow):
         table.viewport().update()
 
         table.selectRow(line)
+
+        if new == 0:
+            self.updateNotifications(id_bdd)
+        else:
+            self.updateNotifications(id_bdd, remove=False)
 
 
     def cleanDb(self):
@@ -1426,7 +1490,8 @@ class Fenetre(QtGui.QMainWindow):
 
         # Main part of the window in a tab.
         # Allows to create other tabs
-        self.onglets = QtGui.QTabWidget()
+        # self.onglets = QtGui.QTabWidget(self)
+        self.onglets = TabPerso(self)
         self.onglets.setContentsMargins(0, 0, 0, 0)
 
         self.splitter1 = QtGui.QSplitter(QtCore.Qt.Vertical)

@@ -1,26 +1,21 @@
 #!/usr/bin/python
 # -*-coding:Utf-8 -*
 
-from PyQt4 import QtSql, QtCore
-
-# import liste
+from PyQt4 import QtSql
 
 class ModelPerso(QtSql.QSqlTableModel):
 
-    """On sous-classe le modèle pour charger toute la
-    bdd en une seule fois. Peut causer des problèmes de
-    performance."""
+    """Subclassing the model to load all the data at once.
+    Can cause performance issues"""
 
-    # def __init__(self, parent=None, database=None):
     def __init__(self):
         super(ModelPerso, self).__init__()
 
 
     def setQuery(self, query):
 
-        """Réimplémentation de cette méthode. Elle permet dorénavant
-        de charger ts les résultats retournés par la requêteen une
-        seule fois. Peut causer des problèmes de performances"""
+        """Reimplementation. Allows to load all the data at once, for a query.
+        Can cause performance issues"""
         # http://stackoverflow.com/questions/17879013/
         # reimplementing-qsqltablemodel-setquery
 
@@ -42,9 +37,8 @@ class ModelPerso(QtSql.QSqlTableModel):
 
     def select(self):
 
-        """Réimplémentation de cette méthode. Elle permet dorénavant
-        de charger tte la bdd en une seule fois. Peut causer des problèmes
-        de performances"""
+        """Reimplementation. Allows to load all the data at once.
+        Can cause performance issues"""
         # http://www.developpez.net/forums/d1243418/autres-langages/
         # python-zope/gui/pyside-pyqt/reglage-ascenseur-vertical-qtableview/
 
