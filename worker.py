@@ -11,7 +11,7 @@ from io import open as iopen
 import hosts
 import functions
 
-from memory_profiler import profile
+# from memory_profiler import profile
 import itertools
 
 class Worker(QtCore.QThread):
@@ -217,7 +217,7 @@ class Worker(QtCore.QThread):
         self.l.info("Exiting thread for {}".format(journal))
 
 
-    @profile
+    # @profile
     def completeData(self, doi, company, journal, journal_abb, entry, future):
 
         """Callback to handle the response of the futures trying to

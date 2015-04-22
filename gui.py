@@ -24,7 +24,7 @@ import functions
 import hosts
 
 # DEBUG
-from memory_profiler import profile
+# from memory_profiler import profile
 
 
 class Fenetre(QtGui.QMainWindow):
