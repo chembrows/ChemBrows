@@ -13,15 +13,21 @@ class TabPerso(QtGui.QTabWidget):
 
     def setNotifications(self, index, nbr_notifications):
 
-        if nbr_notifications == 0:
-            return
-
         text = self.tabText(index)
-        self.setTabText(index, "{} ({})".format(text, nbr_notifications))
+
+        if nbr_notifications == 0:
+            self.setTabText(index, text)
+        else:
+            self.setTabText(index, "{} ({})".format(text, nbr_notifications))
 
 
     def tabText(self, index):
 
         text = super(TabPerso, self).tabText(index)
 
-        return text.split(" (")[0]
+        try:
+            text = text.split(" (")[0]
+        except IndexError:
+            pass
+
+        return text
