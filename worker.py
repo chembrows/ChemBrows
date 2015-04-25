@@ -11,8 +11,8 @@ from io import open as iopen
 import hosts
 import functions
 
-# from memory_profiler import profile
-import itertools
+from memory_profiler import profile
+
 
 class Worker(QtCore.QThread):
 
@@ -54,13 +54,18 @@ class Worker(QtCore.QThread):
 
         """Method to destroy the thread properly"""
 
-        # try:
-            # self.session_pages.shutdown()
-        # except AttributeError:
-            # pass
-        # self.session_images.shutdown()
+        print("on sort")
+        self.l.debug("Deleting thread")
+
+        # self.session_pages.executor.shutdown()
+        # self.session_images.execute.shutdown()
+
+        # del self.session_images
+        # del self.session_pages
+
         self.wait()
         self.exit()
+        print("on est sortis")
 
 
     def run(self):
@@ -86,7 +91,7 @@ class Worker(QtCore.QThread):
 
         # Lists to check if the post is in the db, and if
         # it has all the infos
-        # self.session_images = FuturesSession(max_workers=10)
+        # self.session_images = FuturesSession(max_workers=1)
         self.session_images = FuturesSession(max_workers=20)
         # self.session_images = FuturesSession(max_workers=40)
 
@@ -171,15 +176,17 @@ class Worker(QtCore.QThread):
                     else:
                         # Use a user-agent browser, some journals block bots
                         headers = {'User-agent': 'Mozilla/5.0',
-                                   'Connection': 'close'}
-                        headers["Referer"] = url
+                                   'Connection': 'close',
+                                   'Referer': url}
+                        # headers["Referer"] = url
 
-                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=30)
+                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=3)
                         # self.list_futures_images.append(future_image)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
         else:
 
+            # self.session_pages = FuturesSession(max_workers=1)
             self.session_pages = FuturesSession(max_workers=20)
             # self.session_pages = FuturesSession(max_workers=40)
 
@@ -200,7 +207,7 @@ class Worker(QtCore.QThread):
                     except AttributeError:
                         url = entry.link
 
-                    future = self.session_pages.get(url, timeout=30, headers={'Connection':'close'})
+                    future = self.session_pages.get(url, timeout=3, headers={'Connection':'close'})
                     # self.list_futures_urls.append(future)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
@@ -215,6 +222,7 @@ class Worker(QtCore.QThread):
             self.l.error("Problem when comitting data for {}".format(journal))
 
         self.l.info("Exiting thread for {}".format(journal))
+        del self
 
 
     # @profile
@@ -274,14 +282,16 @@ class Worker(QtCore.QThread):
             self.count_futures_images += 1
         else:
             headers = {'User-agent': 'Mozilla/5.0',
-                       'Connection': 'close'}
-            headers["Referer"] = url
+                       'Connection': 'close',
+                       'Referer': url}
+            # headers["Referer"] = url
 
-            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=30)
+            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=3)
             # self.list_futures_images.append(future_image)
             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
 
+    # @profile
     def pictureDownloaded(self, doi, entry_url, future):
 
         """Callback to handle the response of the futures

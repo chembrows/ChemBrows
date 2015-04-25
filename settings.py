@@ -152,6 +152,7 @@ class Settings(QtGui.QDialog):
         else:
             self.options.remove("journals_to_parse")
 
+        self.parent.model.submitAll()
         self.parent.displayTags()
         self.parent.resetView()
 

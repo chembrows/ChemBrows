@@ -24,7 +24,7 @@ import functions
 import hosts
 
 # DEBUG
-# from memory_profiler import profile
+from memory_profiler import profile
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -43,7 +43,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        self.l.setLevel(20)
+        # self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -191,6 +191,7 @@ class Fenetre(QtGui.QMainWindow):
         # # List to store the threads.
         # # The list is cleared when the method is started
         self.list_threads = []
+        self.count_threads = 0
         for i in range(max_nbr_threads):
             try:
                 url = self.urls[i]
@@ -205,6 +206,7 @@ class Fenetre(QtGui.QMainWindow):
                 break
 
 
+    # @profile
     def checkThreads(self):
 
         """Method to check the state of each thread.
@@ -215,20 +217,27 @@ class Fenetre(QtGui.QMainWindow):
         elapsed_time = datetime.datetime.now() - self.start_time
         self.l.info(elapsed_time)
 
-        states = [thread.isFinished() for thread in self.list_threads]
+        self.count_threads += 1
+
+        for worker in self.list_threads:
+            if worker.isFinished():
+                self.list_threads.remove(worker)
+                del worker
 
         # Display the nbr of finished threads
-        self.l.info("Done: {}/{}".format(states.count(True), self.urls_max))
+        self.l.info("Done: {}/{}".format(self.count_threads, self.urls_max))
 
         # # Display the progress of the parsing w/ the progress bar
-        percent = states.count(True) * 100 / self.urls_max
+        percent = self.count_threads * 100 / self.urls_max
 
         self.progress.setValue(round(percent, 0))
         if percent >= 100:
             self.progress.reset()
             app.processEvents()
 
-        if False not in states and len(states) == self.urls_max:
+        # if False not in states and len(states) == self.urls_max:
+        if self.count_threads == self.urls_max:
+
             self.calculatePercentageMatch(update=False)
             self.parseAction.setEnabled(True)
             self.l.info("Parsing data finished. Enabling parseAction")
@@ -374,6 +383,7 @@ class Fenetre(QtGui.QMainWindow):
         self.updateView()
 
 
+    # @profile
     def closeEvent(self, event):
 
         """Méthode pr effetcuer des actions avant de
@@ -431,6 +441,7 @@ class Fenetre(QtGui.QMainWindow):
         self.l.info("Closing the program")
 
 
+    # @profile
     def loadNotifications(self):
 
         """Method to find the number of unread articles,
@@ -1295,6 +1306,8 @@ class Fenetre(QtGui.QMainWindow):
 
         if self.predictor.classifier is not None:
 
+            self.model.submitAll()
+
             def whenDone():
                 self.progress.reset()
 
@@ -1302,6 +1315,8 @@ class Fenetre(QtGui.QMainWindow):
                     self.updateView()
 
                 self.parsing = False
+
+                del self.predictor
 
             self.parsing = True
 
@@ -1538,17 +1553,17 @@ if __name__ == '__main__':
         # logger.warning("{0}: {1}".format(exc_type, e))
     # finally:
         # Try to kill all the threads
-    try:
-        for worker in ex.list_threads:
-            worker.terminate()
+    # try:
+        # for worker in ex.list_threads:
+            # worker.terminate()
 
-            logger.debug("Starting killing the futures")
-            to_cancel = worker.list_futures_urls + worker.list_futures_images
-            for future in to_cancel:
-                if type(future) is not bool:
-                    future.cancel()
-            logger.debug("Done killing the futures")
+            # logger.debug("Starting killing the futures")
+            # to_cancel = worker.list_futures_urls + worker.list_futures_images
+            # for future in to_cancel:
+                # if type(future) is not bool:
+                    # future.cancel()
+            # logger.debug("Done killing the futures")
 
-        logger.info("Quitting the program, killing all the threads")
-    except AttributeError:
-        logger.info("Quitting the program, no threads")
+        # logger.info("Quitting the program, killing all the threads")
+    # except AttributeError:
+        # logger.info("Quitting the program, no threads")
