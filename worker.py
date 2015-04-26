@@ -11,7 +11,7 @@ from io import open as iopen
 import hosts
 import functions
 
-from memory_profiler import profile
+# from memory_profiler import profile
 
 
 class Worker(QtCore.QThread):
@@ -36,11 +36,12 @@ class Worker(QtCore.QThread):
         # for the tests
         self.path = "./graphical_abstracts/"
 
+        # Set the timeout for the futures
+        # W/ a large timeout, less chances to get en exception
+        self.TIMEOUT = 60
+
         # self.l.info("Starting parsing of the new articles")
 
-        # List to store the urls of the pages to request
-        # self.list_futures_urls = []
-        # self.list_futures_images = []
         self.count_futures_urls = 0
         self.count_futures_images = 0
 
@@ -54,18 +55,12 @@ class Worker(QtCore.QThread):
 
         """Method to destroy the thread properly"""
 
-        print("on sort")
         self.l.debug("Deleting thread")
 
-        # self.session_pages.executor.shutdown()
-        # self.session_images.execute.shutdown()
+        # NE PAS décommenter
+        # self.wait()
 
-        # del self.session_images
-        # del self.session_pages
-
-        self.wait()
         self.exit()
-        print("on est sortis")
 
 
     def run(self):
@@ -91,9 +86,7 @@ class Worker(QtCore.QThread):
 
         # Lists to check if the post is in the db, and if
         # it has all the infos
-        # self.session_images = FuturesSession(max_workers=1)
         self.session_images = FuturesSession(max_workers=20)
-        # self.session_images = FuturesSession(max_workers=40)
 
         # Get the company and the journal_abb by scrolling the dictionnary
         # containing all the data regarding the journals implemented in the
@@ -125,7 +118,6 @@ class Worker(QtCore.QThread):
         # if journal in wiley + science + elsevier:
         if journal in journals_no_dl:
 
-            # self.list_futures_urls = [True] * len(self.feed.entries)
             self.count_futures_urls += len(self.feed.entries)
 
             for entry in self.feed.entries:
@@ -134,7 +126,6 @@ class Worker(QtCore.QThread):
                 doi = hosts.getDoi(company, journal, entry)
 
                 if doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
-                    # self.list_futures_images.append(True)
                     self.count_futures_images += 1
                     self.l.debug("Skipping")
                     continue
@@ -143,7 +134,6 @@ class Worker(QtCore.QThread):
                         title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry)
                     except TypeError:
                         self.l.error("getData returned None for {}".format(journal))
-                        # self.list_futures_images.append(True)
                         self.count_futures_images += 1
                         return
 
@@ -171,32 +161,25 @@ class Worker(QtCore.QThread):
                     query.exec_()
 
                     if graphical_abstract == "Empty":
-                        # self.list_futures_images.append(True)
                         self.count_futures_images += 1
                     else:
                         # Use a user-agent browser, some journals block bots
                         headers = {'User-agent': 'Mozilla/5.0',
                                    'Connection': 'close',
                                    'Referer': url}
-                        # headers["Referer"] = url
 
-                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=3)
-                        # self.list_futures_images.append(future_image)
+                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
         else:
 
-            # self.session_pages = FuturesSession(max_workers=1)
             self.session_pages = FuturesSession(max_workers=20)
-            # self.session_pages = FuturesSession(max_workers=40)
 
             for entry in self.feed.entries:
 
                 doi = hosts.getDoi(company, journal, entry)
 
                 if doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
-                    # self.list_futures_urls.append(True)
-                    # self.list_futures_images.append(True)
                     self.count_futures_images += 1
                     self.count_futures_urls += 1
                     self.l.debug("Skipping")
@@ -207,25 +190,29 @@ class Worker(QtCore.QThread):
                     except AttributeError:
                         url = entry.link
 
-                    future = self.session_pages.get(url, timeout=3, headers={'Connection':'close'})
-                    # self.list_futures_urls.append(future)
+                    headers = {'User-agent': 'Mozilla/5.0',
+                               'Connection': 'close'}
+
+                    future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
         while not self.checkFuturesRunning():
-            # self.wait()
             self.sleep(0.5)
-            # self.sleep(0.2)
-            # self.sleep(1)
 
         if not self.bdd.commit():
             self.l.error(self.bdd.lastError().text())
             self.l.error("Problem when comitting data for {}".format(journal))
 
+        # Free the memory, and clean the remaining futures
+        try:
+            self.session_pages.executor.shutdown()
+        except AttributeError:
+            pass
+        self.session_images.executor.shutdown()
+
         self.l.info("Exiting thread for {}".format(journal))
-        del self
 
 
-    # @profile
     def completeData(self, doi, company, journal, journal_abb, entry, future):
 
         """Callback to handle the response of the futures trying to
@@ -237,12 +224,10 @@ class Worker(QtCore.QThread):
             response = future.result()
         except requests.exceptions.ReadTimeout:
             self.l.error("ReadTimeout for {}".format(journal))
-            # self.list_futures_images.append(True)
             self.count_futures_images += 1
             return
         except requests.exceptions.ConnectionError:
             self.l.error("ConnectionError for {}".format(journal))
-            # self.list_futures_images.append(True)
             self.count_futures_images += 1
             return
 
@@ -252,7 +237,6 @@ class Worker(QtCore.QThread):
             title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry, response)
         except TypeError:
             self.l.error("getData returned None for {}".format(journal))
-            # self.list_futures_images.append(True)
             self.count_futures_images += 1
             return
 
@@ -278,20 +262,16 @@ class Worker(QtCore.QThread):
         query.exec_()
 
         if graphical_abstract == "Empty":
-            # self.list_futures_images.append(True)
             self.count_futures_images += 1
         else:
             headers = {'User-agent': 'Mozilla/5.0',
                        'Connection': 'close',
                        'Referer': url}
-            # headers["Referer"] = url
 
-            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=3)
-            # self.list_futures_images.append(future_image)
+            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
 
-    # @profile
     def pictureDownloaded(self, doi, entry_url, future):
 
         """Callback to handle the response of the futures
@@ -345,22 +325,7 @@ class Worker(QtCore.QThread):
         """Method to check if some futures are still running.
         Returns True if all the futures are done"""
 
-        # total_futures = self.list_futures_images + self.list_futures_urls
-        # states_futures = []
-
-        # for result in total_futures:
-            # if type(result) is bool:
-                # states_futures.append(result)
-            # else:
-                # states_futures.append(result.done())
-
-        # if False not in states_futures and len(total_futures) == len(self.feed.entries) * 2:
-            # return True
-        # else:
-            # return False
-
         if self.count_futures_images + self.count_futures_urls != len(self.feed.entries) * 2:
-            # print("{}/{}".format(self.count_futures_images + self.count_futures_urls, len(self.feed.entries) * 2))
             return False
         else:
             return True

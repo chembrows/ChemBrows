@@ -24,7 +24,7 @@ import functions
 import hosts
 
 # DEBUG
-from memory_profiler import profile
+# from memory_profiler import profile
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -43,7 +43,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        # self.l.setLevel(20)
+        self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -198,7 +198,7 @@ class Fenetre(QtGui.QMainWindow):
                 worker = Worker(self.l, self.bdd, self.dict_journals)
                 worker.setUrl(url)
                 worker.finished.connect(self.checkThreads)
-                self.urls.pop(self.urls.index(url))
+                self.urls.remove(url)
                 self.list_threads.append(worker)
                 worker.start()
                 app.processEvents()
@@ -206,7 +206,7 @@ class Fenetre(QtGui.QMainWindow):
                 break
 
 
-    # @profile
+    @profile
     def checkThreads(self):
 
         """Method to check the state of each thread.
@@ -255,7 +255,7 @@ class Fenetre(QtGui.QMainWindow):
                 worker = Worker(self.l, self.bdd, self.dict_journals)
                 worker.setUrl(self.urls[0])
                 worker.finished.connect(self.checkThreads)
-                self.urls.pop(self.urls.index(worker.url_feed))
+                self.urls.remove(worker.url_feed)
                 self.list_threads.append(worker)
                 worker.start()
                 app.processEvents()
