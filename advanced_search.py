@@ -77,6 +77,7 @@ class AdvancedSearch(QtGui.QDialog):
         if not self.test:
             for index in range(self.parent.onglets.count()):
                 if self.parent.onglets.tabText(index) == tab_title:
+                    self.parent.list_tables_in_tabs.remove(self.parent.onglets.widget(index))
                     self.parent.onglets.removeTab(index)
                     self.parent.onglets.setCurrentIndex(0)
                     break

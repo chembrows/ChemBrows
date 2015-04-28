@@ -1189,12 +1189,11 @@ class Fenetre(QtGui.QMainWindow):
             self.updateNotifications(id_bdd)
 
 
-    def updateView(self, current_item_id=None):
+    def updateView(self):
 
         """Method to update the view after a model change.
         If an item was selected, the item is re-selected"""
 
-        # model = self.list_models_in_tabs[self.onglets.currentIndex()]
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
 
