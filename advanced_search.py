@@ -184,6 +184,7 @@ class AdvancedSearch(QtGui.QDialog):
                         line.clear()
             else:
                 # Perform a simple search, in the first tab
+                self.parent.onglets.setCurrentIndex(0)
                 self.parent.simpleQuery(base, topic_entries, author_entries)
         else:
             name_search = tab_title
@@ -304,9 +305,9 @@ class AdvancedSearch(QtGui.QDialog):
 
 # ------------------------ BUTTONS -----------------------------------------
 
-        self.button_search = QtGui.QPushButton("Search !", self)
+        self.button_search = QtGui.QPushButton("Quick search", self)
         self.button_delete_search = QtGui.QPushButton("Delete search", self)
-        self.button_search_and_save = QtGui.QPushButton("Save", self)
+        self.button_search_and_save = QtGui.QPushButton("Save search", self)
 
 # ------------------------ ASSEMBLING -----------------------------------------
 
