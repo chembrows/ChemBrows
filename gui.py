@@ -206,7 +206,7 @@ class Fenetre(QtGui.QMainWindow):
                 break
 
 
-    @profile
+    # @profile
     def checkThreads(self):
 
         """Method to check the state of each thread.
@@ -986,7 +986,8 @@ class Fenetre(QtGui.QMainWindow):
                     # AND condition
                     if index == 0:
                         if '*' in person:
-                            matching = fnmatch.filter(authors, person)
+                            # matching = fnmatch.filter(authors, person)
+                            matching = functions.match(authors, person)
                             if not matching:
                                 adding = False
                                 break
@@ -994,7 +995,8 @@ class Fenetre(QtGui.QMainWindow):
                     # OR condition
                     if index == 1:
                         if '*' in person:
-                            matching = fnmatch.filter(authors, person)
+                            # matching = fnmatch.filter(authors, person)
+                            matching = functions.match(authors, person)
                             if matching:
                                 list_adding_or.append(True)
                                 break
@@ -1012,7 +1014,8 @@ class Fenetre(QtGui.QMainWindow):
                     # NOT condition
                     if index == 2:
                         if '*' in person:
-                            matching = fnmatch.filter(authors, person)
+                            # matching = fnmatch.filter(authors, person)
+                            matching = functions.match(authors, person)
                             if matching:
                                 adding = False
                                 break

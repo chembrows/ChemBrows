@@ -212,6 +212,32 @@ def checkData():
     bdd.close()
 
 
+def match(target, pattern):
+
+    """target is a list. pattern is a pattern.
+    Return the sublist of target matching pattern.
+    This function is a replacement for fnmatch.filter()"""
+
+    sublist = []
+
+    pattern = pattern.replace(".", "\.")
+    pattern = pattern.replace("*", ".*")
+
+    target = [entry.replace(".", "\.") for entry in target]
+    target = [entry.replace("*", ".*") for entry in target]
+
+
+    for element in target:
+
+        result = re.match(pattern, element)
+
+        if result is not None:
+            sublist.append(element)
+
+    return sublist
+
+
+
 
 if __name__ == "__main__":
     # like(10)
@@ -223,4 +249,6 @@ if __name__ == "__main__":
     queryString("spermine")
     # checkData()
 
-    pass
+    entries = ['anslyn', 'D*K* smith', 'J* Nitschke', 'C* Hunter']
+
+    match(['jean-patrick francoia', 'robert pascal', 'laurent vial'], "r* pascal")
