@@ -679,6 +679,8 @@ class Fenetre(QtGui.QMainWindow):
         """Method to get the infos of a post.
         For now, gets only the abstract"""
 
+        self.button_share_mail.show()
+
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
         abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
@@ -1120,6 +1122,7 @@ class Fenetre(QtGui.QMainWindow):
         # Cleaning title, authors and abstract
         self.label_author.setText("")
         self.label_title.setText("")
+        self.label_journal.setText("")
         self.label_date.setText("")
         self.text_abstract.setHtml("")
 
@@ -1136,6 +1139,8 @@ class Fenetre(QtGui.QMainWindow):
 
         # Clear the search bar
         self.research_bar.clear()
+
+        self.button_share_mail.hide()
 
         # Delete last query
         try:
@@ -1325,6 +1330,8 @@ class Fenetre(QtGui.QMainWindow):
         http://www.2ality.com/2009/02/generate-emails-with-mailto-urls-and.html
         """
 
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+
         # Check if something is selected
         if not table.selectionModel().selection().indexes():
             return
@@ -1332,7 +1339,6 @@ class Fenetre(QtGui.QMainWindow):
         self.l.info("Sending by email")
 
         # Get the infos
-        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
         title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
         url = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
@@ -1562,6 +1568,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Button to share by email
         self.button_share_mail = QtGui.QPushButton("Share by email")
+        self.button_share_mail.hide()
 
         # A QWebView to render the sometimes rich text of the abstracts
         self.text_abstract = QtWebKit.QWebView()
