@@ -7,6 +7,7 @@ from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
 import fnmatch
 import datetime
 import webbrowser
+import subprocess
 
 # Personal modules
 from log import MyLog
@@ -20,7 +21,6 @@ from settings import Settings
 from advanced_search import AdvancedSearch
 from tab import TabPerso
 import functions
-
 import hosts
 
 # DEBUG
@@ -1295,8 +1295,19 @@ class Fenetre(QtGui.QMainWindow):
         if not url:
             return
         else:
-            webbrowser.open(url, new=0, autoraise=True)
+            # webbrowser.open(url, new=0, autoraise=True)
             self.l.info("Opening {0} in browser".format(url))
+
+            if sys.platform=='win32':
+                os.startfile(url)
+            elif sys.platform=='darwin':
+                subprocess.Popen(['open', url])
+            else:
+                try:
+                    subprocess.Popen(['xdg-open', url])
+                except OSError:
+                    self.l.error("openInBrowser: Error. Please open a browser on {}".format(url))
+
 
 
     def calculatePercentageMatch(self, update=True):

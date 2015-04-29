@@ -19,6 +19,8 @@ import re
 # import hosts
 
 
+
+
 def prettyDate(date):
 
     """Prettify a date. Ex: 3 days ago"""
@@ -248,7 +250,5 @@ if __name__ == "__main__":
     queryString("*sperm*")
     queryString("spermine")
     # checkData()
-
-    entries = ['anslyn', 'D*K* smith', 'J* Nitschke', 'C* Hunter']
 
     match(['jean-patrick francoia', 'robert pascal', 'laurent vial'], "r* pascal")
