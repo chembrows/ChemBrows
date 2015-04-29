@@ -8,11 +8,12 @@ import os
 from PyQt4 import QtSql
 import sqlite3
 import arrow
-import unidecode
+# import unidecode
 import re
 
 #TEST
 # from bs4 import BeautifulSoup
+from text_unidecode import unidecode
 
 #Personal modules
 # from log import MyLog
@@ -40,7 +41,9 @@ def simpleChar(string):
     # http://www.siteduzero.com/forum-83-810635-p1-sqlite-recherche-avec-like-insensible-a-la-casse.html#r7767300
 
     # http://stackoverflow.com/questions/5574042/string-slugification-in-python
-    string = unidecode.unidecode(string).lower()
+    # string = unidecode.unidecode(string).lower()
+    string = unidecode(string).lower()
+
     return re.sub(r'\W+', ' ', string)
 
 
@@ -252,3 +255,5 @@ if __name__ == "__main__":
     # checkData()
 
     match(['jean-patrick francoia', 'robert pascal', 'laurent vial'], "r* pascal")
+
+    print(simpleChar("Hello docteur, j€ vous emmerdë$"))
