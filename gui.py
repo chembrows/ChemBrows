@@ -4,10 +4,9 @@
 import sys
 import os
 from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
-import fnmatch
 import datetime
-import webbrowser
 import subprocess
+import urllib
 
 # Personal modules
 from log import MyLog
@@ -25,6 +24,7 @@ import hosts
 
 # DEBUG
 # from memory_profiler import profile
+
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -155,7 +155,8 @@ class Fenetre(QtGui.QMainWindow):
                     if line.split(" : ")[1] in self.journals_to_parse:
                         # self.urls.append(line.split(" : ")[2])
                         line = line.split(" : ")[2]
-                        line = line.lstrip().rstrip()
+                        # line = line.lstrip().rstrip()
+                        line = line.strip()
                         self.urls.append(line)
 
         # Create a dictionnary w/ all the data concerning the journals
@@ -656,6 +657,8 @@ class Fenetre(QtGui.QMainWindow):
         # like resizing the cells of the table
         self.splitter2.splitterMoved.connect(self.updateCellSize)
 
+        self.button_share_mail.clicked.connect(self.shareByEmail)
+
 
     def updateCellSize(self):
 
@@ -682,9 +685,11 @@ class Fenetre(QtGui.QMainWindow):
         title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
         author = table.model().index(table.selectionModel().selection().indexes()[0].row(), 6).data()
         date = table.model().index(table.selectionModel().selection().indexes()[0].row(), 4).data()
+        journal = table.model().index(table.selectionModel().selection().indexes()[0].row(), 5).data()
 
         self.label_date.setText(date)
         self.label_title.setText("<span style='font-size:12pt; font-weight:bold'>{0}</span>".format(title))
+        self.label_journal.setText(journal)
 
         if type(abstract) is str:
             self.text_abstract.setHtml(table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data())
@@ -981,7 +986,8 @@ class Fenetre(QtGui.QMainWindow):
                 for person in entries.split(','):
 
                     # Normalize the person's string
-                    person = person.lstrip().rstrip().lower()
+                    # person = person.lstrip().rstrip().lower()
+                    person = person.strip().lower()
 
                     # AND condition
                     if index == 0:
@@ -1309,6 +1315,58 @@ class Fenetre(QtGui.QMainWindow):
                     self.l.error("openInBrowser: Error. Please open a browser on {}".format(url))
 
 
+    def shareByEmail(self):
+
+        """
+        Method to send an article via email. The methods fills all the fields, except
+        the recepient(s). It sends the title, the authors, the journals, the abstract,
+        and provides a link to the editor's website. Also promotes chemBrows by inserting
+        its name in the title and at the end of the body.
+        http://www.2ality.com/2009/02/generate-emails-with-mailto-urls-and.html
+        """
+
+        # Check if something is selected
+        if not table.selectionModel().selection().indexes():
+            return
+
+        self.l.info("Sending by email")
+
+        # Get the infos
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
+        title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
+        url = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
+        author = table.model().index(table.selectionModel().selection().indexes()[0].row(), 6).data()
+        journal = table.model().index(table.selectionModel().selection().indexes()[0].row(), 5).data()
+
+        # Create a simple title, by removing html tags (tags are not accepted in a mail subject)
+        simple_title = functions.removeHtml(title) + " : spotted with chemBrows"
+
+        # Conctsruct the body structure
+        body = "<span style='font-weight:bold'>{}</span>\n \
+                <span style='font-weight:bold'>Authors : </span>{}\n \
+                <span style='font-weight:bold'>Journal : </span>{}\n\n \
+                <span style='font-weight:bold'>Abstract : </span>\n\n{}\n\n \
+                Click on this link to see the article on the editor's website: <a href=\"{}\">editor's website</a>\n\n \
+                This article was spotted with chemBrows.\n Learn more about chemBrows : notre site web"
+
+        body = urllib.parse.quote(body.format(title, author, journal, abstract, url))
+
+
+        # Create an url to be opened with a mail client
+        url = "mailto:?subject={}&body={}"
+        url = url.format(simple_title, body)
+
+        if sys.platform=='win32':
+            os.startfile(url)
+        elif sys.platform=='darwin':
+            subprocess.Popen(['open', url])
+        else:
+            try:
+                subprocess.Popen(['xdg-email', url])
+            except OSError:
+                self.l.error("shareByEmail: OSError")
+
 
     def calculatePercentageMatch(self, update=True):
 
@@ -1490,11 +1548,20 @@ class Fenetre(QtGui.QMainWindow):
         self.label_author.setWordWrap(True)
         self.label_author.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
-        prelabel_date = QtGui.QLabel("Published: ")
+        prelabel_journal = QtGui.QLabel("Journal: ")
+        prelabel_journal.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
+        self.label_journal = QtGui.QLabel()
+        self.label_journal.setWordWrap(True)
+        self.label_journal.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+
+        prelabel_date = QtGui.QLabel("Date: ")
         prelabel_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
         self.label_date = QtGui.QLabel()
         self.label_date.setWordWrap(True)
         self.label_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+
+        # Button to share by email
+        self.button_share_mail = QtGui.QPushButton("Share by email")
 
         # A QWebView to render the sometimes rich text of the abstracts
         self.text_abstract = QtWebKit.QWebView()
@@ -1510,9 +1577,14 @@ class Fenetre(QtGui.QMainWindow):
         self.grid_area_right_top.addWidget(self.label_title, 0, 1)
         self.grid_area_right_top.addWidget(prelabel_author, 1, 0)
         self.grid_area_right_top.addWidget(self.label_author, 1, 1)
-        self.grid_area_right_top.addWidget(prelabel_date, 2, 0)
-        self.grid_area_right_top.addWidget(self.label_date, 2, 1)
-        self.grid_area_right_top.addWidget(self.text_abstract, 3, 0, 1, 2)
+        self.grid_area_right_top.addWidget(prelabel_journal, 2, 0)
+        self.grid_area_right_top.addWidget(self.label_journal, 2, 1)
+        self.grid_area_right_top.addWidget(prelabel_date, 3, 0)
+        self.grid_area_right_top.addWidget(self.label_date, 3, 1)
+
+        self.grid_area_right_top.addWidget(self.button_share_mail, 4, 1, alignment=QtCore.Qt.AlignRight)
+
+        self.grid_area_right_top.addWidget(self.text_abstract, 5, 0, 1, 2)
 
         # # ------------------------- ASSEMBLING THE AREAS ------------------------------------------------------------------------------------
 

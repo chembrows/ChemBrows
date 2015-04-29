@@ -51,7 +51,8 @@ def getData(company, journal, entry, response=None):
             title = soup.h2
 
             if title is not None:
-                title = title.renderContents().decode().lstrip().rstrip()
+                # title = title.renderContents().decode().lstrip().rstrip()
+                title = title.renderContents().decode().strip()
 
             # # Get the abstrat (w/ html)
             strainer = SoupStrainer("p", xmlns="http://www.rsc.org/schema/rscart38")
@@ -122,9 +123,11 @@ def getData(company, journal, entry, response=None):
                 # Remove the image representing a bond
                 try:
                     r("img", alt="[BOND]")[0].replaceWith("-")
-                    title = r.renderContents().decode().lstrip().rstrip()
+                    # title = r.renderContents().decode().lstrip().rstrip()
+                    title = r.renderContents().decode().strip()
                 except IndexError:
-                    title = r.renderContents().decode().lstrip().rstrip()
+                    # title = r.renderContents().decode().lstrip().rstrip()
+                    title = r.renderContents().decode().strip()
 
                 # print(title)
 

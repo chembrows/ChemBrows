@@ -20,8 +20,6 @@ from text_unidecode import unidecode
 # import hosts
 
 
-
-
 def prettyDate(date):
 
     """Prettify a date. Ex: 3 days ago"""
@@ -90,7 +88,8 @@ def buildSearch(topic_entries, author_entries):
     if topic_entries[0]:
         first = False
 
-        words = [word.lstrip().rstrip() for word in topic_entries[0].split(",")]
+        # words = [word.lstrip().rstrip() for word in topic_entries[0].split(",")]
+        words = [word.strip() for word in topic_entries[0].split(",")]
         words = [queryString(word) for word in words]
 
         for word in words:
@@ -101,7 +100,8 @@ def buildSearch(topic_entries, author_entries):
 
     # TOPIC, OR condition
     if topic_entries[1]:
-        words = [word.lstrip().rstrip() for word in topic_entries[1].split(",")]
+        # words = [word.lstrip().rstrip() for word in topic_entries[1].split(",")]
+        words = [word.strip() for word in topic_entries[1].split(",")]
         words = [queryString(word) for word in words]
 
         if first:
@@ -116,7 +116,8 @@ def buildSearch(topic_entries, author_entries):
 
     # TOPIC, NOT condition
     if topic_entries[2]:
-        words = [word.lstrip().rstrip() for word in topic_entries[2].split(",")]
+        # words = [word.lstrip().rstrip() for word in topic_entries[2].split(",")]
+        words = [word.strip() for word in topic_entries[2].split(",")]
         words = [queryString(word) for word in words]
 
         if first:
@@ -135,7 +136,8 @@ def buildSearch(topic_entries, author_entries):
 
     # AUTHOR, AND condition
     if author_entries[0]:
-        words = [word.lstrip().rstrip() for word in author_entries[0].split(",")]
+        # words = [word.lstrip().rstrip() for word in author_entries[0].split(",")]
+        words = [word.strip() for word in author_entries[0].split(",")]
         words = [queryString(word) for word in words]
 
         if first:
@@ -156,7 +158,8 @@ def buildSearch(topic_entries, author_entries):
 
     # AUTHOR, OR condition
     if author_entries[1]:
-        words = [word.lstrip().rstrip() for word in author_entries[1].split(",")]
+        # words = [word.lstrip().rstrip() for word in author_entries[1].split(",")]
+        words = [word.strip() for word in author_entries[1].split(",")]
         words = [queryString(word) for word in words]
 
         if first:
@@ -177,7 +180,8 @@ def buildSearch(topic_entries, author_entries):
 
     # AUTHOR, NOT condition
     if author_entries[2]:
-        words = [word.lstrip().rstrip() for word in author_entries[2].split(",")]
+        # words = [word.lstrip().rstrip() for word in author_entries[2].split(",")]
+        words = [word.strip() for word in author_entries[2].split(",")]
         words = [queryString(word) for word in words]
 
         if first:
@@ -241,6 +245,16 @@ def match(target, pattern):
 
     return sublist
 
+
+def removeHtml(data):
+
+    """Simple function to remove html tags.
+    Not very robust, but does the job.
+    Used in gui.shareByEmail"""
+
+    p = re.compile(r'<.*?>')
+
+    return p.sub('', data)
 
 
 
