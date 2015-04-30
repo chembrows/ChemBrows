@@ -285,10 +285,10 @@ class Fenetre(QtGui.QMainWindow):
         self.calculatePercentageMatchAction.setStatusTip("Calculate percentages")
         self.calculatePercentageMatchAction.triggered.connect(self.calculatePercentageMatch)
 
-        # Action to like a post
-        self.toggleLikeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_343_thumbs_up'), 'Toggle Like for the post', self)
-        self.toggleLikeAction.setShortcut('L')
-        self.toggleLikeAction.triggered.connect(self.toggleLike)
+        # # Action to like a post
+        # self.toggleLikeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_343_thumbs_up'), 'Toggle Like for the post', self)
+        # self.toggleLikeAction.setShortcut('L')
+        # self.toggleLikeAction.triggered.connect(self.toggleLike)
 
         # Action to open the post in browser
         self.openInBrowserAction = QtGui.QAction('Open post in browser', self)
@@ -1146,12 +1146,16 @@ class Fenetre(QtGui.QMainWindow):
 
         self.button_share_mail.hide()
 
+        # Put the vertical scroll bar at the top
+        self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+
         # Delete last query
         try:
             del self.query
         except AttributeError:
             self.l.warn("Pas de requête précédente")
 
+        # Update the cells of the view, resize them
         self.updateCellSize()
 
 
@@ -1360,18 +1364,38 @@ class Fenetre(QtGui.QMainWindow):
                 Click on this link to see the article on the editor's website: <a href=\"{}\">editor's website</a>\n\n \
                 This article was spotted with chemBrows.\n Learn more about chemBrows : notre site web"
 
-        body = urllib.parse.quote(body.format(title, author, journal, abstract, url))
-
-
-        # Create an url to be opened with a mail client
-        url = "mailto:?subject={}&body={}"
-        url = url.format(simple_title, body)
+        body = body.format(title, author, journal, abstract, url)
 
         if sys.platform=='win32':
             os.startfile(url)
+
+            # Create an url to be opened with a mail client
+            url = "mailto:?subject={}&body={}"
+            url = url.format(simple_title, body)
         elif sys.platform=='darwin':
+            body = urllib.parse.unquote(body)
+            body = body.replace("\n", "</br>")
+
+            with open("./config/layout.html", "r") as layout:
+                with open("./temp_data/article.html", "w") as page:
+                    for line in layout.readlines():
+                        if "---" in line:
+                            page.write(line.replace("---", body))
+                        else:
+                            page.write(line)
+
+            url = "mailto:?subject={}&attachment={}"
+            url = url.format(simple_title, "./temp_data/article.html")
+            # url = url.format(simple_title, "file://./temp_data/article.html")
             subprocess.Popen(['open', url])
+            # subprocess.Popen(['xdg-email', url])
         else:
+            body = urllib.parse.quote(body)
+
+            # Create an url to be opened with a mail client
+            url = "mailto:?subject={}&body={}"
+            url = url.format(simple_title, body)
+
             try:
                 subprocess.Popen(['xdg-email', url])
             except OSError:
@@ -1464,7 +1488,7 @@ class Fenetre(QtGui.QMainWindow):
         self.toolMenu.addAction(self.parseAction)
         self.toolMenu.addAction(self.calculatePercentageMatchAction)
         self.toolMenu.addAction(self.toggleReadAction)
-        self.toolMenu.addAction(self.toggleLikeAction)
+        # self.toolMenu.addAction(self.toggleLikeAction)
         self.toolMenu.addAction(self.openInBrowserAction)
 
         self.viewMenu = self.menubar.addMenu("&View")
@@ -1485,7 +1509,10 @@ class Fenetre(QtGui.QMainWindow):
         self.toolbar = self.addToolBar('toolbar')
         self.toolbar.addAction(self.parseAction)
         self.toolbar.addAction(self.calculatePercentageMatchAction)
-        self.toolbar.addAction(self.toggleLikeAction)
+
+        self.toolbar.addSeparator()
+
+        # self.toolbar.addAction(self.toggleLikeAction)
         # self.toolbar.addAction(self.updateAction)
         self.toolbar.addAction(self.viewAllAction)
         self.toolbar.addAction(self.searchNewAction)
