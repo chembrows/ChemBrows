@@ -304,8 +304,12 @@ class Fenetre(QtGui.QMainWindow):
         self.settingsAction = QtGui.QAction('Preferences', self)
         self.settingsAction.triggered.connect(lambda: Settings(self))
 
+        # Action to view all the articles
+        self.viewAllAction = QtGui.QAction('View all', self)
+        self.viewAllAction.triggered.connect(self.resetView)
+
         # Action so show new articles
-        self.searchNewAction = QtGui.QAction('Unread', self)
+        self.searchNewAction = QtGui.QAction('View unread', self)
         self.searchNewAction.triggered.connect(self.searchNew)
 
         # Action to toggle the read state of an article
@@ -645,7 +649,7 @@ class Fenetre(QtGui.QMainWindow):
         """Connect the slots"""
 
         # Connect the back button
-        self.button_back.clicked.connect(self.resetView)
+        # self.button_view_all.clicked.connect(self.resetView)
 
         # Launch the research if Enter pressed
         self.research_bar.returnPressed.connect(self.research)
@@ -1483,11 +1487,13 @@ class Fenetre(QtGui.QMainWindow):
         self.toolbar.addAction(self.calculatePercentageMatchAction)
         self.toolbar.addAction(self.toggleLikeAction)
         # self.toolbar.addAction(self.updateAction)
+        self.toolbar.addAction(self.viewAllAction)
         self.toolbar.addAction(self.searchNewAction)
 
         # Create a button to reset everything
-        self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_170_step_backward'), 'Back')
-        self.toolbar.addWidget(self.button_back)
+        # self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_170_step_backward'), 'Back')
+        # self.button_view_all = QtGui.QPushButton('View all')
+        # self.toolbar.addWidget(self.button_view_all)
 
         self.toolbar.addSeparator()
 
