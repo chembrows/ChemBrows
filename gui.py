@@ -1357,45 +1357,26 @@ class Fenetre(QtGui.QMainWindow):
         simple_title = functions.removeHtml(title) + " : spotted with chemBrows"
 
         # Conctsruct the body structure
-        body = "<span style='font-weight:bold'>{}</span>\n \
-                <span style='font-weight:bold'>Authors : </span>{}\n \
-                <span style='font-weight:bold'>Journal : </span>{}\n\n \
-                <span style='font-weight:bold'>Abstract : </span>\n\n{}\n\n \
-                Click on this link to see the article on the editor's website: <a href=\"{}\">editor's website</a>\n\n \
-                This article was spotted with chemBrows.\n Learn more about chemBrows : notre site web"
+        body = "<span style='font-weight:bold'>{}</span></br> \
+                <span style='font-weight:bold'>Authors : </span>{}</br> \
+                <span style='font-weight:bold'>Journal : </span>{}</br></br> \
+                <span style='font-weight:bold'>Abstract : </span></br></br>{}</br></br> \
+                Click on this link to see the article on the editor's website: <a href=\"{}\">editor's website</a></br></br> \
+                This article was spotted with chemBrows.</br> Learn more about chemBrows : notre site web"
 
         body = body.format(title, author, journal, abstract, url)
+        # body = urllib.parse.quote(body)
+        url = "mailto:?subject={}&body={}"
+        url = url.format(simple_title, body)
 
         if sys.platform=='win32':
             os.startfile(url)
 
-            # Create an url to be opened with a mail client
-            url = "mailto:?subject={}&body={}"
-            url = url.format(simple_title, body)
         elif sys.platform=='darwin':
-            body = urllib.parse.unquote(body)
-            body = body.replace("\n", "</br>")
-
-            with open("./config/layout.html", "r") as layout:
-                with open("./temp_data/article.html", "w") as page:
-                    for line in layout.readlines():
-                        if "---" in line:
-                            page.write(line.replace("---", body))
-                        else:
-                            page.write(line)
-
-            url = "mailto:?subject={}&attachment={}"
-            url = url.format(simple_title, "./temp_data/article.html")
-            # url = url.format(simple_title, "file://./temp_data/article.html")
             subprocess.Popen(['open', url])
-            # subprocess.Popen(['xdg-email', url])
+
         else:
-            body = urllib.parse.quote(body)
-
             # Create an url to be opened with a mail client
-            url = "mailto:?subject={}&body={}"
-            url = url.format(simple_title, body)
-
             try:
                 subprocess.Popen(['xdg-email', url])
             except OSError:
