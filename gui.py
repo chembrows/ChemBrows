@@ -1373,7 +1373,20 @@ class Fenetre(QtGui.QMainWindow):
             os.startfile(url)
 
         elif sys.platform=='darwin':
-            subprocess.Popen(['open', url])
+            # with open("./config/layout.html", "r") as layout:
+            with open("./temp_data/article.html", "w") as page:
+                # for line in layout.readlines():
+                    # if "---" in line:
+                        # page.write(line.replace("---", body))
+                    # else:
+                page.write(body)
+
+            # url = "mailto:?subject={}&attachment={}"
+            # url = url.format(simple_title, "./temp_data/article.html")
+            # url = url.format(simple_title, "file://./temp_data/article.html")
+            subprocess.Popen(['open', "./temp_data/article.html"])
+            # subprocess.Popen(['xdg-email', url])
+
 
         else:
             # Create an url to be opened with a mail client
