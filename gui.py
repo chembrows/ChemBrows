@@ -1349,7 +1349,7 @@ class Fenetre(QtGui.QMainWindow):
         # Get the infos
         abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
         title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
-        url = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
+        link = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
         author = table.model().index(table.selectionModel().selection().indexes()[0].row(), 6).data()
         journal = table.model().index(table.selectionModel().selection().indexes()[0].row(), 5).data()
 
@@ -1357,15 +1357,22 @@ class Fenetre(QtGui.QMainWindow):
         simple_title = functions.removeHtml(title) + " : spotted with chemBrows"
 
         # Conctsruct the body structure
-        body = "<span style='font-weight:bold'>{}</span></br> \
-                <span style='font-weight:bold'>Authors : </span>{}</br> \
-                <span style='font-weight:bold'>Journal : </span>{}</br></br> \
-                <span style='font-weight:bold'>Abstract : </span></br></br>{}</br></br> \
-                Click on this link to see the article on the editor's website: <a href=\"{}\">editor's website</a></br></br> \
-                This article was spotted with chemBrows.</br> Learn more about chemBrows : notre site web"
+        # body = "<span style='font-weight:bold'>{}</span></br> \
+                # <span style='font-weight:bold'>Authors : </span>{}</br> \
+                # <span style='font-weight:bold'>Journal : </span>{}</br></br> \
+                # <span style='font-weight:bold'>Abstract : </span></br></br>{}</br></br> \
+                # Click on this link to see the article on the editor's website: <a href=\"{}\">editor's website</a></br></br> \
+                # This article was spotted with chemBrows.</br> Learn more about chemBrows : notre site web"
 
-        body = body.format(title, author, journal, abstract, url)
+        body = "Click on this link to see the article on the editor's website: {}\n \
+                This article was spotted with chemBrows.\n Learn more about chemBrows : notre site web"
+
+        # body = body.format(title, author, journal, abstract, link)
         # body = urllib.parse.quote(body)
+
+        body = body.format(link)
+        body = urllib.parse.quote(body)
+
         url = "mailto:?subject={}&body={}"
         url = url.format(simple_title, body)
 
@@ -1373,20 +1380,9 @@ class Fenetre(QtGui.QMainWindow):
             os.startfile(url)
 
         elif sys.platform=='darwin':
-            # with open("./config/layout.html", "r") as layout:
-            with open("./temp_data/article.html", "w") as page:
-                # for line in layout.readlines():
-                    # if "---" in line:
-                        # page.write(line.replace("---", body))
-                    # else:
-                page.write(body)
-
-            # url = "mailto:?subject={}&attachment={}"
-            # url = url.format(simple_title, "./temp_data/article.html")
-            # url = url.format(simple_title, "file://./temp_data/article.html")
-            subprocess.Popen(['open', "./temp_data/article.html"])
-            # subprocess.Popen(['xdg-email', url])
-
+            # url = url.format(simple_title, functions.removeHtml(body))
+            # url = url.format(simple_title, functions.removeHtml(body))
+            subprocess.Popen(['open', url])
 
         else:
             # Create an url to be opened with a mail client
