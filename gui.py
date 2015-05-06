@@ -1371,10 +1371,9 @@ class Fenetre(QtGui.QMainWindow):
         # body = urllib.parse.quote(body)
 
         body = body.format(link)
-        body = urllib.parse.quote(body)
+        # body = urllib.parse.quote(body)
 
         url = "mailto:?subject={}&body={}"
-        url = url.format(simple_title, body)
 
         if sys.platform=='win32':
             os.startfile(url)
@@ -1382,10 +1381,13 @@ class Fenetre(QtGui.QMainWindow):
         elif sys.platform=='darwin':
             # url = url.format(simple_title, functions.removeHtml(body))
             # url = url.format(simple_title, functions.removeHtml(body))
+            url = url.format(simple_title, body)
             subprocess.Popen(['open', url])
 
         else:
             # Create an url to be opened with a mail client
+            body = urllib.parse.quote(body)
+            url = url.format(simple_title, body)
             try:
                 subprocess.Popen(['xdg-email', url])
             except OSError:
