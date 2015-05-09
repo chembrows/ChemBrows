@@ -1364,14 +1364,9 @@ class Fenetre(QtGui.QMainWindow):
                 # Click on this link to see the article on the editor's website: <a href=\"{}\">editor's website</a></br></br> \
                 # This article was spotted with chemBrows.</br> Learn more about chemBrows : notre site web"
 
-        body = "Click on this link to see the article on the editor's website: {}\n \
-                This article was spotted with chemBrows.\n Learn more about chemBrows : notre site web"
-
-        # body = body.format(title, author, journal, abstract, link)
-        # body = urllib.parse.quote(body)
+        body = "Click on this link to see the article on the editor's website: {}\n This article was spotted with chemBrows.\n Learn more about chemBrows : notre site web"
 
         body = body.format(link)
-        # body = urllib.parse.quote(body)
 
         url = "mailto:?subject={}&body={}"
 
@@ -1379,8 +1374,6 @@ class Fenetre(QtGui.QMainWindow):
             os.startfile(url)
 
         elif sys.platform=='darwin':
-            # url = url.format(simple_title, functions.removeHtml(body))
-            # url = url.format(simple_title, functions.removeHtml(body))
             url = url.format(simple_title, body)
             subprocess.Popen(['open', url])
 
