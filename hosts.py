@@ -530,8 +530,8 @@ if __name__ == "__main__":
         # print(authors)
         # print(title)
 
-    # urls_test = ["debug/rsc.htm"]
-    urls_test = ["debug/nat.xml"]
+    urls_test = ["debug/rsc.htm"]
+    # urls_test = ["debug/nat.xml"]
 
     session = FuturesSession(max_workers=20)
 
