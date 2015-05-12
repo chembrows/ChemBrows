@@ -142,6 +142,8 @@ def getData(company, journal, entry, response=None):
         author = entry.author.split(" and ")
         if len(author) > 1:
             author = ", ".join(author)
+        else:
+            author = author[0]
 
         try:
             url = entry.feedburner_origlink
@@ -379,6 +381,8 @@ def getData(company, journal, entry, response=None):
         author = entry.author.split(" and ")
         if len(author) > 1:
             author = ", ".join(author)
+        else:
+            author = author[0]
 
         if entry.summary != "":
             soup = BeautifulSoup(entry.summary)
@@ -527,11 +531,12 @@ if __name__ == "__main__":
         title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("npg", journal, entry, response)
         # print(abstract)
         # print(graphical_abstract)
-        # print(authors)
+        print(authors)
         # print(title)
 
-    urls_test = ["debug/rsc.htm"]
-    # urls_test = ["debug/nat.xml"]
+    # urls_test = ["debug/rsc.htm"]
+    # urls_test = ["debug/natcom.htm"]
+    urls_test = ["debug/npg.htm"]
 
     session = FuturesSession(max_workers=20)
 
@@ -547,19 +552,19 @@ if __name__ == "__main__":
     print(journal)
 
     for entry in feed.entries:
-        # print(entry)
-        if entry.summary == "":
-            continue
-        url = entry.link
+        print(entry)
+        # if "Ticket" not in entry.title:
+            # continue
+        # url = entry.link
         # url = entry.feedburner_origlink
-        title = entry.title
-        print(url)
+        # title = entry.title
+        # print(url)
         # print(title)
         # print(entry)
         # print(url)
         # getDoi(journal, entry)
 
-        future = session.get(url, headers=headers, timeout=20)
-        future.add_done_callback(functools.partial(print_result, journal, entry))
+        # future = session.get(url, headers=headers, timeout=20)
+        # future.add_done_callback(functools.partial(print_result, journal, entry))
 
         break
