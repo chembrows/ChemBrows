@@ -47,7 +47,6 @@ class Fenetre(QtGui.QMainWindow):
         self.l.info('Starting the program')
 
         self.parsing = False
-        self.watching_new = False
 
         # Object to store options and preferences
         self.options = QtCore.QSettings("options.ini", QtCore.QSettings.IniFormat)
@@ -376,7 +375,7 @@ class Fenetre(QtGui.QMainWindow):
             # -> 1 - reverse = 1 -> DescendingOrder -> starts with the
             # highest percentages
             table.sortByColumn(method_nbr, 1 - reverse)
-        self.updateView()
+        # self.updateView()
 
 
     def updateModel(self):
@@ -792,7 +791,13 @@ class Fenetre(QtGui.QMainWindow):
                     return
 
         proxy = QtGui.QSortFilterProxyModel()
-        proxy.setDynamicSortFilter(True)
+
+        # TESTING
+        # W/ a non dynamic sorting filter, I can use
+        # the proxy to filter the new articles, which is much
+        # faster than doing a query
+        # proxy.setDynamicSortFilter(True)
+
         proxy.setSourceModel(self.model)
         self.list_proxies_in_tabs.append(proxy)
 
@@ -912,30 +917,6 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
-        if self.watching_new:
-            query = QtSql.QSqlQuery(self.bdd)
-            query.prepare("SELECT id FROM papers WHERE new=1")
-            query.exec_()
-
-            list_id = []
-
-            while query.next():
-                record = query.record()
-                list_id.append(record.value('id'))
-
-            if "WHERE" in requete:
-                requete += " AND id IN ("
-            else:
-                requete += " WHERE id IN ("
-
-            # Building the query
-            for each_id in list_id:
-                if each_id != list_id[-1]:
-                    requete = requete + str(each_id) + ", "
-                # Close the query if last
-                else:
-                    requete = requete + str(each_id) + ")"
-
         self.query.prepare(requete)
         self.query.exec_
 
@@ -946,12 +927,10 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to select new articles"""
 
-        # Use a boolean, usable in searchByButton
-        self.watching_new = True
-
-        self.model.submitAll()
-
-        self.searchByButton()
+        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
+        proxy.setFilterRegExp(QtCore.QRegExp("[1]"))
+        proxy.setFilterKeyColumn(12)
+        self.updateCellSize()
 
 
     def refineBaseQuery(self, base_query, topic_options, author_options):
@@ -1113,8 +1092,6 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to reset view, clean the graphical abstract, etc"""
 
-        self.watching_new = False
-
         proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
 
         # Clean graphical abstract area
@@ -1134,12 +1111,12 @@ class Fenetre(QtGui.QMainWindow):
         for button in self.list_buttons_tags:
             button.setChecked(False)
 
+        for proxy in self.list_proxies_in_tabs:
+            proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
+            proxy.setFilterKeyColumn(12)
+
         self.tags_selected = self.getJournalsToCare()
         self.searchByButton()
-
-        # Reset the proxy fliter
-        proxy.setFilterRegExp(QtCore.QRegExp(''))
-        proxy.setFilterKeyColumn(2)
 
         # Clear the search bar
         self.research_bar.clear()
