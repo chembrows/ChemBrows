@@ -53,6 +53,11 @@ else:
 
 
 excludes = [
+            # Personal modules
+            'test_hosts',
+            'test_worker',
+            'misc',
+
             'tkinter',
             'certifi',
             'cffi',
@@ -83,9 +88,12 @@ excludes = [
             'doctest',
             'configparser',
             'ftplib',
-
             'smtplib',
             'ssl',
+            'fractions',
+            'site',
+            'termios',
+            'tty',
            ]
 
 includes = [

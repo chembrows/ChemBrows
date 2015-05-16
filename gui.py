@@ -8,6 +8,7 @@ import datetime
 import subprocess
 import urllib
 import fnmatch
+import webbrowser
 
 # Personal modules
 from log import MyLog
@@ -1304,18 +1305,19 @@ class Fenetre(QtGui.QMainWindow):
         if not url:
             return
         else:
-            # webbrowser.open(url, new=0, autoraise=True)
+            webbrowser.open(url, new=0, autoraise=True)
             self.l.info("Opening {0} in browser".format(url))
 
-            if sys.platform=='win32':
-                os.startfile(url)
-            elif sys.platform=='darwin':
-                subprocess.Popen(['open', url])
-            else:
-                try:
-                    subprocess.Popen(['xdg-open', url])
-                except OSError:
-                    self.l.error("openInBrowser: Error. Please open a browser on {}".format(url))
+            # if sys.platform=='win32':
+            # if sys.platform in ['win32','cygwin','win64']:
+                # os.startfile(url)
+            # elif sys.platform=='darwin':
+                # subprocess.Popen(['open', url])
+            # else:
+                # try:
+                    # subprocess.Popen(['xdg-open', url])
+                # except OSError:
+                    # self.l.error("openInBrowser: Error. Please open a browser on {}".format(url))
 
 
     def shareByEmail(self):
@@ -1355,26 +1357,29 @@ class Fenetre(QtGui.QMainWindow):
                 # This article was spotted with chemBrows.</br> Learn more about chemBrows : notre site web"
 
         body = "Click on this link to see the article on the editor's website: {}\n This article was spotted with chemBrows.\n Learn more about chemBrows : notre site web"
-
         body = body.format(link)
 
         url = "mailto:?subject={}&body={}"
 
-        if sys.platform=='win32':
-            os.startfile(url)
+        # if sys.platform=='win32':
+        if sys.platform in ['win32','cygwin','win64']:
+            webbrowser.open(url)
 
         elif sys.platform=='darwin':
             url = url.format(simple_title, body)
-            subprocess.Popen(['open', url])
+            # subprocess.Popen(['open', url])
+            webbrowser.open(url)
 
         else:
             # Create an url to be opened with a mail client
             body = urllib.parse.quote(body)
             url = url.format(simple_title, body)
-            try:
-                subprocess.Popen(['xdg-email', url])
-            except OSError:
-                self.l.error("shareByEmail: OSError")
+            # try:
+                # subprocess.Popen(['xdg-email', url])
+            # except OSError:
+                # self.l.error("shareByEmail: OSError")
+
+        webbrowser.open(url)
 
 
     def calculatePercentageMatch(self, update=True):

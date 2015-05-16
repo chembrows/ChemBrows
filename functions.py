@@ -3,21 +3,10 @@
 
 import sys
 import os
-#import datetime
-#import feedparser
 from PyQt4 import QtSql
-import sqlite3
 import arrow
-# import unidecode
 import re
 
-#TEST
-# from bs4 import BeautifulSoup
-# from text_unidecode import unidecode
-
-#Personal modules
-# from log import MyLog
-# import hosts
 
 def unidecodePerso(string):
 
@@ -37,7 +26,6 @@ def unidecodePerso(string):
         except IndexError:
             pass
     return "".join(chars)
-
 
 def prettyDate(date):
 
@@ -222,49 +210,6 @@ def buildSearch(topic_entries, author_entries):
     return base
 
 
-def checkData():
-
-    """Fct de test uniquement"""
-
-    bdd = sqlite3.connect("debug/test.sqlite")
-    bdd.row_factory = sqlite3.Row
-    c = bdd.cursor()
-
-    c.execute("SELECT id, abstract FROM papers")
-
-    results = c.fetchall()
-
-    for line in results:
-        c.execute("UPDATE papers SET percentage_match = ? WHERE id = ?")
-    c.close()
-    bdd.close()
-
-
-# def match(target, pattern):
-
-    # """target is a list. pattern is a pattern.
-    # Return the sublist of target matching pattern.
-    # This function is a replacement for fnmatch.filter()"""
-
-    # sublist = []
-
-    # pattern = pattern.replace(".", "\.")
-    # pattern = pattern.replace("*", ".*")
-
-    # target = [entry.replace(".", "\.") for entry in target]
-    # target = [entry.replace("*", ".*") for entry in target]
-
-
-    # for element in target:
-
-        # result = re.match(pattern, element)
-
-        # if result is not None:
-            # sublist.append(element)
-
-    # return sublist
-
-
 def removeHtml(data):
 
     """Simple function to remove html tags.
@@ -279,7 +224,6 @@ def removeHtml(data):
 
 if __name__ == "__main__":
     # like(10)
-    # checkData()
     # _, dois = listDoi()
     # print(dois)
     queryString("sper**mine")
