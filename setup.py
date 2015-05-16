@@ -123,9 +123,9 @@ build_exe_options = {
 exe_esky = Executable_Esky("gui.py", gui_only=True)
 exe_cx = Executable(script="gui.py", base=base)
 
-setup(name = "guifoo",
+setup(name = "ChemBrows",
       version = "0.1",
-      description = "My GUI application!",
+      description = "ChemBrows keeps you up-to-date with scientific litterature",
       data_files = my_data_files,
       options = build_exe_options,
       scripts = [exe_esky],

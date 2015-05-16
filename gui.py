@@ -10,6 +10,8 @@ import urllib
 import fnmatch
 import webbrowser
 
+import esky
+
 # Personal modules
 from log import MyLog
 from model import ModelPerso
@@ -23,6 +25,7 @@ from advanced_search import AdvancedSearch
 from tab import TabPerso
 import functions
 import hosts
+from updater import Updater
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -82,8 +85,47 @@ class Fenetre(QtGui.QMainWindow):
 
         """Performs some startup checks"""
 
+        # Check if the running ChemBrows is a frozen app
         if getattr(sys, "frozen", False):
             self.l.info("This version of ChemBrows is a frozen version")
+            update = Updater(self.l)
+
+            # If an update is available, ask the user if he wants to
+            # update immediately
+            if update.update_available:
+
+                message = "A new version of ChemBrows is available. Upgrade now ?" 
+                choice = QtGui.QMessageBox.question(self, "Update of ChemBrows", message,
+                                                    QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok,
+                                                    defaultButton = QtGui.QMessageBox.Ok)
+
+                # If the user says yes, start the update
+                if choice == QtGui.QMessageBox.Ok:
+                    self.l.info("Starting update")
+
+                    def whenDone():
+
+                        """Slot called when the update id finished"""
+
+                        self.l.info("Update finished")
+                        self.progress.reset()
+
+                        # Display a dialog box to tell the user to restart the program
+                        message = "ChemBrows is now up-to-date. Restart it to use the last version"
+                        QtGui.QMessageBox.information(self, "ChemBrows update", message, QtGui.QMessageBox.Ok)
+
+                        del update
+
+                    # Display a QProgressBar while updating
+                    app.processEvents()
+                    self.progress = QtGui.QProgressDialog("Updating ChemBrows...", None, 0, 0, self)
+                    self.progress.setWindowTitle("Updating")
+                    self.progress.show()
+                    app.processEvents()
+
+                    update.start()
+                    update.finished.connect(whenDone)
+
         else:
             self.l.info("This version of ChemBrows is NOT a frozen version")
 
@@ -1644,31 +1686,31 @@ class Fenetre(QtGui.QMainWindow):
 
 if __name__ == '__main__':
     logger = MyLog()
-    # try:
-    app = QtGui.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon('images/icon_main.png'))
-    ex = Fenetre(logger)
-    app.processEvents()
-    sys.exit(app.exec_())
-    # except Exception as e:
-        # exc_type, exc_obj, exc_tb = sys.exc_info()
-        # exc_type = type(e).__name__
-        # fname = exc_tb.tb_frame.f_code.co_filename
-        # logger.warning("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-        # logger.warning("{0}: {1}".format(exc_type, e))
-    # finally:
+    try:
+        app = QtGui.QApplication(sys.argv)
+        app.setWindowIcon(QtGui.QIcon('images/icon_main.png'))
+        ex = Fenetre(logger)
+        app.processEvents()
+        sys.exit(app.exec_())
+    except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        exc_type = type(e).__name__
+        fname = exc_tb.tb_frame.f_code.co_filename
+        logger.warning("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
+        logger.warning("{0}: {1}".format(exc_type, e))
+    finally:
         # Try to kill all the threads
-    # try:
-        # for worker in ex.list_threads:
-            # worker.terminate()
+        try:
+            for worker in ex.list_threads:
+                worker.terminate()
 
-            # logger.debug("Starting killing the futures")
-            # to_cancel = worker.list_futures_urls + worker.list_futures_images
-            # for future in to_cancel:
-                # if type(future) is not bool:
-                    # future.cancel()
-            # logger.debug("Done killing the futures")
+                logger.debug("Starting killing the futures")
+                to_cancel = worker.list_futures_urls + worker.list_futures_images
+                for future in to_cancel:
+                    if type(future) is not bool:
+                        future.cancel()
+                logger.debug("Done killing the futures")
 
-        # logger.info("Quitting the program, killing all the threads")
-    # except AttributeError:
-        # logger.info("Quitting the program, no threads")
+            logger.info("Quitting the program, killing all the threads")
+        except AttributeError:
+            logger.info("Quitting the program, no threads")
