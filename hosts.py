@@ -125,8 +125,6 @@ def getData(company, journal, entry, response=None):
                     # title = r.renderContents().decode().lstrip().rstrip()
                     title = r.renderContents().decode().strip()
 
-                # print(title)
-
 
     elif company == 'acs':
 
@@ -176,23 +174,38 @@ def getData(company, journal, entry, response=None):
 
         title = entry.title
         date = entry.date
-        url = entry.link
         abstract = entry.summary
         graphical_abstract = None
-        author = None
+
+        url = entry.links[0]['href']
+
+        # Example of an 'authors' field
+        # 'authors': [{'name': 'T. Martin Embley'}, {'name': 'Tom A. Williams'}],
+
+        try:
+            author = [dic['name'] for dic in entry.authors]
+            if author:
+                if len(author) > 1:
+                    author = ", ".join(author)
+                else:
+                    author = author[0]
+            else:
+                author = None
+        except AttributeError:
+            author = None
 
         if response.status_code is requests.codes.ok or response.status_code == 401:
             soup = BeautifulSoup(response.text)
 
+            # # r = soup.find_all("ul", attrs={"class": "authors citation-authors"})
+            # strainer = SoupStrainer("ul", attrs={"class": "authors citation-authors"})
+            # soup = BeautifulSoup(response.text, parse_only=strainer)
             # r = soup.find_all("ul", attrs={"class": "authors citation-authors"})
-            strainer = SoupStrainer("ul", attrs={"class": "authors citation-authors"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
-            r = soup.find_all("ul", attrs={"class": "authors citation-authors"})
-            if r:
-                s = r[0].find_all("span", attrs={"class": "fn"})
-                if s:
-                    author = [tag.renderContents().decode() for tag in s]
-                    author = ", ".join(author)
+            # if r:
+                # s = r[0].find_all("span", attrs={"class": "fn"})
+                # if s:
+                    # author = [tag.renderContents().decode() for tag in s]
+                    # author = ", ".join(author)
 
             # r = soup.find_all("h1", attrs={"class": "article-heading"})
             strainer = SoupStrainer("h1", attrs={"class": "article-heading"})
@@ -527,7 +540,7 @@ if __name__ == "__main__":
         title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("npg", journal, entry, response)
         # print(abstract)
         # print(graphical_abstract)
-        print(authors)
+        # print(authors)
         # print(title)
 
     # urls_test = ["debug/rsc.htm"]
@@ -548,11 +561,11 @@ if __name__ == "__main__":
     print(journal)
 
     for entry in feed.entries:
-        print(entry)
+        # print(entry)
         # if "Ticket" not in entry.title:
             # continue
         # url = entry.link
-        # url = entry.feedburner_origlink
+        url = entry.feedburner_origlink
         # title = entry.title
         # print(url)
         # print(title)
@@ -561,6 +574,7 @@ if __name__ == "__main__":
         # getDoi(journal, entry)
 
         # future = session.get(url, headers=headers, timeout=20)
-        # future.add_done_callback(functools.partial(print_result, journal, entry))
+        future = session.get(url, timeout=20)
+        future.add_done_callback(functools.partial(print_result, journal, entry))
 
-        break
+        # break
