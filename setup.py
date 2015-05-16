@@ -13,6 +13,9 @@ from cx_Freeze import setup, Executable
 
 def get_all_files_in_dir(directory):
 
+    """Get all the files in a directory, and
+    return a list bdist formatted"""
+
     list_files = []
 
     for file in os.listdir(directory):
@@ -26,12 +29,10 @@ def get_all_files_in_dir(directory):
 
 my_data_files = []
 
-# my_data_files = ["./images/", "./journals/", "./config/", "./graphical_abstracts"]
-
+# Add the data in images, journals, and config
 my_data_files += get_all_files_in_dir('.{}images{}'.format(os.sep, os.sep))
 my_data_files += get_all_files_in_dir('.{}journals{}'.format(os.sep, os.sep))
 my_data_files += get_all_files_in_dir('.{}config{}'.format(os.sep, os.sep))
-
 
 # GUI applications require a different base on Windows (the default is for a
 # console application).
@@ -52,7 +53,39 @@ else:
 
 
 excludes = [
-            'tkinter'
+            'tkinter',
+            'certifi',
+            'cffi',
+            'cryptography',
+            'curses',
+            'gi',
+            'IPython'
+            'json'
+            'jsonschema',
+            'lib2to3',
+            'nose',
+            'OpenSSL',
+            'pkg_resources',
+            'psutil',
+            'pyasn1',
+            'pycparser',
+            'pydoc_data',
+            'PyQt5',
+            'pytz',
+            'tornado',
+            'zmq',
+            'lxml',
+            'matplotlib',
+            'html5lib',
+            'xml',
+            'xmlrpc',
+            'decimal',
+            'doctest',
+            'configparser',
+            'ftplib',
+
+            'smtplib',
+            'ssl',
            ]
 
 includes = [
@@ -71,18 +104,12 @@ includes = [
 
 # Dependencies are automatically detected, but it might need fine tuning.
 build_exe_options = {
-                     # 'build_exe': {
-                                   # 'includes': includes,
-                                   # 'excludes': excludes,
-                                   # 'include_files': my_data_files,
-                                  # },
                      'bdist_esky': {
                                     'freezer_module': 'cx_Freeze',
                                     'includes': includes,
                                     'excludes': excludes,
                                    }
                      }
-
 
 
 exe_esky = Executable_Esky("gui.py", gui_only=True)
@@ -94,5 +121,4 @@ setup(name = "guifoo",
       data_files = my_data_files,
       options = build_exe_options,
       scripts = [exe_esky],
-      # executables = [exe_cx],
       )

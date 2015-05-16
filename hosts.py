@@ -10,11 +10,7 @@ from time import mktime
 # Personal modules
 import functions
 
-# DEBUG
-from memory_profiler import profile
 
-
-# @profile
 def getData(company, journal, entry, response=None):
 
     """Get the data. Starts from the data contained in the RSS flux, and if necessary,

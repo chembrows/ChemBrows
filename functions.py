@@ -240,29 +240,29 @@ def checkData():
     bdd.close()
 
 
-def match(target, pattern):
+# def match(target, pattern):
 
-    """target is a list. pattern is a pattern.
-    Return the sublist of target matching pattern.
-    This function is a replacement for fnmatch.filter()"""
+    # """target is a list. pattern is a pattern.
+    # Return the sublist of target matching pattern.
+    # This function is a replacement for fnmatch.filter()"""
 
-    sublist = []
+    # sublist = []
 
-    pattern = pattern.replace(".", "\.")
-    pattern = pattern.replace("*", ".*")
+    # pattern = pattern.replace(".", "\.")
+    # pattern = pattern.replace("*", ".*")
 
-    target = [entry.replace(".", "\.") for entry in target]
-    target = [entry.replace("*", ".*") for entry in target]
+    # target = [entry.replace(".", "\.") for entry in target]
+    # target = [entry.replace("*", ".*") for entry in target]
 
 
-    for element in target:
+    # for element in target:
 
-        result = re.match(pattern, element)
+        # result = re.match(pattern, element)
 
-        if result is not None:
-            sublist.append(element)
+        # if result is not None:
+            # sublist.append(element)
 
-    return sublist
+    # return sublist
 
 
 def removeHtml(data):

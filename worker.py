@@ -11,7 +11,6 @@ from io import open as iopen
 import hosts
 import functions
 
-# from memory_profiler import profile
 
 
 class Worker(QtCore.QThread):

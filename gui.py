@@ -7,6 +7,7 @@ from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
 import datetime
 import subprocess
 import urllib
+import fnmatch
 
 # Personal modules
 from log import MyLog
@@ -21,10 +22,6 @@ from advanced_search import AdvancedSearch
 from tab import TabPerso
 import functions
 import hosts
-
-# DEBUG
-# from memory_profiler import profile
-
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -62,6 +59,8 @@ class Fenetre(QtGui.QMainWindow):
 
         # Call processEvents regularly for the splash screen
         app.processEvents()
+        self.bootCheckList()
+        app.processEvents()
         self.connectionBdd()
         app.processEvents()
         self.defineActions()
@@ -78,15 +77,26 @@ class Fenetre(QtGui.QMainWindow):
         splash.finish(self)
 
 
-    def connectionBdd(self):
+    def bootCheckList(self):
 
-        """Method to connect to the database. Creates it
-        if it does not exist"""
+        """Performs some startup checks"""
+
+        if getattr(sys, "frozen", False):
+            self.l.info("This version of ChemBrows is a frozen version")
+        else:
+            self.l.info("This version of ChemBrows is NOT a frozen version")
 
         # Create the folder to store the graphical_abstracts if
         # it doesn't exist
         if not os.path.exists('./graphical_abstracts/'):
             os.makedirs('./graphical_abstracts')
+
+
+    def connectionBdd(self):
+
+        """Method to connect to the database. Creates it
+        if it does not exist"""
+
 
         # Set the database
         self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
@@ -975,14 +985,13 @@ class Fenetre(QtGui.QMainWindow):
                 for person in entries.split(','):
 
                     # Normalize the person's string
-                    # person = person.lstrip().rstrip().lower()
                     person = person.strip().lower()
 
                     # AND condition
                     if index == 0:
                         if '*' in person:
-                            # matching = fnmatch.filter(authors, person)
-                            matching = functions.match(authors, person)
+                            matching = fnmatch.filter(authors, person)
+                            # matching = functions.match(authors, person)
                             if not matching:
                                 adding = False
                                 break
@@ -990,8 +999,8 @@ class Fenetre(QtGui.QMainWindow):
                     # OR condition
                     if index == 1:
                         if '*' in person:
-                            # matching = fnmatch.filter(authors, person)
-                            matching = functions.match(authors, person)
+                            matching = fnmatch.filter(authors, person)
+                            # matching = functions.match(authors, person)
                             if matching:
                                 list_adding_or.append(True)
                                 break
@@ -1009,8 +1018,8 @@ class Fenetre(QtGui.QMainWindow):
                     # NOT condition
                     if index == 2:
                         if '*' in person:
-                            # matching = fnmatch.filter(authors, person)
-                            matching = functions.match(authors, person)
+                            matching = fnmatch.filter(authors, person)
+                            # matching = functions.match(authors, person)
                             if matching:
                                 adding = False
                                 break
