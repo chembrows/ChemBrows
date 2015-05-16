@@ -43,7 +43,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        self.l.setLevel(20)
+        # self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -82,6 +82,11 @@ class Fenetre(QtGui.QMainWindow):
 
         """Method to connect to the database. Creates it
         if it does not exist"""
+
+        # Create the folder to store the graphical_abstracts if
+        # it doesn't exist
+        if not os.path.exists('./graphical_abstracts/'):
+            os.makedirs('./graphical_abstracts')
 
         # Set the database
         self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
@@ -637,7 +642,6 @@ class Fenetre(QtGui.QMainWindow):
         # Create the right-click menu and add the actions
         menu = QtGui.QMenu()
         menu.addAction(self.toggleReadAction)
-        menu.addAction(self.toggleLikeAction)
         menu.addAction(self.openInBrowserAction)
 
         menu.exec_(self.mapToGlobal(new_pos))

@@ -4,51 +4,95 @@
 
 import sys
 import os
+# from esky.bdist_esky import Executable
+import esky.bdist_esky
+# from cx_Freeze import setup, Executable
+from esky.bdist_esky import Executable as Executable_Esky
 from cx_Freeze import setup, Executable
 
 
-my_data_files = ["./images/", "./journals/", "./config/", "./graphical_abstracts"]
+def get_all_files_in_dir(directory):
+
+    list_files = []
+
+    for file in os.listdir(directory):
+        f1 = directory + file
+        if os.path.isfile(f1):  # skip directories
+            f2 = (directory, [f1])
+            list_files.append(f2)
+
+    return list_files
+
+
+my_data_files = []
+
+# my_data_files = ["./images/", "./journals/", "./config/", "./graphical_abstracts"]
+
+my_data_files += get_all_files_in_dir('.{}images{}'.format(os.sep, os.sep))
+my_data_files += get_all_files_in_dir('.{}journals{}'.format(os.sep, os.sep))
+my_data_files += get_all_files_in_dir('.{}config{}'.format(os.sep, os.sep))
+
 
 # GUI applications require a different base on Windows (the default is for a
 # console application).
 base = None
-if sys.platform == "win32":
+if sys.platform in ['win32','cygwin','win64']:
     base = "Win32GUI"
 
     # Copy the sqlite driver
-    my_data_files.append(('C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers', "sqldrivers"))
+    my_data_files.append(('sqldrivers', ['C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers/qsqlite4.dll']))
 
-    # Copy the plugins to load images
-    my_data_files.append('C:\Python34\Lib\site-packages\PyQt4\plugins\imageformats\\')
+    # # Copy the plugins to load images
+    # my_data_files.append('C:\Python34\Lib\site-packages\PyQt4\plugins\imageformats\\')
+
 elif sys.platform=='darwin':
     pass
 else:
-    my_data_files.append(("/usr/lib/qt4/plugins/sqldrivers", "sqldrivers"))
+    my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
+
+
+excludes = [
+            'tkinter'
+           ]
+
+includes = [
+            'sip',
+            'PyQt4.QtCore',
+            'PyQt4.QtGui',
+            'PyQt4.QtNetwork',
+            'PyQt4.QtSql',
+            'scipy.special.specfun',
+            'scipy.integrate.vode',
+            'scipy.integrate.lsoda',
+            'scipy.sparse.csgraph._validation',
+            'sklearn.utils.sparsetools._graph_validation',
+            'scipy.special._ufuncs_cxx',
+           ]
 
 # Dependencies are automatically detected, but it might need fine tuning.
-build_exe_options = {"packages": ["os"],
-                     "excludes": [
-                                  "tkinter"
-                                 ],
-                     'includes': [
-                                  'sip',
-                                  'PyQt4.QtCore',
-                                  'PyQt4.QtGui',
-                                  'PyQt4.QtNetwork',
-                                  'PyQt4.QtSql',
-                                  'scipy.special.specfun',
-                                  'scipy.integrate.vode',
-                                  'scipy.integrate.lsoda',
-                                  'scipy.sparse.csgraph._validation',
-                                  'sklearn.utils.sparsetools._graph_validation',
-                                  'scipy.special._ufuncs_cxx'
-                                 ],
-                     'include_files': my_data_files
-                    }
+build_exe_options = {
+                     # 'build_exe': {
+                                   # 'includes': includes,
+                                   # 'excludes': excludes,
+                                   # 'include_files': my_data_files,
+                                  # },
+                     'bdist_esky': {
+                                    'freezer_module': 'cx_Freeze',
+                                    'includes': includes,
+                                    'excludes': excludes,
+                                   }
+                     }
 
+
+
+exe_esky = Executable_Esky("gui.py", gui_only=True)
+exe_cx = Executable(script="gui.py", base=base)
 
 setup(name = "guifoo",
       version = "0.1",
       description = "My GUI application!",
-      options = {"build_exe": build_exe_options},
-      executables = [Executable("gui.py", base=base)])
+      data_files = my_data_files,
+      options = build_exe_options,
+      scripts = [exe_esky],
+      # executables = [exe_cx],
+      )

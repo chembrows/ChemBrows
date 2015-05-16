@@ -13,11 +13,30 @@ import re
 
 #TEST
 # from bs4 import BeautifulSoup
-from text_unidecode import unidecode
+# from text_unidecode import unidecode
 
 #Personal modules
 # from log import MyLog
 # import hosts
+
+def unidecodePerso(string):
+
+    with open('./config/data.bin', 'rb') as f:
+        _replaces = f.read().decode('utf8').split('\x00')
+
+    chars = []
+    for ch in string:
+        codepoint = ord(ch)
+
+        if not codepoint:
+            chars.append('\x00')
+            continue
+
+        try:
+            chars.append(_replaces[codepoint-1])
+        except IndexError:
+            pass
+    return "".join(chars)
 
 
 def prettyDate(date):
@@ -40,7 +59,7 @@ def simpleChar(string):
 
     # http://stackoverflow.com/questions/5574042/string-slugification-in-python
     # string = unidecode.unidecode(string).lower()
-    string = unidecode(string).lower()
+    string = unidecodePerso(string).lower()
 
     return re.sub(r'\W+', ' ', string)
 
