@@ -23,7 +23,7 @@ class Worker(QtCore.QThread):
     # https://wiki.python.org/moin/PyQt/Threading,_Signals_and_Slots
 
 
-    def __init__(self, logger, bdd, dict_journals):
+    def __init__(self, logger, bdd, dict_journals, parent):
 
         QtCore.QThread.__init__(self)
 
@@ -40,6 +40,8 @@ class Worker(QtCore.QThread):
         self.TIMEOUT = 60
 
         # self.l.info("Starting parsing of the new articles")
+
+        self.parent = parent
 
         self.count_futures_urls = 0
         self.count_futures_images = 0
@@ -111,7 +113,7 @@ class Worker(QtCore.QThread):
                          self.dict_journals['beilstein'][0]
 
         query = QtSql.QSqlQuery(self.bdd)
-        self.bdd.transaction()
+        # self.bdd.transaction()
 
         # The feeds of these journals are complete
         # if journal in wiley + science + elsevier:
@@ -158,6 +160,7 @@ class Worker(QtCore.QThread):
                         query.addBindValue(value)
 
                     query.exec_()
+                    self.parent.counter += 1
 
                     if graphical_abstract == "Empty":
                         self.count_futures_images += 1
@@ -201,9 +204,9 @@ class Worker(QtCore.QThread):
         while not self.checkFuturesRunning():
             self.sleep(0.5)
 
-        if not self.bdd.commit():
-            self.l.error(self.bdd.lastError().text())
-            self.l.error("Problem when comitting data for {}".format(journal))
+        # if not self.bdd.commit():
+            # self.l.error(self.bdd.lastError().text())
+            # self.l.error("Problem when comitting data for {}".format(journal))
 
         # Free the memory, and clean the remaining futures
         try:
@@ -262,13 +265,14 @@ class Worker(QtCore.QThread):
             query.addBindValue(value)
 
         query.exec_()
+        self.parent.counter += 1
 
         if graphical_abstract == "Empty":
             self.count_futures_images += 1
         else:
-            # headers = {'User-agent': 'Mozilla/5.0',
-                       # 'Connection': 'close',
-                       # 'Referer': url}
+            headers = {'User-agent': 'Mozilla/5.0',
+                       'Connection': 'close',
+                       'Referer': url}
 
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                        'Connection': 'close',

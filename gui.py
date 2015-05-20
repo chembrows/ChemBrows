@@ -61,11 +61,15 @@ class Fenetre(QtGui.QMainWindow):
         self.list_tables_in_tabs = []
         self.list_proxies_in_tabs = []
 
+
         # Call processEvents regularly for the splash screen
         app.processEvents()
         self.bootCheckList()
         app.processEvents()
         self.connectionBdd()
+
+        self.checkAccess()
+
         app.processEvents()
         self.defineActions()
         app.processEvents()
@@ -85,10 +89,20 @@ class Fenetre(QtGui.QMainWindow):
 
         """Performs some startup checks"""
 
+        # Create the folder to store the graphical_abstracts if
+        # it doesn't exist
+        if not os.path.exists('./graphical_abstracts/'):
+            os.makedirs('./graphical_abstracts')
+
         # Check if the running ChemBrows is a frozen app
         if getattr(sys, "frozen", False):
+
             self.l.info("This version of ChemBrows is a frozen version")
+
             update = Updater(self.l)
+
+            if update is None:
+                return
 
             # If an update is available, ask the user if he wants to
             # update immediately
@@ -129,10 +143,6 @@ class Fenetre(QtGui.QMainWindow):
         else:
             self.l.info("This version of ChemBrows is NOT a frozen version")
 
-        # Create the folder to store the graphical_abstracts if
-        # it doesn't exist
-        if not os.path.exists('./graphical_abstracts/'):
-            os.makedirs('./graphical_abstracts')
 
 
     def connectionBdd(self):
@@ -184,9 +194,26 @@ class Fenetre(QtGui.QMainWindow):
         return journals
 
 
+    def checkAccess(self):
+
+        count_query = QtSql.QSqlQuery(self.bdd)
+        count_query.exec_("SELECT COUNT(id) FROM papers")
+        count_query.first()
+        record = count_query.record().value(0)
+        print(record)
+
+
+        return True
+
+
     def parse(self):
 
         """Method to start the parsing of the data"""
+
+        if not self.checkAccess():
+            # TODO: ici, afficher une dialog box pr dire à l'user
+            # qu'il n'a pas l'autorisation de refresh
+            return
 
         self.parsing = True
 
@@ -244,7 +271,15 @@ class Fenetre(QtGui.QMainWindow):
         # Get the optimal nbr of thread. Will vary depending
         # on the user's computer
         max_nbr_threads = QtCore.QThread.idealThreadCount()
+        self.l.debug("IdealThreadCount: {}".format(max_nbr_threads))
         # max_nbr_threads = 2
+
+        # Start a sql transaction here. Will commit all the bdd
+        # changes when the parsing is finished
+        self.bdd.transaction()
+
+        # Counter to count the new entries in the database
+        self.counter = 0
 
         # # List to store the threads.
         # # The list is cleared when the method is started
@@ -253,7 +288,7 @@ class Fenetre(QtGui.QMainWindow):
         for i in range(max_nbr_threads):
             try:
                 url = self.urls[i]
-                worker = Worker(self.l, self.bdd, self.dict_journals)
+                worker = Worker(self.l, self.bdd, self.dict_journals, self)
                 worker.setUrl(url)
                 worker.finished.connect(self.checkThreads)
                 self.urls.remove(url)
@@ -296,6 +331,13 @@ class Fenetre(QtGui.QMainWindow):
         # if False not in states and len(states) == self.urls_max:
         if self.count_threads == self.urls_max:
 
+            # Commit all the changes to the database
+            if not self.bdd.commit():
+                self.l.error(self.bdd.lastError().text())
+                self.l.error("Problem when comitting data")
+
+            self.l.debug("{} new entries added to the database".format(self.counter))
+
             self.calculatePercentageMatch(update=False)
             self.parseAction.setEnabled(True)
             self.l.info("Parsing data finished. Enabling parseAction")
@@ -310,7 +352,7 @@ class Fenetre(QtGui.QMainWindow):
         else:
             if self.urls:
                 self.l.info("STARTING NEW THREAD")
-                worker = Worker(self.l, self.bdd, self.dict_journals)
+                worker = Worker(self.l, self.bdd, self.dict_journals, self)
                 worker.setUrl(self.urls[0])
                 worker.finished.connect(self.checkThreads)
                 self.urls.remove(worker.url_feed)

@@ -29,7 +29,11 @@ class Updater(QtCore.QThread):
         self.app = esky.Esky(sys.executable, "http://chembrows.com/downloads/")
 
         # Get the number of the latest version
-        best_version = self.app.find_update()
+        try:
+            best_version = self.app.find_update()
+        except Exception as e:
+            self.l.critical("ERROR UPDATING APP: {}".format(e))
+            return None
 
         if best_version is None:
             self.l.info("Latest version of ChemBrows running: {}".format(self.app.version))

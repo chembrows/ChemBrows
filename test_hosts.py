@@ -47,10 +47,8 @@ def test_getJournals():
 @pytest.fixture()
 def journalsUrls():
 
-    """Returns a list. One journal per publisher,
-    chosen randomly from all the journals of each publisher"""
+    """Returns a list. All the journals of a publisher"""
 
-    # urls = []
     _, rsc_abb, rsc_urls = hosts.getJournals("rsc")
     _, acs_abb, acs_urls = hosts.getJournals("acs")
     _, wiley_abb, wiley_urls = hosts.getJournals("wiley")
@@ -74,6 +72,7 @@ def test_getData(journalsUrls):
 
     list_sites = journalsUrls
 
+    # Get the names of the journals, per company
     rsc = hosts.getJournals("rsc")[0]
     acs = hosts.getJournals("acs")[0]
     wiley = hosts.getJournals("wiley")[0]
@@ -84,8 +83,11 @@ def test_getData(journalsUrls):
     thieme = hosts.getJournals("thieme")[0]
     beil = hosts.getJournals("beilstein")[0]
 
-    i = 1
+    # All the journals are tested
     for site in list_sites:
+
+        print("Site {} of {}".format(list_sites.index(site) + 1, len(list_sites)))
+
         feed = feedparser.parse(site)
         journal = feed['feed']['title']
 
@@ -106,7 +108,7 @@ def test_getData(journalsUrls):
         elif journal in thieme:
             company = 'thieme'
         elif journal in beil:
-            company = 'beil'
+            company = 'beilstein'
 
         print("\n")
         print(journal)
@@ -116,7 +118,7 @@ def test_getData(journalsUrls):
         else:
             samples = random.sample(feed.entries, LENGTH_SAMPLE)
 
-        # Tests 3 entries for a journal, not all of them
+        # Tests LENGTH_SAMPLE entries for a journal, not all of them
         for entry in samples:
 
             if journal in science + elsevier + beil:
@@ -130,7 +132,6 @@ def test_getData(journalsUrls):
                 response = requests.get(url, timeout=10)
                 title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry, response)
 
-            print("Sample {}".format(i))
             print(title)
             print(url)
             print(graphical_abstract)
@@ -139,8 +140,6 @@ def test_getData(journalsUrls):
             assert type(abstract) == str
             assert type(url) == str
             assert type(graphical_abstract) == str
-
-            i += 1
 
 
 def test_getDoi(journalsUrls):
@@ -181,13 +180,18 @@ def test_getDoi(journalsUrls):
         elif journal in thieme:
             company = 'thieme'
         elif journal in beil:
-            company = 'beil'
+            company = 'beilstein'
 
         print("{}: {}".format(site, len(feed.entries)))
 
+        if len(feed.entries) < LENGTH_SAMPLE:
+            samples = feed.entries
+        else:
+            samples = random.sample(feed.entries, LENGTH_SAMPLE)
+
         # Tests 3 entries for a journal, not all of them
         # for entry in random.sample(feed.entries, 3):
-        for entry in random.sample(feed.entries, 3):
+        for entry in samples:
 
             doi = hosts.getDoi(company, journal, entry)
             print(doi)

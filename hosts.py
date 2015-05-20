@@ -377,7 +377,7 @@ def getData(company, journal, entry, response=None):
                 author = author.replace("*", "")
 
 
-    elif company == 'beil':
+    elif company == 'beilstein':
 
         title = entry.title
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
@@ -425,44 +425,6 @@ def getData(company, journal, entry, response=None):
     return title, date, author, abstract, graphical_abstract, url, topic_simple
 
 
-# def formatName(authors_list, reverse=False):
-
-    # """Function to ormat the author's name in a specific way. Ex:
-    # Jennifer A. Doudna -> J. A. Doudna"""
-    # print(authors_list)
-
-    # # New string to store all the authors, formatted
-    # new_author = ""
-
-    # for complete_name in authors_list:
-        # # Example
-        # # complete_name: Jennifer A. Doudna
-        # complete_name = complete_name.replace("“", "")
-        # complete_name = complete_name.split(" ")
-        # person = ""
-
-        # for piece_name in complete_name:
-            # if piece_name != complete_name[-1]:
-
-                # # If the piece is already an abb, add directly
-                # if "." in piece_name and len(piece_name) is 2:
-                    # person += piece_name
-                # else:
-                    # person = person + piece_name[0] + "."
-                # person += " "
-
-            # else:
-                # person += piece_name
-
-        # # Add to the new_author string
-        # if not new_author:
-            # new_author += person
-        # else:
-            # new_author = new_author + ", " + person
-
-    # return new_author
-
-
 def getDoi(company, journal, entry):
 
     """Get the DOI id of a post, to save time"""
@@ -492,7 +454,7 @@ def getDoi(company, journal, entry):
         base = base.split("pnas;")[1]
         doi = "10.1073/pnas." + base
 
-    # FUCK !! for this published, the doi is not given
+    # FUCK !! for this publisher, the doi is not given
     # in the RSS flux. It's so replaced by the url
     elif company == 'elsevier':
         doi = entry.id
@@ -500,13 +462,13 @@ def getDoi(company, journal, entry):
     elif company == 'thieme':
         doi = entry.prism_doi
 
-    elif company == 'beil':
+    elif company == 'beilstein':
         doi = entry.summary.split("doi:")[1].split("</p>")[0]
 
     try:
         doi = doi.replace(" ", "")
     except UnboundLocalError:
-        # print("Erreur in getDoi: {0}".format(journal))
+        print("Erreur in getDoi: {0}".format(journal))
         return None
 
     return doi
