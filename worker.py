@@ -155,12 +155,12 @@ class Worker(QtCore.QThread):
                         # Set new to 1 and not to true
                         params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1, topic_simple)
                         self.l.debug("Adding {0} to the database".format(doi))
+                        self.parent.counter += 1
 
                     for value in params:
                         query.addBindValue(value)
 
                     query.exec_()
-                    self.parent.counter += 1
 
                     if graphical_abstract == "Empty":
                         self.count_futures_images += 1
@@ -260,12 +260,12 @@ class Worker(QtCore.QThread):
                            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
             params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1, topic_simple)
             self.l.debug("Adding {0} to the database".format(doi))
+            self.parent.counter += 1
 
         for value in params:
             query.addBindValue(value)
 
         query.exec_()
-        self.parent.counter += 1
 
         if graphical_abstract == "Empty":
             self.count_futures_images += 1
