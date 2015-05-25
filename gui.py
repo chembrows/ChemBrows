@@ -94,10 +94,17 @@ class Fenetre(QtGui.QMainWindow):
         if not os.path.exists('./graphical_abstracts/'):
             os.makedirs('./graphical_abstracts')
 
+        # TODO: à mettre ds la partie pr les frozen app
+        # Start a form to sign up the user
+        if not os.path.exists('./config/user_id'):
+            print("coucou")
+            self.signUp()
+
         # Check if the running ChemBrows is a frozen app
         if getattr(sys, "frozen", False):
 
             self.l.info("This version of ChemBrows is a frozen version")
+
 
             update = Updater(self.l)
 
@@ -108,7 +115,7 @@ class Fenetre(QtGui.QMainWindow):
             # update immediately
             if update.update_available:
 
-                message = "A new version of ChemBrows is available. Upgrade now ?" 
+                message = "A new version of ChemBrows is available. Upgrade now ?"
                 choice = QtGui.QMessageBox.question(self, "Update of ChemBrows", message,
                                                     QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok,
                                                     defaultButton = QtGui.QMessageBox.Ok)
@@ -143,6 +150,11 @@ class Fenetre(QtGui.QMainWindow):
         else:
             self.l.info("This version of ChemBrows is NOT a frozen version")
 
+
+
+    def signUp(self):
+
+        pass
 
 
     def connectionBdd(self):
