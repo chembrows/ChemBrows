@@ -871,6 +871,7 @@ class Fenetre(QtGui.QMainWindow):
         # If the tab's query is updated from the advancedSearch window,
         # just update the base_query
         if update:
+            self.model.submitAll()
             for index in range(self.onglets.count()):
                 if name_search == self.onglets.tabText(index):
                     self.list_tables_in_tabs[index].base_query = query
@@ -885,9 +886,9 @@ class Fenetre(QtGui.QMainWindow):
                         self.model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
                         proxy.setSourceModel(self.model)
                         table.setModel(proxy)
+            self.loadNotifications()
 
-                    self.loadNotifications()
-                    return
+            return
 
         proxy = QtGui.QSortFilterProxyModel()
 
