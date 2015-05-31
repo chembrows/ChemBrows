@@ -657,7 +657,7 @@ class Fenetre(QtGui.QMainWindow):
         try:
             self.changeSortingMethod(self.sorting_method, self.sorting_reversed)
         except AttributeError:
-            self.changeSortingMethod(1)
+            self.changeSortingMethod(1, False)
 
         self.getJournalsToCare()
 
@@ -1179,11 +1179,14 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to search on title and abstract"""
 
-        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
         results = functions.simpleChar(self.research_bar.text())
-        proxy.setFilterRegExp(QtCore.QRegExp(results))
-        proxy.setFilterKeyColumn(13)
-        self.updateCellSize()
+
+        self.query = QtSql.QSqlQuery(self.bdd)
+
+        self.query.prepare("SELECT * FROM papers WHERE topic_simple LIKE '%{}%'".format(results))
+        self.query.exec_()
+
+        self.updateView()
 
 
     def clearLayout(self, layout):
