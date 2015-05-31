@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*-coding:Utf-8 -*
 
+import os
 from PyQt4 import QtSql, QtCore
 import feedparser
 import functools
@@ -267,7 +268,7 @@ class Worker(QtCore.QThread):
 
         query.exec_()
 
-        if graphical_abstract == "Empty":
+        if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
             self.count_futures_images += 1
         else:
             headers = {'User-agent': 'Mozilla/5.0',
