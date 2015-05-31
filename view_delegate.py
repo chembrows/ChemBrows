@@ -69,6 +69,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             else:
                 percentage = 0
 
+            # Print the infos (formatted)
             adding_infos = ""
             adding_infos += "<br><br>"
             adding_infos += "<b><font color='gray'>Published in: </font></b><i>{0}</i>, {1}".format(journal, date)

@@ -175,7 +175,7 @@ class Fenetre(QtGui.QMainWindow):
                      liked INTEGER, url TEXT, verif INTEGER, new INTEGER, topic_simple TEXT)")
 
         # Create the model for the new tab
-        self.model = ModelPerso()
+        self.model = ModelPerso(self)
 
         # Changes are not effective immediately, but it doesn't matter
         # because the view is updated each time a change is made
@@ -394,7 +394,7 @@ class Fenetre(QtGui.QMainWindow):
         self.calculatePercentageMatchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_040_stats.png'), '&Percentages', self)
         self.calculatePercentageMatchAction.setShortcut('F6')
         self.calculatePercentageMatchAction.setStatusTip("Calculate percentages")
-        self.calculatePercentageMatchAction.triggered.connect(self.calculatePercentageMatch)
+        self.calculatePercentageMatchAction.triggered.connect(lambda: self.calculatePercentageMatch(update=True))
 
         # # Action to like a post
         # self.toggleLikeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_343_thumbs_up'), 'Toggle Like for the post', self)
@@ -440,14 +440,17 @@ class Fenetre(QtGui.QMainWindow):
         self.sortingPercentageAction = QtGui.QAction('By percentage match', self, checkable=True)
         self.sortingPercentageAction.triggered.connect(lambda: self.changeSortingMethod(1,
                                                                                         reverse=self.sortingReversedAction.isChecked()))
+
         # Action to change the sorting method of the views
         self.sortingDateAction = QtGui.QAction('By date', self, checkable=True)
         self.sortingDateAction.triggered.connect(lambda: self.changeSortingMethod(4,
                                                                                   reverse=self.sortingReversedAction.isChecked()))
+
         # Action to change the sorting method of the views, reverse the results
         self.sortingReversedAction = QtGui.QAction('Reverse order', self, checkable=True)
         self.sortingReversedAction.triggered.connect(lambda: self.changeSortingMethod(self.sorting_method,
                                                                                       reverse=self.sortingReversedAction.isChecked()))
+
         # Action to serve use as a separator
         self.separatorAction = QtGui.QAction(self)
         self.separatorAction.setSeparator(True)
@@ -480,14 +483,15 @@ class Fenetre(QtGui.QMainWindow):
         else:
             self.sortingReversedAction.setChecked(False)
 
-        for table in self.list_tables_in_tabs:
+        self.updateView()
+
+        # for table in self.list_tables_in_tabs:
             # Qt.AscendingOrder   0   starts with 'AAA' ends with 'ZZZ'
             # Qt.DescendingOrder  1   starts with 'ZZZ' ends with 'AAA'
             # if "reverse order" in unchecked, reverse = False = 0
             # -> 1 - reverse = 1 -> DescendingOrder -> starts with the
             # highest percentages
-            table.sortByColumn(method_nbr, 1 - reverse)
-        # self.updateView()
+            # table.sortByColumn(method_nbr, 1 - reverse)
 
 
     def updateModel(self):
@@ -653,7 +657,7 @@ class Fenetre(QtGui.QMainWindow):
         try:
             self.changeSortingMethod(self.sorting_method, self.sorting_reversed)
         except AttributeError:
-            self.changeSortingMethod(1, False)
+            self.changeSortingMethod(1)
 
         self.getJournalsToCare()
 
@@ -1478,7 +1482,7 @@ class Fenetre(QtGui.QMainWindow):
         webbrowser.open(url)
 
 
-    def calculatePercentageMatch(self, update=True):
+    def calculatePercentageMatch(self, update=False):
 
         """Slot to calculate the match percentage.
         If update= False, does not update the view"""
@@ -1498,6 +1502,10 @@ class Fenetre(QtGui.QMainWindow):
                 self.parsing = False
 
                 del self.predictor
+
+                if update:
+                    self.searchByButton()
+
 
             self.parsing = True
 
@@ -1740,31 +1748,31 @@ class Fenetre(QtGui.QMainWindow):
 
 if __name__ == '__main__':
     logger = MyLog()
+    # try:
+    app = QtGui.QApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon('images/icon_main.png'))
+    ex = Fenetre(logger)
+    app.processEvents()
+    sys.exit(app.exec_())
+    # except Exception as e:
+        # exc_type, exc_obj, exc_tb = sys.exc_info()
+        # exc_type = type(e).__name__
+        # fname = exc_tb.tb_frame.f_code.co_filename
+        # logger.warning("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
+        # logger.warning("{0}: {1}".format(exc_type, e))
+    # finally:
+        # # Try to kill all the threads
     try:
-        app = QtGui.QApplication(sys.argv)
-        app.setWindowIcon(QtGui.QIcon('images/icon_main.png'))
-        ex = Fenetre(logger)
-        app.processEvents()
-        sys.exit(app.exec_())
-    except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        exc_type = type(e).__name__
-        fname = exc_tb.tb_frame.f_code.co_filename
-        logger.warning("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-        logger.warning("{0}: {1}".format(exc_type, e))
-    finally:
-        # Try to kill all the threads
-        try:
-            for worker in ex.list_threads:
-                worker.terminate()
+        for worker in ex.list_threads:
+            worker.terminate()
 
-                logger.debug("Starting killing the futures")
-                to_cancel = worker.list_futures_urls + worker.list_futures_images
-                for future in to_cancel:
-                    if type(future) is not bool:
-                        future.cancel()
-                logger.debug("Done killing the futures")
+            logger.debug("Starting killing the futures")
+            to_cancel = worker.list_futures_urls + worker.list_futures_images
+            for future in to_cancel:
+                if type(future) is not bool:
+                    future.cancel()
+            logger.debug("Done killing the futures")
 
-            logger.info("Quitting the program, killing all the threads")
-        except AttributeError:
-            logger.info("Quitting the program, no threads")
+        logger.info("Quitting the program, killing all the threads")
+    except AttributeError:
+        logger.info("Quitting the program, no threads")

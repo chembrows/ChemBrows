@@ -160,6 +160,7 @@ class AdvancedSearch(QtGui.QDialog):
             if save:
                 # Get the search name with a dialogBox, if the user pushed the save button
                 name_search = QtGui.QInputDialog.getText(self, "Search name", "Save your search as:")
+                name_search = name_search.replace("/", "-")
 
                 if not name_search[1] or name_search[0] == "":
                     return
