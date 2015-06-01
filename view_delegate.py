@@ -63,17 +63,12 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             journal = index.sibling(index.row(), 5).data()
             date = prettyDate(index.sibling(index.row(), 4).data())
 
-            percentage = index.sibling(index.row(), 1).data()
-            if type(percentage) is float:
-                percentage = str(int(round(percentage, 0)))
-            else:
-                percentage = 0
-
+            # Print the infos (formatted)
             adding_infos = ""
             adding_infos += "<br><br>"
             adding_infos += "<b><font color='gray'>Published in: </font></b><i>{0}</i>, {1}".format(journal, date)
             adding_infos += "<br>"
-            adding_infos += "<b><font color='gray'>Match: </font></b>{0} %".format(percentage)
+            adding_infos += "<b><font color='gray'>Hot pepperness: </font></b>"
 
             doc.setHtml(options.text + adding_infos)
 
@@ -94,22 +89,45 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             # Center the text vertically
             height = doc.documentLayout().documentSize().height()
-            painter.translate(options.rect.left(), options.rect.top() + options.rect.height() / 2 - height / 2)
+            painter.translate(options.rect.left(), options.rect.top() + options.rect.height() / 2.5 - height / 2)
 
             clip = QtCore.QRectF(0, 0, options.rect.width(), options.rect.height())
             doc.drawContents(painter, clip)
 
             painter.restore()
 
+            percentage = index.sibling(index.row(), 1).data()
+            if type(percentage) is not float:
+                percentage = 0
+
+            # Get the read/unread state of an article
             new = index.sibling(index.row(), 12).data()
 
+            # Get the like state of the post
+            liked = index.sibling(index.row(), 9).data()
 
             # Paint a star in the right bottom corner
             # DIMENSION = 40
             DIMENSION = options.rect.width() * 0.07
 
-            # Get the like state of the post
-            liked = index.sibling(index.row(), 9).data()
+            # Draw peppers. A full pepper if the match percentage
+            # of an article is superior to the element of the list.
+            # Else, an empty pepper
+            nbr_peppers = [10, 25, 50, 75]
+            for index, perc in enumerate(nbr_peppers):
+
+                if percentage >= perc:
+                    path = "./images/hot_pepper_full.png"
+                else:
+                    path = "./images/hot_pepper_empty.png"
+
+                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
+
+                pos_x = option.rect.x() + DIMENSION * 0.5 + DIMENSION * 0.5 * index
+                pos_y = option.rect.y() + option.rect.height() - DIMENSION * 0.8
+
+                painter.drawPixmap(pos_x, pos_y, DIMENSION * 0.4, DIMENSION * 0.7, pixmap)
+
 
             # If the post is liked, display the like star.
             # Else, display the unlike star
