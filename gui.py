@@ -97,7 +97,6 @@ class Fenetre(QtGui.QMainWindow):
         # TODO: à mettre ds la partie pr les frozen app
         # Start a form to sign up the user
         if not os.path.exists('./config/user_id'):
-            print("coucou")
             self.signUp()
 
         # Check if the running ChemBrows is a frozen app
@@ -153,6 +152,8 @@ class Fenetre(QtGui.QMainWindow):
 
 
     def signUp(self):
+
+        """Method to log the user on the server"""
 
         pass
 
