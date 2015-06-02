@@ -181,6 +181,7 @@ class Fenetre(QtGui.QMainWindow):
         # Changes are not effective immediately, but it doesn't matter
         # because the view is updated each time a change is made
         self.model.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
+        # self.model.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
 
         self.model.setTable("papers")
         self.model.select()
@@ -214,7 +215,6 @@ class Fenetre(QtGui.QMainWindow):
         count_query.first()
         record = count_query.record().value(0)
         print(record)
-
 
         return True
 
@@ -572,6 +572,7 @@ class Fenetre(QtGui.QMainWindow):
 
         count_query = QtSql.QSqlQuery(self.bdd)
         for table in self.list_tables_in_tabs:
+
             temp_list = []
 
             req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
@@ -580,21 +581,30 @@ class Fenetre(QtGui.QMainWindow):
             # the concerned articles
             if table != self.list_tables_in_tabs[0]:
                 count_query.exec_(req_str)
+
                 while count_query.next():
                     record = count_query.record()
                     temp_list.append(record.value('id'))
-                table.list_id_articles = temp_list
 
-            temp_list = []
+            req_str = "id IN ("
+
+            # Building the query
+            for each_id in temp_list:
+                if each_id != temp_list[-1]:
+                    req_str = req_str + str(each_id) + ", "
+                # Close the query if last
+                else:
+                    req_str = req_str + str(each_id) + ")"
 
             # Then, get a list of the unread articles, for each search query
             if table != self.list_tables_in_tabs[0]:
-                count_req = req_str.split("WHERE")[1]
-                count_req = "SELECT id FROM papers WHERE new=1 AND" + count_req
+                count_req = "SELECT id FROM papers WHERE new=1 AND " + req_str
             else:
                 count_req = "SELECT id FROM papers WHERE new=1"
 
             count_query.exec_(count_req)
+
+            temp_list = []
 
             while count_query.next():
                 record = count_query.record()
@@ -874,6 +884,11 @@ class Fenetre(QtGui.QMainWindow):
         for table in self.list_tables_in_tabs:
             table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
 
+        # Submit the changes on the model.
+        # Otherwise, a bug appears: one changing an article, the changes are visible
+        # (trough the proxy) on all the articles at the same place in all tabs
+        self.model.submitAll()
+
         self.searchByButton()
         # Update the size of the columns of the view if the central
         # splitter moved
@@ -913,7 +928,6 @@ class Fenetre(QtGui.QMainWindow):
         # W/ a non dynamic sorting filter, I can use
         # the proxy to filter the new articles, which is much
         # faster than doing a query
-        # proxy.setDynamicSortFilter(True)
 
         proxy.setSourceModel(self.model)
         self.list_proxies_in_tabs.append(proxy)
@@ -1296,7 +1310,9 @@ class Fenetre(QtGui.QMainWindow):
 
             # Change the data in the model
             table.model().setData(table.model().index(line, 12), 0)
+
             index = table.model().index(line, 12)
+
             table.model().dataChanged.emit(index, index)
 
             table.selectRow(line)
@@ -1318,9 +1334,11 @@ class Fenetre(QtGui.QMainWindow):
             proxy.setSourceModel(self.model)
             table.setModel(proxy)
         except AttributeError:
+            self.l.debug("updateView, AttributeError")
             self.model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
             proxy.setSourceModel(self.model)
             table.setModel(proxy)
+
 
 
     def toggleRead(self):
@@ -1336,11 +1354,11 @@ class Fenetre(QtGui.QMainWindow):
         # Invert the value of new
         new = 1 - new
 
-        table.model().setData(table.model().index(line, 12), new)
         index = table.model().index(line, 12)
+
+        table.model().setData(index, new)
         table.model().dataChanged.emit(index, index)
         table.viewport().update()
-
         table.selectRow(line)
 
         if new == 0:

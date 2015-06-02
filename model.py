@@ -58,6 +58,6 @@ class ModelPerso(QtSql.QSqlTableModel):
 
         # results = QtSql.QSqlTableModel.select(self)
 
-        # while self.canFetchMore():
-            # self.fetchMore()
+        # # while self.canFetchMore():
+            # # self.fetchMore()
         # return results

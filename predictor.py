@@ -143,7 +143,8 @@ class Predictor(QtCore.QThread):
 
         try:
             # Normalize the percentages: the highest is set to 100%
-            list_percentages = [float(100 * proba[0] / max(self.classifier.predict_proba(x_test))) for proba in self.classifier.predict_proba(x_test)]
+            list_percentages = [float(100 * proba[0]) for proba in self.classifier.predict_proba(x_test)]
+            list_percentages = [perc * 100 / max(list_percentages) for perc in list_percentages]
         except ValueError:
             self.l.debug("Not enough data yet")
             return
