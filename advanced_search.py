@@ -9,6 +9,7 @@ from log import MyLog
 import functions
 
 
+
 class AdvancedSearch(QtGui.QDialog):
 
     """Class to perform advanced searches"""
@@ -215,7 +216,7 @@ class AdvancedSearch(QtGui.QDialog):
 
     def createForm(self):
 
-# ------------------------ NEW SEARCH TAB -------------------------------------
+        # ------------------------ NEW SEARCH TAB -----------------------------
 
         # Main widget of the tab, with a grid layout
         widget_query = QtGui.QWidget()
@@ -306,13 +307,13 @@ class AdvancedSearch(QtGui.QDialog):
         self.tabs.addTab(query, "New query")
 
 
-# ------------------------ BUTTONS -----------------------------------------
+        # ----------------- BUTTONS -----------------------------------------
 
         self.button_search = QtGui.QPushButton("Quick search", self)
         self.button_delete_search = QtGui.QPushButton("Delete search", self)
         self.button_search_and_save = QtGui.QPushButton("Save search", self)
 
-# ------------------------ ASSEMBLING -----------------------------------------
+        # ------------------------ ASSEMBLING ---------------------------------
 
         # Create a global vbox, and stack the main widget + the search button
         self.vbox_global = QtGui.QVBoxLayout()

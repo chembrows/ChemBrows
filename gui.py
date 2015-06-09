@@ -417,8 +417,8 @@ class Fenetre(QtGui.QMainWindow):
         self.settingsAction.triggered.connect(lambda: Settings(self))
 
         # Action to view all the articles
-        self.viewAllAction = QtGui.QAction('View all', self)
-        self.viewAllAction.triggered.connect(self.resetView)
+        # self.viewAllAction = QtGui.QAction('View all', self)
+        # self.viewAllAction.triggered.connect(self.resetView)
 
         # Action so show new articles
         self.searchNewAction = QtGui.QAction('View unread', self)
@@ -1056,12 +1056,27 @@ class Fenetre(QtGui.QMainWindow):
 
     def searchNew(self):
 
-        """Slot to select new articles"""
+        """Slot to show new articles. It's a toggable method, if
+        the text of the sender button changes, the method does a different
+        thing. It shows the new articles, or all depending of the
+        button's state"""
 
-        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
-        proxy.setFilterRegExp(QtCore.QRegExp("[1]"))
-        proxy.setFilterKeyColumn(12)
-        self.updateCellSize()
+        # If the button displays "View unread", shows the new articles
+        # and change the button's text to "View all"
+        if self.sender().text() == "View unread":
+            self.searchNewAction.setText("View all")
+            proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
+            proxy.setFilterRegExp(QtCore.QRegExp("[1]"))
+            proxy.setFilterKeyColumn(12)
+            self.updateCellSize()
+
+        # Else, do the contrary
+        else:
+            self.searchNewAction.setText("View unread")
+            for proxy in self.list_proxies_in_tabs:
+                proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
+                proxy.setFilterKeyColumn(12)
+
 
 
     def refineBaseQuery(self, base_query, topic_options, author_options):
@@ -1621,7 +1636,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # self.toolbar.addAction(self.toggleLikeAction)
         # self.toolbar.addAction(self.updateAction)
-        self.toolbar.addAction(self.viewAllAction)
+        # self.toolbar.addAction(self.viewAllAction)
         self.toolbar.addAction(self.searchNewAction)
 
         # Create a button to reset everything
