@@ -182,6 +182,7 @@ class Fenetre(QtGui.QMainWindow):
         # because the view is updated each time a change is made
         self.model.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
         # self.model.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
+        # self.model.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
 
         self.model.setTable("papers")
         self.model.select()
@@ -1209,6 +1210,8 @@ class Fenetre(QtGui.QMainWindow):
     def research(self):
 
         """Slot to search on title and abstract"""
+
+        self.model.submitAll()
 
         results = functions.simpleChar(self.research_bar.text())
 

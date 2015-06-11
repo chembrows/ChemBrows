@@ -1,1 +1,10 @@
 abstract
+erratum
+spotlight
+figure
+synthesis
+synthesized
+new
+compounds
+novel
+ISBN
