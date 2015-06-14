@@ -1185,31 +1185,6 @@ class Fenetre(QtGui.QMainWindow):
             return requete
 
 
-    def simpleQuery(self, base, topic_options=None, author_options=None):
-
-        """Method to perform a simple search.
-        Called from AdvancedSearch, when the user doesn't
-        want to save the search"""
-
-        self.query = QtSql.QSqlQuery(self.bdd)
-
-        self.query.prepare(self.refineBaseQuery(base, topic_options, author_options))
-
-        self.updateView()
-
-        # Clean graphical abstract area
-        try:
-            self.scene.clear()
-        except AttributeError:
-            self.l.debug("No scene object for now")
-
-        # Cleaning title, authors and abstract
-        self.label_author.setText("")
-        self.label_title.setText("")
-        self.label_date.setText("")
-        self.text_abstract.setHtml("")
-
-
     def research(self):
 
         """Slot to search on title and abstract"""

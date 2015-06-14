@@ -52,7 +52,7 @@ class AdvancedSearch(QtGui.QDialog):
 
         """Establish the slots"""
 
-        self.button_search.clicked.connect(self.search)
+        # self.button_search.clicked.connect(self.search)
 
         self.button_search_and_save.clicked.connect(self.search)
 
@@ -118,7 +118,7 @@ class AdvancedSearch(QtGui.QDialog):
             # Change the buttons at the button if the tab is
             # a tab dedicated to search edition
             self.button_delete_search.show()
-            self.button_search.hide()
+            # self.button_search.hide()
 
             topic_entries_options = self.options.value("{0}/topic_entries".format(tab_title), None)
             if topic_entries_options is not None:
@@ -129,17 +129,12 @@ class AdvancedSearch(QtGui.QDialog):
 
         else:
             self.button_delete_search.hide()
-            self.button_search.show()
+            # self.button_search.show()
 
 
     def search(self):
 
         """Slot to save a query"""
-
-        if self.sender() is self.button_search:
-            save = False
-        else:
-            save = True
 
         lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
 
@@ -157,39 +152,34 @@ class AdvancedSearch(QtGui.QDialog):
             return
 
         if tab_title == "New query":
-            # The search is about to be saved
-            if save:
-                # Get the search name with a dialogBox, if the user pushed the save button
-                name_search = QtGui.QInputDialog.getText(self, "Search name", "Save your search as:")
+            # Get the search name with a dialogBox, if the user pushed the save button
+            name_search = QtGui.QInputDialog.getText(self, "Search name", "Save your search as:")
 
-                if "/" in name_search:
-                    name_search = name_search.replace("/", "-")
+            if "/" in name_search:
+                name_search = name_search.replace("/", "-")
 
-                if not name_search[1] or name_search[0] == "":
-                    return
-                else:
-                    name_search = name_search[0]
-                if name_search in self.options.childGroups():
-                    # Display an error message if the search name is already used
-                    QtGui.QMessageBox.critical(self, "Saving search", "You already have a search called like this",
-                                               QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
-
-                    self.logger.debug("This search name is already used")
-                    return
-                else:
-                    self.tabs.addTab(self.createForm(), name_search)
-                    if not self.test:
-                        self.parent.createSearchTab(name_search, base,
-                                                    topic_entries,
-                                                    author_entries)
-
-                    # Clear the fields when perform search
-                    for line in lines:
-                        line.clear()
+            if not name_search[1] or name_search[0] == "":
+                return
             else:
-                # Perform a simple search, in the first tab
-                self.parent.onglets.setCurrentIndex(0)
-                self.parent.simpleQuery(base, topic_entries, author_entries)
+                name_search = name_search[0]
+            if name_search in self.options.childGroups():
+                # Display an error message if the search name is already used
+                QtGui.QMessageBox.critical(self, "Saving search", "You already have a search called like this",
+                                           QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+
+                self.logger.debug("This search name is already used")
+                return
+            else:
+                self.tabs.addTab(self.createForm(), name_search)
+                if not self.test:
+                    self.parent.createSearchTab(name_search, base,
+                                                topic_entries,
+                                                author_entries)
+
+                # Clear the fields when perform search
+                for line in lines:
+                    line.clear()
+
         else:
             name_search = tab_title
 
@@ -197,21 +187,20 @@ class AdvancedSearch(QtGui.QDialog):
                 self.parent.createSearchTab(name_search, base, topic_entries,
                                             author_entries, update=True)
 
-        if save:
-            self.logger.debug("Saving the search")
+        self.logger.debug("Saving the search")
 
-            self.options.beginGroup(name_search)
+        self.options.beginGroup(name_search)
 
-            # Re-initialize the keys
-            self.options.remove("")
-            # self.options.setValue("name_search", name_search)
-            if topic_entries != [''] * 3:
-                self.options.setValue("topic_entries", topic_entries)
-            if author_entries != [''] * 3:
-                self.options.setValue("author_entries", author_entries)
-            if base:
-                self.options.setValue("sql_query", base)
-            self.options.endGroup()
+        # Re-initialize the keys
+        self.options.remove("")
+        # self.options.setValue("name_search", name_search)
+        if topic_entries != [''] * 3:
+            self.options.setValue("topic_entries", topic_entries)
+        if author_entries != [''] * 3:
+            self.options.setValue("author_entries", author_entries)
+        if base:
+            self.options.setValue("sql_query", base)
+        self.options.endGroup()
 
 
     def createForm(self):
@@ -299,7 +288,6 @@ class AdvancedSearch(QtGui.QDialog):
         self.parent.window_search = QtGui.QWidget()
         self.parent.window_search.setWindowTitle('Advanced Search')
 
-
         self.tabs = QtGui.QTabWidget()
 
         query = self.createForm()
@@ -309,7 +297,7 @@ class AdvancedSearch(QtGui.QDialog):
 
         # ----------------- BUTTONS -----------------------------------------
 
-        self.button_search = QtGui.QPushButton("Quick search", self)
+        # self.button_search = QtGui.QPushButton("Quick search", self)
         self.button_delete_search = QtGui.QPushButton("Delete search", self)
         self.button_search_and_save = QtGui.QPushButton("Save search", self)
 
@@ -319,7 +307,7 @@ class AdvancedSearch(QtGui.QDialog):
         self.vbox_global = QtGui.QVBoxLayout()
         self.vbox_global.addWidget(self.tabs)
 
-        self.vbox_global.addWidget(self.button_search)
+        # self.vbox_global.addWidget(self.button_search)
         self.vbox_global.addWidget(self.button_delete_search)
         self.button_delete_search.hide()
         self.vbox_global.addWidget(self.button_search_and_save)
