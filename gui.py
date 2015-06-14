@@ -1075,11 +1075,6 @@ class Fenetre(QtGui.QMainWindow):
                 proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
                 proxy.setFilterKeyColumn(12)
 
-        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
-        proxy.setFilterRegExp(QtCore.QRegExp("[1]"))
-        proxy.setFilterKeyColumn(12)
-        self.updateCellSize()
-
 
     def refineBaseQuery(self, base_query, topic_options, author_options):
 
@@ -1622,7 +1617,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # self.toolbar.addAction(self.toggleLikeAction)
         # self.toolbar.addAction(self.updateAction)
-        self.toolbar.addAction(self.viewAllAction)
+        # self.toolbar.addAction(self.viewAllAction)
         self.toolbar.addAction(self.searchNewAction)
 
         # Create a button to reset everything
