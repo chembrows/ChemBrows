@@ -52,8 +52,6 @@ class AdvancedSearch(QtGui.QDialog):
 
         """Establish the slots"""
 
-        # self.button_search.clicked.connect(self.search)
-
         self.button_search_and_save.clicked.connect(self.search)
 
         self.tabs.currentChanged.connect(self.tabChanged)
@@ -118,7 +116,6 @@ class AdvancedSearch(QtGui.QDialog):
             # Change the buttons at the button if the tab is
             # a tab dedicated to search edition
             self.button_delete_search.show()
-            # self.button_search.hide()
 
             topic_entries_options = self.options.value("{0}/topic_entries".format(tab_title), None)
             if topic_entries_options is not None:
@@ -129,7 +126,6 @@ class AdvancedSearch(QtGui.QDialog):
 
         else:
             self.button_delete_search.hide()
-            # self.button_search.show()
 
 
     def search(self):
@@ -297,7 +293,6 @@ class AdvancedSearch(QtGui.QDialog):
 
         # ----------------- BUTTONS -----------------------------------------
 
-        # self.button_search = QtGui.QPushButton("Quick search", self)
         self.button_delete_search = QtGui.QPushButton("Delete search", self)
         self.button_search_and_save = QtGui.QPushButton("Save search", self)
 
@@ -307,7 +302,6 @@ class AdvancedSearch(QtGui.QDialog):
         self.vbox_global = QtGui.QVBoxLayout()
         self.vbox_global.addWidget(self.tabs)
 
-        # self.vbox_global.addWidget(self.button_search)
         self.vbox_global.addWidget(self.button_delete_search)
         self.button_delete_search.hide()
         self.vbox_global.addWidget(self.button_search_and_save)
