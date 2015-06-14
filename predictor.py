@@ -15,7 +15,10 @@ import datetime
 
 from log import MyLog
 
+<<<<<<< HEAD
 from memory_profiler import profile
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
 class Predictor(QtCore.QThread):
 
@@ -114,7 +117,10 @@ class Predictor(QtCore.QThread):
         self.l.debug("Initializing classifier in {0}".format(elsapsed_time))
 
 
+<<<<<<< HEAD
     # @profile
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
     # def calculatePercentageMatch(self, test=False):
     def run(self):
 
@@ -141,7 +147,10 @@ class Predictor(QtCore.QThread):
                 list_id.append(record.value('id'))
                 x_test.append(abstract)
 
+<<<<<<< HEAD
         # x_test = np.array(x_test)
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
         try:
             # Normalize the percentages: the highest is set to 100%

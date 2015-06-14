@@ -9,7 +9,10 @@ from log import MyLog
 import functions
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 class AdvancedSearch(QtGui.QDialog):
 
     """Class to perform advanced searches"""
@@ -52,6 +55,11 @@ class AdvancedSearch(QtGui.QDialog):
 
         """Establish the slots"""
 
+<<<<<<< HEAD
+=======
+        self.button_search.clicked.connect(self.search)
+
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
         self.button_search_and_save.clicked.connect(self.search)
 
         self.tabs.currentChanged.connect(self.tabChanged)
@@ -116,6 +124,9 @@ class AdvancedSearch(QtGui.QDialog):
             # Change the buttons at the button if the tab is
             # a tab dedicated to search edition
             self.button_delete_search.show()
+<<<<<<< HEAD
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
             topic_entries_options = self.options.value("{0}/topic_entries".format(tab_title), None)
             if topic_entries_options is not None:
@@ -126,12 +137,18 @@ class AdvancedSearch(QtGui.QDialog):
 
         else:
             self.button_delete_search.hide()
+<<<<<<< HEAD
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
 
     def search(self):
 
         """Slot to save a query"""
 
+<<<<<<< HEAD
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
         lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
 
         # Get the name of the current tab. Used to determine if the current
@@ -148,6 +165,7 @@ class AdvancedSearch(QtGui.QDialog):
             return
 
         if tab_title == "New query":
+<<<<<<< HEAD
             # Get the search name with a dialogBox, if the user pushed the save button
             name_search = QtGui.QInputDialog.getText(self, "Search name", "Save your search as:")
 
@@ -176,6 +194,8 @@ class AdvancedSearch(QtGui.QDialog):
                 for line in lines:
                     line.clear()
 
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
         else:
             name_search = tab_title
 
@@ -183,6 +203,7 @@ class AdvancedSearch(QtGui.QDialog):
                 self.parent.createSearchTab(name_search, base, topic_entries,
                                             author_entries, update=True)
 
+<<<<<<< HEAD
         self.logger.debug("Saving the search")
 
         self.options.beginGroup(name_search)
@@ -197,11 +218,16 @@ class AdvancedSearch(QtGui.QDialog):
         if base:
             self.options.setValue("sql_query", base)
         self.options.endGroup()
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
 
     def createForm(self):
 
+<<<<<<< HEAD
         # ------------------------ NEW SEARCH TAB -----------------------------
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
         # Main widget of the tab, with a grid layout
         widget_query = QtGui.QWidget()
@@ -284,6 +310,9 @@ class AdvancedSearch(QtGui.QDialog):
         self.parent.window_search = QtGui.QWidget()
         self.parent.window_search.setWindowTitle('Advanced Search')
 
+<<<<<<< HEAD
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
         self.tabs = QtGui.QTabWidget()
 
         query = self.createForm()
@@ -291,17 +320,23 @@ class AdvancedSearch(QtGui.QDialog):
         self.tabs.addTab(query, "New query")
 
 
+<<<<<<< HEAD
         # ----------------- BUTTONS -----------------------------------------
 
         self.button_delete_search = QtGui.QPushButton("Delete search", self)
         self.button_search_and_save = QtGui.QPushButton("Save search", self)
 
         # ------------------------ ASSEMBLING ---------------------------------
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
         # Create a global vbox, and stack the main widget + the search button
         self.vbox_global = QtGui.QVBoxLayout()
         self.vbox_global.addWidget(self.tabs)
 
+<<<<<<< HEAD
+=======
+>>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
         self.vbox_global.addWidget(self.button_delete_search)
         self.button_delete_search.hide()
         self.vbox_global.addWidget(self.button_search_and_save)
