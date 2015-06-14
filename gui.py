@@ -26,10 +26,7 @@ from tab import TabPerso
 import functions
 import hosts
 from updater import Updater
-<<<<<<< HEAD
 from line_clear import ButtonLineEdit
-=======
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -186,10 +183,6 @@ class Fenetre(QtGui.QMainWindow):
         # because the view is updated each time a change is made
         self.model.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
         # self.model.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
-<<<<<<< HEAD
-        # self.model.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
-=======
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
         self.model.setTable("papers")
         self.model.select()
@@ -425,13 +418,8 @@ class Fenetre(QtGui.QMainWindow):
         self.settingsAction.triggered.connect(lambda: Settings(self))
 
         # Action to view all the articles
-<<<<<<< HEAD
-        # self.viewAllAction = QtGui.QAction('View all', self)
-        # self.viewAllAction.triggered.connect(self.resetView)
-=======
         self.viewAllAction = QtGui.QAction('View all', self)
         self.viewAllAction.triggered.connect(self.resetView)
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
         # Action so show new articles
         self.searchNewAction = QtGui.QAction('View unread', self)
@@ -441,16 +429,6 @@ class Fenetre(QtGui.QMainWindow):
         self.toggleReadAction = QtGui.QAction('Toggle read state', self)
         self.toggleReadAction.setShortcut('M')
         self.toggleReadAction.triggered.connect(self.toggleRead)
-
-<<<<<<< HEAD
-        # # Start the search
-        # self.searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_027_search'), 'Search', self)
-        # self.searchAction.triggered.connect(self.research)
-=======
-        # Start the search
-        self.searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_027_search'), 'Search', self)
-        self.searchAction.triggered.connect(self.research)
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
         # Start advanced search
         self.advanced_searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_025_binoculars'), 'Advanced search', self)
@@ -797,11 +775,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Launch the research if Enter pressed
         self.research_bar.returnPressed.connect(self.research)
-<<<<<<< HEAD
-        # self.research_bar.textChanged.connect(self.research)
         self.research_bar.buttonClicked.connect(self.clearSearch)
-=======
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
         # Perform some stuff when the tab is changed
         self.onglets.currentChanged.connect(self.tabChanged)
@@ -1080,7 +1054,6 @@ class Fenetre(QtGui.QMainWindow):
 
     def searchNew(self):
 
-<<<<<<< HEAD
         """Slot to show new articles. It's a toggable method, if
         the text of the sender button changes, the method does a different
         thing. It shows the new articles, or all depending of the
@@ -1102,14 +1075,10 @@ class Fenetre(QtGui.QMainWindow):
                 proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
                 proxy.setFilterKeyColumn(12)
 
-=======
-        """Slot to select new articles"""
-
         proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
         proxy.setFilterRegExp(QtCore.QRegExp("[1]"))
         proxy.setFilterKeyColumn(12)
         self.updateCellSize()
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
 
 
     def refineBaseQuery(self, base_query, topic_options, author_options):
@@ -1214,16 +1183,10 @@ class Fenetre(QtGui.QMainWindow):
             return requete
 
 
-<<<<<<< HEAD
-=======
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
     def research(self):
 
         """Slot to search on title and abstract"""
 
-<<<<<<< HEAD
-=======
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
         results = functions.simpleChar(self.research_bar.text())
 
         self.query = QtSql.QSqlQuery(self.bdd)
@@ -1234,7 +1197,6 @@ class Fenetre(QtGui.QMainWindow):
         self.updateView()
 
 
-<<<<<<< HEAD
     def clearSearch(self):
 
         """Method to clear the research bar"""
@@ -1243,8 +1205,6 @@ class Fenetre(QtGui.QMainWindow):
         self.research_bar.returnPressed.emit()
 
 
-=======
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
     def clearLayout(self, layout):
 
         """Method to erase the widgets from a layout"""
@@ -1649,10 +1609,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Create a research bar and set its size
         self.research_bar = QtGui.QLineEdit()
-<<<<<<< HEAD
         self.research_bar = ButtonLineEdit('images/glyphicons_197_remove')
-=======
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
         self.research_bar.setFixedSize(self.research_bar.sizeHint())
 
         # On ajoute une toolbar en la nommant pr l'indentifier,
@@ -1665,10 +1622,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # self.toolbar.addAction(self.toggleLikeAction)
         # self.toolbar.addAction(self.updateAction)
-<<<<<<< HEAD
-        # self.toolbar.addAction(self.viewAllAction)
-=======
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
+        self.toolbar.addAction(self.viewAllAction)
         self.toolbar.addAction(self.searchNewAction)
 
         # Create a button to reset everything
@@ -1680,10 +1634,6 @@ class Fenetre(QtGui.QMainWindow):
 
         self.toolbar.addWidget(QtGui.QLabel('Search : '))
         self.toolbar.addWidget(self.research_bar)
-<<<<<<< HEAD
-        # self.toolbar.addAction(self.searchAction)
-=======
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
         self.toolbar.addAction(self.advanced_searchAction)
 
         # Empty widget acting like a spacer
