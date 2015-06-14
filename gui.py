@@ -26,6 +26,7 @@ from tab import TabPerso
 import functions
 import hosts
 from updater import Updater
+from line_clear import ButtonLineEdit
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -430,9 +431,9 @@ class Fenetre(QtGui.QMainWindow):
         self.toggleReadAction.setShortcut('M')
         self.toggleReadAction.triggered.connect(self.toggleRead)
 
-        # Start the search
-        self.searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_027_search'), 'Search', self)
-        self.searchAction.triggered.connect(self.research)
+        # # Start the search
+        # self.searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_027_search'), 'Search', self)
+        # self.searchAction.triggered.connect(self.research)
 
         # Start advanced search
         self.advanced_searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_025_binoculars'), 'Advanced search', self)
@@ -779,6 +780,8 @@ class Fenetre(QtGui.QMainWindow):
 
         # Launch the research if Enter pressed
         self.research_bar.returnPressed.connect(self.research)
+        # self.research_bar.textChanged.connect(self.research)
+        self.research_bar.buttonClicked.connect(self.clearSearch)
 
         # Perform some stuff when the tab is changed
         self.onglets.currentChanged.connect(self.tabChanged)
@@ -1223,6 +1226,14 @@ class Fenetre(QtGui.QMainWindow):
         self.updateView()
 
 
+    def clearSearch(self):
+
+        """Method to clear the research bar"""
+
+        self.research_bar.clear()
+        self.research_bar.returnPressed.emit()
+
+
     def clearLayout(self, layout):
 
         """Method to erase the widgets from a layout"""
@@ -1627,6 +1638,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Create a research bar and set its size
         self.research_bar = QtGui.QLineEdit()
+        self.research_bar = ButtonLineEdit('images/glyphicons_197_remove')
         self.research_bar.setFixedSize(self.research_bar.sizeHint())
 
         # On ajoute une toolbar en la nommant pr l'indentifier,
@@ -1651,7 +1663,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.toolbar.addWidget(QtGui.QLabel('Search : '))
         self.toolbar.addWidget(self.research_bar)
-        self.toolbar.addAction(self.searchAction)
+        # self.toolbar.addAction(self.searchAction)
         self.toolbar.addAction(self.advanced_searchAction)
 
         # Empty widget acting like a spacer
