@@ -538,10 +538,6 @@ class Fenetre(QtGui.QMainWindow):
         except AttributeError:
             self.options.setValue("sorting_reversed", False)
 
-        # Save the checked journals (on the left)
-        if self.tags_selected and self.tags_selected != self.getJournalsToCare():
-            self.options.setValue("tags_selected", self.tags_selected)
-
         self.options.endGroup()
 
         # Be sure self.options finished its tasks.
@@ -1680,24 +1676,28 @@ class Fenetre(QtGui.QMainWindow):
         prelabel_title = QtGui.QLabel("Title: ")
         prelabel_title.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
         self.label_title = QtGui.QLabel()
+        self.label_title.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         self.label_title.setWordWrap(True)
         self.label_title.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
         prelabel_author = QtGui.QLabel("Author(s): ")
         prelabel_author.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
         self.label_author = QtGui.QLabel()
+        self.label_author.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         self.label_author.setWordWrap(True)
         self.label_author.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
         prelabel_journal = QtGui.QLabel("Journal: ")
         prelabel_journal.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
         self.label_journal = QtGui.QLabel()
+        self.label_journal.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         self.label_journal.setWordWrap(True)
         self.label_journal.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
         prelabel_date = QtGui.QLabel("Date: ")
         prelabel_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
         self.label_date = QtGui.QLabel()
+        self.label_date.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         self.label_date.setWordWrap(True)
         self.label_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 

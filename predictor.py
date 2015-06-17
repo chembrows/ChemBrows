@@ -83,12 +83,17 @@ class Predictor(QtCore.QThread):
             else:
                 continue
 
+            if type(record.value('title')) is str:
+                title = record.value('title')
+            else:
+                continue
+
             if type(record.value('liked')) is int:
                 category = 0
             else:
                 category = 1
 
-            self.x_train.append(abstract)
+            self.x_train.append(abstract + ' ' + title)
             self.y_train.append(category)
 
         if not self.x_train or 1 not in self.y_train:
