@@ -40,7 +40,6 @@ class ViewPerso(QtGui.QTableView):
         self.customContextMenuRequested.connect(self.parent.popup)
 
         self.clicked.connect(self.parent.displayInfos)
-        self.clicked.connect(self.parent.displayMosaic)
         self.clicked.connect(self.parent.markOneRead)
 
 

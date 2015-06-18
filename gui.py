@@ -16,7 +16,7 @@ import esky
 from log import MyLog
 from model import ModelPerso
 from view import ViewPerso
-from graphicsview import GraphicsViewPerso
+from web_view import WebViewPerso
 from view_delegate import ViewDelegate
 from worker import Worker
 from predictor import Predictor
@@ -417,10 +417,6 @@ class Fenetre(QtGui.QMainWindow):
         self.settingsAction = QtGui.QAction('Preferences', self)
         self.settingsAction.triggered.connect(lambda: Settings(self))
 
-        # Action to view all the articles
-        self.viewAllAction = QtGui.QAction('View all', self)
-        self.viewAllAction.triggered.connect(self.resetView)
-
         # Action so show new articles
         self.searchNewAction = QtGui.QAction('View unread', self)
         self.searchNewAction.triggered.connect(self.searchNew)
@@ -441,13 +437,18 @@ class Fenetre(QtGui.QMainWindow):
 
         # Action to change the sorting method of the views
         self.sortingDateAction = QtGui.QAction('By date', self, checkable=True)
-        self.sortingDateAction.triggered.connect(lambda: self.changeSortingMethod(4,
+        self.sortingDateAction.triggered.connect(lambda: self.changeSortingMethod(0,
                                                                                   reverse=self.sortingReversedAction.isChecked()))
 
         # Action to change the sorting method of the views, reverse the results
         self.sortingReversedAction = QtGui.QAction('Reverse order', self, checkable=True)
         self.sortingReversedAction.triggered.connect(lambda: self.changeSortingMethod(self.sorting_method,
                                                                                       reverse=self.sortingReversedAction.isChecked()))
+
+        # Action in the toolbar. Button. Used to change the sorting method
+        self.changeSortingAction = QtGui.QAction(self)
+        self.changeSortingAction.triggered.connect(lambda: self.changeSortingMethod(None,
+                                                                                    reverse=self.sortingReversedAction.isChecked()))
 
         # Action to serve use as a separator
         self.separatorAction = QtGui.QAction(self)
@@ -460,21 +461,26 @@ class Fenetre(QtGui.QMainWindow):
         Slot to change the sorting method of the
         articles. Get an int as a parameter:
         1 -> percentage match
-        4 -> date
+        0 -> date
         reverse -> if True, descending order
         """
 
-        # Set a class attribute, to save with the QSettings,
-        # to restore the check at boot
-        self.sorting_method = method_nbr
-        self.sorting_reversed = reverse
+        if method_nbr is None:
+            self.sorting_method = 1 - self.sorting_method
+        else:
+            # Set a class attribute, to save with the QSettings,
+            # to restore the check at boot
+            self.sorting_method = method_nbr
+            self.sorting_reversed = reverse
 
         if self.sorting_method == 1:
             self.sortingPercentageAction.setChecked(True)
             self.sortingDateAction.setChecked(False)
-        elif self.sorting_method == 4:
+            self.changeSortingAction.setText("Sort by pepperness")
+        elif self.sorting_method == 0:
             self.sortingPercentageAction.setChecked(False)
             self.sortingDateAction.setChecked(True)
+            self.changeSortingAction.setText("Sort by date")
 
         if self.sorting_reversed:
             self.sortingReversedAction.setChecked(True)
@@ -524,8 +530,7 @@ class Fenetre(QtGui.QMainWindow):
         for index, each_table in enumerate(self.list_tables_in_tabs):
             self.options.setValue("header_state{0}".format(index), each_table.horizontalHeader().saveState())
 
-        # Save the states of the splitters of the window
-        self.options.setValue("central_splitter", self.splitter1.saveState())
+        # Save the state of the window's splitter
         self.options.setValue("final_splitter", self.splitter2.saveState())
 
         # Save the sorting method
@@ -641,7 +646,7 @@ class Fenetre(QtGui.QMainWindow):
                 if header_state is not None:
                     each_table.horizontalHeader().restoreState(self.options.value("Window/header_state{0}".format(index)))
 
-            self.splitter1.restoreState(self.options.value("Window/central_splitter"))
+            # self.splitter1.restoreState(self.options.value("Window/central_splitter"))
             self.splitter2.restoreState(self.options.value("Window/final_splitter"))
 
             # # Bloc to restore the check of the sorting method, in the View menu
@@ -749,7 +754,6 @@ class Fenetre(QtGui.QMainWindow):
             return
         else:
             self.displayInfos()
-            self.displayMosaic()
 
         # Define a new postition for the menu
         new_pos = QtCore.QPoint(pos.x() + 10, pos.y() + 107)
@@ -799,25 +803,39 @@ class Fenetre(QtGui.QMainWindow):
 
     def displayInfos(self):
 
-        """Method to get the infos of a post.
-        For now, gets only the abstract"""
-
-        self.button_share_mail.show()
+        """Method to get the infos of a post. Also loads the graphical abstract.
+        Basically build the infos displayed on the right side"""
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
-        abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
+        # Get the different infos for an article
         title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
         author = table.model().index(table.selectionModel().selection().indexes()[0].row(), 6).data()
         date = table.model().index(table.selectionModel().selection().indexes()[0].row(), 4).data()
         journal = table.model().index(table.selectionModel().selection().indexes()[0].row(), 5).data()
+
+        abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
+
+        try:
+            # Checkings on the graphical abstract. Add the path of the picture to
+            # the abstract if ok
+            graphical_abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 8).data()
+            if type(graphical_abstract) is str and graphical_abstract != "Empty":
+                # Get the path of the graphical abstract
+                base = "<br/><br/><p align='center'><img src='file://{}' align='center' /></p>"
+                base = base.format(os.path.abspath("./graphical_abstracts/" + graphical_abstract))
+                abstract += base
+        except TypeError:
+            self.l.debug("No graphical abstract for this post, displayInfos()")
+
+        self.button_share_mail.show()
 
         self.label_date.setText(date)
         self.label_title.setText("<span style='font-size:12pt; font-weight:bold'>{0}</span>".format(title))
         self.label_journal.setText(journal)
 
         if type(abstract) is str:
-            self.text_abstract.setHtml(table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data())
+            self.text_abstract.setHtml(abstract)
         else:
             self.text_abstract.setHtml("")
 
@@ -825,48 +843,6 @@ class Fenetre(QtGui.QMainWindow):
             self.label_author.setText(author)
         else:
             self.label_author.setText("")
-
-
-    def displayMosaic(self):
-
-        """Slot qui affiche la mosaïque de la vidéo dans
-        la partie droite"""
-        # infos:
-        # http://vincent-vande-vyvre.developpez.com/tutoriels/pyqt/manipulation-images/
-
-        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
-
-        try:
-            path_graphical_abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 8).data()
-            if type(path_graphical_abstract) is not str:
-                try:
-                    self.scene.clear()
-                except AttributeError:
-                    self.l.warn("No scene object yet, displayMosaic")
-                return
-        except TypeError:
-            self.l.debug("No graphical abstract for this post, displayMosaic()")
-            self.scene.clear()
-            return
-
-        # Get the path of the graphical abstract
-        path_graphical_abstract = "./graphical_abstracts/" + path_graphical_abstract
-
-        w_vue, h_vue = self.vision.width(), self.vision.height()
-        self.current_image = QtGui.QImage(path_graphical_abstract)
-
-        # Scale the picture
-        self.pixmap = QtGui.QPixmap.fromImage(self.current_image.scaled(w_vue, h_vue,
-                                              QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
-
-        w_pix, h_pix = self.pixmap.width(), self.pixmap.height()
-
-        self.scene = QtGui.QGraphicsScene(self.vision)
-
-        # Center the picture
-        self.scene.setSceneRect(0, 0, w_pix, h_pix - 10)
-        self.scene.addPixmap(self.pixmap)
-        self.vision.setScene(self.scene)
 
 
     def tabChanged(self):
@@ -1217,12 +1193,6 @@ class Fenetre(QtGui.QMainWindow):
         """Slot to reset view, clean the graphical abstract, etc"""
 
         proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
-
-        # Clean graphical abstract area
-        try:
-            self.scene.clear()
-        except AttributeError:
-            self.l.debug("No scene object for now")
 
         # Cleaning title, authors and abstract
         self.label_author.setText("")
@@ -1613,8 +1583,8 @@ class Fenetre(QtGui.QMainWindow):
 
         # self.toolbar.addAction(self.toggleLikeAction)
         # self.toolbar.addAction(self.updateAction)
-        # self.toolbar.addAction(self.viewAllAction)
         self.toolbar.addAction(self.searchNewAction)
+        self.toolbar.addAction(self.changeSortingAction)
 
         # Create a button to reset everything
         # self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_170_step_backward'), 'Back')
@@ -1633,7 +1603,7 @@ class Fenetre(QtGui.QMainWindow):
         self.toolbar.addWidget(self.empty_widget)
 
 
-        # # ------------------------- LEFT AREA ------------------------------------------------------------------------
+        # ------------------------- LEFT AREA --------------------------------
 
         # On crée des scrollarea pr mettre les boutons des tags et des acteurs
         self.scroll_tags = QtGui.QScrollArea()
@@ -1646,24 +1616,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.scroll_tags.hide()
 
-
-        # # ------------------------- RIGHT BOTTOM AREA ---------------------------------------------------------------------------
-
-        # The bottom area contains the mosaic (graphical abstract)
-
-        # The bottom are is a simple widget
-        self.area_right_bottom = QtGui.QWidget()
-
-        # Personnal graphicsView. Allows the resizing of the mosaic
-        self.vision = GraphicsViewPerso(self.area_right_bottom)
-        self.vision.setDragMode(GraphicsViewPerso.ScrollHandDrag)
-
-        self.box_mosaic = QtGui.QVBoxLayout()
-        self.box_mosaic.addWidget(self.vision)
-
-        self.area_right_bottom.setLayout(self.box_mosaic)
-
-        # ------------------------- RIGHT TOP AREA ------------------------------------------------------------------------------------
+        # ------------------------- RIGHT TOP AREA ---------------------------
 
         # Creation of a gridLayout to handle the top right area
         self.area_right_top = QtGui.QWidget()
@@ -1706,13 +1659,14 @@ class Fenetre(QtGui.QMainWindow):
         self.button_share_mail.hide()
 
         # A QWebView to render the sometimes rich text of the abstracts
-        self.text_abstract = QtWebKit.QWebView()
+        # self.text_abstract = QtWebKit.QWebView()
+        self.text_abstract = WebViewPerso()
         self.web_settings = QtWebKit.QWebSettings.globalSettings()
 
         # Get the default font and use it for the QWebView
         self.web_settings.setFontFamily(QtWebKit.QWebSettings.StandardFont, self.font().family())
         # self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 18)
-        self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 16)
+        # self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 16)
 
         # Building the grid
         self.grid_area_right_top.addWidget(prelabel_title, 0, 0)
@@ -1728,7 +1682,11 @@ class Fenetre(QtGui.QMainWindow):
 
         self.grid_area_right_top.addWidget(self.text_abstract, 5, 0, 1, 2)
 
-        # # ------------------------- ASSEMBLING THE AREAS ------------------------------------------------------------------------------------
+        # USEFULL: set the size of the grid and its widgets to the minimum
+        self.grid_area_right_top.setRowStretch(5, 1)
+
+
+        # ------------------------- ASSEMBLING THE AREAS ----------------------
 
         # Main part of the window in a tab.
         # Allows to create other tabs
@@ -1736,9 +1694,9 @@ class Fenetre(QtGui.QMainWindow):
         self.onglets = TabPerso(self)
         self.onglets.setContentsMargins(0, 0, 0, 0)
 
-        self.splitter1 = QtGui.QSplitter(QtCore.Qt.Vertical)
-        self.splitter1.addWidget(self.area_right_top)
-        self.splitter1.addWidget(self.area_right_bottom)
+        # self.splitter1 = QtGui.QSplitter(QtCore.Qt.Vertical)
+        # self.splitter1.addWidget(self.area_right_top)
+        # self.splitter1.addWidget(self.area_right_bottom)
         # self.vbox_right = QtGui.QVBoxLayout()
         # self.vbox_right.addWidget(self.area_right_top)
         # self.vbox_right.addWidget(self.area_right_bottom)
@@ -1750,7 +1708,8 @@ class Fenetre(QtGui.QMainWindow):
         self.splitter2 = QtGui.QSplitter(QtCore.Qt.Horizontal)
         # self.splitter2.addWidget(self.scroll_tags)
         self.splitter2.addWidget(self.onglets)
-        self.splitter2.addWidget(self.splitter1)
+        # self.splitter2.addWidget(self.splitter1)
+        self.splitter2.addWidget(self.area_right_top)
 
         self.hbox_central.addWidget(self.scroll_tags)
         self.hbox_central.addWidget(self.splitter2)

@@ -24,7 +24,7 @@ class ModelPerso(QtSql.QSqlTableModel):
         self.query = QtSql.QSqlQuery()
 
         # Sorting method wanted by the user
-        if self.parent.sorting_method == 4:
+        if self.parent.sorting_method == 1:
             sorting = "date"
         else:
             sorting = "percentage_match"
