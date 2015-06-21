@@ -1,5 +1,4 @@
 abstract
-<<<<<<< HEAD
 erratum
 spotlight
 figure
@@ -9,5 +8,22 @@ new
 compounds
 novel
 ISBN
-=======
->>>>>>> ce5cebb5bfba6b5bcd2281abb97668a7ec7c004b
+km
+m
+cm
+mm
+µm
+nm
+pm
+M
+mM
+µM
+nM
+s
+ms
+µs
+ns
+L
+mL
+µL
+nL

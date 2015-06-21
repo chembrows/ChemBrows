@@ -197,6 +197,8 @@ class AdvancedSearch(QtGui.QDialog):
             self.options.setValue("sql_query", base)
         self.options.endGroup()
 
+        self.options.sync()
+
 
     def createForm(self):
 

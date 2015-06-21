@@ -363,6 +363,8 @@ class Fenetre(QtGui.QMainWindow):
             self.updateCellSize()
             self.parsing = False
 
+            self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+
         else:
             if self.urls:
                 self.l.info("STARTING NEW THREAD")
@@ -489,6 +491,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.updateView()
 
+        self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+
         # for table in self.list_tables_in_tabs:
             # Qt.AscendingOrder   0   starts with 'AAA' ends with 'ZZZ'
             # Qt.DescendingOrder  1   starts with 'ZZZ' ends with 'AAA'
@@ -523,7 +527,7 @@ class Fenetre(QtGui.QMainWindow):
         # Reinitializing the keys
         self.options.remove("")
 
-        self.l.debug("Sauvegarde de l'état de la fenêtre dans options.ini")
+        self.l.debug("Saving windows state")
         self.options.setValue("window_geometry", self.saveGeometry())
         self.options.setValue("window_state", self.saveState())
 
@@ -1047,6 +1051,8 @@ class Fenetre(QtGui.QMainWindow):
                 proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
                 proxy.setFilterKeyColumn(12)
 
+        self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+
 
     def refineBaseQuery(self, base_query, topic_options, author_options):
 
@@ -1489,6 +1495,8 @@ class Fenetre(QtGui.QMainWindow):
 
                 if update:
                     self.searchByButton()
+
+                self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
 
             self.parsing = True
