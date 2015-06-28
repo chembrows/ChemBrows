@@ -54,6 +54,10 @@ class ViewPerso(QtGui.QTableView):
         # corner, where the user can click to toggle liked state
         DIMENSION = self.columnWidth(3) * 0.07
 
+        # Attribute to shunt parent.markOneRead if the user is clicking
+        # on the read/unread icon
+        self.update_new = False
+
         # Call the parent class function
         super(ViewPerso, self).mousePressEvent(e)
 
@@ -64,20 +68,32 @@ class ViewPerso(QtGui.QTableView):
         x = e.x()
         y = e.y()
 
-        corner_x, corner_y = False, False
+        # area_y: to check if the click is in the bottom part of the post
+        # area_*_x: to check if the click is on the read/unread icon,
+        # or the like icon
+        area_like_x, area_read_x, area_y = False, False, False
 
         # If the click was on the right bottom corner, start the real buisness
-        if x <= rect.x() + rect.width() and x >= rect.x() + rect.width() - DIMENSION:
-            corner_x = True
         if y <= rect.y() + rect.height() and y >= rect.y() + rect.height() - DIMENSION:
-            corner_y = True
+            area_y = True
+        if x <= rect.x() + rect.width() and x >= rect.x() + rect.width() - DIMENSION:
+            area_like_x = True
+        if x >= rect.x() + rect.width() - 2 * DIMENSION and x <= rect.x() + rect.width() - DIMENSION:
+            area_read_x = True
 
-        if corner_x and corner_y:
+        # if not area_read_x:
+
+        if area_like_x and area_y:
             self.parent.toggleLike()
 
-        # Emit a clicked signal, otherwise the user can like an article
-        # while the article is not marked as read
-        self.clicked.emit(self.selectionModel().currentIndex())
+            # Emit a clicked signal, otherwise the user can like an article
+            # while the article is not marked as read
+            self.clicked.emit(self.selectionModel().currentIndex())
+
+        elif area_read_x and area_y:
+            self.update_new = True
+            self.parent.toggleRead()
+            self.clicked.emit(self.selectionModel().currentIndex())
 
 
     def resizeCells(self, new_size):

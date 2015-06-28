@@ -148,8 +148,12 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)
 
             if new:
-                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/new.png"))
+                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/unread.png"))
                 painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
+            else:
+                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/read.png"))
+                painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
+
             if red:
                 painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
 

@@ -73,7 +73,7 @@ class Predictor(QtCore.QThread):
 
         query = QtSql.QSqlQuery(self.bdd)
 
-        query.exec_("SELECT * FROM papers WHERE new=0")
+        query.exec_("SELECT * FROM papers WHERE new=0 OR liked=1")
 
         while query.next():
             record = query.record()
@@ -99,9 +99,6 @@ class Predictor(QtCore.QThread):
         if not self.x_train or 1 not in self.y_train:
             self.l.debug("Not enough data yet")
             return None
-
-        self.x_train = np.array(self.x_train)
-        self.y_train = np.array(self.y_train)
 
         self.classifier = Pipeline([
             ('vectorizer', CountVectorizer(

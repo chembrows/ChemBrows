@@ -1268,7 +1268,9 @@ class Fenetre(QtGui.QMainWindow):
         id_bdd = table.model().index(element.row(), 0).data()
         new = table.model().index(element.row(), 12).data()
 
-        if new == 0:
+        # update_new: to check if the user is currently clicking
+        # on the read icon. If so, don't mark the article as read
+        if new == 0 or table.update_new == True:
             return
         else:
 
@@ -1531,9 +1533,9 @@ class Fenetre(QtGui.QMainWindow):
         else:
             like = 1
 
-        table.model().setData(table.model().index(line, 9), like)
-
         index = table.model().index(line, 9)
+        table.model().setData(index, like)
+
         table.model().dataChanged.emit(index, index)
         table.viewport().update()
 
