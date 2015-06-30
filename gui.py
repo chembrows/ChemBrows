@@ -211,11 +211,18 @@ class Fenetre(QtGui.QMainWindow):
 
     def checkAccess(self):
 
+        """Originally, coded to perform check acces on the server. If 
+        the programm doesn't go commercial, RENAME THIS METHOD.
+        For now, this method get the max id, used to know if incoming articles
+        are new"""
+
         count_query = QtSql.QSqlQuery(self.bdd)
-        count_query.exec_("SELECT COUNT(id) FROM papers")
+        # count_query.exec_("SELECT COUNT(id) FROM papers")
+        count_query.exec_("SELECT MAX(id) FROM papers")
         count_query.first()
-        record = count_query.record().value(0)
-        print(record)
+        self.max_id_for_new = count_query.record().value(0)
+
+        self.l.info("Max id for new: {}".format(self.max_id_for_new))
 
         return True
 
@@ -400,10 +407,10 @@ class Fenetre(QtGui.QMainWindow):
         self.calculatePercentageMatchAction.setStatusTip("Calculate percentages")
         self.calculatePercentageMatchAction.triggered.connect(lambda: self.calculatePercentageMatch(update=True))
 
-        # # Action to like a post
-        # self.toggleLikeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_343_thumbs_up'), 'Toggle Like for the post', self)
-        # self.toggleLikeAction.setShortcut('L')
-        # self.toggleLikeAction.triggered.connect(self.toggleLike)
+        # Action to like a post
+        self.toggleLikeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_343_thumbs_up'), 'Toggle like', self)
+        self.toggleLikeAction.setShortcut('L')
+        self.toggleLikeAction.triggered.connect(self.toggleLike)
 
         # Action to open the post in browser
         self.openInBrowserAction = QtGui.QAction('Open post in browser', self)
@@ -424,7 +431,7 @@ class Fenetre(QtGui.QMainWindow):
         self.searchNewAction.triggered.connect(self.searchNew)
 
         # Action to toggle the read state of an article
-        self.toggleReadAction = QtGui.QAction('Toggle read state', self)
+        self.toggleReadAction = QtGui.QAction('Toggle read', self)
         self.toggleReadAction.setShortcut('M')
         self.toggleReadAction.triggered.connect(self.toggleRead)
 
@@ -764,6 +771,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Create the right-click menu and add the actions
         menu = QtGui.QMenu()
+        menu.addAction(self.toggleLikeAction)
         menu.addAction(self.toggleReadAction)
         menu.addAction(self.openInBrowserAction)
 
@@ -1566,7 +1574,7 @@ class Fenetre(QtGui.QMainWindow):
         self.toolMenu.addAction(self.parseAction)
         self.toolMenu.addAction(self.calculatePercentageMatchAction)
         self.toolMenu.addAction(self.toggleReadAction)
-        # self.toolMenu.addAction(self.toggleLikeAction)
+        self.toolMenu.addAction(self.toggleLikeAction)
         self.toolMenu.addAction(self.openInBrowserAction)
 
         self.viewMenu = self.menubar.addMenu("&View")

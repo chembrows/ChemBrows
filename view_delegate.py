@@ -101,10 +101,14 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 percentage = 0
 
             # Get the read/unread state of an article
-            new = index.sibling(index.row(), 12).data()
+            read = index.sibling(index.row(), 12).data()
 
             # Get the like state of the post
             liked = index.sibling(index.row(), 9).data()
+
+            # New if the article was gathered on the last refresh, and if the user
+            # hasn't restarted the program
+            new = index.sibling(index.row(), 0).data() > self.parent.max_id_for_new
 
             # Paint a star in the right bottom corner
             # DIMENSION = 40
@@ -147,12 +151,19 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)
 
-            if new:
+            # A picture to display the read/unread state
+            if read:
                 pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/unread.png"))
                 painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
             else:
                 pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/read.png"))
                 painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
+
+            # Display a picture to warn the user if the article is new (gathered on the last
+            # refresh)
+            if new:
+                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/new.png"))
+                painter.drawPixmap(pos_x - 2 * DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
 
             if red:
                 painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
