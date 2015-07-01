@@ -1400,7 +1400,11 @@ class Fenetre(QtGui.QMainWindow):
         """
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
-        url = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
+
+        try:
+            url = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
+        except IndexError:
+            self.l.debug("No url to open. openInBrowser")
 
         if not url:
             return
