@@ -23,11 +23,10 @@ class ModelPerso(QtSql.QSqlTableModel):
 
         self.query = QtSql.QSqlQuery()
 
-        # Sorting method wanted by the user
-        if self.parent.sorting_method == 1:
-            sorting = "date"
-        else:
-            sorting = "percentage_match"
+        new = self.parent.max_id_for_new
+
+        if type(new) is not int:
+            new = 0
 
         # If the user has checked the reverse order
         if self.parent.sorting_reversed:
@@ -35,10 +34,22 @@ class ModelPerso(QtSql.QSqlTableModel):
         else:
             reverse = "DESC"
 
-        if type(query) is str:
-            self.query.prepare(query + " ORDER BY {} {}".format(sorting, reverse))
+        # Sorting method wanted by the user
+        if self.parent.sorting_method == 1:
+            sorting = "date"
+
+            # If sorting by date, pull up the "new" articles, i.e
+            # the ones gathered on the last refresh
+            str_sorting = " ORDER BY {} {}, \
+                            CASE WHEN id > {} THEN 1 ELSE 0 END DESC".format(sorting, reverse, new)
         else:
-            self.query.prepare(query.executedQuery() + " ORDER BY {} {}".format(sorting, reverse))
+            sorting = "percentage_match"
+            str_sorting = " ORDER BY {} {}".format(sorting, reverse)
+
+        if type(query) is str:
+            self.query.prepare(query + str_sorting)
+        else:
+            self.query.prepare(query.executedQuery() + str_sorting)
 
         self.query.exec_()
 

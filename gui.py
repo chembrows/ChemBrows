@@ -211,7 +211,7 @@ class Fenetre(QtGui.QMainWindow):
 
     def checkAccess(self):
 
-        """Originally, coded to perform check acces on the server. If 
+        """Originally, coded to perform check acces on the server. If
         the programm doesn't go commercial, RENAME THIS METHOD.
         For now, this method get the max id, used to know if incoming articles
         are new"""
@@ -872,6 +872,12 @@ class Fenetre(QtGui.QMainWindow):
         self.model.submitAll()
 
         self.searchByButton()
+
+        self.searchNewAction.setText("View unread")
+        for proxy in self.list_proxies_in_tabs:
+            proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
+            proxy.setFilterKeyColumn(12)
+
         # Update the size of the columns of the view if the central
         # splitter moved
         self.updateCellSize()

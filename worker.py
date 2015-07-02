@@ -259,7 +259,13 @@ class Worker(QtCore.QThread):
         else:
             query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
                            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-            params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1, topic_simple)
+
+            if graphical_abstract != "Empty":
+                path_picture = functions.simpleChar(graphical_abstract)
+            else:
+                path_picture = "Empty"
+
+            params = (doi, title, date, journal_abb, authors, abstract, path_picture, url, verif, 1, topic_simple)
             self.l.debug("Adding {0} to the database".format(doi))
             self.parent.counter += 1
 
@@ -316,14 +322,15 @@ class Worker(QtCore.QThread):
                 except OSError:
                     params = ("Empty", 0, doi)
                 else:
-                    graphical_abstract = functions.simpleChar(response.url)
-                    params = (graphical_abstract, 1, doi)
+                    # graphical_abstract = functions.simpleChar(response.url)
+                    # params = (graphical_abstract, 1, doi)
+                    params = (1, doi)
             else:
                 self.l.debug("Bad return code: {}".format(response.status_code))
                 params = ("Empty", 0, doi)
 
         finally:
-            query.prepare("UPDATE papers SET graphical_abstract=?, verif=? WHERE doi=?")
+            query.prepare("UPDATE papers SET verif=? WHERE doi=?")
 
             for value in params:
                 query.addBindValue(value)

@@ -108,7 +108,11 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             # New if the article was gathered on the last refresh, and if the user
             # hasn't restarted the program
-            new = index.sibling(index.row(), 0).data() > self.parent.max_id_for_new
+            try:
+                new = index.sibling(index.row(), 0).data() > self.parent.max_id_for_new
+            except TypeError:
+                self.parent.l.debug("No max id. Probably the first refresh of the program.")
+                new = True
 
             # Paint a star in the right bottom corner
             # DIMENSION = 40
@@ -161,7 +165,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             # Display a picture to warn the user if the article is new (gathered on the last
             # refresh)
-            if new:
+            if new and read:
                 pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/new.png"))
                 painter.drawPixmap(pos_x - 2 * DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
 
