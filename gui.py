@@ -9,6 +9,7 @@ import subprocess
 import urllib
 import fnmatch
 import webbrowser
+import requests
 
 import esky
 
@@ -95,11 +96,6 @@ class Fenetre(QtGui.QMainWindow):
         if not os.path.exists('./graphical_abstracts/'):
             os.makedirs('./graphical_abstracts')
 
-        # TODO: à mettre ds la partie pr les frozen app
-        # Start a form to sign up the user
-        if not os.path.exists('./config/user_id'):
-            self.signUp()
-
         # Check if the running ChemBrows is a frozen app
         if getattr(sys, "frozen", False):
 
@@ -151,12 +147,26 @@ class Fenetre(QtGui.QMainWindow):
             self.l.info("This version of ChemBrows is NOT a frozen version")
 
 
+    def checkAccess(self):
 
-    def signUp(self):
+        """Originally, coded to perform check acces on the server. If
+        the programm doesn't go commercial, RENAME THIS METHOD.
+        For now, this method get the max id, used to know if incoming articles
+        are new"""
 
-        """Method to log the user on the server"""
+        count_query = QtSql.QSqlQuery(self.bdd)
+        # count_query.exec_("SELECT COUNT(id) FROM papers")
+        count_query.exec_("SELECT MAX(id) FROM papers")
+        count_query.first()
+        self.max_id_for_new = count_query.record().value(0)
 
-        pass
+        self.l.info("Max id for new: {}".format(self.max_id_for_new))
+
+        payload = {'nbr_entries': self.max_id_for_new, 'journals': self.getJournalsToCare()}
+
+        req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload)
+
+        self.l.info(req.text)
 
 
     def connectionBdd(self):
@@ -209,32 +219,11 @@ class Fenetre(QtGui.QMainWindow):
         return journals
 
 
-    def checkAccess(self):
-
-        """Originally, coded to perform check acces on the server. If
-        the programm doesn't go commercial, RENAME THIS METHOD.
-        For now, this method get the max id, used to know if incoming articles
-        are new"""
-
-        count_query = QtSql.QSqlQuery(self.bdd)
-        # count_query.exec_("SELECT COUNT(id) FROM papers")
-        count_query.exec_("SELECT MAX(id) FROM papers")
-        count_query.first()
-        self.max_id_for_new = count_query.record().value(0)
-
-        self.l.info("Max id for new: {}".format(self.max_id_for_new))
-
-        return True
 
 
     def parse(self):
 
         """Method to start the parsing of the data"""
-
-        if not self.checkAccess():
-            # TODO: ici, afficher une dialog box pr dire à l'user
-            # qu'il n'a pas l'autorisation de refresh
-            return
 
         self.parsing = True
 
@@ -295,9 +284,9 @@ class Fenetre(QtGui.QMainWindow):
         self.l.debug("IdealThreadCount: {}".format(max_nbr_threads))
         # max_nbr_threads = 2
 
-        # Start a sql transaction here. Will commit all the bdd
-        # changes when the parsing is finished
-        self.bdd.transaction()
+        # # Start a sql transaction here. Will commit all the bdd
+        # # changes when the parsing is finished
+        # self.bdd.transaction()
 
         # Counter to count the new entries in the database
         self.counter = 0
@@ -352,10 +341,10 @@ class Fenetre(QtGui.QMainWindow):
         # if False not in states and len(states) == self.urls_max:
         if self.count_threads == self.urls_max:
 
-            # Commit all the changes to the database
-            if not self.bdd.commit():
-                self.l.error(self.bdd.lastError().text())
-                self.l.error("Problem when comitting data")
+            # # Commit all the changes to the database
+            # if not self.bdd.commit():
+                # self.l.error(self.bdd.lastError().text())
+                # self.l.error("Problem when comitting data")
 
             self.l.debug("{} new entries added to the database".format(self.counter))
 
@@ -582,44 +571,19 @@ class Fenetre(QtGui.QMainWindow):
         count_query = QtSql.QSqlQuery(self.bdd)
         for table in self.list_tables_in_tabs:
 
-            temp_list = []
-
             req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
-
-            # First, execute the normal search query, and get all the id of
-            # the concerned articles
-            if table != self.list_tables_in_tabs[0]:
-                count_query.exec_(req_str)
-
-                while count_query.next():
-                    record = count_query.record()
-                    temp_list.append(record.value('id'))
-
-            req_str = "id IN ("
-
-            # Building the query
-            for each_id in temp_list:
-                if each_id != temp_list[-1]:
-                    req_str = req_str + str(each_id) + ", "
-                # Close the query if last
-                else:
-                    req_str = req_str + str(each_id) + ")"
-
-            # Then, get a list of the unread articles, for each search query
-            if table != self.list_tables_in_tabs[0]:
-                count_req = "SELECT id FROM papers WHERE new=1 AND " + req_str
-            else:
-                count_req = "SELECT id FROM papers WHERE new=1"
-
-            count_query.exec_(count_req)
-
-            temp_list = []
+            count_query.exec_(req_str)
 
             while count_query.next():
                 record = count_query.record()
-                temp_list.append(record.value('id'))
 
-            table.list_new_ids = temp_list
+                # Don't add the id to this list if it's the main tab, it's
+                # useless because the article will be concerned for sure
+                if table != self.list_tables_in_tabs[0]:
+                    table.list_id_articles.append(record.value('id'))
+
+                if record.value('new') == 1:
+                    table.list_new_ids.append(record.value('id'))
 
         # Set the notifications for each tab
         for index in range(self.onglets.count()):
@@ -1344,10 +1308,13 @@ class Fenetre(QtGui.QMainWindow):
         table.viewport().update()
         table.selectRow(line)
 
+        print(id_bdd)
         if new == 0:
             self.updateNotifications(id_bdd)
+            print("-1")
         else:
             self.updateNotifications(id_bdd, remove=False)
+            print("+1")
 
 
     def cleanDb(self):
@@ -1759,6 +1726,7 @@ if __name__ == '__main__':
     ex = Fenetre(logger)
     app.processEvents()
     sys.exit(app.exec_())
+
     # except Exception as e:
         # exc_type, exc_obj, exc_tb = sys.exc_info()
         # exc_type = type(e).__name__

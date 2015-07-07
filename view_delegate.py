@@ -57,7 +57,9 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # Tansform the text into a QDocument
             doc = QtGui.QTextDocument()
             text_option = QtGui.QTextOption(doc.defaultTextOption())
-            text_option.setWrapMode(QtGui.QTextOption.WordWrap)  # Enable word wrap
+
+            # Enable word wrap
+            text_option.setWrapMode(QtGui.QTextOption.WordWrap)
             doc.setDefaultTextOption(text_option)
 
             journal = index.sibling(index.row(), 5).data()
@@ -115,7 +117,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 new = True
 
             # Paint a star in the right bottom corner
-            # DIMENSION = 40
             DIMENSION = options.rect.width() * 0.07
 
             # Draw peppers. A full pepper if the match percentage
@@ -157,16 +158,16 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             # A picture to display the read/unread state
             if read:
-                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/unread.png"))
+                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/unread.png"))
                 painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
             else:
-                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/read.png"))
+                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read.png"))
                 painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
 
             # Display a picture to warn the user if the article is new (gathered on the last
             # refresh)
             if new and read:
-                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("images/new.png"))
+                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/new.png"))
                 painter.drawPixmap(pos_x - 2 * DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
 
             if red:
@@ -186,6 +187,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             if type(index.data()) is str and index.data() != "Empty":
                 path_photo = "./graphical_abstracts/" + index.data()
+                # self.parent.l.debug(path_photo)
 
                 if os.path.exists(path_photo):
                     # --- la photo existe: on l'affiche dans la case -------------
@@ -212,12 +214,8 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                     painter.drawPixmap(QtCore.QRect(x, y, wpix, hpix), pixmap)
 
             else:
-                # The picture doesn't exist: grey rectangle
-                # painter.fillRect(option.rect, QtGui.QColor("green"))
-                # painter.fillRect(option.rect, QtGui.QColor(100, 100, 100, 90))
-
-                # pixmap = QtGui.QPixmap("images/censored.jpg")
-                pixmap = QtGui.QPixmap("images/not_available.png")
+                # The picture doesn't exist: display a "not available image"
+                pixmap = QtGui.QPixmap("./images/not_available.png")
 
                 wcase, hcase = option.rect.width(), option.rect.height()
                 wpix, hpix =  pixmap.width(), pixmap.height()
@@ -236,7 +234,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
                 # Draw in the calculated rectangle
                 painter.drawPixmap(QtCore.QRect(x, y, wpix, hpix), pixmap)
-
 
         else:
             # Using default painter

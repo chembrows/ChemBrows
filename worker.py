@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # -*-coding:Utf-8 -*
 
+# DEBUG:
+import sys
+
 import os
 from PyQt4 import QtSql, QtCore
 import feedparser
@@ -69,11 +72,23 @@ class Worker(QtCore.QThread):
 
         """Main function. Starts the real business"""
 
+        self.l.debug("Entering worker")
+        self.l.debug(self.url_feed)
+
         # Get the RSS page of the url provided
         try:
             self.feed = feedparser.parse(self.url_feed)
+            self.l.debug("RSS page successfully dled")
         except OSError:
             self.l.error("Too many files open, could not start the thread !")
+            return
+        # DEBUG: simplifier les vérifs dés que possible
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            exc_type = type(e).__name__
+            fname = exc_tb.tb_frame.f_code.co_filename
+            self.l.debug("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
+            self.l.debug("{0}: {1}".format(exc_type, e))
             return
 
         # Get the journal name
@@ -114,7 +129,8 @@ class Worker(QtCore.QThread):
                          self.dict_journals['beilstein'][0]
 
         query = QtSql.QSqlQuery(self.bdd)
-        # self.bdd.transaction()
+
+        self.bdd.transaction()
 
         # The feeds of these journals are complete
         # if journal in wiley + science + elsevier:
@@ -151,10 +167,16 @@ class Worker(QtCore.QThread):
                         params = (title, date, authors, abstract, verif, topic_simple, doi)
                         self.l.debug("Updating {0} in the database".format(doi))
                     else:
+
+                        if graphical_abstract != "Empty":
+                            path_picture = functions.simpleChar(graphical_abstract)
+                        else:
+                            path_picture = "Empty"
+
                         query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
                                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                         # Set new to 1 and not to true
-                        params = (doi, title, date, journal_abb, authors, abstract, graphical_abstract, url, verif, 1, topic_simple)
+                        params = (doi, title, date, journal_abb, authors, abstract, path_picture, url, verif, 1, topic_simple)
                         self.l.debug("Adding {0} to the database".format(doi))
                         self.parent.counter += 1
 
@@ -163,13 +185,13 @@ class Worker(QtCore.QThread):
 
                     query.exec_()
 
-                    if graphical_abstract == "Empty":
+                    if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
                         self.count_futures_images += 1
                     else:
-                        # Use a user-agent browser, some journals block bots
                         # headers = {'User-agent': 'Mozilla/5.0',
                                    # 'Connection': 'close',
                                    # 'Referer': url}
+
                         headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                                    'Connection': 'close',
                                    'Referer': url}
@@ -205,9 +227,9 @@ class Worker(QtCore.QThread):
         while not self.checkFuturesRunning():
             self.sleep(0.5)
 
-        # if not self.bdd.commit():
-            # self.l.error(self.bdd.lastError().text())
-            # self.l.error("Problem when comitting data for {}".format(journal))
+        if not self.bdd.commit():
+            self.l.error(self.bdd.lastError().text())
+            self.l.error("Problem when comitting data for {}".format(journal))
 
         # Free the memory, and clean the remaining futures
         try:
@@ -277,9 +299,9 @@ class Worker(QtCore.QThread):
         if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
             self.count_futures_images += 1
         else:
-            headers = {'User-agent': 'Mozilla/5.0',
-                       'Connection': 'close',
-                       'Referer': url}
+            # headers = {'User-agent': 'Mozilla/5.0',
+                       # 'Connection': 'close',
+                       # 'Referer': url}
 
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                        'Connection': 'close',
