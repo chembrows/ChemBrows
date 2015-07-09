@@ -50,6 +50,9 @@ class Worker(QtCore.QThread):
         self.count_futures_urls = 0
         self.count_futures_images = 0
 
+        # Count the entries added by a particular worker
+        self.new_entries_worker = 0
+
 
     def setUrl(self, url_feed):
 
@@ -183,6 +186,7 @@ class Worker(QtCore.QThread):
                     for value in params:
                         query.addBindValue(value)
 
+                    self.new_entries_worker += 1
                     query.exec_()
 
                     if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
@@ -229,6 +233,7 @@ class Worker(QtCore.QThread):
 
         if not self.bdd.commit():
             self.l.error(self.bdd.lastError().text())
+            self.l.debug("db insertions/modifications: {}".format(self.new_entries_worker))
             self.l.error("Problem when comitting data for {}".format(journal))
 
         # Free the memory, and clean the remaining futures
@@ -294,6 +299,7 @@ class Worker(QtCore.QThread):
         for value in params:
             query.addBindValue(value)
 
+        self.new_entries_worker += 1
         query.exec_()
 
         if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
@@ -357,6 +363,7 @@ class Worker(QtCore.QThread):
             for value in params:
                 query.addBindValue(value)
 
+            self.new_entries_worker += 1
             query.exec_()
 
 

@@ -158,13 +158,17 @@ class Fenetre(QtGui.QMainWindow):
         # count_query.exec_("SELECT COUNT(id) FROM papers")
         count_query.exec_("SELECT MAX(id) FROM papers")
         count_query.first()
+
         self.max_id_for_new = count_query.record().value(0)
+
+        if type(self.max_id_for_new) is not int:
+            self.max_id_for_new = 0
 
         self.l.info("Max id for new: {}".format(self.max_id_for_new))
 
         payload = {'nbr_entries': self.max_id_for_new, 'journals': self.getJournalsToCare()}
 
-        req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload)
+        req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
 
         self.l.info(req.text)
 
@@ -576,14 +580,17 @@ class Fenetre(QtGui.QMainWindow):
 
             while count_query.next():
                 record = count_query.record()
+                id_bdd = record.value('id')
 
                 # Don't add the id to this list if it's the main tab, it's
                 # useless because the article will be concerned for sure
                 if table != self.list_tables_in_tabs[0]:
-                    table.list_id_articles.append(record.value('id'))
+                    if id_bdd not in table.list_id_articles:
+                        table.list_id_articles.append(id_bdd)
 
                 if record.value('new') == 1:
-                    table.list_new_ids.append(record.value('id'))
+                    if id_bdd not in table.list_new_ids:
+                        table.list_new_ids.append(id_bdd)
 
         # Set the notifications for each tab
         for index in range(self.onglets.count()):
@@ -1735,17 +1742,17 @@ if __name__ == '__main__':
         # logger.warning("{0}: {1}".format(exc_type, e))
     # finally:
         # # Try to kill all the threads
-    try:
-        for worker in ex.list_threads:
-            worker.terminate()
+    # try:
+        # for worker in ex.list_threads:
+            # worker.terminate()
 
-            logger.debug("Starting killing the futures")
-            to_cancel = worker.list_futures_urls + worker.list_futures_images
-            for future in to_cancel:
-                if type(future) is not bool:
-                    future.cancel()
-            logger.debug("Done killing the futures")
+            # logger.debug("Starting killing the futures")
+            # to_cancel = worker.list_futures_urls + worker.list_futures_images
+            # for future in to_cancel:
+                # if type(future) is not bool:
+                    # future.cancel()
+            # logger.debug("Done killing the futures")
 
-        logger.info("Quitting the program, killing all the threads")
-    except AttributeError:
-        logger.info("Quitting the program, no threads")
+        # logger.info("Quitting the program, killing all the threads")
+    # except AttributeError:
+        # logger.info("Quitting the program, no threads")
