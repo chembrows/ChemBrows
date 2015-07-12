@@ -5,12 +5,12 @@ import sys
 import os
 from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
 import datetime
-import subprocess
 import urllib
 import fnmatch
 import webbrowser
 import requests
 
+# To package and distribute the program
 import esky
 
 # Personal modules
@@ -28,6 +28,9 @@ import functions
 import hosts
 from updater import Updater
 from line_clear import ButtonLineEdit
+
+# # To debug and profile. Comment for prod
+# # from memory_profiler import profile
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -65,26 +68,36 @@ class Fenetre(QtGui.QMainWindow):
 
 
         # Call processEvents regularly for the splash screen
+        start_time = datetime.datetime.now()
+
         app.processEvents()
         self.bootCheckList()
+
         app.processEvents()
         self.connectionBdd()
-
         self.checkAccess()
-
-        app.processEvents()
         self.defineActions()
+
         app.processEvents()
         self.initUI()
+
+        app.processEvents()
         self.defineSlots()
+
         app.processEvents()
         self.displayTags()
         app.processEvents()
         self.restoreSettings()
+
+        app.processEvents()
+        self.loadNotifications()
+
         app.processEvents()
 
         self.show()
         splash.finish(self)
+
+        self.l.debug("Boot took {}".format(datetime.datetime.now() - start_time))
 
 
     def bootCheckList(self):
@@ -573,7 +586,7 @@ class Fenetre(QtGui.QMainWindow):
         each table"""
 
         count_query = QtSql.QSqlQuery(self.bdd)
-        for table in self.list_tables_in_tabs:
+        for table in self.list_tables_in_tabs[1:]:
 
             req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
             count_query.exec_(req_str)
@@ -582,18 +595,18 @@ class Fenetre(QtGui.QMainWindow):
                 record = count_query.record()
                 id_bdd = record.value('id')
 
-                # Don't add the id to this list if it's the main tab, it's
-                # useless because the article will be concerned for sure
-                if table != self.list_tables_in_tabs[0]:
-                    if id_bdd not in table.list_id_articles:
-                        table.list_id_articles.append(id_bdd)
+                # # Don't add the id to this list if it's the main tab, it's
+                # # useless because the article will be concerned for sure
+                # if table != self.list_tables_in_tabs[0]:
+                    # if id_bdd not in table.list_id_articles:
+                        # table.list_id_articles.append(id_bdd)
 
                 if record.value('new') == 1:
                     if id_bdd not in table.list_new_ids:
                         table.list_new_ids.append(id_bdd)
 
         # Set the notifications for each tab
-        for index in range(self.onglets.count()):
+        for index in range(1, self.onglets.count()):
             notifs = len(self.onglets.widget(index).list_new_ids)
             self.onglets.setNotifications(index, notifs)
 
@@ -601,6 +614,7 @@ class Fenetre(QtGui.QMainWindow):
     def restoreSettings(self):
 
         """Restore the prefs of the window"""
+
 
         searches_saved = QtCore.QSettings("searches.ini", QtCore.QSettings.IniFormat)
 
@@ -613,8 +627,6 @@ class Fenetre(QtGui.QMainWindow):
                                  topic_options=topic_entries,
                                  author_options=author_entries)
 
-        # Load the unread articles, and display it for each tab
-        self.loadNotifications()
 
         # Si des réglages pour la fenêtre
         # sont disponibles, on les importe et applique
@@ -1226,7 +1238,7 @@ class Fenetre(QtGui.QMainWindow):
         """Slot to update the number of unread articles,
         in each tab. Called by markOneRead and toggleRead"""
 
-        for index in range(self.onglets.count()):
+        for index in range(1, self.onglets.count()):
 
             # remove the id of the list of the new articles
             if id_bdd in self.onglets.widget(index).list_new_ids and remove:
@@ -1236,10 +1248,10 @@ class Fenetre(QtGui.QMainWindow):
             elif id_bdd in self.onglets.widget(index).list_id_articles and not remove:
                 self.onglets.widget(index).list_new_ids.append(id_bdd)
 
-            # The tab is the main tab, with all the articles.
-            # The article is concerned for sure
-            elif index == 0 and not remove:
-                self.onglets.widget(index).list_new_ids.append(id_bdd)
+            # # The tab is the main tab, with all the articles.
+            # # The article is concerned for sure
+            # elif index == 0 and not remove:
+                # self.onglets.widget(index).list_new_ids.append(id_bdd)
 
             notifs = len(self.onglets.widget(index).list_new_ids)
             self.onglets.setNotifications(index, notifs)
@@ -1315,13 +1327,10 @@ class Fenetre(QtGui.QMainWindow):
         table.viewport().update()
         table.selectRow(line)
 
-        print(id_bdd)
         if new == 0:
             self.updateNotifications(id_bdd)
-            print("-1")
         else:
             self.updateNotifications(id_bdd, remove=False)
-            print("+1")
 
 
     def cleanDb(self):
