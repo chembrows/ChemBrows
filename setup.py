@@ -37,7 +37,7 @@ my_data_files += get_all_files_in_dir('.{}config{}'.format(os.sep, os.sep))
 # GUI applications require a different base on Windows (the default is for a
 # console application).
 base = None
-if sys.platform in ['win32','cygwin','win64']:
+if sys.platform in ['win32', 'cygwin', 'win64']:
     base = "Win32GUI"
 
     # Copy the sqlite driver
@@ -46,7 +46,7 @@ if sys.platform in ['win32','cygwin','win64']:
     # # Copy the plugins to load images
     # my_data_files.append('C:\Python34\Lib\site-packages\PyQt4\plugins\imageformats\\')
 
-elif sys.platform=='darwin':
+elif sys.platform == 'darwin':
     pass
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
@@ -121,12 +121,12 @@ build_exe_options = {
 
 
 exe_esky = Executable_Esky("gui.py", gui_only=True)
-exe_cx = Executable(script="gui.py", base=base)
+exe_cx = Executable(script="gui.py", base=base, compress=False)
 
-setup(name = "ChemBrows",
-      version = "0.1",
-      description = "ChemBrows keeps you up-to-date with scientific litterature",
-      data_files = my_data_files,
-      options = build_exe_options,
-      scripts = [exe_esky],
+setup(name="ChemBrows",
+      version="0.1",
+      description="ChemBrows keeps you up-to-date with scientific litterature",
+      data_files=my_data_files,
+      options=build_exe_options,
+      scripts=[exe_esky],
       )

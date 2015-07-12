@@ -181,9 +181,12 @@ class Fenetre(QtGui.QMainWindow):
 
         payload = {'nbr_entries': self.max_id_for_new, 'journals': self.getJournalsToCare()}
 
-        req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
+        try:
+            req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
+            self.l.info(req.text)
+        except requests.exceptions.ReadTimeout:
+            self.l.error("checkAccess. Timeout while contacting the server")
 
-        self.l.info(req.text)
 
 
     def connectionBdd(self):
@@ -817,7 +820,7 @@ class Fenetre(QtGui.QMainWindow):
             graphical_abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 8).data()
             if type(graphical_abstract) is str and graphical_abstract != "Empty":
                 # Get the path of the graphical abstract
-                base = "<br/><br/><p align='center'><img src='file://{}' align='center' /></p>"
+                base = "<br/><br/><p align='center'><img src='file:///{}' align='center' /></p>"
                 base = base.format(os.path.abspath("./graphical_abstracts/" + graphical_abstract))
                 abstract += base
         except TypeError:
