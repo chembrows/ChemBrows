@@ -88,8 +88,9 @@ class AdvancedSearch(QtGui.QDialog):
         # Get all the lineEdit from the current tab
         lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
 
-        topic_entries = [line.text() for line in lines[0:3]]
-        author_entries = [line.text() for line in lines[3:7]]
+        # Clean the fields of tailing comma
+        topic_entries = [line.text()[:-1] if line.text() and line.text()[-1] == ',' else line.text() for line in lines[0:3]]
+        author_entries = [line.text()[:-1] if line.text() and line.text()[-1] == ',' else line.text() for line in lines[3:7]]
 
         base = functions.buildSearch(topic_entries, author_entries)
 
