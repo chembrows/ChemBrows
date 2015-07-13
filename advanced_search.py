@@ -171,6 +171,7 @@ class AdvancedSearch(QtGui.QDialog):
                     self.parent.createSearchTab(name_search, base,
                                                 topic_entries,
                                                 author_entries)
+                    self.parent.loadNotifications()
 
                 # Clear the fields when perform search
                 for line in lines:
