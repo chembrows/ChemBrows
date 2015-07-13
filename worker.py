@@ -330,13 +330,16 @@ class Worker(QtCore.QThread):
             response = future.result()
         except requests.exceptions.ReadTimeout:
             self.l.error("ReadTimeout for image: {}".format(entry_url))
-            params = ("Empty", 0, doi)
+            # params = ("Empty", 0, doi)
+            params = (0, doi)
         except requests.exceptions.ConnectionError:
             self.l.error("ConnectionError for image: {}".format(entry_url))
-            params = ("Empty", 0, doi)
+            # params = ("Empty", 0, doi)
+            params = (0, doi)
         except requests.exceptions.MissingSchema:
             self.l.error("MissingSchema for image: {}".format(entry_url))
-            params = ("Empty", 0, doi)
+            # params = ("Empty", 0, doi)
+            params = (0, doi)
         else:
             if response.status_code is requests.codes.ok:
 
@@ -348,14 +351,16 @@ class Worker(QtCore.QThread):
                         file.write(response.content)
                         self.l.debug("Image ok")
                 except OSError:
-                    params = ("Empty", 0, doi)
+                    # params = ("Empty", 0, doi)
+                    params = (0, doi)
                 else:
                     # graphical_abstract = functions.simpleChar(response.url)
                     # params = (graphical_abstract, 1, doi)
                     params = (1, doi)
             else:
                 self.l.debug("Bad return code: {}".format(response.status_code))
-                params = ("Empty", 0, doi)
+                # params = ("Empty", 0, doi)
+                params = (0, doi)
 
         finally:
             query.prepare("UPDATE papers SET verif=? WHERE doi=?")
