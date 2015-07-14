@@ -19,6 +19,8 @@ class Signing(QtGui.QDialog):
 
         self.parent = parent
 
+        self.setModal(True)
+
         self.initUI()
         self.defineSlots()
 
@@ -40,7 +42,12 @@ class Signing(QtGui.QDialog):
 
         """Establish the slots"""
 
+        # If OK pressed, send a request to the server
         self.ok_button.clicked.connect(self.validateForm)
+
+        # If Cancel is pressed, terminate the program. The user can't
+        # use it if he's not logged
+        self.cancel_button.clicked.connect(self.parent.closeEvent)
 
 
     def validateForm(self):
@@ -54,55 +61,61 @@ class Signing(QtGui.QDialog):
         r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-011\013\014\016-\177])*"'
         r')@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?$', re.IGNORECASE)
 
-        # if email_re.search(self.line_email.text()) is None:
-            # self.line_email.setStyleSheet('QLineEdit {background-color: #FFA07A}')
-            # validate = False
-        # else:
-            # self.line_email.setStyleSheet(None)
+        if email_re.search(self.line_email.text()) is None:
+            self.line_email.setStyleSheet('QLineEdit {background-color: #FFA07A}')
+            validate = False
+        else:
+            self.line_email.setStyleSheet(None)
 
-        # user_answer = simpleChar(self.line_question.text())
+        if self.combo_status.currentIndex() == 0:
+            self.combo_status.setStyleSheet('QComboBox {background-color: #FFA07A}')
+            validate = False
+        else:
+            self.combo_status.setStyleSheet(None)
 
-        # if self.combo_status.currentIndex() == 0:
-            # self.combo_status.setStyleSheet('QComboBox {background-color: #FFA07A}')
-            # validate = False
-        # else:
-            # self.combo_status.setStyleSheet(None)
+        user_answer = simpleChar(self.line_question.text())
 
-        # if user_answer != self.answer:
-            # self.line_question.setStyleSheet('QLineEdit {background-color: #FFA07A}')
-            # validate = False
-            # self.form_sign.labelForField(self.line_question).setText(self.askQuestion())
-        # else:
-            # self.line_question.setStyleSheet(None)
+        if user_answer != self.answer:
+            self.line_question.setStyleSheet('QLineEdit {background-color: #FFA07A}')
+            validate = False
+            self.form_sign.labelForField(self.line_question).setText(self.askQuestion())
+        else:
+            self.line_question.setStyleSheet(None)
 
+        # TODO: transformer statut en nombre
 
         if validate:
-            # payload = {
-                       # 'status': self.combo_status.currentText(),
-                       # 'email': self.line_email.text(),
-                       # 'user_id': None
-                      # }
             payload = {
-                       'status': 'student',
-                       'email': 'jp@um2.fr',
-                       'user_id': None
+                       'status': self.combo_status.currentIndex(),
+                       'email': self.line_email.text(),
                       }
-            # r = requests.post("http://chembrows.com/cgi-bin/test.py", params=payload)
-            r = requests.post("http://127.0.0.1:8000/cgi-bin/test.py", data=payload)
+
+            # payload = {
+                       # 'status': 0,
+                       # 'email': 'jp@um2.fr',
+                      # }
+            r = requests.post("http://chembrows.com/cgi-bin/sign.py", params=payload)
+            # r = requests.post("http://127.0.0.1:8000/cgi-bin/test.py", data=payload)
 
 
-            print(r.text)
+            response = [part for part in r.text.split("\n") if part != '']
 
-            self.parent.fen_signing.close()
-            del self.parent.fen_signing
+            print(response)
+
+            if 'user_id' in response[-1]:
+                self.parent.options.setValue('user_id', response[-1].split(':')[-1])
+                self.close()
+                del self
+            elif response[-1] == 'A user with this email already exists':
+                # TODO: afficher dialog box erreur
+                print("Kaboum")
+                pass
+            # TODO: gérer le cas où le serveur réponde "Wrong data". Peu probable
 
 
     def initUI(self):
 
         """Handles the display"""
-
-        self.parent.fen_signing = QtGui.QWidget()
-        self.parent.fen_signing.setWindowTitle('Signing up')
 
         self.combo_status = QtGui.QComboBox()
         self.combo_status.addItem(None)
@@ -118,7 +131,6 @@ class Signing(QtGui.QDialog):
         self.form_sign.addRow("What are you? :", self.combo_status)
 
         self.line_email = QtGui.QLineEdit(self)
-
 
         self.form_sign.addRow("Email :", self.line_email)
 
@@ -138,10 +150,8 @@ class Signing(QtGui.QDialog):
         self.vbox_global.addLayout(self.form_sign)
         self.vbox_global.addLayout(self.hbox_buttons)
 
-        self.parent.fen_signing.setLayout(self.vbox_global)
-        self.parent.fen_signing.show()
-
-
+        self.setLayout(self.vbox_global)
+        self.show()
 
 if __name__ == '__main__':
 

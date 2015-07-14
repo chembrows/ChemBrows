@@ -17,6 +17,7 @@ class Settings(QtGui.QDialog):
 
         self.parent = parent
 
+        # TEST
         try:
             self.options = self.parent.options
         except AttributeError:

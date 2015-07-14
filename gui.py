@@ -29,6 +29,9 @@ import hosts
 from updater import Updater
 from line_clear import ButtonLineEdit
 
+# TEST
+from signing import Signing
+
 # # To debug and profile. Comment for prod
 # # from memory_profiler import profile
 
@@ -55,7 +58,7 @@ class Fenetre(QtGui.QMainWindow):
         self.parsing = False
 
         # Object to store options and preferences
-        self.options = QtCore.QSettings("options.ini", QtCore.QSettings.IniFormat)
+        self.options = QtCore.QSettings("config/options.ini", QtCore.QSettings.IniFormat)
 
         QtGui.qApp.installEventFilter(self)
 
@@ -75,8 +78,8 @@ class Fenetre(QtGui.QMainWindow):
 
         app.processEvents()
         self.connectionBdd()
-        self.checkAccess()
         self.defineActions()
+        self.checkAccess()
 
         app.processEvents()
         self.initUI()
@@ -114,7 +117,6 @@ class Fenetre(QtGui.QMainWindow):
 
             self.l.info("This version of ChemBrows is a frozen version")
 
-
             update = Updater(self.l)
 
             if update is None:
@@ -127,7 +129,7 @@ class Fenetre(QtGui.QMainWindow):
                 message = "A new version of ChemBrows is available. Upgrade now ?"
                 choice = QtGui.QMessageBox.question(self, "Update of ChemBrows", message,
                                                     QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok,
-                                                    defaultButton = QtGui.QMessageBox.Ok)
+                                                    defaultButton=QtGui.QMessageBox.Ok)
 
                 # If the user says yes, start the update
                 if choice == QtGui.QMessageBox.Ok:
@@ -167,26 +169,35 @@ class Fenetre(QtGui.QMainWindow):
         For now, this method get the max id, used to know if incoming articles
         are new"""
 
-        count_query = QtSql.QSqlQuery(self.bdd)
-        # count_query.exec_("SELECT COUNT(id) FROM papers")
-        count_query.exec_("SELECT MAX(id) FROM papers")
-        count_query.first()
-
-        self.max_id_for_new = count_query.record().value(0)
-
-        if type(self.max_id_for_new) is not int:
+        user_id = self.options.value("user_id", None)
+        if user_id is None:
             self.max_id_for_new = 0
+            signing = Signing(self)
 
-        self.l.info("Max id for new: {}".format(self.max_id_for_new))
+        else:
+            count_query = QtSql.QSqlQuery(self.bdd)
+            # count_query.exec_("SELECT COUNT(id) FROM papers")
+            count_query.exec_("SELECT MAX(id) FROM papers")
+            count_query.first()
 
-        payload = {'nbr_entries': self.max_id_for_new, 'journals': self.getJournalsToCare()}
+            self.max_id_for_new = count_query.record().value(0)
+            print(self.max_id_for_new)
 
-        try:
-            req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
-            self.l.info(req.text)
-        except requests.exceptions.ReadTimeout:
-            self.l.error("checkAccess. Timeout while contacting the server")
+            if type(self.max_id_for_new) is not int:
+                self.max_id_for_new = 0
 
+            self.l.info("Max id for new: {}".format(self.max_id_for_new))
+
+            payload = {'nbr_entries': self.max_id_for_new,
+                       'journals': self.getJournalsToCare(),
+                       'user_id': user_id,
+                      }
+
+            try:
+                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
+                self.l.info(req.text)
+            except requests.exceptions.ReadTimeout:
+                self.l.error("checkAccess. Timeout while contacting the server")
 
 
     def connectionBdd(self):
