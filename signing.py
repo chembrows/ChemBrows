@@ -94,22 +94,32 @@ class Signing(QtGui.QDialog):
                        # 'status': 0,
                        # 'email': 'jp@um2.fr',
                       # }
-            r = requests.post("http://chembrows.com/cgi-bin/sign.py", params=payload)
+            try:
+                r = requests.post("http://chembrows.com/cgi-bin/sign.py", params=payload)
+            except requests.exceptions.ReadTimeout:
+                QtGui.QMessageBox.critical(self, "Signing up error", "An time out error occured while contacting the server. \
+                        Please check you are connected to the internet, or contact us.",
+                                           QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+                self.parent.l.critical("ReadTimeout error while contacting the server. No signing up.")
+            except requests.exceptions.ConnectionError:
+                QtGui.QMessageBox.critical(self, "Signing up error", "An error occured while contacting the server. \
+                        Please check you are connected to the internet, or contact us.",
+                                           QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+                self.parent.l.critical("ConnectionError error while contacting the server. No signing up.")
+
             # r = requests.post("http://127.0.0.1:8000/cgi-bin/test.py", data=payload)
 
 
             response = [part for part in r.text.split("\n") if part != '']
-
-            print(response)
 
             if 'user_id' in response[-1]:
                 self.parent.options.setValue('user_id', response[-1].split(':')[-1])
                 self.close()
                 del self
             elif response[-1] == 'A user with this email already exists':
-                # TODO: afficher dialog box erreur
-                print("Kaboum")
-                pass
+                QtGui.QMessageBox.critical(self, "Signing up error", "A user with the same email already exists. Please use another email or contact us.",
+                                           QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+
             # TODO: gérer le cas où le serveur réponde "Wrong data". Peu probable
 
 
