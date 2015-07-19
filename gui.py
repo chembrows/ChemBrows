@@ -463,13 +463,13 @@ class Fenetre(QtGui.QMainWindow):
         self.advanced_searchAction.triggered.connect(lambda: AdvancedSearch(self))
 
         # Action to change the sorting method of the views
-        self.sortingPercentageAction = QtGui.QAction('By percentage match', self, checkable=True)
-        self.sortingPercentageAction.triggered.connect(lambda: self.changeSortingMethod(1,
+        self.sortingPercentageAction = QtGui.QAction('By pepperness', self, checkable=True)
+        self.sortingPercentageAction.triggered.connect(lambda: self.changeSortingMethod(0,
                                                                                         reverse=self.sortingReversedAction.isChecked()))
 
         # Action to change the sorting method of the views
         self.sortingDateAction = QtGui.QAction('By date', self, checkable=True)
-        self.sortingDateAction.triggered.connect(lambda: self.changeSortingMethod(0,
+        self.sortingDateAction.triggered.connect(lambda: self.changeSortingMethod(1,
                                                                                   reverse=self.sortingReversedAction.isChecked()))
 
         # Action to change the sorting method of the views, reverse the results
@@ -506,12 +506,12 @@ class Fenetre(QtGui.QMainWindow):
             self.sorting_reversed = reverse
 
         if self.sorting_method == 1:
-            self.sortingPercentageAction.setChecked(True)
-            self.sortingDateAction.setChecked(False)
-            self.changeSortingAction.setText("Sort by pepperness")
-        elif self.sorting_method == 0:
             self.sortingPercentageAction.setChecked(False)
             self.sortingDateAction.setChecked(True)
+            self.changeSortingAction.setText("Sort by pepperness")
+        elif self.sorting_method == 0:
+            self.sortingPercentageAction.setChecked(True)
+            self.sortingDateAction.setChecked(False)
             self.changeSortingAction.setText("Sort by date")
 
         if self.sorting_reversed:
