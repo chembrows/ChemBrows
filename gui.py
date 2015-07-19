@@ -176,19 +176,22 @@ class Fenetre(QtGui.QMainWindow):
 
         else:
             count_query = QtSql.QSqlQuery(self.bdd)
-            # count_query.exec_("SELECT COUNT(id) FROM papers")
+
+            count_query.exec_("SELECT COUNT(id) FROM papers")
+            count_query.first()
+            nbr_entries = count_query.record().value(0)
+            self.l.debug("Nbr of entries: {}".format(nbr_entries))
+
             count_query.exec_("SELECT MAX(id) FROM papers")
             count_query.first()
-
             self.max_id_for_new = count_query.record().value(0)
-            print(self.max_id_for_new)
 
             if type(self.max_id_for_new) is not int:
                 self.max_id_for_new = 0
 
             self.l.info("Max id for new: {}".format(self.max_id_for_new))
 
-            payload = {'nbr_entries': self.max_id_for_new,
+            payload = {'nbr_entries': nbr_entries,
                        'journals': self.getJournalsToCare(),
                        'user_id': user_id,
                       }
@@ -1353,6 +1356,8 @@ class Fenetre(QtGui.QMainWindow):
         the window settings, but better to be here. Also
         deletes the unused pictures present in the graphical_abstracts folder"""
 
+        self.bdd.transaction()
+
         query = QtSql.QSqlQuery(self.bdd)
 
         requete = "DELETE FROM papers WHERE journal NOT IN ("
@@ -1369,13 +1374,18 @@ class Fenetre(QtGui.QMainWindow):
 
         query.prepare(requete)
         query.exec_()
+
         self.l.error(self.bdd.lastError().text())
 
         self.l.debug("Removed unintersting journals from the database")
 
         query.exec_("DELETE FROM papers WHERE verif=0")
+        query.exec_("DELETE FROM papers WHERE abstract=''")
 
-        self.l.debug("Removed incomplete articles from the database")
+        if not self.bdd.commit():
+            self.l.critical("Problem while commiting, cleanDb")
+        else:
+            self.l.info("Removed incomplete articles from the database")
 
         query.exec_("SELECT graphical_abstract FROM papers")
 

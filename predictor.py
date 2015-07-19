@@ -15,7 +15,7 @@ import datetime
 
 from log import MyLog
 
-from memory_profiler import profile
+# from memory_profiler import profile
 
 class Predictor(QtCore.QThread):
 
@@ -78,14 +78,10 @@ class Predictor(QtCore.QThread):
         while query.next():
             record = query.record()
 
-            if type(record.value('abstract')) is str:
-                abstract = record.value('abstract')
-            else:
-                continue
+            abstract = record.value('abstract')
 
-            if type(record.value('title')) is str:
-                title = record.value('title')
-            else:
+            # Do not use 'Empty' abstracts
+            if type(abstract) is not str or abstract == 'Empty':
                 continue
 
             if type(record.value('liked')) is int:
@@ -93,10 +89,10 @@ class Predictor(QtCore.QThread):
             else:
                 category = 1
 
-            self.x_train.append(abstract + ' ' + title)
+            self.x_train.append(abstract)
             self.y_train.append(category)
 
-        if not self.x_train or 1 not in self.y_train:
+        if not self.x_train or 0 not in self.y_train:
             self.l.debug("Not enough data yet")
             return None
 
@@ -136,17 +132,16 @@ class Predictor(QtCore.QThread):
         while query.next():
 
             record = query.record()
-
-            if type(record.value('abstract')) is str:
-                abstract = record.value('abstract')
-
-                list_id.append(record.value('id'))
-                x_test.append(abstract)
+            abstract = record.value('abstract')
+            x_test.append(abstract)
+            list_id.append(record.value('id'))
 
         try:
             # Normalize the percentages: the highest is set to 100%
-            list_percentages = [float(100 * proba[0]) for proba in self.classifier.predict_proba(x_test)]
-            list_percentages = [perc * 100 / max(list_percentages) for perc in list_percentages]
+            # Use operations on numpy array, faster than lists comprehensions
+            probs = np.array([proba[0] for proba in self.classifier.predict_proba(x_test)])
+            maximum = max(probs)
+            list_percentages = probs * 100 / maximum
         except ValueError:
             self.l.debug("Not enough data yet")
             return
@@ -158,22 +153,28 @@ class Predictor(QtCore.QThread):
 
         for id_bdd, percentage in zip(list_id, list_percentages):
 
-            params = (percentage, id_bdd)
+            # Convert the percentage to a float, because the number is
+            # probably a type used by numpy
+            params = (float(percentage), id_bdd)
 
             for value in params:
                 query.addBindValue(value)
 
             query.exec_()
 
-        if self.bdd.commit():
-            self.l.debug("updates ok")
+        # Set the percentage_match to 0 if the abstact is 'Empty' or empty
+        query.prepare("UPDATE papers SET percentage_match = 0 WHERE abstract = 'Empty' OR abstract = ''")
+        query.exec_()
 
-        elsapsed_time = datetime.datetime.now() - start_time
-        self.l.debug("Done calculating match percentages in {0} s".format(elsapsed_time))
+        if not self.bdd.commit():
+            self.l.critical("Percentages match not correctly written in db")
+        else:
+            elsapsed_time = datetime.datetime.now() - start_time
+            self.l.debug("Done calculating match percentages in {0} s".format(elsapsed_time))
 
 
 
 if __name__ == "__main__":
     logger = MyLog()
     predictor = Predictor(logger)
-    predictor.calculatePercentageMatch(True)
+    # predictor.calculatePercentageMatch(True)
