@@ -47,17 +47,17 @@ def test_getJournals():
 @pytest.fixture()
 def journalsUrls():
 
-    """Returns a list. All the journals of a publisher"""
+    """Returns a combined list. All the journals of all the companies"""
 
-    _, rsc_abb, rsc_urls = hosts.getJournals("rsc")
-    _, acs_abb, acs_urls = hosts.getJournals("acs")
-    _, wiley_abb, wiley_urls = hosts.getJournals("wiley")
-    _, npg_abb, npg_urls = hosts.getJournals("npg")
-    _, science_abb, science_urls = hosts.getJournals("science")
-    _, nas_abb, nas_urls = hosts.getJournals("nas")
-    _, elsevier_abb, elsevier_urls = hosts.getJournals("elsevier")
-    _, thieme_abb, thieme_urls = hosts.getJournals("thieme")
-    _, beil_abb, beil_urls = hosts.getJournals("beilstein")
+    rsc_urls = hosts.getJournals("rsc")[2]
+    acs_urls = hosts.getJournals("acs")[2]
+    wiley_urls = hosts.getJournals("wiley")[2]
+    npg_urls = hosts.getJournals("npg")[2]
+    science_urls = hosts.getJournals("science")[2]
+    nas_urls = hosts.getJournals("nas")[2]
+    elsevier_urls = hosts.getJournals("elsevier")[2]
+    thieme_urls = hosts.getJournals("thieme")[2]
+    beil_urls = hosts.getJournals("beilstein")[2]
 
     urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls + \
            nas_urls + elsevier_urls + thieme_urls + beil_urls
@@ -67,9 +67,13 @@ def journalsUrls():
 
 def test_getData(journalsUrls):
 
+    """Tests the function getData. For each journal of each company,
+    tests LENGTH_SAMPLE entries"""
+
     print("\n")
     print("Starting test getData")
 
+    # Returns a list of the urls of the feed pages
     list_sites = journalsUrls
 
     # Get the names of the journals, per company
@@ -143,6 +147,8 @@ def test_getData(journalsUrls):
 
 
 def test_getDoi(journalsUrls):
+
+    """Tests if the function getDoi gets the DOI correctly"""
 
     print("\n")
     print("Starting test getDoi")

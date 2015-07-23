@@ -13,11 +13,15 @@ import functions
 
 def getData(company, journal, entry, response=None):
 
-    """Get the data. Starts from the data contained in the RSS flux, and if necessary,
-    parse the website for supplementary infos. Download the graphical abstract"""
+    """Get the data. Starts from the data contained in the RSS flux, and if
+    necessary, parse the website for supplementary infos. Download the
+    graphical abstract"""
 
     # If the journal is edited by the RSC
     if company == 'rsc':
+
+        """Graphical abstract present in RSS. Abstract incomplete
+        and w/out html. Title w/out html"""
 
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
@@ -47,7 +51,6 @@ def getData(company, journal, entry, response=None):
             title = soup.h2
 
             if title is not None:
-                # title = title.renderContents().decode().lstrip().rstrip()
                 title = title.renderContents().decode().strip()
 
             # # Get the abstrat (w/ html)
@@ -72,6 +75,8 @@ def getData(company, journal, entry, response=None):
 
 
     elif company == 'wiley':
+
+        """Feed compltete. Abstract w/ html. Title w/out html"""
 
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
@@ -103,7 +108,6 @@ def getData(company, journal, entry, response=None):
             abstract = None
 
         if response.status_code is requests.codes.ok:
-            # soup = BeautifulSoup(response.text)
 
             # # Get the title (w/ html)
             strainer = SoupStrainer("span", attrs={"class": "mainTitle"})
@@ -119,14 +123,14 @@ def getData(company, journal, entry, response=None):
                 # Remove the image representing a bond
                 try:
                     r("img", alt="[BOND]")[0].replaceWith("-")
-                    # title = r.renderContents().decode().lstrip().rstrip()
                     title = r.renderContents().decode().strip()
                 except IndexError:
-                    # title = r.renderContents().decode().lstrip().rstrip()
                     title = r.renderContents().decode().strip()
 
 
     elif company == 'acs':
+
+        """Feed only contains graphical abstract"""
 
         title = entry.title.replace("\n", " ")
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
@@ -153,16 +157,13 @@ def getData(company, journal, entry, response=None):
 
         # If the dl went wrong, print an error
         if response.status_code is requests.codes.ok:
-            # soup = BeautifulSoup(response.text)
 
-            # r = soup("p", attrs={"class": "articleBody_abstractText"})
             strainer = SoupStrainer("p", attrs={"class": "articleBody_abstractText"})
             soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.p
             if r is not None:
                 abstract = r.renderContents().decode()
 
-            # r = soup("h1", attrs={"class": "articleTitle"})
             strainer = SoupStrainer("h1", attrs={"class": "articleTitle"})
             soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.h1
@@ -179,9 +180,6 @@ def getData(company, journal, entry, response=None):
 
         url = entry.links[0]['href']
 
-        # Example of an 'authors' field
-        # 'authors': [{'name': 'T. Martin Embley'}, {'name': 'Tom A. Williams'}],
-
         try:
             author = [dic['name'] for dic in entry.authors]
             if author:
@@ -197,29 +195,16 @@ def getData(company, journal, entry, response=None):
         if response.status_code is requests.codes.ok or response.status_code == 401:
             soup = BeautifulSoup(response.text)
 
-            # # r = soup.find_all("ul", attrs={"class": "authors citation-authors"})
-            # strainer = SoupStrainer("ul", attrs={"class": "authors citation-authors"})
-            # soup = BeautifulSoup(response.text, parse_only=strainer)
-            # r = soup.find_all("ul", attrs={"class": "authors citation-authors"})
-            # if r:
-                # s = r[0].find_all("span", attrs={"class": "fn"})
-                # if s:
-                    # author = [tag.renderContents().decode() for tag in s]
-                    # author = ", ".join(author)
-
-            # r = soup.find_all("h1", attrs={"class": "article-heading"})
             strainer = SoupStrainer("h1", attrs={"class": "article-heading"})
             soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.h1
             if r is not None:
                 title = r.renderContents().decode()
 
-            # r = soup.find_all("div", attrs={"id": "first-paragraph"})
             strainer = SoupStrainer("div", attrs={"id": "first-paragraph"})
             soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.div
             if r is not None:
-                # [tag.extract() for tag in r[0]("a", title=True)]
                 abstract = r.renderContents().decode()
 
             strainer = SoupStrainer("img")
@@ -227,7 +212,7 @@ def getData(company, journal, entry, response=None):
             r = soup.find_all("img", attrs={"class": "fig"})
             if r:
                 if "f1.jpg" in r[0]["src"]:
-                    graphical_abstract ="http://www.nature.com" + r[0]["src"]
+                    graphical_abstract = "http://www.nature.com" + r[0]["src"]
 
                     if "carousel" in graphical_abstract:
                         graphical_abstract = graphical_abstract.replace("carousel", "images_article")
@@ -269,10 +254,8 @@ def getData(company, journal, entry, response=None):
 
         if response.status_code is requests.codes.ok:
             # Get the abstract
-            # soup = BeautifulSoup(response.text)
 
             # Get the correct title, no the one in the RSS
-            # r = soup.find_all("h1", id="article-title-1")
             strainer = SoupStrainer("h1", id="article-title-1")
             soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.find_all("h1", id="article-title-1")

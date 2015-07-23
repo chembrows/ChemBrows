@@ -316,7 +316,7 @@ class Fenetre(QtGui.QMainWindow):
         # on the user's computer
         max_nbr_threads = QtCore.QThread.idealThreadCount()
         self.l.debug("IdealThreadCount: {}".format(max_nbr_threads))
-        # max_nbr_threads = 2
+        # max_nbr_threads = 10
 
         # # Start a sql transaction here. Will commit all the bdd
         # # changes when the parsing is finished

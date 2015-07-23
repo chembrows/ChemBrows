@@ -192,9 +192,6 @@ class Worker(QtCore.QThread):
                     if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
                         self.count_futures_images += 1
                     else:
-                        # headers = {'User-agent': 'Mozilla/5.0',
-                                   # 'Connection': 'close',
-                                   # 'Referer': url}
 
                         headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                                    'Connection': 'close',
@@ -251,6 +248,7 @@ class Worker(QtCore.QThread):
         """Callback to handle the response of the futures trying to
         download the page of the articles"""
 
+
         self.count_futures_urls += 1
 
         try:
@@ -305,10 +303,6 @@ class Worker(QtCore.QThread):
         if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
             self.count_futures_images += 1
         else:
-            # headers = {'User-agent': 'Mozilla/5.0',
-                       # 'Connection': 'close',
-                       # 'Referer': url}
-
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                        'Connection': 'close',
                        'Referer': url}
@@ -321,6 +315,7 @@ class Worker(QtCore.QThread):
 
         """Callback to handle the response of the futures
         downloading a picture"""
+
 
         self.count_futures_images += 1
 
@@ -338,6 +333,7 @@ class Worker(QtCore.QThread):
             self.l.error("MissingSchema for image: {}".format(entry_url))
             params = (0, doi)
         else:
+            # If the picture was dled correctly
             if response.status_code is requests.codes.ok:
 
                 path = self.path
