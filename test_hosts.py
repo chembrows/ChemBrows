@@ -6,6 +6,8 @@ import feedparser
 import requests
 import pytest
 import random
+import datetime
+from bs4 import BeautifulSoup
 
 import hosts
 
@@ -203,3 +205,41 @@ def test_getDoi(journalsUrls):
             print(doi)
 
             assert type(doi) == str
+
+
+def test_dlRssPages(journalsUrls):
+
+    print("\n")
+    print("Starting test dlRssPages")
+
+    # Returns a list of the urls of the feed pages
+    list_sites = journalsUrls
+
+    headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
+               'Connection': 'close'}
+
+    print(list_sites)
+
+    for url_feed in list_sites:
+
+        print("Site {} of {}".format(list_sites.index(url_feed) + 1, len(list_sites)))
+        feed = feedparser.parse(url_feed)
+
+        try:
+            journal = feed['feed']['title']
+        except KeyError:
+            print("Abort for {}".format(url_feed))
+
+        # Get the RSS page and store it. I'll run some comparisons on them
+        content = requests.get(url_feed, timeout=120, headers=headers)
+        if content.status_code is requests.codes.ok:
+            soup = BeautifulSoup(content.text)
+
+            filename = "./debug/" + str(journal) + "/" + str(datetime.datetime.today().date())
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+            with open(filename, 'w') as file:
+                for line in soup.prettify():
+                    file.write(line)
+        else:
+            print("Dl of {} not OK: {}".format(journal, content.status_code))

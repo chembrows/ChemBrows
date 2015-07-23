@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*-coding:Utf-8 -*
 
-# DEBUG:
-import sys
 
 import os
 from PyQt4 import QtSql, QtCore
@@ -78,28 +76,22 @@ class Worker(QtCore.QThread):
         self.l.debug("Entering worker")
         self.l.debug(self.url_feed)
 
+
         # Get the RSS page of the url provided
         try:
             self.feed = feedparser.parse(self.url_feed)
             self.l.debug("RSS page successfully dled")
+
         except OSError:
             self.l.error("Too many files open, could not start the thread !")
-            return
-        # DEBUG: simplifier les vérifs dés que possible
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            exc_type = type(e).__name__
-            fname = exc_tb.tb_frame.f_code.co_filename
-            self.l.debug("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-            self.l.debug("{0}: {1}".format(exc_type, e))
             return
 
         # Get the journal name
         try:
             journal = self.feed['feed']['title']
         except KeyError:
-            self.l.error("No title for the journal ! Aborting")
-            self.l.error(self.url_feed)
+            self.l.critical("No title for the journal ! Aborting")
+            self.l.critical(self.url_feed)
             return
 
         self.l.info("{0}: {1}".format(journal, len(self.feed.entries)))
