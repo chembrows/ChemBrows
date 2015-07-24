@@ -8,6 +8,7 @@ import pytest
 import random
 import datetime
 from bs4 import BeautifulSoup
+import hashlib
 
 import hosts
 
@@ -209,6 +210,10 @@ def test_getDoi(journalsUrls):
 
 def test_dlRssPages(journalsUrls):
 
+    """Dl all the RSS pages  of the journals, and store them
+    in directories named after the journal. I'll run comparisons
+    on the pages to determine the refresh rate of each journal"""
+
     print("\n")
     print("Starting test dlRssPages")
 
@@ -235,7 +240,7 @@ def test_dlRssPages(journalsUrls):
         if content.status_code is requests.codes.ok:
             soup = BeautifulSoup(content.text)
 
-            filename = "./debug/" + str(journal) + "/" + str(datetime.datetime.today().date())
+            filename = "./debug_journals/" + str(journal) + "/" + str(datetime.datetime.today().date())
             os.makedirs(os.path.dirname(filename), exist_ok=True)
 
             with open(filename, 'w') as file:
@@ -243,3 +248,28 @@ def test_dlRssPages(journalsUrls):
                     file.write(line)
         else:
             print("Dl of {} not OK: {}".format(journal, content.status_code))
+
+
+def test_analyzeRssPages():
+
+    """Tests all the RSS pages stored in debug_journals.
+    For each journal, print the date when the RSS page changed"""
+
+    for directory in os.walk("./debug_journals/"):
+
+        print(directory[0])
+
+        list_dates = []
+        list_md5 = []
+
+        for fichier in directory[2]:
+
+            # Read each file and generate a md5 sum
+            with open(directory[0] + "/" + fichier, 'rb') as file:
+                m = hashlib.md5(file.read()).hexdigest()
+
+            if m not in list_md5:
+                list_md5.append(m)
+                list_dates.append(fichier)
+
+        print(list_dates)
