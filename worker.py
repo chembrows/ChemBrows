@@ -41,8 +41,6 @@ class Worker(QtCore.QThread):
         # W/ a large timeout, less chances to get en exception
         self.TIMEOUT = 60
 
-        # self.l.info("Starting parsing of the new articles")
-
         self.parent = parent
 
         self.count_futures_urls = 0
@@ -81,7 +79,6 @@ class Worker(QtCore.QThread):
         try:
             self.feed = feedparser.parse(self.url_feed)
             self.l.debug("RSS page successfully dled")
-
         except OSError:
             self.l.error("Too many files open, could not start the thread !")
             return
@@ -142,6 +139,19 @@ class Worker(QtCore.QThread):
                     self.count_futures_images += 1
                     self.l.debug("Skipping")
                     continue
+
+                elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
+
+                    # TODO: coder updateData
+                    # title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.updateData(company, journal, entry)
+
+                    # query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
+                    # params = (title, date, authors, abstract, verif, topic_simple, doi)
+                    # self.l.debug("Updating {0} in the database".format(doi))
+                    # self.parent.counter_updates += 1
+                    # self.l.info(journal)
+                    pass
+
                 else:
                     try:
                         title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry)
@@ -150,36 +160,27 @@ class Worker(QtCore.QThread):
                         self.count_futures_images += 1
                         return
 
-                    # Checking if the data are complete
-                    # TODO: normally fot these journals, no need to check
                     if type(abstract) is not str:
                         verif = 0
                     else:
                         verif = 1
 
-                    if doi in self.list_doi and doi not in self.list_ok:
-                        query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
-                        params = (title, date, authors, abstract, verif, topic_simple, doi)
-                        self.l.debug("Updating {0} in the database".format(doi))
+                    # TODO: ici, checker si on rejette l'article ou pas
+                    # On se base sur le titre pour rejeter
+                    # Si on rejette, pas de future_image, on return direct
+
+                    if graphical_abstract != "Empty":
+                        path_picture = functions.simpleChar(graphical_abstract)
                     else:
+                        path_picture = "Empty"
 
-                        if graphical_abstract != "Empty":
-                            path_picture = functions.simpleChar(graphical_abstract)
-                        else:
-                            path_picture = "Empty"
-
-                        query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
-                                       VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-                        # Set new to 1 and not to true
-                        params = (doi, title, date, journal_abb, authors, abstract, path_picture, url, verif, 1, topic_simple)
-                        self.l.debug("Adding {0} to the database".format(doi))
-                        self.parent.counter += 1
-
-                    for value in params:
-                        query.addBindValue(value)
-
+                    query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
+                                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                    # Set new to 1 and not to true
+                    params = (doi, title, date, journal_abb, authors, abstract, path_picture, url, verif, 1, topic_simple)
+                    self.l.debug("Adding {0} to the database".format(doi))
+                    self.parent.counter += 1
                     self.new_entries_worker += 1
-                    query.exec_()
 
                     if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
                         self.count_futures_images += 1
@@ -191,6 +192,11 @@ class Worker(QtCore.QThread):
 
                         future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
+
+                for value in params:
+                    query.addBindValue(value)
+
+                query.exec_()
 
         else:
 
@@ -205,7 +211,28 @@ class Worker(QtCore.QThread):
                     self.count_futures_urls += 1
                     self.l.debug("Skipping")
                     continue
+
+                elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
+
+                    # TODO: coder updateData
+                    # title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.updateData(company, journal, entry)
+
+                    # updateData doit renvoyer des bool:
+                        # - dl seulement l'article ? -> si oui, future et on renvoie à completeData
+                        # - dl seulement l'image ? -> si oui, future et on renvoie à pictureDownloaded
+                        # - dl l'article pr avoir l'image -> future sur completeData
+
+                    # query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
+                    # params = (title, date, authors, abstract, verif, topic_simple, doi)
+                    # self.l.debug("Updating {0} in the database".format(doi))
+                    # self.parent.counter_updates += 1
+                    # self.l.info(journal)
+                    pass
                 else:
+
+                    # TODO: ici, checker si on rejette l'article ou pas.
+                    # On se base sur le titre pour rejeter
+                    # Si on rejette, pas de future ou de future_image, on return direct
                     try:
                         url = entry.feedburner_origlink
                     except AttributeError:
@@ -269,10 +296,13 @@ class Worker(QtCore.QThread):
         else:
             verif = 1
 
-        if doi in self.list_doi and doi not in self.list_ok:
+        # if doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
+        if doi in self.list_doi:
             query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
             params = (title, date, authors, abstract, verif, topic_simple, doi)
             self.l.debug("Updating {0} in the database".format(doi))
+            self.parent.counter_updates += 1
+            self.l.info(journal)
         else:
             query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
                            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
@@ -382,6 +412,7 @@ class Worker(QtCore.QThread):
             list_doi.append(record.value('doi'))
 
             if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
+            # if record.value('verif') == 1:
                 # Try to download the images again if it didn't work before
                 list_ok.append(True)
             else:

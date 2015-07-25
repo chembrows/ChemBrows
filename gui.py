@@ -52,7 +52,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        # self.l.setLevel(20)
+        self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -253,8 +253,6 @@ class Fenetre(QtGui.QMainWindow):
         return journals
 
 
-
-
     def parse(self):
 
         """Method to start the parsing of the data"""
@@ -324,6 +322,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Counter to count the new entries in the database
         self.counter = 0
+        self.counter_updates = 0
 
         # # List to store the threads.
         # # The list is cleared when the method is started
@@ -380,7 +379,8 @@ class Fenetre(QtGui.QMainWindow):
                 # self.l.error(self.bdd.lastError().text())
                 # self.l.error("Problem when comitting data")
 
-            self.l.debug("{} new entries added to the database".format(self.counter))
+            self.l.info("{} new entries added to the database".format(self.counter))
+            self.l.info("{} entries updated".format(self.counter_updates))
 
             self.calculatePercentageMatch(update=False)
             self.parseAction.setEnabled(True)
