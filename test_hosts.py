@@ -235,7 +235,7 @@ def test_dlRssPages(journalsUrls):
         if content.status_code is requests.codes.ok:
             soup = BeautifulSoup(content.text)
 
-            filename = "./debug/" + str(journal) + "/" + str(datetime.datetime.today().date())
+            filename = "./debug_journals/" + str(journal) + "/" + str(datetime.datetime.today().date())
             os.makedirs(os.path.dirname(filename), exist_ok=True)
 
             with open(filename, 'w') as file:
