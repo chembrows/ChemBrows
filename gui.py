@@ -519,7 +519,7 @@ class Fenetre(QtGui.QMainWindow):
         else:
             self.sortingReversedAction.setChecked(False)
 
-        self.updateView()
+        self.searchByButton()
 
         self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
