@@ -1178,7 +1178,16 @@ class Fenetre(QtGui.QMainWindow):
 
         self.query = QtSql.QSqlQuery(self.bdd)
 
-        self.query.prepare("SELECT * FROM papers WHERE topic_simple LIKE '%{}%'".format(results))
+        requete = "SELECT * FROM papers WHERE topic_simple LIKE '%{}%' AND journal IN("
+
+        # Search only the selected journals
+        for each_journal in self.tags_selected:
+            if each_journal != self.tags_selected[-1]:
+                requete = requete + "\"" + str(each_journal) + "\"" + ", "
+            else:
+                requete = requete + "\"" + str(each_journal) + "\"" + ")"
+
+        self.query.prepare(requete.format(results))
         self.query.exec_()
 
         self.updateView()
@@ -1694,14 +1703,11 @@ class Fenetre(QtGui.QMainWindow):
         self.button_share_mail.hide()
 
         # A QWebView to render the sometimes rich text of the abstracts
-        # self.text_abstract = QtWebKit.QWebView()
         self.text_abstract = WebViewPerso()
         self.web_settings = QtWebKit.QWebSettings.globalSettings()
 
         # Get the default font and use it for the QWebView
         self.web_settings.setFontFamily(QtWebKit.QWebSettings.StandardFont, self.font().family())
-        # self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 18)
-        # self.web_settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 16)
 
         # Building the grid
         self.grid_area_right_top.addWidget(prelabel_title, 0, 0)
@@ -1720,30 +1726,19 @@ class Fenetre(QtGui.QMainWindow):
         # USEFULL: set the size of the grid and its widgets to the minimum
         self.grid_area_right_top.setRowStretch(5, 1)
 
-
         # ------------------------- ASSEMBLING THE AREAS ----------------------
 
         # Main part of the window in a tab.
         # Allows to create other tabs
-        # self.onglets = QtGui.QTabWidget(self)
         self.onglets = TabPerso(self)
         self.onglets.setContentsMargins(0, 0, 0, 0)
-
-        # self.splitter1 = QtGui.QSplitter(QtCore.Qt.Vertical)
-        # self.splitter1.addWidget(self.area_right_top)
-        # self.splitter1.addWidget(self.area_right_bottom)
-        # self.vbox_right = QtGui.QVBoxLayout()
-        # self.vbox_right.addWidget(self.area_right_top)
-        # self.vbox_right.addWidget(self.area_right_bottom)
 
         self.central_widget = QtGui.QWidget()
         self.hbox_central = QtGui.QHBoxLayout()
         self.central_widget.setLayout(self.hbox_central)
 
         self.splitter2 = QtGui.QSplitter(QtCore.Qt.Horizontal)
-        # self.splitter2.addWidget(self.scroll_tags)
         self.splitter2.addWidget(self.onglets)
-        # self.splitter2.addWidget(self.splitter1)
         self.splitter2.addWidget(self.area_right_top)
 
         self.hbox_central.addWidget(self.scroll_tags)
@@ -1752,10 +1747,7 @@ class Fenetre(QtGui.QMainWindow):
         # Create the main table, at index 0
         self.createSearchTab("All articles", "SELECT * FROM papers")
 
-        # self.setCentralWidget(self.splitter2)
         self.setCentralWidget(self.central_widget)
-
-        # self.show()
 
 
 if __name__ == '__main__':
