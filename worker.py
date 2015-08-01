@@ -9,10 +9,18 @@ import functools
 from requests_futures.sessions import FuturesSession
 import requests
 from io import open as iopen
+import ssl
 
 import hosts
 import functions
 
+
+# Monkey patch to avoid connection errors while trying to dl
+# a RSS page w/ an invalid SSL certificate. This patch is used
+# to fix erros w/ Synlett and Synthesis
+# http://stackoverflow.com/questions/28282797/feedparser-parse-ssl-certificate-verify-failed
+if hasattr(ssl, '_create_unverified_context'):
+    ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class Worker(QtCore.QThread):
@@ -30,6 +38,7 @@ class Worker(QtCore.QThread):
         QtCore.QThread.__init__(self)
 
         self.l = logger
+
         self.bdd = bdd
         self.dict_journals = dict_journals
 
@@ -60,9 +69,6 @@ class Worker(QtCore.QThread):
         """Method to destroy the thread properly"""
 
         self.l.debug("Deleting thread")
-
-        # NE PAS décommenter
-        # self.wait()
 
         self.exit()
 
@@ -101,12 +107,21 @@ class Worker(QtCore.QThread):
         # containing all the data regarding the journals implemented in the
         # program. This dictionnary is built in gui.py, to avoid multiple calls
         # to hosts.getJournals
+        # care_image determines if the Worker will try to dl the graphical
+        # abstracts
         for key, tuple_data in self.dict_journals.items():
             if journal in tuple_data[0]:
                 company = key
                 index = tuple_data[0].index(journal)
                 journal_abb = tuple_data[1][index]
+                care_image = tuple_data[3][index]
                 break
+
+        # Make unverified HTTPS requests for Thieme company
+        if company == 'thieme':
+            bool_verify = False
+        else:
+            bool_verify = True
 
         try:
             self.list_doi, self.list_ok = self.listDoi(journal_abb)
@@ -140,17 +155,34 @@ class Worker(QtCore.QThread):
                     self.l.debug("Skipping")
                     continue
 
-                elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
+                if doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
 
-                    # TODO: coder updateData
-                    # title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.updateData(company, journal, entry)
+                    # How to update the entry
+                    dl_page, dl_image, data = hosts.updateData(company, journal, entry, care_image)
 
-                    # query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
-                    # params = (title, date, authors, abstract, verif, topic_simple, doi)
-                    # self.l.debug("Updating {0} in the database".format(doi))
-                    # self.parent.counter_updates += 1
-                    # self.l.info(journal)
-                    pass
+                    # For these journals, all the infos are in the RSS. Only care
+                    # about the image
+                    if dl_image:
+                        graphical_abstract = data['graphical_abstract']
+
+                        if os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
+                            self.count_futures_images += 1
+                        else:
+                            try:
+                                url = entry.feedburner_origlink
+                            except AttributeError:
+                                url = entry.link
+
+                            headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
+                                       'Connection': 'close',
+                                       'Referer': url}
+
+                            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
+                            future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
+
+                    else:
+                        self.count_futures_images += 1
+                        continue
 
                 else:
                     try:
@@ -160,7 +192,7 @@ class Worker(QtCore.QThread):
                         self.count_futures_images += 1
                         return
 
-                    if type(abstract) is not str:
+                    if type(abstract) is not str or type(title) is not str:
                         verif = 0
                     else:
                         verif = 1
@@ -190,7 +222,7 @@ class Worker(QtCore.QThread):
                                    'Connection': 'close',
                                    'Referer': url}
 
-                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
+                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
                 for value in params:
@@ -199,6 +231,9 @@ class Worker(QtCore.QThread):
                 query.exec_()
 
         else:
+
+            headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
+                       'Connection': 'close'}
 
             self.session_pages = FuturesSession(max_workers=20)
 
@@ -214,20 +249,41 @@ class Worker(QtCore.QThread):
 
                 elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
 
-                    # TODO: coder updateData
-                    # title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.updateData(company, journal, entry)
+                    try:
+                        url = entry.feedburner_origlink
+                    except AttributeError:
+                        url = entry.link
 
-                    # updateData doit renvoyer des bool:
-                        # - dl seulement l'article ? -> si oui, future et on renvoie à completeData
-                        # - dl seulement l'image ? -> si oui, future et on renvoie à pictureDownloaded
-                        # - dl l'article pr avoir l'image -> future sur completeData
+                    dl_page, dl_image, data = hosts.updateData(company, journal, entry, care_image)
 
-                    # query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
-                    # params = (title, date, authors, abstract, verif, topic_simple, doi)
-                    # self.l.debug("Updating {0} in the database".format(doi))
-                    # self.parent.counter_updates += 1
-                    # self.l.info(journal)
-                    pass
+                    if dl_page:
+
+                        future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers, verify=bool_verify)
+                        future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
+
+                        # Continue just to be sure. If dl_page is True, dl_image is likely True too
+                        continue
+
+                    elif dl_image:
+
+                        self.count_futures_urls += 1
+
+                        graphical_abstract = data['graphical_abstract']
+
+                        if os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
+                            self.count_futures_images += 1
+                        else:
+                            headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
+                                       'Connection': 'close',
+                                       'Referer': url}
+
+                            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
+                            future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
+
+                    else:
+                        self.count_futures_urls += 1
+                        self.count_futures_images += 1
+
                 else:
 
                     # TODO: ici, checker si on rejette l'article ou pas.
@@ -238,10 +294,7 @@ class Worker(QtCore.QThread):
                     except AttributeError:
                         url = entry.link
 
-                    headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
-                               'Connection': 'close'}
-
-                    future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers)
+                    future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers, verify=bool_verify)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
         while not self.checkFuturesRunning():
@@ -278,6 +331,10 @@ class Worker(QtCore.QThread):
             return
         except requests.exceptions.ConnectionError:
             self.l.error("ConnectionError for {}".format(journal))
+            self.count_futures_images += 1
+            return
+        except ConnectionResetError:
+            self.l.error("ConnectionResetError for {}".format(journal))
             self.count_futures_images += 1
             return
 

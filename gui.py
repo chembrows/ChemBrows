@@ -180,7 +180,7 @@ class Fenetre(QtGui.QMainWindow):
             count_query.exec_("SELECT COUNT(id) FROM papers")
             count_query.first()
             nbr_entries = count_query.record().value(0)
-            self.l.debug("Nbr of entries: {}".format(nbr_entries))
+            self.l.info("Nbr of entries: {}".format(nbr_entries))
 
             count_query.exec_("SELECT MAX(id) FROM papers")
             count_query.first()

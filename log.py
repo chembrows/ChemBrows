@@ -43,6 +43,7 @@ class MyLog(logging.Logger):
         self.steam_handler.setLevel(logging.DEBUG)
         self.addHandler(self.steam_handler)
 
+
 if __name__ == '__main__':
 
     # Après 3 heures, on peut enfin logguer

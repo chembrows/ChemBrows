@@ -236,7 +236,7 @@ def test_dlRssPages(journalsUrls):
             print("Abort for {}".format(url_feed))
 
         # Get the RSS page and store it. I'll run some comparisons on them
-        content = requests.get(url_feed, timeout=120, headers=headers)
+        content = requests.get(url_feed, timeout=120, headers=headers, verify=False)
         if content.status_code is requests.codes.ok:
             soup = BeautifulSoup(content.text)
 
@@ -272,4 +272,4 @@ def test_analyzeRssPages():
                 list_md5.append(m)
                 list_dates.append(fichier)
 
-        print(list_dates)
+        print(sorted(list_dates))
