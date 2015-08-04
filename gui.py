@@ -612,11 +612,11 @@ class Fenetre(QtGui.QMainWindow):
                 record = count_query.record()
                 id_bdd = record.value('id')
 
-                # # Don't add the id to this list if it's the main tab, it's
-                # # useless because the article will be concerned for sure
-                # if table != self.list_tables_in_tabs[0]:
-                    # if id_bdd not in table.list_id_articles:
-                        # table.list_id_articles.append(id_bdd)
+                # Don't add the id to this list if it's the main tab, it's
+                # useless because the article will be concerned for sure
+                if table != self.list_tables_in_tabs[0]:
+                    if id_bdd not in table.list_id_articles:
+                        table.list_id_articles.append(id_bdd)
 
                 if record.value('new') == 1:
                     if id_bdd not in table.list_new_ids:
@@ -1273,11 +1273,7 @@ class Fenetre(QtGui.QMainWindow):
             # Add the id to the list of new articles
             elif id_bdd in self.onglets.widget(index).list_id_articles and not remove:
                 self.onglets.widget(index).list_new_ids.append(id_bdd)
-
-            # # The tab is the main tab, with all the articles.
-            # # The article is concerned for sure
-            # elif index == 0 and not remove:
-                # self.onglets.widget(index).list_new_ids.append(id_bdd)
+                print("coucou")
 
             notifs = len(self.onglets.widget(index).list_new_ids)
             self.onglets.setNotifications(index, notifs)

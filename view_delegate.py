@@ -122,7 +122,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # Draw peppers. A full pepper if the match percentage
             # of an article is superior to the element of the list.
             # Else, an empty pepper
-            nbr_peppers = [20, 40, 60, 80]
+            nbr_peppers = [15, 30, 45, 70]
             for index, perc in enumerate(nbr_peppers):
 
                 if percentage >= perc:
