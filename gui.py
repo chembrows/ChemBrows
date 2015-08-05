@@ -203,6 +203,16 @@ class Fenetre(QtGui.QMainWindow):
                 self.l.error("checkAccess. Timeout while contacting the server")
 
 
+    def showAbout(self):
+
+        """Shows a dialogBox w/ the version number"""
+
+        with open('config/version.txt', 'r') as version_file:
+            version = version_file.read()
+        message = "You are using ChemBrows version {}".format(version)
+        QtGui.QMessageBox.about(self, "About ChemBrows", message)
+
+
     def connectionBdd(self):
 
         """Method to connect to the database. Creates it
@@ -448,6 +458,10 @@ class Fenetre(QtGui.QMainWindow):
         # Action to show a settings window
         self.settingsAction = QtGui.QAction('Preferences', self)
         self.settingsAction.triggered.connect(lambda: Settings(self))
+
+        # Action to show a settings window
+        self.showAboutAction = QtGui.QAction('About', self)
+        self.showAboutAction.triggered.connect(self.showAbout)
 
         # Action so show new articles
         self.searchNewAction = QtGui.QAction('View unread', self)
@@ -1605,6 +1619,9 @@ class Fenetre(QtGui.QMainWindow):
         self.sortMenu.addAction(self.sortingDateAction)
         self.sortMenu.addAction(self.separatorAction)
         self.sortMenu.addAction(self.sortingReversedAction)
+
+        self.helpMenu = self.menubar.addMenu("&Help")
+        self.helpMenu.addAction(self.showAboutAction)
 
         # # ------------------------- TOOLBAR  -----------------------------------------------
 
