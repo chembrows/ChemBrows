@@ -380,7 +380,7 @@ class Fenetre(QtGui.QMainWindow):
                 # self.l.error("Problem when comitting data")
 
             self.l.info("{} new entries added to the database".format(self.counter))
-            self.l.info("{} entries updated".format(self.counter_updates))
+            self.l.info("{} attempts to update entries".format(self.counter_updates))
 
             self.calculatePercentageMatch(update=False)
             self.parseAction.setEnabled(True)

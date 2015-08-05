@@ -155,7 +155,11 @@ class Worker(QtCore.QThread):
                     self.l.debug("Skipping")
                     continue
 
-                if doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
+                # Reject crappy entries: corrigendum, erratum, etc
+                elif hosts.reject(entry):
+                    continue
+
+                elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
 
                     # How to update the entry
                     dl_page, dl_image, data = hosts.updateData(company, journal, entry, care_image)
@@ -163,6 +167,8 @@ class Worker(QtCore.QThread):
                     # For these journals, all the infos are in the RSS. Only care
                     # about the image
                     if dl_image:
+                        self.parent.counter_updates += 1
+
                         graphical_abstract = data['graphical_abstract']
 
                         if os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
@@ -247,6 +253,10 @@ class Worker(QtCore.QThread):
                     self.l.debug("Skipping")
                     continue
 
+                # Reject crappy entries: corrigendum, erratum, etc
+                elif hosts.reject(entry):
+                    continue
+
                 elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
 
                     try:
@@ -257,6 +267,7 @@ class Worker(QtCore.QThread):
                     dl_page, dl_image, data = hosts.updateData(company, journal, entry, care_image)
 
                     if dl_page:
+                        self.parent.counter_updates += 1
 
                         future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers, verify=bool_verify)
                         future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
@@ -265,6 +276,7 @@ class Worker(QtCore.QThread):
                         continue
 
                     elif dl_image:
+                        self.parent.counter_updates += 1
 
                         self.count_futures_urls += 1
 
@@ -353,13 +365,10 @@ class Worker(QtCore.QThread):
         else:
             verif = 1
 
-        # if doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
         if doi in self.list_doi:
             query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
             params = (title, date, authors, abstract, verif, topic_simple, doi)
             self.l.debug("Updating {0} in the database".format(doi))
-            self.parent.counter_updates += 1
-            self.l.info(journal)
         else:
             query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
                            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")

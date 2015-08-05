@@ -11,6 +11,14 @@ from time import mktime
 import functions
 
 
+def reject(entry):
+
+    """Function called by a Worker object to filter crappy entries.
+    It is meant to reject articles like corrigendum, erratum, etc"""
+
+    return False
+
+
 def updateData(company, journal, entry, care_image):
 
     """Function called by a Worker object when an RSS entry is
