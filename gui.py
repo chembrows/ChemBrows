@@ -52,7 +52,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        self.l.setLevel(20)
+        # self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -200,7 +200,9 @@ class Fenetre(QtGui.QMainWindow):
                 req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
                 self.l.info(req.text)
             except requests.exceptions.ReadTimeout:
-                self.l.error("checkAccess. Timeout while contacting the server")
+                self.l.error("checkAccess. ReadTimeout while contacting the server")
+            except requests.exceptions.ConnectTimeout:
+                self.l.error("checkAccess. ConnectionTimeout while contacting the server")
 
 
     def showAbout(self):

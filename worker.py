@@ -118,10 +118,17 @@ class Worker(QtCore.QThread):
                 break
 
         # Make unverified HTTPS requests for Thieme company
-        if company == 'thieme':
-            bool_verify = False
-        else:
-            bool_verify = True
+        try:
+            if company == 'thieme':
+                bool_verify = False
+            else:
+                bool_verify = True
+
+        # Condition occurs when the RSS page is not properly formatted.
+        # The page can have a journal, but the company can't be identified
+        except UnboundLocalError:
+            self.l.critical("Problem parsing {}".format(journal))
+            self.l.critical("Problem parsing URL {}".format(self.url_feed))
 
         try:
             self.list_doi, self.list_ok = self.listDoi(journal_abb)
