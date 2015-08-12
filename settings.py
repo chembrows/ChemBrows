@@ -20,8 +20,10 @@ class Settings(QtGui.QDialog):
         # TEST
         try:
             self.options = self.parent.options
+            self.test = False
         except AttributeError:
             self.options = QtCore.QSettings("debug/options.ini", QtCore.QSettings.IniFormat)
+            self.test = True
 
         self.check_journals = []
 
@@ -59,7 +61,9 @@ class Settings(QtGui.QDialog):
 
         # Button "clean database" (erase the unintersting journals from the db)
         # connected to the method of the main window class
-        self.button_clean_db.clicked.connect(self.parent.cleanDb)
+        # TO COMMENT to run the module standalone
+        if not self.test:
+            self.button_clean_db.clicked.connect(self.parent.cleanDb)
 
 
     def selectUnselectAll(self, state):

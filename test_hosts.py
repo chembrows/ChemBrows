@@ -131,10 +131,7 @@ def test_getData(journalsUrls):
             if journal in science + elsevier + beil:
                 title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry)
             else:
-                try:
-                    url = entry.feedburner_origlink
-                except AttributeError:
-                    url = entry.link
+                url = getattr(entry, 'feedburner_origlink', entry.link)
 
                 response = requests.get(url, timeout=10)
                 title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry, response)

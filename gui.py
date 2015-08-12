@@ -52,7 +52,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        # self.l.setLevel(20)
+        self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False

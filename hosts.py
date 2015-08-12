@@ -116,10 +116,7 @@ def getData(company, journal, entry, response=None):
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
 
-        try:
-            url = entry.feedburner_origlink
-        except AttributeError:
-            url = entry.link
+        url = getattr(entry, 'feedburner_origlink', entry.link)
 
         abstract = None
         graphical_abstract = None
@@ -233,10 +230,7 @@ def getData(company, journal, entry, response=None):
         else:
             author = author[0]
 
-        try:
-            url = entry.feedburner_origlink
-        except AttributeError:
-            url = entry.link
+        url = getattr(entry, 'feedburner_origlink', entry.link)
 
         graphical_abstract = None
 

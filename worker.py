@@ -181,10 +181,7 @@ class Worker(QtCore.QThread):
                         if os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
                             self.count_futures_images += 1
                         else:
-                            try:
-                                url = entry.feedburner_origlink
-                            except AttributeError:
-                                url = entry.link
+                            url = getattr(entry, 'feedburner_origlink', entry.link)
 
                             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                                        'Connection': 'close',
@@ -266,10 +263,7 @@ class Worker(QtCore.QThread):
 
                 elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
 
-                    try:
-                        url = entry.feedburner_origlink
-                    except AttributeError:
-                        url = entry.link
+                    url = getattr(entry, 'feedburner_origlink', entry.link)
 
                     dl_page, dl_image, data = hosts.updateData(company, journal, entry, care_image)
 
@@ -308,10 +302,7 @@ class Worker(QtCore.QThread):
                     # TODO: ici, checker si on rejette l'article ou pas.
                     # On se base sur le titre pour rejeter
                     # Si on rejette, pas de future ou de future_image, on return direct
-                    try:
-                        url = entry.feedburner_origlink
-                    except AttributeError:
-                        url = entry.link
+                    url = getattr(entry, 'feedburner_origlink', entry.link)
 
                     future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers, verify=bool_verify)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
@@ -329,6 +320,7 @@ class Worker(QtCore.QThread):
             self.session_pages.executor.shutdown()
         except AttributeError:
             pass
+
         self.session_images.executor.shutdown()
 
         self.l.info("Exiting thread for {}".format(journal))
