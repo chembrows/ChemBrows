@@ -46,11 +46,11 @@ class Worker(QtCore.QThread):
         # for the tests
         self.path = "./graphical_abstracts/"
 
+        self.parent = parent
+
         # Set the timeout for the futures
         # W/ a large timeout, less chances to get en exception
         self.TIMEOUT = 60
-
-        self.parent = parent
 
         self.count_futures_urls = 0
         self.count_futures_images = 0
@@ -101,7 +101,7 @@ class Worker(QtCore.QThread):
 
         # Lists to check if the post is in the db, and if
         # it has all the infos
-        self.session_images = FuturesSession(max_workers=20)
+        self.session_images = FuturesSession(max_workers=40)
 
         # Get the company and the journal_abb by scrolling the dictionnary
         # containing all the data regarding the journals implemented in the
@@ -157,14 +157,27 @@ class Worker(QtCore.QThread):
                 # Get the DOI, a unique number for a publication
                 doi = hosts.getDoi(company, journal, entry)
 
-                if doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
+                # TODO:
+                # Reject crappy entries: corrigendum, erratum, etc
+                # Penser à incrémenter les listes de futures
+                if hosts.reject(entry):
+                    title = entry.title
+                    self.count_futures_images += 1
+                    self.l.debug("Rejecting {0}".format(doi))
+
+                    if self.parent.debug_mod and doi not in self.list_doi:
+                        url = getattr(entry, 'feedburner_origlink', entry.link)
+                        query.prepare("INSERT INTO debug (doi, title, journal, url) VALUES(?, ?, ?, ?)")
+                        params = (doi, title, journal_abb, url)
+                        self.l.debug("Inserting {0} in table debug".format(doi))
+                    else:
+                        continue
+
+                elif doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
                     self.count_futures_images += 1
                     self.l.debug("Skipping")
                     continue
 
-                # Reject crappy entries: corrigendum, erratum, etc
-                elif hosts.reject(entry):
-                    continue
 
                 elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
 
@@ -207,16 +220,12 @@ class Worker(QtCore.QThread):
                     else:
                         verif = 1
 
-                    # TODO: ici, checker si on rejette l'article ou pas
-                    # On se base sur le titre pour rejeter
-                    # Si on rejette, pas de future_image, on return direct
-
                     if graphical_abstract != "Empty":
                         path_picture = functions.simpleChar(graphical_abstract)
                     else:
                         path_picture = "Empty"
 
-                    query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
+                    query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
                                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                     # Set new to 1 and not to true
                     params = (doi, title, date, journal_abb, authors, abstract, path_picture, url, verif, 1, topic_simple)
@@ -245,21 +254,41 @@ class Worker(QtCore.QThread):
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                        'Connection': 'close'}
 
-            self.session_pages = FuturesSession(max_workers=20)
+            self.session_pages = FuturesSession(max_workers=40)
 
             for entry in self.feed.entries:
 
                 doi = hosts.getDoi(company, journal, entry)
 
-                if doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
+                # TODO:
+                # Reject crappy entries: corrigendum, erratum, etc
+                # Penser à incrémenter les listes de futures
+                if hosts.reject(entry):
+                    title = entry.title
+                    self.count_futures_images += 1
+                    self.count_futures_urls += 1
+                    self.l.debug("Rejecting {0}".format(doi))
+
+                    if self.parent.debug_mod and doi not in self.list_doi:
+                        url = getattr(entry, 'feedburner_origlink', entry.link)
+                        query.prepare("INSERT INTO debug (doi, title, journal, url) VALUES(?, ?, ?, ?)")
+                        params = (doi, title, journal_abb, url)
+
+                        for value in params:
+                            query.addBindValue(value)
+                        query.exec_()
+
+                        self.l.debug("Inserting {0} in table debug".format(doi))
+                    else:
+                        continue
+
+
+                elif doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
                     self.count_futures_images += 1
                     self.count_futures_urls += 1
                     self.l.debug("Skipping")
                     continue
 
-                # Reject crappy entries: corrigendum, erratum, etc
-                elif hosts.reject(entry):
-                    continue
 
                 elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
 
@@ -299,9 +328,6 @@ class Worker(QtCore.QThread):
 
                 else:
 
-                    # TODO: ici, checker si on rejette l'article ou pas.
-                    # On se base sur le titre pour rejeter
-                    # Si on rejette, pas de future ou de future_image, on return direct
                     url = getattr(entry, 'feedburner_origlink', entry.link)
 
                     future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers, verify=bool_verify)
@@ -348,6 +374,10 @@ class Worker(QtCore.QThread):
             self.l.error("ConnectionResetError for {}".format(journal))
             self.count_futures_images += 1
             return
+        except socket.timeout:
+            self.l.error("socket.timeout for {}".format(journal))
+            self.count_futures_images += 1
+            return
 
         query = QtSql.QSqlQuery(self.bdd)
 
@@ -369,7 +399,7 @@ class Worker(QtCore.QThread):
             params = (title, date, authors, abstract, verif, topic_simple, doi)
             self.l.debug("Updating {0} in the database".format(doi))
         else:
-            query.prepare("INSERT INTO papers(doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
+            query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
                            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
             if graphical_abstract != "Empty":
@@ -403,7 +433,6 @@ class Worker(QtCore.QThread):
         """Callback to handle the response of the futures
         downloading a picture"""
 
-
         self.count_futures_images += 1
 
         query = QtSql.QSqlQuery(self.bdd)
@@ -418,6 +447,12 @@ class Worker(QtCore.QThread):
             params = (0, doi)
         except requests.exceptions.MissingSchema:
             self.l.error("MissingSchema for image: {}".format(entry_url))
+            params = (0, doi)
+        except ConnectionResetError:
+            self.l.error("ConnectionResetError for {}".format(journal))
+            params = (0, doi)
+        except socket.timeout:
+            self.l.error("socket.timeout for {}".format(journal))
             params = (0, doi)
         else:
             # If the picture was dled correctly
@@ -477,10 +512,17 @@ class Worker(QtCore.QThread):
             list_doi.append(record.value('doi'))
 
             if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
-            # if record.value('verif') == 1:
                 # Try to download the images again if it didn't work before
                 list_ok.append(True)
             else:
                 list_ok.append(False)
+
+        if self.parent.debug_mod:
+            query.prepare("SELECT doi FROM debug WHERE journal=?")
+            query.addBindValue(journal_abb)
+            query.exec_()
+            while query.next():
+                record = query.record()
+                list_doi.append(record.value('doi'))
 
         return list_doi, list_ok

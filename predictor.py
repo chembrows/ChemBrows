@@ -55,7 +55,7 @@ class Predictor(QtCore.QThread):
 
         with open('config/stop_words.txt', 'r') as config:
             for word in config.readlines():
-                my_additional_stop_words.append(word.replace("\n", ""))
+                my_additional_stop_words.append(word.rstrip())
 
         self.stop_words = text.ENGLISH_STOP_WORDS.union(my_additional_stop_words)
 

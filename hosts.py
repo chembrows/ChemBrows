@@ -7,6 +7,9 @@ import requests
 import arrow
 from time import mktime
 
+# TEST
+import re
+
 # Personal modules
 import functions
 
@@ -16,7 +19,18 @@ def reject(entry):
     """Function called by a Worker object to filter crappy entries.
     It is meant to reject articles like corrigendum, erratum, etc"""
 
-    return False
+    # Load the regex stored in a config file, as filters
+    with open('config/regex.txt', 'r') as filters_file:
+        filters = filters_file.read().splitlines()
+
+    # Try to match the filters against the title entry
+    responses = [bool(re.search(regex, entry.title)) for regex in filters]
+
+    # If one filter matched, reject the entry
+    if True in responses:
+        return True
+    else:
+        return False
 
 
 def updateData(company, journal, entry, care_image):
@@ -219,7 +233,7 @@ def getData(company, journal, entry, response=None):
 
         """Feed only contains graphical abstract"""
 
-        title = entry.title.replace("\n", " ")
+        title = entry.title.rstrip()
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
         abstract = None
 
@@ -480,7 +494,7 @@ def getData(company, journal, entry, response=None):
     else:
         topic_simple = " " + functions.simpleChar(title) + " "
 
-    if abstract is None:
+    if abstract is None or abstract == '':
         abstract = "Empty"
     if graphical_abstract is None:
         graphical_abstract = "Empty"
@@ -556,12 +570,12 @@ def getJournals(company):
     with open('journals/{0}.ini'.format(company), 'r') as config:
         for line in config:
             names.append(line.split(" : ")[0])
-            abb.append(line.split(" : ")[1].replace("\n", ""))
-            urls.append(line.split(" : ")[2].replace("\n", ""))
+            abb.append(line.split(" : ")[1].rstrip())
+            urls.append(line.split(" : ")[2].rstrip())
 
             # Get a bool: care about the image when refreshing
             try:
-                care = line.split(" : ")[3].replace("\n", "")
+                care = line.split(" : ")[3].rstrip()
                 if care == "False":
                     cares_image.append(False)
                 else:
@@ -574,49 +588,51 @@ def getJournals(company):
 
 
 if __name__ == "__main__":
-    from requests_futures.sessions import FuturesSession
-    import functools
 
-    def print_result(journal, entry, future):
-        response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("thieme", journal, entry, response)
-        print(abstract)
-        # print(graphical_abstract)
-        # print(authors)
-        print(title)
+    reject(None)
+    # from requests_futures.sessions import FuturesSession
+    # import functools
 
-    # urls_test = ["debug/rsc.htm"]
-    # urls_test = ["debug/natcom.htm"]
-    urls_test = ["debug/synt.xml"]
-
-    session = FuturesSession(max_workers=20)
-
-    list_urls = []
-
-    feed = feedparser.parse(urls_test[0])
-    journal = feed['feed']['title']
-
-    headers = {'User-agent': 'Mozilla/5.0',
-               'Connection': 'close'}
-
-
-    print(journal)
-
-    for entry in feed.entries:
-        # print(entry)
-        if "Sonogashira" not in entry.title:
-            continue
-        url = entry.link
-        # url = entry.feedburner_origlink
-        # title = entry.title
-        # print(url)
+    # def print_result(journal, entry, future):
+        # response = future.result()
+        # title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("thieme", journal, entry, response)
+        # print(abstract)
+        # # print(graphical_abstract)
+        # # print(authors)
         # print(title)
-        # print(entry)
-        # print(url)
-        # getDoi(journal, entry)
 
-        # future = session.get(url, headers=headers, timeout=20)
-        future = session.get(url, timeout=20, verify=False)
-        future.add_done_callback(functools.partial(print_result, journal, entry))
+    # # urls_test = ["debug/rsc.htm"]
+    # # urls_test = ["debug/natcom.htm"]
+    # urls_test = ["debug/synt.xml"]
 
-        # break
+    # session = FuturesSession(max_workers=20)
+
+    # list_urls = []
+
+    # feed = feedparser.parse(urls_test[0])
+    # journal = feed['feed']['title']
+
+    # headers = {'User-agent': 'Mozilla/5.0',
+               # 'Connection': 'close'}
+
+
+    # print(journal)
+
+    # for entry in feed.entries:
+        # # print(entry)
+        # if "Sonogashira" not in entry.title:
+            # continue
+        # url = entry.link
+        # # url = entry.feedburner_origlink
+        # # title = entry.title
+        # # print(url)
+        # # print(title)
+        # # print(entry)
+        # # print(url)
+        # # getDoi(journal, entry)
+
+        # # future = session.get(url, headers=headers, timeout=20)
+        # future = session.get(url, timeout=20, verify=False)
+        # future.add_done_callback(functools.partial(print_result, journal, entry))
+
+        # # break

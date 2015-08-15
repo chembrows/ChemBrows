@@ -52,7 +52,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        self.l.setLevel(20)
+        # self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -73,27 +73,44 @@ class Fenetre(QtGui.QMainWindow):
         # Call processEvents regularly for the splash screen
         start_time = datetime.datetime.now()
 
+        diff_time = start_time
+
         app.processEvents()
         self.bootCheckList()
+        self.l.debug("bootCheckList took {}".format(datetime.datetime.now() - diff_time))
+        diff_time = datetime.datetime.now()
 
         app.processEvents()
         self.connectionBdd()
         self.defineActions()
         self.checkAccess()
+        self.l.debug("connectionBdd & defineActions took {}".format(datetime.datetime.now() - diff_time))
+        diff_time = datetime.datetime.now()
 
         app.processEvents()
         self.initUI()
+        self.l.debug("initUI took {}".format(datetime.datetime.now() - diff_time))
+        diff_time = datetime.datetime.now()
 
         app.processEvents()
         self.defineSlots()
+        self.l.debug("defineSlots took {}".format(datetime.datetime.now() - diff_time))
+        diff_time = datetime.datetime.now()
 
         app.processEvents()
         self.displayTags()
+        self.l.debug("displayTags took {}".format(datetime.datetime.now() - diff_time))
+        diff_time = datetime.datetime.now()
+
         app.processEvents()
         self.restoreSettings()
+        self.l.debug("restoreSettings took {}".format(datetime.datetime.now() - diff_time))
+        diff_time = datetime.datetime.now()
 
         app.processEvents()
         self.loadNotifications()
+        self.l.debug("loadNotifications took {}".format(datetime.datetime.now() - diff_time))
+        diff_time = datetime.datetime.now()
 
         app.processEvents()
 
@@ -116,6 +133,9 @@ class Fenetre(QtGui.QMainWindow):
         if getattr(sys, "frozen", False):
 
             self.l.info("This version of ChemBrows is a frozen version")
+
+            # The program is NOT in debug mod if it's frozen
+            self.debug_mod = False
 
             update = Updater(self.l)
 
@@ -159,6 +179,8 @@ class Fenetre(QtGui.QMainWindow):
                     update.finished.connect(whenDone)
 
         else:
+            # The program is in debug mod if it's not frozen
+            self.debug_mod = True
             self.l.info("This version of ChemBrows is NOT a frozen version")
 
 
@@ -197,7 +219,10 @@ class Fenetre(QtGui.QMainWindow):
                       }
 
             try:
-                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
+                if not self.debug_mod:
+                    req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
+                else:
+                    req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload)
                 self.l.info(req.text)
             except requests.exceptions.ReadTimeout:
                 self.l.error("checkAccess. ReadTimeout while contacting the server")
@@ -220,7 +245,6 @@ class Fenetre(QtGui.QMainWindow):
         """Method to connect to the database. Creates it
         if it does not exist"""
 
-
         # Set the database
         self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
         self.bdd.setDatabaseName("fichiers.sqlite")
@@ -232,13 +256,17 @@ class Fenetre(QtGui.QMainWindow):
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
                      liked INTEGER, url TEXT, verif INTEGER, new INTEGER, topic_simple TEXT)")
 
+        if self.debug_mod:
+            query.exec_("CREATE TABLE IF NOT EXISTS debug \
+                        (id INTEGER PRIMARY KEY AUTOINCREMENT, doi TEXT, \
+                        title TEXT, journal TEXT, url TEXT)")
+
         # Create the model for the new tab
         self.model = ModelPerso(self)
 
         # Changes are not effective immediately, but it doesn't matter
         # because the view is updated each time a change is made
         self.model.setEditStrategy(QtSql.QSqlTableModel.OnManualSubmit)
-        # self.model.setEditStrategy(QtSql.QSqlTableModel.OnFieldChange)
 
         self.model.setTable("papers")
         self.model.select()
