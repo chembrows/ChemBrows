@@ -52,7 +52,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        # self.l.setLevel(20)
+        self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -116,6 +116,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.show()
         splash.finish(self)
+        self.l.debug("splash.finish took {}".format(datetime.datetime.now() - diff_time))
 
         self.l.debug("Boot took {}".format(datetime.datetime.now() - start_time))
 
@@ -363,6 +364,7 @@ class Fenetre(QtGui.QMainWindow):
         # Counter to count the new entries in the database
         self.counter = 0
         self.counter_updates = 0
+        self.counter_rejected = 0
 
         # # List to store the threads.
         # # The list is cleared when the method is started
@@ -420,6 +422,7 @@ class Fenetre(QtGui.QMainWindow):
                 # self.l.error("Problem when comitting data")
 
             self.l.info("{} new entries added to the database".format(self.counter))
+            self.l.info("{} entries rejected".format(self.counter_rejected))
             self.l.info("{} attempts to update entries".format(self.counter_updates))
 
             self.calculatePercentageMatch(update=False)
@@ -1405,9 +1408,9 @@ class Fenetre(QtGui.QMainWindow):
         the window settings, but better to be here. Also
         deletes the unused pictures present in the graphical_abstracts folder"""
 
-        self.bdd.transaction()
-
         query = QtSql.QSqlQuery(self.bdd)
+
+        self.bdd.transaction()
 
         requete = "DELETE FROM papers WHERE journal NOT IN ("
 
@@ -1453,6 +1456,66 @@ class Fenetre(QtGui.QMainWindow):
                     os.remove(os.path.abspath("./graphical_abstracts/{0}".format(fichier)))
 
         self.l.debug("Deleted all the useless images")
+
+        query.exec_("SELECT id, doi, title, journal, url FROM papers")
+
+        # Build a list of tuples w/ all the rejected articles
+        articles_to_reject = []
+        while query.next():
+            record = query.record()
+            reject = hosts.reject(record.value('title'))
+
+            if reject:
+                id = record.value('id')
+                doi = record.value('doi')
+                title = record.value('title')
+                journal = record.value('journal')
+                url = record.value('url')
+
+                # Tuple representing an article
+                articles_to_reject.append((id, doi, title, journal, url))
+
+        self.l.info("{} entries rejected will be deleted".format(len(articles_to_reject)))
+
+        requete = "DELETE FROM papers WHERE id IN ("
+
+        # Building the query
+        for article in articles_to_reject:
+            if article != articles_to_reject[-1]:
+                requete = requete + str(article[0]) + ", "
+            # Close the query if last
+            else:
+                requete = requete + str(article[0]) + ")"
+
+        query.exec_(requete)
+
+        self.l.info("Rejected entries deleted from the database")
+
+        # If the program is not in debug mod, exit the method
+        if not self.debug_mod:
+            return
+
+        # Build a list of DOIs to avoid duplicate in debug table
+        list_doi = []
+        query.exec_("SELECT * FROM debug")
+        while query.next():
+            record = query.record()
+            list_doi.append(record.value('doi'))
+
+        # Insert all the rejected articles in the debug table
+        self.bdd.transaction()
+        query.prepare("INSERT INTO debug (doi, title, journal, url) VALUES(?, ?, ?, ?)")
+
+        for article in articles_to_reject:
+            if article[1] not in list_doi:
+                for value in article[1:]:
+                    query.addBindValue(value)
+                query.exec_()
+
+        if not self.bdd.commit():
+            self.l.critical("Problem while inserting rejected articles, cleanDb")
+        else:
+            self.l.info("Inserting rejected articles into the database")
 
 
     def openInBrowser(self):

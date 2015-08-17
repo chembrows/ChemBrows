@@ -2,5 +2,9 @@
 ^\[Editorial\]
 ^\[In Brief\]
 ^\[Books et al.\]
-^Correction to 
-^Editorial Board
+^Correction(\r\n|\r|\n|\s)*to
+^Corrigendum(\r\n|\r|\n|\s)*to
+^Editorial(\r\n|\r|\n|\s)*Board
+^Spotlights(\r\n|\r|\n|\s)*on
+^Contents:
+^\[Book Review\]

@@ -10,6 +10,7 @@ from requests_futures.sessions import FuturesSession
 import requests
 from io import open as iopen
 import ssl
+import socket
 
 import hosts
 import functions
@@ -101,7 +102,7 @@ class Worker(QtCore.QThread):
 
         # Lists to check if the post is in the db, and if
         # it has all the infos
-        self.session_images = FuturesSession(max_workers=40)
+        self.session_images = FuturesSession(max_workers=30)
 
         # Get the company and the journal_abb by scrolling the dictionnary
         # containing all the data regarding the journals implemented in the
@@ -157,13 +158,12 @@ class Worker(QtCore.QThread):
                 # Get the DOI, a unique number for a publication
                 doi = hosts.getDoi(company, journal, entry)
 
-                # TODO:
                 # Reject crappy entries: corrigendum, erratum, etc
-                # Penser à incrémenter les listes de futures
-                if hosts.reject(entry):
+                if hosts.reject(entry.title):
                     title = entry.title
                     self.count_futures_images += 1
-                    self.l.debug("Rejecting {0}".format(doi))
+                    self.parent.counter_rejected += 1
+                    self.l.critical("Rejecting {0}".format(doi))
 
                     if self.parent.debug_mod and doi not in self.list_doi:
                         url = getattr(entry, 'feedburner_origlink', entry.link)
@@ -246,7 +246,6 @@ class Worker(QtCore.QThread):
 
                 for value in params:
                     query.addBindValue(value)
-
                 query.exec_()
 
         else:
@@ -254,20 +253,19 @@ class Worker(QtCore.QThread):
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                        'Connection': 'close'}
 
-            self.session_pages = FuturesSession(max_workers=40)
+            self.session_pages = FuturesSession(max_workers=30)
 
             for entry in self.feed.entries:
 
                 doi = hosts.getDoi(company, journal, entry)
 
-                # TODO:
                 # Reject crappy entries: corrigendum, erratum, etc
-                # Penser à incrémenter les listes de futures
-                if hosts.reject(entry):
+                if hosts.reject(entry.title):
                     title = entry.title
                     self.count_futures_images += 1
                     self.count_futures_urls += 1
-                    self.l.debug("Rejecting {0}".format(doi))
+                    self.parent.counter_rejected += 1
+                    self.l.critical("Rejecting {0}".format(doi))
 
                     if self.parent.debug_mod and doi not in self.list_doi:
                         url = getattr(entry, 'feedburner_origlink', entry.link)
@@ -278,9 +276,8 @@ class Worker(QtCore.QThread):
                             query.addBindValue(value)
                         query.exec_()
 
-                        self.l.debug("Inserting {0} in table debug".format(doi))
-                    else:
-                        continue
+                        self.l.critical("Inserting {0} in table debug".format(doi))
+                    continue
 
 
                 elif doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
@@ -449,10 +446,10 @@ class Worker(QtCore.QThread):
             self.l.error("MissingSchema for image: {}".format(entry_url))
             params = (0, doi)
         except ConnectionResetError:
-            self.l.error("ConnectionResetError for {}".format(journal))
+            self.l.error("ConnectionResetError for {}".format(entry_url))
             params = (0, doi)
         except socket.timeout:
-            self.l.error("socket.timeout for {}".format(journal))
+            self.l.error("socket.timeout for {}".format(entry_url))
             params = (0, doi)
         else:
             # If the picture was dled correctly

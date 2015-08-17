@@ -14,7 +14,7 @@ import re
 import functions
 
 
-def reject(entry):
+def reject(entry_title):
 
     """Function called by a Worker object to filter crappy entries.
     It is meant to reject articles like corrigendum, erratum, etc"""
@@ -24,7 +24,7 @@ def reject(entry):
         filters = filters_file.read().splitlines()
 
     # Try to match the filters against the title entry
-    responses = [bool(re.search(regex, entry.title)) for regex in filters]
+    responses = [bool(re.search(regex, entry_title)) for regex in filters]
 
     # If one filter matched, reject the entry
     if True in responses:
@@ -589,7 +589,7 @@ def getJournals(company):
 
 if __name__ == "__main__":
 
-    reject(None)
+    print(reject("Spotlights on Recent <i>JACS</i> Publications"))
     # from requests_futures.sessions import FuturesSession
     # import functools
 
