@@ -440,7 +440,7 @@ class Fenetre(QtGui.QMainWindow):
 
         else:
             if self.urls:
-                self.l.info("STARTING NEW THREAD")
+                self.l.debug("STARTING NEW THREAD")
                 worker = Worker(self.l, self.bdd, self.dict_journals, self)
                 worker.setUrl(self.urls[0])
                 worker.finished.connect(self.checkThreads)

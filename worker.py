@@ -276,7 +276,7 @@ class Worker(QtCore.QThread):
                             query.addBindValue(value)
                         query.exec_()
 
-                        self.l.critical("Inserting {0} in table debug".format(doi))
+                        self.l.debug("Inserting {0} in table debug".format(doi))
                     continue
 
 
@@ -346,7 +346,7 @@ class Worker(QtCore.QThread):
 
         self.session_images.executor.shutdown()
 
-        self.l.info("Exiting thread for {}".format(journal))
+        self.l.debug("Exiting thread for {}".format(journal))
 
 
     def completeData(self, doi, company, journal, journal_abb, entry, future):

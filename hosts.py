@@ -348,12 +348,9 @@ def getData(company, journal, entry, response=None):
         graphical_abstract = None
         author = None
 
-        abstract = entry.summary
-
         if response.status_code is requests.codes.ok:
-            # Get the abstract
 
-            # Get the correct title, no the one in the RSS
+            # Get the correct title, not the one in the RSS
             strainer = SoupStrainer("h1", id="article-title-1")
             soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
             r = soup.find_all("h1", id="article-title-1")
@@ -361,13 +358,21 @@ def getData(company, journal, entry, response=None):
                 title = r[0].renderContents().decode()
 
             # Get the authors
-            # r = soup.find_all("a", attrs={"class": "name-search"})
             strainer = SoupStrainer("a", attrs={"class": "name-search"})
             soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
             r = soup.find_all("a", attrs={"class": "name-search"})
             if r:
                 author = [tag.text for tag in r]
                 author = ", ".join(author)
+
+            # Try to get the complete abstract. Sometimes it's available, sometimes
+            # the article only contains an extract
+            strainer = SoupStrainer("div", attrs={"class": "section abstract"})
+            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            if soup.p is not None:
+                abstract = soup.p.renderContents().decode()
+            else:
+                abstract = entry.summary
 
 
     elif company == 'elsevier':
@@ -589,55 +594,52 @@ def getJournals(company):
 
 if __name__ == "__main__":
 
-    print(reject("Correction to “A Review of U.S. Patents in\
-        the Field of Organic Process Development Published During October\
-        and November 2014"))
-    print(reject("Correction to Biobased n-Butanol\
-    Prepared from Poly-3-hydroxybutyrate: Optimization of the Reduction\
-    of n-Butyl Crotonate to n-Butanol"))
-    # from requests_futures.sessions import FuturesSession
-    # import functools
+    from requests_futures.sessions import FuturesSession
+    import functools
 
-    # def print_result(journal, entry, future):
-        # response = future.result()
-        # title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("thieme", journal, entry, response)
-        # print(abstract)
-        # # print(graphical_abstract)
-        # # print(authors)
+    def print_result(journal, entry, future):
+        response = future.result()
+        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("nas", journal, entry, response)
+        print(abstract)
+        # print(graphical_abstract)
+        # print(authors)
         # print(title)
+        # print("\n")
 
-    # # urls_test = ["debug/rsc.htm"]
-    # # urls_test = ["debug/natcom.htm"]
-    # urls_test = ["debug/synt.xml"]
+    urls_test = ["debug/pnas.xml"]
 
-    # session = FuturesSession(max_workers=20)
+    session = FuturesSession(max_workers=20)
 
-    # list_urls = []
+    list_urls = []
 
-    # feed = feedparser.parse(urls_test[0])
-    # journal = feed['feed']['title']
+    feed = feedparser.parse(urls_test[0])
+    journal = feed['feed']['title']
 
-    # headers = {'User-agent': 'Mozilla/5.0',
-               # 'Connection': 'close'}
+    headers = {'User-agent': 'Mozilla/5.0',
+               'Connection': 'close'}
 
 
-    # print(journal)
+    print(journal)
 
-    # for entry in feed.entries:
-        # # print(entry)
-        # if "Sonogashira" not in entry.title:
-            # continue
-        # url = entry.link
-        # # url = entry.feedburner_origlink
-        # # title = entry.title
-        # # print(url)
-        # # print(title)
-        # # print(entry)
-        # # print(url)
-        # # getDoi(journal, entry)
+    for entry in feed.entries:
+        # print(entry)
+        url = entry.link
 
-        # # future = session.get(url, headers=headers, timeout=20)
-        # future = session.get(url, timeout=20, verify=False)
-        # future.add_done_callback(functools.partial(print_result, journal, entry))
+        if not "Climate change" in entry.title and not "Pressure due" in entry.title:
+            continue
 
-        # # break
+        # print(url)
+
+        # url = entry.feedburner_origlink
+        # title = entry.title
+        # print(url)
+        # print(title)
+        # print(entry)
+        # print(url)
+        # getDoi(journal, entry)
+
+        # future = session.get(url, headers=headers, timeout=20)
+        future = session.get(url, timeout=20, verify=False)
+        future.add_done_callback(functools.partial(print_result, journal, entry))
+
+        # break

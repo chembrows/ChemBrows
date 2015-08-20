@@ -3,6 +3,7 @@
 ^\[In Brief\]
 ^\[Books et al.\]
 ^Correction(\r\n|\r|\n|\s)*to
+^Correction(\r\n|\r|\n|\s)*for
 ^Correction:
 ^Corrigendum(\r\n|\r|\n|\s)*to
 ^Editorial
