@@ -102,7 +102,7 @@ class Worker(QtCore.QThread):
 
         # Lists to check if the post is in the db, and if
         # it has all the infos
-        self.session_images = FuturesSession(max_workers=30)
+        self.session_images = FuturesSession(max_workers=25)
 
         # Get the company and the journal_abb by scrolling the dictionnary
         # containing all the data regarding the journals implemented in the
@@ -163,7 +163,7 @@ class Worker(QtCore.QThread):
                     title = entry.title
                     self.count_futures_images += 1
                     self.parent.counter_rejected += 1
-                    self.l.critical("Rejecting {0}".format(doi))
+                    self.l.debug("Rejecting {0}".format(doi))
 
                     if self.parent.debug_mod and doi not in self.list_doi:
                         url = getattr(entry, 'feedburner_origlink', entry.link)
@@ -253,7 +253,7 @@ class Worker(QtCore.QThread):
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                        'Connection': 'close'}
 
-            self.session_pages = FuturesSession(max_workers=30)
+            self.session_pages = FuturesSession(max_workers=25)
 
             for entry in self.feed.entries:
 
@@ -265,7 +265,7 @@ class Worker(QtCore.QThread):
                     self.count_futures_images += 1
                     self.count_futures_urls += 1
                     self.parent.counter_rejected += 1
-                    self.l.critical("Rejecting {0}".format(doi))
+                    self.l.debug("Rejecting {0}".format(doi))
 
                     if self.parent.debug_mod and doi not in self.list_doi:
                         url = getattr(entry, 'feedburner_origlink', entry.link)

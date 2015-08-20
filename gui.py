@@ -237,7 +237,7 @@ class Fenetre(QtGui.QMainWindow):
 
         with open('config/version.txt', 'r') as version_file:
             version = version_file.read()
-        message = "You are using ChemBrows version {}".format(version)
+        message = "You are using ChemBrows version {}\nwww.chembrows.com".format(version)
         QtGui.QMessageBox.about(self, "About ChemBrows", message)
 
 
@@ -510,7 +510,7 @@ class Fenetre(QtGui.QMainWindow):
         self.advanced_searchAction.triggered.connect(lambda: AdvancedSearch(self))
 
         # Action to change the sorting method of the views
-        self.sortingPercentageAction = QtGui.QAction('By pepperness', self, checkable=True)
+        self.sortingPercentageAction = QtGui.QAction('By paperness', self, checkable=True)
         self.sortingPercentageAction.triggered.connect(lambda: self.changeSortingMethod(0,
                                                                                         reverse=self.sortingReversedAction.isChecked()))
 
@@ -555,7 +555,7 @@ class Fenetre(QtGui.QMainWindow):
         if self.sorting_method == 1:
             self.sortingPercentageAction.setChecked(False)
             self.sortingDateAction.setChecked(True)
-            self.changeSortingAction.setText("Sort by pepperness")
+            self.changeSortingAction.setText("Sort by paperness")
         elif self.sorting_method == 0:
             self.sortingPercentageAction.setChecked(True)
             self.sortingDateAction.setChecked(False)
@@ -1585,7 +1585,7 @@ class Fenetre(QtGui.QMainWindow):
                 # Click on this link to see the article on the editor's website: <a href=\"{}\">editor's website</a></br></br> \
                 # This article was spotted with chemBrows.</br> Learn more about chemBrows : notre site web"
 
-        body = "Click on this link to see the article on the editor's website: {}\n This article was spotted with chemBrows.\n Learn more about chemBrows : notre site web"
+        body = "Click on this link to see the article on the editor's website: {}\n This article was spotted with chemBrows.\n Learn more about chemBrows : www.chembrows.com"
         body = body.format(link)
 
         url = "mailto:?subject={}&body={}"

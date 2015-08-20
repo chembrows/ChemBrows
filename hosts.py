@@ -589,7 +589,12 @@ def getJournals(company):
 
 if __name__ == "__main__":
 
-    print(reject("Spotlights on Recent <i>JACS</i> Publications"))
+    print(reject("Correction to “A Review of U.S. Patents in\
+        the Field of Organic Process Development Published During October\
+        and November 2014"))
+    print(reject("Correction to Biobased n-Butanol\
+    Prepared from Poly-3-hydroxybutyrate: Optimization of the Reduction\
+    of n-Butyl Crotonate to n-Butanol"))
     # from requests_futures.sessions import FuturesSession
     # import functools
 

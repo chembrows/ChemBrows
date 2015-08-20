@@ -70,7 +70,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             adding_infos += "<br><br>"
             adding_infos += "<b><font color='gray'>Published in: </font></b><i>{0}</i>, {1}".format(journal, date)
             adding_infos += "<br>"
-            adding_infos += "<b><font color='gray'>Hot pepperness: </font></b>"
+            adding_infos += "<b><font color='gray'>Hot paperness: </font></b>"
 
             doc.setHtml(options.text + adding_infos)
 
