@@ -413,7 +413,6 @@ class Fenetre(QtGui.QMainWindow):
             self.progress.reset()
             app.processEvents()
 
-        # if False not in states and len(states) == self.urls_max:
         if self.count_threads == self.urls_max:
 
             # # Commit all the changes to the database

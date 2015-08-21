@@ -118,18 +118,19 @@ class Worker(QtCore.QThread):
                 care_image = tuple_data[3][index]
                 break
 
-        # Make unverified HTTPS requests for Thieme company
-        try:
-            if company == 'thieme':
-                bool_verify = False
-            else:
-                bool_verify = True
+        # # Make unverified HTTPS requests for Thieme company
+        # try:
+            # if company == 'thieme':
+                # # bool_verify = False
+                # bool_verify = True
+            # else:
+                # bool_verify = True
 
-        # Condition occurs when the RSS page is not properly formatted.
-        # The page can have a journal, but the company can't be identified
-        except UnboundLocalError:
-            self.l.critical("Problem parsing {}".format(journal))
-            self.l.critical("Problem parsing URL {}".format(self.url_feed))
+        # # Condition occurs when the RSS page is not properly formatted.
+        # # The page can have a journal, but the company can't be identified
+        # except UnboundLocalError:
+            # self.l.critical("Problem parsing {}".format(journal))
+            # self.l.critical("Problem parsing URL {}".format(self.url_feed))
 
         try:
             self.list_doi, self.list_ok = self.listDoi(journal_abb)
@@ -200,7 +201,8 @@ class Worker(QtCore.QThread):
                                        'Connection': 'close',
                                        'Referer': url}
 
-                            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
+                            # future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
+                            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
                     else:
@@ -241,7 +243,8 @@ class Worker(QtCore.QThread):
                                    'Connection': 'close',
                                    'Referer': url}
 
-                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
+                        # future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
+                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
                 for value in params:
@@ -296,7 +299,8 @@ class Worker(QtCore.QThread):
                     if dl_page:
                         self.parent.counter_updates += 1
 
-                        future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers, verify=bool_verify)
+                        # future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers, verify=bool_verify)
+                        future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers)
                         future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
                         # Continue just to be sure. If dl_page is True, dl_image is likely True too
@@ -316,7 +320,8 @@ class Worker(QtCore.QThread):
                                        'Connection': 'close',
                                        'Referer': url}
 
-                            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
+                            # future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
+                            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
                     else:
@@ -327,7 +332,8 @@ class Worker(QtCore.QThread):
 
                     url = getattr(entry, 'feedburner_origlink', entry.link)
 
-                    future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers, verify=bool_verify)
+                    # future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers, verify=bool_verify)
+                    future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
         while not self.checkFuturesRunning():
