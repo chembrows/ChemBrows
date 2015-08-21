@@ -1069,6 +1069,11 @@ class Fenetre(QtGui.QMainWindow):
 
         self.query = QtSql.QSqlQuery(self.bdd)
 
+        # The normal query:
+        # SELECT * FROM papers WHERE topic_simple LIKE '% carboxyfluorescein %'
+        # Becomes:
+        # SELECT * FROM papers WHERE (topic_simple LIKE '% carboxyfluorescein %') AND journal IN ("ACS Catal."...
+
         refined_query = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
 
         if "WHERE" in refined_query:
@@ -1221,13 +1226,22 @@ class Fenetre(QtGui.QMainWindow):
 
     def research(self):
 
-        """Slot to search on title and abstract"""
+        """Slot to search on title and abstract.
+        The search can be performed on a particular tab"""
+
+        # If it's not the main tab, filter through the already-filtered
+        # results of a particular tab
+        if self.onglets.currentIndex() != 0:
+            table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+            requete = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
+            requete = requete.replace("WHERE ", "WHERE (")
+            requete += ") AND (topic_simple LIKE '%{}%') AND journal IN ("
+        else:
+            requete = "SELECT * FROM papers WHERE (topic_simple LIKE '%{}%') AND journal IN ("
 
         results = functions.simpleChar(self.research_bar.text())
 
         self.query = QtSql.QSqlQuery(self.bdd)
-
-        requete = "SELECT * FROM papers WHERE topic_simple LIKE '%{}%' AND journal IN("
 
         # Search only the selected journals
         for each_journal in self.tags_selected:
