@@ -464,7 +464,7 @@ class Fenetre(QtGui.QMainWindow):
         # Action to refresh the posts
         self.parseAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_081_refresh.png'), '&Refresh', self)
         self.parseAction.setShortcut('F5')
-        self.parseAction.setStatusTip("Download new posts")
+        self.parseAction.setToolTip("Refresh: download new posts")
         self.parseAction.triggered.connect(self.parse)
 
         # Action to calculate the percentages of match
@@ -498,6 +498,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Action so show new articles
         self.searchNewAction = QtGui.QAction('View unread', self)
+        self.searchNewAction.setToolTip("Display unread articles")
         self.searchNewAction.triggered.connect(self.searchNew)
 
         # Action to toggle the read state of an article
@@ -507,6 +508,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Start advanced search
         self.advanced_searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_025_binoculars'), 'Advanced search', self)
+        self.advanced_searchAction.setToolTip("Advanced earch")
         self.advanced_searchAction.triggered.connect(lambda: AdvancedSearch(self))
 
         # Action to change the sorting method of the views
@@ -528,6 +530,7 @@ class Fenetre(QtGui.QMainWindow):
         self.changeSortingAction = QtGui.QAction(self)
         self.changeSortingAction.triggered.connect(lambda: self.changeSortingMethod(None,
                                                                                     reverse=self.sortingReversedAction.isChecked()))
+        self.changeSortingAction.setToolTip("Sort articles by date or paperness")
 
         # Action to serve use as a separator
         self.separatorAction = QtGui.QAction(self)
@@ -1681,13 +1684,13 @@ class Fenetre(QtGui.QMainWindow):
 
     def initUI(self):
 
-        """Méthode pour créer la fenêtre et régler ses paramètres"""
+        """Build the program's interface"""
 
         # self.setGeometry(0, 25, 1900 , 1020)
         # self.showMaximized()
         self.setWindowTitle('ChemBrows')
 
-        # ------------------------- CONSTRUCTION DES MENUS -------------------------------------------------------------
+        # ------------------------- BUILDING THE MENUS -------------------------------------------------------------
 
         self.menubar = self.menuBar()
 
@@ -1721,6 +1724,7 @@ class Fenetre(QtGui.QMainWindow):
         # Create a research bar and set its size
         self.research_bar = QtGui.QLineEdit()
         self.research_bar = ButtonLineEdit('images/glyphicons_197_remove')
+        self.research_bar.setToolTip("Quick search")
         self.research_bar.setFixedSize(self.research_bar.sizeHint())
 
         # On ajoute une toolbar en la nommant pr l'indentifier,
@@ -1731,8 +1735,6 @@ class Fenetre(QtGui.QMainWindow):
 
         self.toolbar.addSeparator()
 
-        # self.toolbar.addAction(self.toggleLikeAction)
-        # self.toolbar.addAction(self.updateAction)
         self.toolbar.addAction(self.searchNewAction)
         self.toolbar.addAction(self.changeSortingAction)
 
