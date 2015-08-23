@@ -118,7 +118,7 @@ class Fenetre(QtGui.QMainWindow):
         splash.finish(self)
         self.l.debug("splash.finish took {}".format(datetime.datetime.now() - diff_time))
 
-        self.l.debug("Boot took {}".format(datetime.datetime.now() - start_time))
+        self.l.info("Boot took {}".format(datetime.datetime.now() - start_time))
 
 
     def bootCheckList(self):
@@ -220,15 +220,17 @@ class Fenetre(QtGui.QMainWindow):
                       }
 
             try:
-                if not self.debug_mod:
-                    req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
+                if self.debug_mod:
+                    req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=1)
                 else:
-                    req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload)
+                    req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
                 self.l.info(req.text)
             except requests.exceptions.ReadTimeout:
                 self.l.error("checkAccess. ReadTimeout while contacting the server")
+                return
             except requests.exceptions.ConnectTimeout:
                 self.l.error("checkAccess. ConnectionTimeout while contacting the server")
+                return
 
 
     def showAbout(self):

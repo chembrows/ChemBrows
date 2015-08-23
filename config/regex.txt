@@ -24,3 +24,6 @@
 ^Response(\r\n|\r|\n|\s)*to
 ^SYNFORM(\r\n|\r|\n|\s)*
 ^Science of Synthesis
+^Profile of
+^\[Technical Response\]
+^\[Editors' Choice\]
