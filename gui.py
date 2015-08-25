@@ -1,5 +1,6 @@
 #!/usr/bin/python
-# -*-coding:Utf-8 -*
+# coding: utf-8
+
 
 import sys
 import os
@@ -1636,7 +1637,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.predictor = Predictor(self.l, self.bdd)
 
-        if self.predictor.classifier is not None:
+        if self.predictor is not None:
 
             self.model.submitAll()
 

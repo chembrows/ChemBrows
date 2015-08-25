@@ -1,5 +1,6 @@
 #!/usr/bin/python
-# -*-coding:Utf-8 -*
+# coding: utf-8
+
 
 
 """Module pour modifier le style et la présentation de la vue"""

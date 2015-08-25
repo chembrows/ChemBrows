@@ -1,5 +1,6 @@
 #!/usr/bin/python
-# -*-coding:Utf-8 -*
+# coding: utf-8
+
 
 
 import os
@@ -51,7 +52,7 @@ class Worker(QtCore.QThread):
 
         # Set the timeout for the futures
         # W/ a large timeout, less chances to get en exception
-        self.TIMEOUT = 30
+        self.TIMEOUT = 60
 
         self.count_futures_urls = 0
         self.count_futures_images = 0

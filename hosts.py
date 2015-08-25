@@ -1,5 +1,6 @@
 #!/usr/bin/python
-# -*-coding:Utf-8 -*
+# coding: utf-8
+
 
 import feedparser
 from bs4 import BeautifulSoup, SoupStrainer

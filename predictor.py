@@ -1,5 +1,6 @@
 #!/usr/bin/python
-# -*-coding:Utf-8 -*
+# coding: utf-8
+
 
 from PyQt4 import QtSql, QtCore
 
@@ -35,7 +36,12 @@ class Predictor(QtCore.QThread):
         self.l = logger
 
         self.getStopWords()
-        self.initializePipeline()
+        # self.initializePipeline()
+
+        if self.initializePipeline() is None:
+            return None
+        else:
+            return self
 
 
     def __del__(self):
