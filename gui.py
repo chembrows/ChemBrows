@@ -959,6 +959,7 @@ class Fenetre(QtGui.QMainWindow):
                         proxy.setSourceModel(self.model)
                         table.setModel(proxy)
             self.loadNotifications()
+            self.updateView()
 
             return
 
@@ -1339,7 +1340,6 @@ class Fenetre(QtGui.QMainWindow):
             # Add the id to the list of new articles
             elif id_bdd in self.onglets.widget(index).list_id_articles and not remove:
                 self.onglets.widget(index).list_new_ids.append(id_bdd)
-                print("coucou")
 
             notifs = len(self.onglets.widget(index).list_new_ids)
             self.onglets.setNotifications(index, notifs)

@@ -148,6 +148,7 @@ class AdvancedSearch(QtGui.QDialog):
         if not base:
             return
 
+        # Creating a new search
         if tab_title == "New query":
             # Get the search name with a dialogBox, if the user pushed the save button
             name_search = QtGui.QInputDialog.getText(self, "Search name", "Save your search as:")
@@ -178,6 +179,7 @@ class AdvancedSearch(QtGui.QDialog):
                 for line in lines:
                     line.clear()
 
+        # Modifying and saving an existing search
         else:
             name_search = tab_title
 
