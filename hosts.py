@@ -7,9 +7,10 @@ from bs4 import BeautifulSoup, SoupStrainer
 import requests
 import arrow
 from time import mktime
-
-# TEST
 import re
+
+# DEBUG
+# from memory_profiler import profile
 
 # Personal modules
 import functions
@@ -116,6 +117,7 @@ def updateData(company, journal, entry, care_image):
 
 
 
+# @profile
 def getData(company, journal, entry, response=None):
 
     """Get the data. Starts from the data contained in the RSS flux, and if
@@ -292,7 +294,6 @@ def getData(company, journal, entry, response=None):
             author = None
 
         if response.status_code is requests.codes.ok or response.status_code == 401:
-            soup = BeautifulSoup(response.text, "lxml")
 
             strainer = SoupStrainer("h1", attrs={"class": "article-heading"})
             soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)

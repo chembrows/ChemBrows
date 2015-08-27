@@ -13,6 +13,10 @@ from io import open as iopen
 import ssl
 import socket
 
+# DEBUG
+# from memory_profiler import profile
+
+
 import hosts
 import functions
 
@@ -75,6 +79,7 @@ class Worker(QtCore.QThread):
         self.exit()
 
 
+    # @profile
     def run(self):
 
         """Main function. Starts the real business"""
@@ -103,7 +108,7 @@ class Worker(QtCore.QThread):
 
         # Lists to check if the post is in the db, and if
         # it has all the infos
-        self.session_images = FuturesSession(max_workers=25)
+        self.session_images = FuturesSession(max_workers=20)
 
         # Get the company and the journal_abb by scrolling the dictionnary
         # containing all the data regarding the journals implemented in the
@@ -257,7 +262,7 @@ class Worker(QtCore.QThread):
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                        'Connection': 'close'}
 
-            self.session_pages = FuturesSession(max_workers=25)
+            self.session_pages = FuturesSession(max_workers=20)
 
             for entry in self.feed.entries:
 

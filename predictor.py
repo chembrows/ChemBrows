@@ -16,7 +16,7 @@ import datetime
 
 from log import MyLog
 
-# from memory_profiler import profile
+from memory_profiler import profile
 
 class Predictor(QtCore.QThread):
 
@@ -36,7 +36,6 @@ class Predictor(QtCore.QThread):
         self.l = logger
 
         self.getStopWords()
-        # self.initializePipeline()
 
         if self.initializePipeline() is None:
             return None
@@ -145,9 +144,9 @@ class Predictor(QtCore.QThread):
         try:
             # Normalize the percentages: the highest is set to 100%
             # Use operations on numpy array, faster than lists comprehensions
-            probs = np.array([proba[0] for proba in self.classifier.predict_proba(x_test)])
-            maximum = max(probs)
-            list_percentages = probs * 100 / maximum
+            x_test = np.array([proba[0] for proba in self.classifier.predict_proba(x_test)])
+            maximum = max(x_test)
+            list_percentages = x_test * 100 / maximum
         except ValueError:
             self.l.critical("Not enough data yet 3")
             return
@@ -176,11 +175,10 @@ class Predictor(QtCore.QThread):
             self.l.critical("Percentages match not correctly written in db")
         else:
             elsapsed_time = datetime.datetime.now() - start_time
-            self.l.debug("Done calculating match percentages in {0} s".format(elsapsed_time))
-
+            self.l.info("Done calculating match percentages in {0} s".format(elsapsed_time))
 
 
 if __name__ == "__main__":
     logger = MyLog()
     predictor = Predictor(logger)
-    # predictor.calculatePercentageMatch(True)
+    predictor.calculatePercentageMatch(True)

@@ -33,8 +33,8 @@ from line_clear import ButtonLineEdit
 # TEST
 from signing import Signing
 
-# # To debug and profile. Comment for prod
-# # from memory_profiler import profile
+# To debug and profile. Comment for prod
+# from memory_profiler import profile
 
 
 class Fenetre(QtGui.QMainWindow):
@@ -323,9 +323,7 @@ class Fenetre(QtGui.QMainWindow):
             with open('journals/{0}'.format(company), 'r') as config:
                 for line in config:
                     if line.split(" : ")[1] in self.journals_to_parse:
-                        # self.urls.append(line.split(" : ")[2])
                         line = line.split(" : ")[2]
-                        # line = line.lstrip().rstrip()
                         line = line.strip()
                         self.urls.append(line)
 
@@ -358,7 +356,7 @@ class Fenetre(QtGui.QMainWindow):
         # on the user's computer
         max_nbr_threads = QtCore.QThread.idealThreadCount()
         self.l.debug("IdealThreadCount: {}".format(max_nbr_threads))
-        # max_nbr_threads = 10
+        # max_nbr_threads = 1
 
         # # Start a sql transaction here. Will commit all the bdd
         # # changes when the parsing is finished
@@ -472,7 +470,7 @@ class Fenetre(QtGui.QMainWindow):
         # Action to calculate the percentages of match
         self.calculatePercentageMatchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_040_stats.png'), '&Percentages', self)
         self.calculatePercentageMatchAction.setShortcut('F6')
-        self.calculatePercentageMatchAction.setStatusTip("Calculate percentages")
+        self.calculatePercentageMatchAction.setToolTip("Re-calculate paperness")
         self.calculatePercentageMatchAction.triggered.connect(lambda: self.calculatePercentageMatch(update=True))
 
         # Action to like a post
@@ -1649,12 +1647,12 @@ class Fenetre(QtGui.QMainWindow):
 
                 self.parsing = False
 
-                del self.predictor
-
                 if update:
                     self.searchByButton()
 
                 self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+
+                del self.predictor
 
 
             self.parsing = True
