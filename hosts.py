@@ -334,7 +334,11 @@ def getData(company, journal, entry, response=None):
         else:
             if "Author:" in entry.summary:
                 abstract = entry.summary.split("Author: ")[0]
-                author = entry.summary.split("Author: ")[1]
+
+                try:
+                    author = entry.summary.split("Author: ")[1]
+                except IndexError:
+                    pass
             elif "Authors:" in entry.summary:
                 abstract = entry.summary.split("Authors: ")[0]
                 author = entry.summary.split("Authors: ")[1].split(", ")
