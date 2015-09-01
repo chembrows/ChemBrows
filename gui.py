@@ -1062,10 +1062,9 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to select articles by journal"""
 
-        # Reset the view when the last button is unchecked
+        # When last button is uncheck, select all the journals
         if not self.tags_selected:
-            self.resetView()
-            return
+            self.tags_selected = self.getJournalsToCare()
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
