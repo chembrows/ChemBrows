@@ -500,17 +500,27 @@ def getData(company, journal, entry, response=None):
         return None
 
 
-    if abstract is not None:
-        topic_simple = " " + functions.simpleChar(BeautifulSoup(abstract, "lxml").text) + functions.simpleChar(title) + " "
-    else:
-        topic_simple = " " + functions.simpleChar(title) + " "
+    # Use extra blank spaces to facilitate LIKE SQL query
+    topic_simple = " "
 
     if abstract is None or abstract == '':
         abstract = "Empty"
-    if graphical_abstract is None:
-        graphical_abstract = "Empty"
+    else:
+        # Use BeautifulSoup to remove the tags, simply keeo the text
+        topic_simple += functions.simpleChar(BeautifulSoup(abstract, "lxml").text)
+        topic_simple += " "
+
     if author is None:
         author = "Empty"
+    else:
+        topic_simple += functions.simpleChar(author)
+        topic_simple += " "
+
+    topic_simple += functions.simpleChar(title)
+    topic_simple += " "
+
+    if graphical_abstract is None:
+        graphical_abstract = "Empty"
 
 
     return title, date, author, abstract, graphical_abstract, url, topic_simple
