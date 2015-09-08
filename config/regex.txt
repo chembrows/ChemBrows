@@ -6,6 +6,7 @@
 ^Correction(\r\n|\r|\n|\s)*for
 ^Correction:
 ^Corrigendum(\r\n|\r|\n|\s)*to
+^Corrigendum:
 ^Editorial
 ^Call for Papers
 ^In This Issue
@@ -32,3 +33,5 @@
 ^Retraction for
 ^Retraction of
 ^Book and Media Recommendations:
+^Graphical Abstract:
+^Masthead:

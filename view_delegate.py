@@ -160,9 +160,11 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # A picture to display the read/unread state
             if read:
                 pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/unread.png"))
+                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_full.png"))
                 painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
             else:
                 pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read.png"))
+                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_empty.png"))
                 painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
 
             # Display a picture to warn the user if the article is new (gathered on the last

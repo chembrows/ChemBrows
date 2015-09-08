@@ -14,18 +14,14 @@ def checkData():
     bdd.row_factory = sqlite3.Row
     c = bdd.cursor()
 
-    c.execute("SELECT * FROM papers")
+    c.execute("SELECT * FROM papers WHERE journal='Chem. Asian j.'")
 
     results = c.fetchall()
 
     for line in results:
         id_bdd = line['id']
-        authors = line['authors']
-        print(id_bdd)
 
-        if authors is not None and authors != '':
-            topic_simple = line['topic_simple'] + functions.simpleChar(authors)
-            c.execute("UPDATE papers SET topic_simple = ? WHERE id = ?", (topic_simple, id_bdd))
+        c.execute("UPDATE papers SET journal = 'Chem. Asian J.' WHERE id = ?", (id_bdd,))
 
     bdd.commit()
     c.close()
