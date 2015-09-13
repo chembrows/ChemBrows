@@ -1409,13 +1409,22 @@ class Fenetre(QtGui.QMainWindow):
 
         table.model().setData(index, new)
         table.model().dataChanged.emit(index, index)
-        table.viewport().update()
-        table.selectRow(line)
 
         if new == 0:
             self.updateNotifications(id_bdd)
         else:
+
+            # Check if the article is like. If it is, unlike it. An article
+            # can't be unread and liked
+            like = table.model().index(table.selectionModel().currentIndex().row(), 9).data()
+            if like == 1:
+                index = table.model().index(line, 9)
+                table.model().setData(index, 0)
+                table.model().dataChanged.emit(index, index)
             self.updateNotifications(id_bdd, remove=False)
+
+        table.viewport().update()
+        table.selectRow(line)
 
 
     def cleanDb(self):
