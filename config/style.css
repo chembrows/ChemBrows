@@ -1,0 +1,11 @@
+QScrollArea
+{
+    background: grey;
+}
+
+QPushButton
+{
+    /*border-style: transparent;*/
+    /*border: 0px;*/
+    /*margin: 0px;*/
+}

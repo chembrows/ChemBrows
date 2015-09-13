@@ -98,7 +98,7 @@ class Predictor(QtCore.QThread):
             self.y_train.append(category)
 
         if not self.x_train or 0 not in self.y_train:
-            self.l.critical("Not enough data yet 1")
+            self.l.error("Not enough data yet to feed the classifier")
             return None
 
         self.classifier = Pipeline([
@@ -110,7 +110,7 @@ class Predictor(QtCore.QThread):
         try:
             self.classifier.fit(self.x_train, self.y_train)
         except ValueError:
-            self.l.critical("Not enough data yet 2")
+            self.l.error("Not enough data yet to train the classifier")
             return
 
         elsapsed_time = datetime.datetime.now() - start_time
@@ -147,8 +147,8 @@ class Predictor(QtCore.QThread):
             x_test = np.array([proba[0] for proba in self.classifier.predict_proba(x_test)])
             maximum = max(x_test)
             list_percentages = x_test * 100 / maximum
-        except ValueError:
-            self.l.critical("Not enough data yet 3")
+        except AttributeError:
+            self.l.error("Not enough data yet to predict probability")
             return
 
         self.bdd.transaction()

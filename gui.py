@@ -1052,7 +1052,7 @@ class Fenetre(QtGui.QMainWindow):
         if source.parent() is self.scrolling_tags:
             if pressed:
                 self.tags_selected.append(source.text())
-            else:
+            elif not pressed and len(self.tags_selected) > 0:
                 self.tags_selected.remove(source.text())
 
         self.searchByButton()
@@ -1660,8 +1660,8 @@ class Fenetre(QtGui.QMainWindow):
             # If the range is set to 0, get a busy progress bar,
             # without percentage
             app.processEvents()
-            self.progress = QtGui.QProgressDialog("Calculating match percentages...", None, 0, 0, self)
-            self.progress.setWindowTitle("Percentages calculation")
+            self.progress = QtGui.QProgressDialog("Calculating Hot Paperness...", None, 0, 0, self)
+            self.progress.setWindowTitle("Hot Paperness calculation")
             self.progress.show()
             app.processEvents()
 
@@ -1770,12 +1770,13 @@ class Fenetre(QtGui.QMainWindow):
 
         # ------------------------- LEFT AREA --------------------------------
 
-        # On crée des scrollarea pr mettre les boutons des tags et des acteurs
+        # Create scrollarea to put the journals buttons
         self.scroll_tags = QtGui.QScrollArea()
 
-        # On crée la zone de scrolling
+        # Create scrolling zone
         # http://www.mattmurrayanimation.com/archives/tag/how-do-i-use-a-qscrollarea-in-pyqt
         self.scrolling_tags = QtGui.QWidget()
+
         self.vbox_all_tags = QtGui.QVBoxLayout()
         self.scrolling_tags.setLayout(self.vbox_all_tags)
 
@@ -1869,6 +1870,12 @@ class Fenetre(QtGui.QMainWindow):
         self.createSearchTab("All articles", "SELECT * FROM papers")
 
         self.setCentralWidget(self.central_widget)
+
+        with open("./config/style.css", "r") as fh:
+            self.setStyleSheet(fh.read())
+
+        with open("./config/style_left.css", "r") as fh:
+            self.scrolling_tags.setStyleSheet(fh.read())
 
 
 if __name__ == '__main__':
