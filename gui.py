@@ -29,9 +29,10 @@ import functions
 import hosts
 from updater import Updater
 from line_clear import ButtonLineEdit
+from signing import Signing
 
 # TEST
-from signing import Signing
+from tuto import Tuto
 
 # To debug and profile. Comment for prod
 # from memory_profiler import profile
@@ -53,7 +54,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        self.l.setLevel(20)
+        # self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -78,48 +79,57 @@ class Fenetre(QtGui.QMainWindow):
 
         app.processEvents()
         self.bootCheckList()
-        self.l.debug("bootCheckList took {}".format(datetime.datetime.now() - diff_time))
+        self.l.debug("bootCheckList took {}".
+                     format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         app.processEvents()
         self.connectionBdd()
         self.defineActions()
         self.checkAccess()
-        self.l.debug("connectionBdd & defineActions took {}".format(datetime.datetime.now() - diff_time))
+        self.l.debug("connectionBdd, defineActions & checkAccess took {}"
+                     .format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         app.processEvents()
         self.initUI()
-        self.l.debug("initUI took {}".format(datetime.datetime.now() - diff_time))
+        self.l.debug("initUI took {}".
+                     format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         app.processEvents()
         self.defineSlots()
-        self.l.debug("defineSlots took {}".format(datetime.datetime.now() - diff_time))
+        self.l.debug("defineSlots took {}".
+                     format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         app.processEvents()
         self.displayTags()
-        self.l.debug("displayTags took {}".format(datetime.datetime.now() - diff_time))
+        self.l.debug("displayTags took {}".
+                     format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         app.processEvents()
         self.restoreSettings()
-        self.l.debug("restoreSettings took {}".format(datetime.datetime.now() - diff_time))
+        self.l.debug("restoreSettings took {}".
+                     format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         app.processEvents()
         self.loadNotifications()
-        self.l.debug("loadNotifications took {}".format(datetime.datetime.now() - diff_time))
+        self.l.debug("loadNotifications took {}".
+                     format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         app.processEvents()
 
         self.show()
         splash.finish(self)
-        self.l.debug("splash.finish took {}".format(datetime.datetime.now() - diff_time))
+        self.l.debug("splash.finish took {}".
+                     format(datetime.datetime.now() - diff_time))
 
-        self.l.info("Boot took {}".format(datetime.datetime.now() - start_time))
+        self.l.info("Boot took {}".
+                    format(datetime.datetime.now() - start_time))
 
 
     def bootCheckList(self):
@@ -193,10 +203,14 @@ class Fenetre(QtGui.QMainWindow):
         For now, this method get the max id, used to know if incoming articles
         are new"""
 
+        tuto = Tuto(self)
+
+        # Check if there is a user_id. If not, start the logging window
         user_id = self.options.value("user_id", None)
         if user_id is None:
             self.max_id_for_new = 0
             signing = Signing(self)
+
 
         else:
             count_query = QtSql.QSqlQuery(self.bdd)
@@ -289,7 +303,7 @@ class Fenetre(QtGui.QMainWindow):
         if not journals:
             # self.journals_to_care = []
             for company in os.listdir("./journals"):
-                with open('journals/{0}'.format(company), 'r') as config:
+                with open('./journals/{0}'.format(company), 'r') as config:
                     for line in config:
                         # Take the abbreviation
                         journals.append(line.split(" : ")[1])

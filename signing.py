@@ -14,6 +14,9 @@ from functions import simpleChar
 
 class Signing(QtGui.QDialog):
 
+    """Module to log the user and assign to him a user_id
+    the first he starts the programm"""
+
     def __init__(self, parent):
 
         super(Signing, self).__init__(parent)
