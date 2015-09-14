@@ -11,6 +11,9 @@ import requests
 
 from functions import simpleChar
 
+# TEST
+from tuto import Tuto
+
 
 class Signing(QtGui.QDialog):
 
@@ -118,7 +121,7 @@ class Signing(QtGui.QDialog):
 
             if 'user_id' in response[-1]:
                 self.parent.options.setValue('user_id', response[-1].split(':')[-1])
-                self.close()
+                self.accept()
                 del self
             elif response[-1] == 'A user with this email already exists':
                 QtGui.QMessageBox.critical(self, "Signing up error", "A user with the same email already exists. Please use another email or contact us.",

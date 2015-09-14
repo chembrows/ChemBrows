@@ -77,44 +77,51 @@ class Fenetre(QtGui.QMainWindow):
 
         diff_time = start_time
 
+        # Look for updates and create files
         app.processEvents()
         self.bootCheckList()
         self.l.debug("bootCheckList took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
+        # Connect to the database & log the connection
         app.processEvents()
         self.connectionBdd()
         self.defineActions()
-        self.checkAccess()
-        self.l.debug("connectionBdd, defineActions & checkAccess took {}"
+        self.logConnection()
+        self.l.debug("connectionBdd, defineActions & logConnection took {}"
                      .format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
+        # Create the GUI
         app.processEvents()
         self.initUI()
         self.l.debug("initUI took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
+        # Define the slots
         app.processEvents()
         self.defineSlots()
         self.l.debug("defineSlots took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
+        # Creates the journals buttons
         app.processEvents()
         self.displayTags()
         self.l.debug("displayTags took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
+        # Restore the settings
         app.processEvents()
         self.restoreSettings()
         self.l.debug("restoreSettings took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
+        # Load the notifications
         app.processEvents()
         self.loadNotifications()
         self.l.debug("loadNotifications took {}".
@@ -123,6 +130,7 @@ class Fenetre(QtGui.QMainWindow):
 
         app.processEvents()
 
+        # Show the window
         self.show()
         splash.finish(self)
         self.l.debug("splash.finish took {}".
@@ -130,6 +138,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.l.info("Boot took {}".
                     format(datetime.datetime.now() - start_time))
+
+        self.finishBoot()
 
 
     def bootCheckList(self):
@@ -196,56 +206,65 @@ class Fenetre(QtGui.QMainWindow):
             self.l.info("This version of ChemBrows is NOT a frozen version")
 
 
-    def checkAccess(self):
+    def logConnection(self):
 
         """Originally, coded to perform check acces on the server. If
         the programm doesn't go commercial, RENAME THIS METHOD.
         For now, this method get the max id, used to know if incoming articles
         are new"""
 
-        tuto = Tuto(self)
-
-        # Check if there is a user_id. If not, start the logging window
+        # Check if there is a user_id. If so, log the connection
         user_id = self.options.value("user_id", None)
         if user_id is None:
             self.max_id_for_new = 0
-            signing = Signing(self)
+            return
+
+        count_query = QtSql.QSqlQuery(self.bdd)
+
+        count_query.exec_("SELECT COUNT(id) FROM papers")
+        count_query.first()
+        nbr_entries = count_query.record().value(0)
+        self.l.info("Nbr of entries: {}".format(nbr_entries))
+
+        count_query.exec_("SELECT MAX(id) FROM papers")
+        count_query.first()
+        self.max_id_for_new = count_query.record().value(0)
+
+        if type(self.max_id_for_new) is not int:
+            self.max_id_for_new = 0
+
+        self.l.info("Max id for new: {}".format(self.max_id_for_new))
+
+        payload = {'nbr_entries': nbr_entries,
+                   'journals': self.getJournalsToCare(),
+                   'user_id': user_id,
+                  }
+
+        try:
+            if self.debug_mod:
+                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=1)
+            else:
+                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
+            self.l.info(req.text)
+        except requests.exceptions.ReadTimeout:
+            self.l.error("checkAccess. ReadTimeout while contacting the server")
+            return
+        except requests.exceptions.ConnectTimeout:
+            self.l.error("checkAccess. ConnectionTimeout while contacting the server")
+            return
 
 
-        else:
-            count_query = QtSql.QSqlQuery(self.bdd)
+    def finishBoot(self):
 
-            count_query.exec_("SELECT COUNT(id) FROM papers")
-            count_query.first()
-            nbr_entries = count_query.record().value(0)
-            self.l.info("Nbr of entries: {}".format(nbr_entries))
+        """Method to register a new user. When it is done,
+        start the tutorial"""
 
-            count_query.exec_("SELECT MAX(id) FROM papers")
-            count_query.first()
-            self.max_id_for_new = count_query.record().value(0)
+        # Check if there is a user_id. If not, register the user
+        if self.options.value("user_id", None) is None:
+            sign = Signing(self)
 
-            if type(self.max_id_for_new) is not int:
-                self.max_id_for_new = 0
-
-            self.l.info("Max id for new: {}".format(self.max_id_for_new))
-
-            payload = {'nbr_entries': nbr_entries,
-                       'journals': self.getJournalsToCare(),
-                       'user_id': user_id,
-                      }
-
-            try:
-                if self.debug_mod:
-                    req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=1)
-                else:
-                    req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
-                self.l.info(req.text)
-            except requests.exceptions.ReadTimeout:
-                self.l.error("checkAccess. ReadTimeout while contacting the server")
-                return
-            except requests.exceptions.ConnectTimeout:
-                self.l.error("checkAccess. ConnectionTimeout while contacting the server")
-                return
+            # When the user is registered, start the tuto
+            sign.accepted.connect(lambda: Tuto(self))
 
 
     def showAbout(self):
@@ -505,6 +524,9 @@ class Fenetre(QtGui.QMainWindow):
         # Action to show a settings window
         self.settingsAction = QtGui.QAction('Preferences', self)
         self.settingsAction.triggered.connect(lambda: Settings(self))
+
+        self.tutoAction = QtGui.QAction('Tutorial', self)
+        self.tutoAction.triggered.connect(lambda: Tuto(self))
 
         # Action to show a settings window
         self.showAboutAction = QtGui.QAction('About', self)
@@ -1753,6 +1775,7 @@ class Fenetre(QtGui.QMainWindow):
         self.sortMenu.addAction(self.sortingReversedAction)
 
         self.helpMenu = self.menubar.addMenu("&Help")
+        self.helpMenu.addAction(self.tutoAction)
         self.helpMenu.addAction(self.showAboutAction)
 
         # # ------------------------- TOOLBAR  -----------------------------------------------
