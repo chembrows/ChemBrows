@@ -1,4 +1,6 @@
 .QWidget
 {
     background: grey;
+    /*margin: 0;*/
+    border: 0;
 }

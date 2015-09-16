@@ -1899,7 +1899,7 @@ class Fenetre(QtGui.QMainWindow):
         # Main part of the window in a tab.
         # Allows to create other tabs
         self.onglets = TabPerso(self)
-        self.onglets.setContentsMargins(0, 0, 0, 0)
+        # self.onglets.setContentsMargins(0, 0, 0, 0)
 
         self.central_widget = QtGui.QWidget()
         self.hbox_central = QtGui.QHBoxLayout()
@@ -1922,6 +1922,7 @@ class Fenetre(QtGui.QMainWindow):
 
         with open("./config/style_left.css", "r") as fh:
             self.scrolling_tags.setStyleSheet(fh.read())
+            self.central_widget.setStyleSheet(fh.read())
 
 
 if __name__ == '__main__':

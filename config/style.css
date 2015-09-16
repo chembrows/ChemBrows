@@ -1,11 +1,24 @@
 QScrollArea
 {
     background: grey;
+    /*border: 0px;*/
+    /*margin: 0;*/
 }
 
-QPushButton
+QTabWidget
+{
+    border: 0px;
+    /*margin: 0px;*/
+}
+
+QSplitter
 {
     /*border-style: transparent;*/
-    /*border: 0px;*/
+    border: 0px;
     /*margin: 0px;*/
+}
+
+QTableView
+{
+    border: 0px;
 }
