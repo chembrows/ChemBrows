@@ -211,15 +211,12 @@ class MyTwit(QtGui.QDialog):
         # Quit the tuto at any moment
         self.cancel_button.clicked.connect(self.done)
 
-        self.check_graphical.stateChanged.connect(self.setTweetText)
-
 
     def initUI(self):
 
         """Handles the display"""
 
         self.text_tweet = QtGui.QTextEdit()
-
 
         self.cancel_button = QtGui.QPushButton("Cancel", self)
         self.ok_button = QtGui.QPushButton("Tweet me !", self)
@@ -231,6 +228,7 @@ class MyTwit(QtGui.QDialog):
         # if he wants the graphical abstract to be displayed
         if self.graphical is not None:
             self.check_graphical = QtGui.QCheckBox("Include graphical abstract")
+            self.check_graphical.stateChanged.connect(self.setTweetText)
             self.hbox_buttons.addWidget(self.check_graphical)
 
         self.hbox_buttons.addWidget(self.cancel_button)
