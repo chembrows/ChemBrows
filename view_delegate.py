@@ -34,6 +34,8 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
         """Method called to draw the content of the cells"""
 
+        painter.setRenderHint(QtGui.QPainter.SmoothPixmapTransform)
+
         # Bool to color lines
         red = False
 
@@ -117,7 +119,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 self.parent.l.debug("No max id. Probably the first refresh of the program.")
                 new = True
 
-            # Paint a star in the right bottom corner
+            # Constant, proportional to the size of one cell
             DIMENSION = options.rect.width() * 0.07
 
             # Draw peppers. A full pepper if the match percentage
@@ -127,16 +129,18 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             for index, perc in enumerate(nbr_peppers):
 
                 if percentage >= perc:
-                    path = "./images/hot_pepper_full.png"
+                    path = "./images/pepper_full.png"
                 else:
-                    path = "./images/hot_pepper_empty.png"
+                    path = "./images/pepper_empty.png"
 
-                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
+                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
+                pixmap = QtGui.QPixmap(path)
+                # pixmap = pixmap.scaled(DIMENSION, DIMENSION, QtCore.Qt.IgnoreAspectRatio,  QtCore.Qt.SmoothTransformation)
 
                 pos_x = option.rect.x() + DIMENSION * 0.5 + DIMENSION * 0.5 * index
                 pos_y = option.rect.y() + option.rect.height() - DIMENSION * 0.8
 
-                painter.drawPixmap(pos_x, pos_y, DIMENSION * 0.4, DIMENSION * 0.7, pixmap)
+                painter.drawPixmap(pos_x, pos_y, DIMENSION * 0.7, DIMENSION * 0.7, pixmap)
 
 
             # If the post is liked, display the like star.

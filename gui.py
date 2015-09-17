@@ -33,6 +33,7 @@ from signing import Signing
 
 # TEST
 from tuto import Tuto
+from my_twit import MyTwit
 
 # To debug and profile. Comment for prod
 # from memory_profiler import profile
@@ -882,7 +883,11 @@ class Fenetre(QtGui.QMainWindow):
         # like resizing the cells of the table
         self.splitter2.splitterMoved.connect(self.updateCellSize)
 
+        # Share by email
         self.button_share_mail.clicked.connect(self.shareByEmail)
+
+        # Share on Twitter
+        self.button_twitter.clicked.connect(self.shareOnTwitter)
 
 
     def updateCellSize(self):
@@ -926,6 +931,7 @@ class Fenetre(QtGui.QMainWindow):
         except TypeError:
             self.l.debug("No graphical abstract for this post, displayInfos()")
 
+        self.button_twitter.show()
         self.button_share_mail.show()
 
         self.label_date.setText(date)
@@ -1610,6 +1616,27 @@ class Fenetre(QtGui.QMainWindow):
                     # self.l.error("openInBrowser: Error. Please open a browser on {}".format(url))
 
 
+    def shareOnTwitter(self):
+
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+
+        # Check if something is selected
+        if not table.selectionModel().selection().indexes():
+            return
+
+        self.l.info("Sharing on Twitter")
+
+        # Get the infos
+        title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
+        link = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
+        graphical_abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 8).data()
+
+        if type(graphical_abstract) is str and graphical_abstract != "Empty":
+            twitter = MyTwit(self, title, link, graphical_abstract)
+        else:
+            twitter = MyTwit(self, title, link)
+
+
     def shareByEmail(self):
 
         """
@@ -1866,6 +1893,10 @@ class Fenetre(QtGui.QMainWindow):
         self.label_date.setWordWrap(True)
         self.label_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
+        # Button to share on twitter
+        self.button_twitter = QtGui.QPushButton("Share on twitter")
+        self.button_twitter.hide()
+
         # Button to share by email
         self.button_share_mail = QtGui.QPushButton("Share by email")
         self.button_share_mail.hide()
@@ -1878,18 +1909,19 @@ class Fenetre(QtGui.QMainWindow):
         self.web_settings.setFontFamily(QtWebKit.QWebSettings.StandardFont, self.font().family())
 
         # Building the grid
-        self.grid_area_right_top.addWidget(prelabel_title, 0, 0)
+        self.grid_area_right_top.addWidget(prelabel_title, 0, 0, 1, 3)
         self.grid_area_right_top.addWidget(self.label_title, 0, 1)
         self.grid_area_right_top.addWidget(prelabel_author, 1, 0)
-        self.grid_area_right_top.addWidget(self.label_author, 1, 1)
+        self.grid_area_right_top.addWidget(self.label_author, 1, 1, 1, 3)
         self.grid_area_right_top.addWidget(prelabel_journal, 2, 0)
-        self.grid_area_right_top.addWidget(self.label_journal, 2, 1)
+        self.grid_area_right_top.addWidget(self.label_journal, 2, 1, 1, 3)
         self.grid_area_right_top.addWidget(prelabel_date, 3, 0)
-        self.grid_area_right_top.addWidget(self.label_date, 3, 1)
+        self.grid_area_right_top.addWidget(self.label_date, 3, 1, 1, 3)
 
-        self.grid_area_right_top.addWidget(self.button_share_mail, 4, 1, alignment=QtCore.Qt.AlignRight)
+        self.grid_area_right_top.addWidget(self.button_twitter, 4, 1, alignment=QtCore.Qt.AlignRight)
+        self.grid_area_right_top.addWidget(self.button_share_mail, 4, 2, alignment=QtCore.Qt.AlignRight)
 
-        self.grid_area_right_top.addWidget(self.text_abstract, 5, 0, 1, 2)
+        self.grid_area_right_top.addWidget(self.text_abstract, 5, 0, 1, 3)
 
         # USEFULL: set the size of the grid and its widgets to the minimum
         self.grid_area_right_top.setRowStretch(5, 1)

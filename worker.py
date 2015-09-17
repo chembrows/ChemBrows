@@ -172,6 +172,7 @@ class Worker(QtCore.QThread):
                     self.parent.counter_rejected += 1
                     self.l.debug("Rejecting {0}".format(doi))
 
+                    # Insert the crappy articles in a rescue database
                     if self.parent.debug_mod and doi not in self.list_doi:
                         url = getattr(entry, 'feedburner_origlink', entry.link)
                         query.prepare("INSERT INTO debug (doi, title, journal, url) VALUES(?, ?, ?, ?)")
@@ -207,7 +208,6 @@ class Worker(QtCore.QThread):
                                        'Connection': 'close',
                                        'Referer': url}
 
-                            # future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
                             future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
@@ -222,6 +222,13 @@ class Worker(QtCore.QThread):
                         self.l.error("getData returned None for {}".format(journal))
                         self.count_futures_images += 1
                         return
+
+                    # Rejecting article if no author
+                    if authors == "Empty":
+                        self.count_futures_images += 1
+                        self.parent.counter_rejected += 1
+                        self.l.debug("Rejecting article {}, no author".format(title))
+                        continue
 
                     if type(abstract) is not str or type(title) is not str:
                         verif = 0
@@ -249,7 +256,6 @@ class Worker(QtCore.QThread):
                                    'Connection': 'close',
                                    'Referer': url}
 
-                        # future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
                         future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
@@ -395,6 +401,13 @@ class Worker(QtCore.QThread):
         except TypeError:
             self.l.error("getData returned None for {}".format(journal))
             self.count_futures_images += 1
+            return
+
+        # Rejecting the article if no authors
+        if authors == "Empty":
+            self.count_futures_images += 1
+            self.parent.counter_rejected += 1
+            self.l.debug("Rejecting article {}, no author".format(title))
             return
 
         # Checking if the data are complete
