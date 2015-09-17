@@ -138,6 +138,8 @@ class MyTwit(QtGui.QDialog):
         if len(self.title) > LEN_TWEET - len_data - 2 - 10:
             title = self.title[:LEN_TWEET - len_data - 2 - 10 - 3]
             title += "..."
+        else:
+            title = self.title
 
         self.text_tweet.setText(title + " " + self.link)
 
