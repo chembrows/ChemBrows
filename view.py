@@ -97,6 +97,11 @@ class ViewPerso(QtGui.QTableView):
             self.clicked.emit(self.selectionModel().currentIndex())
 
 
+    def updateHeight(self):
+
+        self.verticalHeader().setDefaultSectionSize(self.height() * 0.2)
+
+
     def resizeCells(self, new_size):
 
         """Slot triggered by the parent when the central splitter is moved.
@@ -144,11 +149,15 @@ class ViewPerso(QtGui.QTableView):
         self.hideColumn(11)  # Hide verif
         self.hideColumn(12)  # Hide new
         self.hideColumn(13)  # Hide topic_simple
-        self.horizontalHeader().moveSection(8, 0)  # Move the graphical abstract to first
+
+        # Move the graphical abstract to first
+        self.horizontalHeader().moveSection(8, 0)
 
         self.verticalHeader().setVisible(False)
         self.horizontalHeader().setVisible(False)
-        self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)  # No cell editing
+
+        # No cell editing
+        self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
 
 
     def keyboardSearch(self, search):

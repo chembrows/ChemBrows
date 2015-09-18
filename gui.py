@@ -505,7 +505,7 @@ class Fenetre(QtGui.QMainWindow):
         # Action to calculate the percentages of match
         self.calculatePercentageMatchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_040_stats.png'), '&Percentages', self)
         self.calculatePercentageMatchAction.setShortcut('F6')
-        self.calculatePercentageMatchAction.setToolTip("Re-calculate paperness")
+        self.calculatePercentageMatchAction.setToolTip("Re-calculate Hot Paperness")
         self.calculatePercentageMatchAction.triggered.connect(lambda: self.calculatePercentageMatch(update=True))
 
         # Action to like a post
@@ -550,7 +550,7 @@ class Fenetre(QtGui.QMainWindow):
         self.advanced_searchAction.triggered.connect(lambda: AdvancedSearch(self))
 
         # Action to change the sorting method of the views
-        self.sortingPercentageAction = QtGui.QAction('By paperness', self, checkable=True)
+        self.sortingPercentageAction = QtGui.QAction('By Hot Paperness', self, checkable=True)
         self.sortingPercentageAction.triggered.connect(lambda: self.changeSortingMethod(0,
                                                                                         reverse=self.sortingReversedAction.isChecked()))
 
@@ -568,7 +568,7 @@ class Fenetre(QtGui.QMainWindow):
         self.changeSortingAction = QtGui.QAction(self)
         self.changeSortingAction.triggered.connect(lambda: self.changeSortingMethod(None,
                                                                                     reverse=self.sortingReversedAction.isChecked()))
-        self.changeSortingAction.setToolTip("Sort articles by date or paperness")
+        self.changeSortingAction.setToolTip("Sort articles by date or Hot Paperness")
 
         # Action to serve use as a separator
         self.separatorAction = QtGui.QAction(self)
@@ -596,7 +596,7 @@ class Fenetre(QtGui.QMainWindow):
         if self.sorting_method == 1:
             self.sortingPercentageAction.setChecked(False)
             self.sortingDateAction.setChecked(True)
-            self.changeSortingAction.setText("Sort by paperness")
+            self.changeSortingAction.setText("Sort by Hot Paperness")
         elif self.sorting_method == 0:
             self.sortingPercentageAction.setChecked(True)
             self.sortingDateAction.setChecked(False)
@@ -768,10 +768,6 @@ class Fenetre(QtGui.QMainWindow):
 
         self.searchByButton()
 
-        # Change the height of the rows
-        for table in self.list_tables_in_tabs:
-            table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
-
         # Timer to get the dimensions of the window right.
         # If the window is displayed too fast, I can't get the dimensions right
         QtCore.QTimer.singleShot(50, self.updateCellSize)
@@ -911,10 +907,12 @@ class Fenetre(QtGui.QMainWindow):
         # Get the size of the main splitter
         new_size = self.splitter2.sizes()[0]
 
-        self.list_tables_in_tabs[self.onglets.currentIndex()].resizeCells(new_size)
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        table.resizeCells(new_size)
+        table.updateHeight()
 
-        for table in self.list_tables_in_tabs:
-            table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
+        # for table in self.list_tables_in_tabs:
+            # table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
 
 
     def displayInfos(self):
@@ -967,9 +965,8 @@ class Fenetre(QtGui.QMainWindow):
         """Slot to perform some actions when the current tab is changed.
         Mainly sets the tab query to the saved query"""
 
-
-        for table in self.list_tables_in_tabs:
-            table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        table.updateHeight()
 
         # Submit the changes on the model.
         # Otherwise, a bug appears: one changing an article, the changes are visible
@@ -1026,6 +1023,7 @@ class Fenetre(QtGui.QMainWindow):
         proxy.setSourceModel(self.model)
         self.list_proxies_in_tabs.append(proxy)
 
+
         # Create the view, and give it the model
         tableau = ViewPerso(self)
         tableau.name_search = name_search
@@ -1035,6 +1033,7 @@ class Fenetre(QtGui.QMainWindow):
         tableau.setModel(proxy)
         tableau.setItemDelegate(ViewDelegate(self))
         tableau.setSelectionBehavior(tableau.SelectRows)
+        tableau.updateHeight()
         tableau.initUI()
 
         self.list_tables_in_tabs.append(tableau)
@@ -1742,8 +1741,8 @@ class Fenetre(QtGui.QMainWindow):
             # If the range is set to 0, get a busy progress bar,
             # without percentage
             app.processEvents()
-            self.progress = QtGui.QProgressDialog("Calculating Paperness...", None, 0, 0, self)
-            self.progress.setWindowTitle("Paperness calculation")
+            self.progress = QtGui.QProgressDialog("Calculating Hot Paperness...", None, 0, 0, self)
+            self.progress.setWindowTitle("Hot Paperness calculation")
             self.progress.show()
             app.processEvents()
 
@@ -1832,7 +1831,7 @@ class Fenetre(QtGui.QMainWindow):
         self.button_calculate_percentage = QtGui.QPushButton()
         self.button_calculate_percentage.setIcon(QtGui.QIcon("./images/stats.png"))
         self.button_calculate_percentage.setIconSize(QtCore.QSize(36, 36))
-        self.button_calculate_percentage.setToolTip("Re-calculate paperness")
+        self.button_calculate_percentage.setToolTip("Re-calculate Hot Paperness")
 
         # Create a research bar and set its size
         self.line_research = QtGui.QLineEdit()

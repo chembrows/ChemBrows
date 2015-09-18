@@ -2,12 +2,8 @@
 # coding: utf-8
 
 
-
-"""Module pour modifier le style et la présentation de la vue"""
-
-import sys
 import os
-from PyQt4 import QtCore, QtGui, QtSql
+from PyQt4 import QtCore, QtGui
 
 from functions import prettyDate
 
@@ -72,8 +68,8 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             adding_infos = ""
             adding_infos += "<br><br>"
             adding_infos += "<b><font color='gray'>Published in: </font></b><i>{0}</i>, {1}".format(journal, date)
-            adding_infos += "<br>"
-            adding_infos += "<b><font color='gray'>Paperness: </font></b>"
+            adding_infos += "<br><br>"
+            adding_infos += "<b><font color='gray'>Hot Paperness: </font></b>"
 
             doc.setHtml(options.text + adding_infos)
 
@@ -86,8 +82,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 doc.setHtml(options.text)
                 doc.setTextWidth(options.rect.width())
                 height = doc.documentLayout().documentSize().height()
-
-                # while doc.documentLayout().documentSize().height() > options.rect.height():
 
             options.text = ""
             options.widget.style().drawControl(QtGui.QStyle.CE_ItemViewItem, options, painter)
@@ -120,7 +114,8 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 # new = True
 
             # Constant, proportional to the size of one cell
-            DIMENSION = options.rect.width() * 0.07
+            DIMENSION = options.rect.width() * 0.05
+            # DIMENSION = 35
 
             # Draw peppers. A full pepper if the match percentage
             # of an article is superior to the element of the list.
@@ -137,7 +132,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 pixmap = QtGui.QPixmap(path)
                 # pixmap = pixmap.scaled(DIMENSION, DIMENSION, QtCore.Qt.IgnoreAspectRatio,  QtCore.Qt.SmoothTransformation)
 
-                pos_x = option.rect.x() + DIMENSION * 0.5 + DIMENSION * 0.5 * index
+                pos_x = option.rect.x() + DIMENSION * 4 + DIMENSION * 0.5 * index
                 pos_y = option.rect.y() + option.rect.height() - DIMENSION * 0.8
 
                 painter.drawPixmap(pos_x, pos_y, DIMENSION * 0.7, DIMENSION * 0.7, pixmap)
@@ -146,13 +141,9 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # If the post is liked, display the like star.
             # Else, display the unlike star
             if liked == 1:
-                # path = "./images/glyphicons_049_star.png"
-                # path = "./images/full1.png"
-                path = "./images/full2.png"
+                path = "./images/like.png"
             else:
-                # path = "./images/glyphicons_048_dislikes.png"
-                # path = "./images/empty1.png"
-                path = "./images/empty2.png"
+                path = "./images/not_like.png"
 
             pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
 

@@ -42,7 +42,7 @@ class WebViewPerso(QtWebKit.QWebView):
 
         # Change the background and font colors
         if self.dark == 1:
-            self.setStyleSheet("QWebView {background-color: grey;}")
+            self.setStyleSheet("QWebView {background-color: #333333;}")
             string = "<style>body {color:white}</style>" + string
         else:
             self.setStyleSheet("QWebView {background-color: white;}")
