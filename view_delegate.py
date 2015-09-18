@@ -36,8 +36,8 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
         painter.setRenderHint(QtGui.QPainter.SmoothPixmapTransform)
 
-        # Bool to color lines
-        red = False
+        # # Bool to color lines
+        # red = False
 
         # If the data are not complete (i.e 'verif' is False), color red
         verif = index.sibling(index.row(), 11).data()
@@ -111,13 +111,13 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # Get the like state of the post
             liked = index.sibling(index.row(), 9).data()
 
-            # New if the article was gathered on the last refresh, and if the user
-            # hasn't restarted the program
-            try:
-                new = index.sibling(index.row(), 0).data() > self.parent.max_id_for_new
-            except TypeError:
-                self.parent.l.debug("No max id. Probably the first refresh of the program.")
-                new = True
+            # # New if the article was gathered on the last refresh, and if the user
+            # # hasn't restarted the program
+            # try:
+                # new = index.sibling(index.row(), 0).data() > self.parent.max_id_for_new
+            # except TypeError:
+                # self.parent.l.debug("No max id. Probably the first refresh of the program.")
+                # new = True
 
             # Constant, proportional to the size of one cell
             DIMENSION = options.rect.width() * 0.07
@@ -171,14 +171,14 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_empty.png"))
                 painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
 
-            # Display a picture to warn the user if the article is new (gathered on the last
-            # refresh)
-            if new and read:
-                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/new.png"))
-                painter.drawPixmap(pos_x - 2 * DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
+            # # Display a picture to warn the user if the article is new (gathered on the last
+            # # refresh)
+            # if new and read:
+                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/new.png"))
+                # painter.drawPixmap(pos_x - 2 * DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
 
-            if red:
-                painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
+            # if red:
+                # painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
 
 
         # Actions on the date

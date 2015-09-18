@@ -497,7 +497,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Action to refresh the posts
         self.parseAction = QtGui.QAction(QtGui.QIcon('images/refresh.png'), '&Refresh', self)
-        # self.parseAction.setIconSize(QtCore.QSize(48, 48))
+        # self.parseAction.setIconSize(QtCore.QSize(36, 36))
         self.parseAction.setShortcut('F5')
         self.parseAction.setToolTip("Refresh: download new posts")
         self.parseAction.triggered.connect(self.parse)
@@ -871,8 +871,8 @@ class Fenetre(QtGui.QMainWindow):
         # self.button_view_all.clicked.connect(self.resetView)
 
         # Launch the research if Enter pressed
-        self.research_bar.returnPressed.connect(self.research)
-        self.research_bar.buttonClicked.connect(self.clearSearch)
+        self.line_research.returnPressed.connect(self.research)
+        self.line_research.buttonClicked.connect(self.clearSearch)
 
         # Perform some stuff when the tab is changed
         self.onglets.currentChanged.connect(self.tabChanged)
@@ -886,6 +886,21 @@ class Fenetre(QtGui.QMainWindow):
 
         # Share on Twitter
         self.button_twitter.clicked.connect(self.shareOnTwitter)
+
+        # Button in the toolbar: parse
+        self.button_refresh.clicked.connect(self.parse)
+
+        # Button in the toolbar: calculate paperness
+        self.button_calculate_percentage.clicked.connect(self.calculatePercentageMatch)
+
+        # Button in the toolbar: advanced search
+        self.button_advanced_search.clicked.connect(lambda: AdvancedSearch(self))
+
+        self.button_zoom_more.clicked.connect(lambda: self.text_abstract.zoom(True))
+
+        self.button_zoom_less.clicked.connect(lambda: self.text_abstract.zoom(False))
+
+        self.button_color_read.clicked.connect(self.text_abstract.darkAndLight)
 
 
     def updateCellSize(self):
@@ -1280,7 +1295,7 @@ class Fenetre(QtGui.QMainWindow):
         else:
             requete = "SELECT * FROM papers WHERE (topic_simple LIKE '%{}%') AND journal IN ("
 
-        results = functions.simpleChar(self.research_bar.text())
+        results = functions.simpleChar(self.line_research.text())
 
         self.query = QtSql.QSqlQuery(self.bdd)
 
@@ -1301,8 +1316,8 @@ class Fenetre(QtGui.QMainWindow):
 
         """Method to clear the research bar"""
 
-        self.research_bar.clear()
-        self.research_bar.returnPressed.emit()
+        self.line_research.clear()
+        self.line_research.returnPressed.emit()
 
 
     def clearLayout(self, layout):
@@ -1346,7 +1361,7 @@ class Fenetre(QtGui.QMainWindow):
         self.searchByButton()
 
         # Clear the search bar
-        self.research_bar.clear()
+        self.line_research.clear()
 
         self.button_share_mail.hide()
 
@@ -1630,9 +1645,9 @@ class Fenetre(QtGui.QMainWindow):
         graphical_abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 8).data()
 
         if type(graphical_abstract) is str and graphical_abstract != "Empty":
-            twitter = MyTwit(self, title, link, graphical_abstract)
+            MyTwit(self, title, link, graphical_abstract)
         else:
-            twitter = MyTwit(self, title, link)
+            MyTwit(self, title, link)
 
 
     def shareByEmail(self):
@@ -1654,11 +1669,8 @@ class Fenetre(QtGui.QMainWindow):
         self.l.info("Sending by email")
 
         # Get the infos
-        abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
         title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
         link = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
-        author = table.model().index(table.selectionModel().selection().indexes()[0].row(), 6).data()
-        journal = table.model().index(table.selectionModel().selection().indexes()[0].row(), 5).data()
 
         # Create a simple title, by removing html tags (tags are not accepted in a mail subject)
         simple_title = functions.removeHtml(title) + " : spotted with chemBrows"
@@ -1809,30 +1821,40 @@ class Fenetre(QtGui.QMainWindow):
         # Puis on ajoute les widgets
         self.toolbar = self.addToolBar('toolbar')
 
+        # Refresh button. I use buttons and not actions because I want to
+        # set their style
         self.button_refresh = QtGui.QPushButton()
         self.button_refresh.setIcon(QtGui.QIcon("./images/refresh.png"))
-        self.button_refresh.setIconSize(QtCore.QSize(48, 48))
-        self.button_refresh.clicked.connect(self.parse)
+        self.button_refresh.setIconSize(QtCore.QSize(36, 36))
+        self.button_refresh.setToolTip("Refresh: download new posts")
 
-        # self.toolbar.addAction(self.parseAction)
-
-        # self.toolbar.addAction(self.calculatePercentageMatchAction)
+        # Percentage calculation button
+        self.button_calculate_percentage = QtGui.QPushButton()
+        self.button_calculate_percentage.setIcon(QtGui.QIcon("./images/stats.png"))
+        self.button_calculate_percentage.setIconSize(QtCore.QSize(36, 36))
+        self.button_calculate_percentage.setToolTip("Re-calculate paperness")
 
         # Create a research bar and set its size
-        self.research_bar = QtGui.QLineEdit()
-        self.research_bar = ButtonLineEdit('images/glyphicons_197_remove')
-        self.research_bar.setToolTip("Quick search")
-        self.research_bar.setFixedSize(self.research_bar.sizeHint())
+        self.line_research = QtGui.QLineEdit()
+        self.line_research = ButtonLineEdit('images/glyphicons_197_remove')
+        self.line_research.setToolTip("Quick search")
+        self.line_research.setFixedSize(self.line_research.sizeHint())
 
+        # Advanced search button
+        self.button_advanced_search = QtGui.QPushButton()
+        self.button_advanced_search.setIcon(QtGui.QIcon("./images/advanced_search.png"))
+        self.button_advanced_search.setIconSize(QtCore.QSize(36, 36))
+        self.button_advanced_search.setToolTip("Advanced search: more powerful research")
 
         self.toolbar.addWidget(self.button_refresh)
+        self.toolbar.addWidget(self.button_calculate_percentage)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.searchNewAction)
         self.toolbar.addAction(self.changeSortingAction)
         self.toolbar.addSeparator()
         self.toolbar.addWidget(QtGui.QLabel('Search : '))
-        self.toolbar.addWidget(self.research_bar)
-        self.toolbar.addAction(self.advanced_searchAction)
+        self.toolbar.addWidget(self.line_research)
+        self.toolbar.addWidget(self.button_advanced_search)
 
         # Create a button to reset everything
         # self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_170_step_backward'), 'Back')
@@ -1898,39 +1920,61 @@ class Fenetre(QtGui.QMainWindow):
         self.label_date.setWordWrap(True)
         self.label_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
+
+        # TEST
+        self.button_zoom_less = QtGui.QPushButton()
+        self.button_zoom_less.setIcon(QtGui.QIcon('./images/zoom_out.png'))
+        self.button_zoom_less.setIconSize(QtCore.QSize(36, 36))
+        # self.button_zoom_less.hide()
+        self.button_zoom_more = QtGui.QPushButton()
+        self.button_zoom_more.setIcon(QtGui.QIcon('./images/zoom_in.png'))
+        self.button_zoom_more.setIconSize(QtCore.QSize(36, 36))
+        # self.button_zoom_more.hide()
+        self.button_color_read = QtGui.QPushButton()
+        self.button_color_read.setIcon(QtGui.QIcon('./images/black_text.png'))
+        self.button_color_read.setIconSize(QtCore.QSize(36, 36))
+        # self.button_zoom_more.hide()
+
         # Button to share on twitter
         self.button_twitter = QtGui.QPushButton()
         self.button_twitter.setIcon(QtGui.QIcon('./images/twitter.png'))
-        self.button_twitter.setIconSize(QtCore.QSize(48, 48))
+        self.button_twitter.setIconSize(QtCore.QSize(36, 36))
         self.button_twitter.hide()
 
         # Button to share by email
         self.button_share_mail = QtGui.QPushButton()
         self.button_share_mail.setIcon(QtGui.QIcon('./images/email.png'))
-        self.button_share_mail.setIconSize(QtCore.QSize(48, 48))
+        self.button_share_mail.setIconSize(QtCore.QSize(36, 36))
         self.button_share_mail.hide()
 
         # A QWebView to render the sometimes rich text of the abstracts
         self.text_abstract = WebViewPerso()
-        self.web_settings = QtWebKit.QWebSettings.globalSettings()
-
-        # Get the default font and use it for the QWebView
-        self.web_settings.setFontFamily(QtWebKit.QWebSettings.StandardFont, self.font().family())
 
         # Building the grid
-        self.grid_area_right_top.addWidget(prelabel_title, 0, 0, 1, 3)
+        self.grid_area_right_top.addWidget(prelabel_title, 0, 0, 1, 4)
         self.grid_area_right_top.addWidget(self.label_title, 0, 1)
         self.grid_area_right_top.addWidget(prelabel_author, 1, 0)
-        self.grid_area_right_top.addWidget(self.label_author, 1, 1, 1, 3)
+        self.grid_area_right_top.addWidget(self.label_author, 1, 1, 1, 4)
         self.grid_area_right_top.addWidget(prelabel_journal, 2, 0)
-        self.grid_area_right_top.addWidget(self.label_journal, 2, 1, 1, 3)
+        self.grid_area_right_top.addWidget(self.label_journal, 2, 1, 1, 4)
         self.grid_area_right_top.addWidget(prelabel_date, 3, 0)
-        self.grid_area_right_top.addWidget(self.label_date, 3, 1, 1, 3)
+        self.grid_area_right_top.addWidget(self.label_date, 3, 1, 1, 4)
 
-        self.grid_area_right_top.addWidget(self.button_twitter, 4, 1, alignment=QtCore.Qt.AlignRight)
-        self.grid_area_right_top.addWidget(self.button_share_mail, 4, 2, alignment=QtCore.Qt.AlignRight)
+        # An empty widget, acts as spacer
+        self.empty_widget = QtGui.QWidget()
+        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred);
 
-        self.grid_area_right_top.addWidget(self.text_abstract, 5, 0, 1, 3)
+        # A HBoxLayout to store the article "toolbar"
+        self.hbox_toolbar_article = QtGui.QHBoxLayout()
+        self.hbox_toolbar_article.addWidget(self.button_zoom_less, alignment=QtCore.Qt.AlignLeft)
+        self.hbox_toolbar_article.addWidget(self.button_zoom_more, alignment=QtCore.Qt.AlignLeft)
+        self.hbox_toolbar_article.addWidget(self.button_color_read, alignment=QtCore.Qt.AlignLeft)
+        self.hbox_toolbar_article.addWidget(self.empty_widget)
+        self.hbox_toolbar_article.addWidget(self.button_twitter, alignment=QtCore.Qt.AlignRight)
+        self.hbox_toolbar_article.addWidget(self.button_share_mail, alignment=QtCore.Qt.AlignRight)
+
+        self.grid_area_right_top.addLayout(self.hbox_toolbar_article, 4, 0, 1, 4)
+        self.grid_area_right_top.addWidget(self.text_abstract, 5, 0, 1, 4)
 
         # USEFULL: set the size of the grid and its widgets to the minimum
         self.grid_area_right_top.setRowStretch(5, 1)
@@ -1968,11 +2012,20 @@ class Fenetre(QtGui.QMainWindow):
             style = fh.read()
             self.scrolling_tags.setStyleSheet(style)
 
-        with open("./config/styles/style_button.css", "r") as fh:
+        with open("./config/styles/buttons.css", "r") as fh:
             style = fh.read()
             self.button_twitter.setStyleSheet(style)
             self.button_share_mail.setStyleSheet(style)
+            self.button_zoom_less.setStyleSheet(style)
+            self.button_zoom_more.setStyleSheet(style)
+            self.button_color_read.setStyleSheet(style)
+
+        with open("./config/styles/buttons_toolbar.css", "r") as fh:
+            style = fh.read()
             self.button_refresh.setStyleSheet(style)
+            self.button_calculate_percentage.setStyleSheet(style)
+            self.button_advanced_search.setStyleSheet(style)
+            self.line_research.setStyleSheet(style)
 
 
 if __name__ == '__main__':
