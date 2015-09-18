@@ -26,16 +26,21 @@ class WebViewPerso(QtWebKit.QWebView):
 
     def darkAndLight(self):
 
-        self.dark = 1 - self.dark
+        """Change the background and the font colors of the abstract
+        reading area, through a boolean"""
 
+        self.dark = 1 - self.dark
         self.setHtml()
 
 
     def setHtml(self, string=None):
 
+        """Re-implementation of the parent method"""
+
         if string is None:
             string = self.page().mainFrame().toHtml().split("</style>")[-1]
 
+        # Change the background and font colors
         if self.dark == 1:
             self.setStyleSheet("QWebView {background-color: grey;}")
             string = "<style>body {color:white}</style>" + string
