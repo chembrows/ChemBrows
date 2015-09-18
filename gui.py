@@ -55,7 +55,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        # self.l.setLevel(20)
+        self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -496,7 +496,8 @@ class Fenetre(QtGui.QMainWindow):
         self.exitAction.triggered.connect(self.closeEvent)
 
         # Action to refresh the posts
-        self.parseAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_081_refresh.png'), '&Refresh', self)
+        self.parseAction = QtGui.QAction(QtGui.QIcon('images/refresh.png'), '&Refresh', self)
+        # self.parseAction.setIconSize(QtCore.QSize(48, 48))
         self.parseAction.setShortcut('F5')
         self.parseAction.setToolTip("Refresh: download new posts")
         self.parseAction.triggered.connect(self.parse)
@@ -690,6 +691,9 @@ class Fenetre(QtGui.QMainWindow):
         each table"""
 
         count_query = QtSql.QSqlQuery(self.bdd)
+
+        # Don't treat the articles if it's the main tab, it's
+        # useless because the article will be concerned for sure
         for table in self.list_tables_in_tabs[1:]:
 
             req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
@@ -697,17 +701,11 @@ class Fenetre(QtGui.QMainWindow):
 
             while count_query.next():
                 record = count_query.record()
-                id_bdd = record.value('id')
 
-                # Don't add the id to this list if it's the main tab, it's
-                # useless because the article will be concerned for sure
-                if table != self.list_tables_in_tabs[0]:
-                    if id_bdd not in table.list_id_articles:
-                        table.list_id_articles.append(id_bdd)
+                table.list_id_articles.append(record.value('id'))
 
                 if record.value('new') == 1:
-                    if id_bdd not in table.list_new_ids:
-                        table.list_new_ids.append(id_bdd)
+                    table.list_new_ids.append(record.value('id'))
 
         # Set the notifications for each tab
         for index in range(1, self.onglets.count()):
@@ -1732,8 +1730,8 @@ class Fenetre(QtGui.QMainWindow):
             # If the range is set to 0, get a busy progress bar,
             # without percentage
             app.processEvents()
-            self.progress = QtGui.QProgressDialog("Calculating Hot Paperness...", None, 0, 0, self)
-            self.progress.setWindowTitle("Hot Paperness calculation")
+            self.progress = QtGui.QProgressDialog("Calculating Paperness...", None, 0, 0, self)
+            self.progress.setWindowTitle("Paperness calculation")
             self.progress.show()
             app.processEvents()
 
@@ -1807,38 +1805,45 @@ class Fenetre(QtGui.QMainWindow):
 
         # # ------------------------- TOOLBAR  -----------------------------------------------
 
+        # On ajoute une toolbar en la nommant pr l'indentifier,
+        # Puis on ajoute les widgets
+        self.toolbar = self.addToolBar('toolbar')
+
+        self.button_refresh = QtGui.QPushButton()
+        self.button_refresh.setIcon(QtGui.QIcon("./images/refresh.png"))
+        self.button_refresh.setIconSize(QtCore.QSize(48, 48))
+        self.button_refresh.clicked.connect(self.parse)
+
+        # self.toolbar.addAction(self.parseAction)
+
+        # self.toolbar.addAction(self.calculatePercentageMatchAction)
+
         # Create a research bar and set its size
         self.research_bar = QtGui.QLineEdit()
         self.research_bar = ButtonLineEdit('images/glyphicons_197_remove')
         self.research_bar.setToolTip("Quick search")
         self.research_bar.setFixedSize(self.research_bar.sizeHint())
 
-        # On ajoute une toolbar en la nommant pr l'indentifier,
-        # Puis on ajoute les widgets
-        self.toolbar = self.addToolBar('toolbar')
-        self.toolbar.addAction(self.parseAction)
-        self.toolbar.addAction(self.calculatePercentageMatchAction)
 
+        self.toolbar.addWidget(self.button_refresh)
         self.toolbar.addSeparator()
-
         self.toolbar.addAction(self.searchNewAction)
         self.toolbar.addAction(self.changeSortingAction)
+        self.toolbar.addSeparator()
+        self.toolbar.addWidget(QtGui.QLabel('Search : '))
+        self.toolbar.addWidget(self.research_bar)
+        self.toolbar.addAction(self.advanced_searchAction)
 
         # Create a button to reset everything
         # self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_170_step_backward'), 'Back')
         # self.button_view_all = QtGui.QPushButton('View all')
         # self.toolbar.addWidget(self.button_view_all)
 
-        self.toolbar.addSeparator()
-
-        self.toolbar.addWidget(QtGui.QLabel('Search : '))
-        self.toolbar.addWidget(self.research_bar)
-        self.toolbar.addAction(self.advanced_searchAction)
 
         # Empty widget acting like a spacer
-        self.empty_widget = QtGui.QWidget()
-        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred);
-        self.toolbar.addWidget(self.empty_widget)
+        # self.empty_widget = QtGui.QWidget()
+        # self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred);
+        # self.toolbar.addWidget(self.empty_widget)
 
 
         # ------------------------- LEFT AREA --------------------------------
@@ -1894,11 +1899,15 @@ class Fenetre(QtGui.QMainWindow):
         self.label_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
         # Button to share on twitter
-        self.button_twitter = QtGui.QPushButton("Share on twitter")
+        self.button_twitter = QtGui.QPushButton()
+        self.button_twitter.setIcon(QtGui.QIcon('./images/twitter.png'))
+        self.button_twitter.setIconSize(QtCore.QSize(48, 48))
         self.button_twitter.hide()
 
         # Button to share by email
-        self.button_share_mail = QtGui.QPushButton("Share by email")
+        self.button_share_mail = QtGui.QPushButton()
+        self.button_share_mail.setIcon(QtGui.QIcon('./images/email.png'))
+        self.button_share_mail.setIconSize(QtCore.QSize(48, 48))
         self.button_share_mail.hide()
 
         # A QWebView to render the sometimes rich text of the abstracts
@@ -1949,19 +1958,28 @@ class Fenetre(QtGui.QMainWindow):
 
         self.setCentralWidget(self.central_widget)
 
-        with open("./config/style.css", "r") as fh:
+        with open("./config/styles/style.css", "r") as fh:
+            style = fh.read()
             self.setStyleSheet(fh.read())
+            self.central_widget.setStyleSheet(style)
+            self.toolbar.setStyleSheet(style)
 
-        with open("./config/style_left.css", "r") as fh:
-            self.scrolling_tags.setStyleSheet(fh.read())
-            self.central_widget.setStyleSheet(fh.read())
+        with open("./config/styles/style_left.css", "r") as fh:
+            style = fh.read()
+            self.scrolling_tags.setStyleSheet(style)
+
+        with open("./config/styles/style_button.css", "r") as fh:
+            style = fh.read()
+            self.button_twitter.setStyleSheet(style)
+            self.button_share_mail.setStyleSheet(style)
+            self.button_refresh.setStyleSheet(style)
 
 
 if __name__ == '__main__':
     logger = MyLog()
     # try:
     app = QtGui.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon('images/icon_main.png'))
+    app.setWindowIcon(QtGui.QIcon('./images/icon_main.png'))
     ex = Fenetre(logger)
     app.processEvents()
     sys.exit(app.exec_())

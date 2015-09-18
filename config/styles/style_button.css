@@ -1,0 +1,30 @@
+QPushButton
+{
+    /*background-color: white;*/
+    /*border-style: solid;*/
+    /*border-width:1px;*/
+    /*border-radius:50px;*/
+    /*border-color: red;*/
+    border: 0px;
+    /*margin: 0px;*/
+    max-width: 48px;
+    max-height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+}
+
+
+QWidget
+{
+    /*background-color: white;*/
+    /*border-style: solid;*/
+    /*border-width:1px;*/
+    /*border-radius:50px;*/
+    /*border-color: red;*/
+    border: 0px;
+    /*margin: 0px;*/
+    max-width: 48px;
+    max-height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+}

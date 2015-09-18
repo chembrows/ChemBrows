@@ -230,6 +230,7 @@ class MyTwit(QtGui.QDialog):
         # if he wants the graphical abstract to be displayed
         if self.graphical is not None:
             self.check_graphical = QtGui.QCheckBox("Include graphical abstract")
+            self.check_graphical.setCheckState(2)
             self.check_graphical.stateChanged.connect(self.setTweetText)
             self.hbox_buttons.addWidget(self.check_graphical)
 
