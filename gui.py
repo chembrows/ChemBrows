@@ -534,10 +534,10 @@ class Fenetre(QtGui.QMainWindow):
         self.showAboutAction = QtGui.QAction('About', self)
         self.showAboutAction.triggered.connect(self.showAbout)
 
-        # Action so show new articles
-        self.searchNewAction = QtGui.QAction('View unread', self)
-        self.searchNewAction.setToolTip("Display unread articles")
-        self.searchNewAction.triggered.connect(self.searchNew)
+        # # Action so show new articles
+        # self.searchNewAction = QtGui.QAction('View unread', self)
+        # self.searchNewAction.setToolTip("Display unread articles")
+        # self.searchNewAction.triggered.connect(self.searchNew)
 
         # Action to toggle the read state of an article
         self.toggleReadAction = QtGui.QAction('Toggle read', self)
@@ -549,33 +549,24 @@ class Fenetre(QtGui.QMainWindow):
         self.advanced_searchAction.setToolTip("Advanced earch")
         self.advanced_searchAction.triggered.connect(lambda: AdvancedSearch(self))
 
-        # Action to change the sorting method of the views
+        # Action to change the sorting method of the views. In the menu
         self.sortingPercentageAction = QtGui.QAction('By Hot Paperness', self, checkable=True)
-        self.sortingPercentageAction.triggered.connect(lambda: self.changeSortingMethod(0,
-                                                                                        reverse=self.sortingReversedAction.isChecked()))
+        self.sortingPercentageAction.triggered.connect(lambda: self.changeSortingMethod(0))
 
-        # Action to change the sorting method of the views
+        # Action to change the sorting method of the views. In the menu
         self.sortingDateAction = QtGui.QAction('By date', self, checkable=True)
-        self.sortingDateAction.triggered.connect(lambda: self.changeSortingMethod(1,
-                                                                                  reverse=self.sortingReversedAction.isChecked()))
+        self.sortingDateAction.triggered.connect(lambda: self.changeSortingMethod(1))
 
-        # Action to change the sorting method of the views, reverse the results
+        # Action to change the sorting method of the views, reverse the results. In the menu
         self.sortingReversedAction = QtGui.QAction('Reverse order', self, checkable=True)
-        self.sortingReversedAction.triggered.connect(lambda: self.changeSortingMethod(self.sorting_method,
-                                                                                      reverse=self.sortingReversedAction.isChecked()))
-
-        # Action in the toolbar. Button. Used to change the sorting method
-        self.changeSortingAction = QtGui.QAction(self)
-        self.changeSortingAction.triggered.connect(lambda: self.changeSortingMethod(None,
-                                                                                    reverse=self.sortingReversedAction.isChecked()))
-        self.changeSortingAction.setToolTip("Sort articles by date or Hot Paperness")
+        self.sortingReversedAction.triggered.connect(lambda: self.changeSortingMethod(self.sorting_method, True))
 
         # Action to serve use as a separator
         self.separatorAction = QtGui.QAction(self)
         self.separatorAction.setSeparator(True)
 
 
-    def changeSortingMethod(self, method_nbr, reverse):
+    def changeSortingMethod(self, method_nbr, reverse=None):
 
         """
         Slot to change the sorting method of the
@@ -591,21 +582,18 @@ class Fenetre(QtGui.QMainWindow):
             # Set a class attribute, to save with the QSettings,
             # to restore the check at boot
             self.sorting_method = method_nbr
-            self.sorting_reversed = reverse
 
         if self.sorting_method == 1:
             self.sortingPercentageAction.setChecked(False)
             self.sortingDateAction.setChecked(True)
-            self.changeSortingAction.setText("Sort by Hot Paperness")
+            self.button_sort_by.setText("Sort by Hot Paperness")
         elif self.sorting_method == 0:
             self.sortingPercentageAction.setChecked(True)
             self.sortingDateAction.setChecked(False)
-            self.changeSortingAction.setText("Sort by date")
+            self.button_sort_by.setText("Sort by date")
 
-        if self.sorting_reversed:
-            self.sortingReversedAction.setChecked(True)
-        else:
-            self.sortingReversedAction.setChecked(False)
+        if reverse is not None:
+            self.sorting_reversed = self.sortingReversedAction.isChecked()
 
         self.searchByButton()
 
@@ -617,7 +605,6 @@ class Fenetre(QtGui.QMainWindow):
             # if "reverse order" in unchecked, reverse = False = 0
             # -> 1 - reverse = 1 -> DescendingOrder -> starts with the
             # highest percentages
-            # table.sortByColumn(method_nbr, 1 - reverse)
 
 
     def updateModel(self):
@@ -695,6 +682,12 @@ class Fenetre(QtGui.QMainWindow):
         # Don't treat the articles if it's the main tab, it's
         # useless because the article will be concerned for sure
         for table in self.list_tables_in_tabs[1:]:
+
+            # Empty these lists, because when loadNotifications is called
+            # several times during the use, the nbr of unread articles is
+            # added to the nbr of notifications
+            table.list_new_ids = []
+            table.list_id_articles = []
 
             req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
             count_query.exec_(req_str)
@@ -898,6 +891,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.button_color_read.clicked.connect(self.text_abstract.darkAndLight)
 
+        self.button_search_new.clicked.connect(self.searchNew)
+
 
     def updateCellSize(self):
 
@@ -942,6 +937,9 @@ class Fenetre(QtGui.QMainWindow):
         except TypeError:
             self.l.debug("No graphical abstract for this post, displayInfos()")
 
+        self.button_zoom_less.show()
+        self.button_zoom_more.show()
+        self.button_color_read.show()
         self.button_twitter.show()
         self.button_share_mail.show()
 
@@ -975,7 +973,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.searchByButton()
 
-        self.searchNewAction.setText("View unread")
+        self.button_search_new.setText("View unread")
         for proxy in self.list_proxies_in_tabs:
             proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
             proxy.setFilterKeyColumn(12)
@@ -1083,7 +1081,8 @@ class Fenetre(QtGui.QMainWindow):
         self.scroll_tags.setWidget(self.scrolling_tags)
 
         # Get the pixles which need to be added
-        add = self.vbox_all_tags.getContentsMargins()[0] * 2 + 2 + \
+        # +10 because of margin-left for the buttons
+        add = self.vbox_all_tags.getContentsMargins()[0] * 2 + 2 + 10 + \
             self.scroll_tags.verticalScrollBar().sizeHint().width()
 
         # self.scroll_tags.setFixedWidth(size + add)
@@ -1161,7 +1160,7 @@ class Fenetre(QtGui.QMainWindow):
         # If the button displays "View unread", shows the new articles
         # and change the button's text to "View all"
         if self.sender().text() == "View unread":
-            self.searchNewAction.setText("View all")
+            self.button_search_new.setText("View all")
             proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
             proxy.setFilterRegExp(QtCore.QRegExp("[1]"))
             proxy.setFilterKeyColumn(12)
@@ -1169,7 +1168,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Else, do the contrary
         else:
-            self.searchNewAction.setText("View unread")
+            self.button_search_new.setText("View unread")
             for proxy in self.list_proxies_in_tabs:
                 proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
                 proxy.setFilterKeyColumn(12)
@@ -1362,6 +1361,10 @@ class Fenetre(QtGui.QMainWindow):
         # Clear the search bar
         self.line_research.clear()
 
+        self.button_zoom_less.hide()
+        self.button_zoom_more.hide()
+        self.button_color_read.hide()
+        self.button_twitter.hide()
         self.button_share_mail.hide()
 
         # Put the vertical scroll bar at the top
@@ -1819,6 +1822,7 @@ class Fenetre(QtGui.QMainWindow):
         # On ajoute une toolbar en la nommant pr l'indentifier,
         # Puis on ajoute les widgets
         self.toolbar = self.addToolBar('toolbar')
+        self.toolbar.setMovable(False)
 
         # Refresh button. I use buttons and not actions because I want to
         # set their style
@@ -1832,6 +1836,19 @@ class Fenetre(QtGui.QMainWindow):
         self.button_calculate_percentage.setIcon(QtGui.QIcon("./images/stats.png"))
         self.button_calculate_percentage.setIconSize(QtCore.QSize(36, 36))
         self.button_calculate_percentage.setToolTip("Re-calculate Hot Paperness")
+
+        # Button to display new articles, or view them all
+        self.button_search_new = QtGui.QPushButton('View unread')
+        self.button_search_new.setToolTip("Display unread articles")
+
+        self.button_sort_by = QtGui.QPushButton()
+        self.button_sort_by.setToolTip("Sort articles by date or Hot Paperness")
+        self.button_sort_by.clicked.connect(lambda: self.changeSortingMethod(None, self.sortingReversedAction.isChecked()))
+
+        # self.changeSortingAction = QtGui.QAction(self)
+        # self.changeSortingAction.triggered.connect(lambda: self.changeSortingMethod(None,
+                                                                                    # reverse=self.sortingReversedAction.isChecked()))
+        # self.changeSortingAction.setToolTip("Sort articles by date or Hot Paperness")
 
         # Create a research bar and set its size
         self.line_research = QtGui.QLineEdit()
@@ -1848,8 +1865,8 @@ class Fenetre(QtGui.QMainWindow):
         self.toolbar.addWidget(self.button_refresh)
         self.toolbar.addWidget(self.button_calculate_percentage)
         self.toolbar.addSeparator()
-        self.toolbar.addAction(self.searchNewAction)
-        self.toolbar.addAction(self.changeSortingAction)
+        self.toolbar.addWidget(self.button_search_new)
+        self.toolbar.addWidget(self.button_sort_by)
         self.toolbar.addSeparator()
         self.toolbar.addWidget(QtGui.QLabel('Search : '))
         self.toolbar.addWidget(self.line_research)
@@ -1919,20 +1936,19 @@ class Fenetre(QtGui.QMainWindow):
         self.label_date.setWordWrap(True)
         self.label_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
-
-        # TEST
+        # Buttons for the display of the article: zoom & dark background
         self.button_zoom_less = QtGui.QPushButton()
         self.button_zoom_less.setIcon(QtGui.QIcon('./images/zoom_out.png'))
         self.button_zoom_less.setIconSize(QtCore.QSize(36, 36))
-        # self.button_zoom_less.hide()
+        self.button_zoom_less.hide()
         self.button_zoom_more = QtGui.QPushButton()
         self.button_zoom_more.setIcon(QtGui.QIcon('./images/zoom_in.png'))
         self.button_zoom_more.setIconSize(QtCore.QSize(36, 36))
-        # self.button_zoom_more.hide()
+        self.button_zoom_more.hide()
         self.button_color_read = QtGui.QPushButton()
         self.button_color_read.setIcon(QtGui.QIcon('./images/black_text.png'))
         self.button_color_read.setIconSize(QtCore.QSize(36, 36))
-        # self.button_zoom_more.hide()
+        self.button_color_read.hide()
 
         # Button to share on twitter
         self.button_twitter = QtGui.QPushButton()
@@ -2003,13 +2019,15 @@ class Fenetre(QtGui.QMainWindow):
 
         with open("./config/styles/style.css", "r") as fh:
             style = fh.read()
-            self.setStyleSheet(fh.read())
+            # self.setStyleSheet(style)
             self.central_widget.setStyleSheet(style)
             self.toolbar.setStyleSheet(style)
 
-        with open("./config/styles/style_left.css", "r") as fh:
+        with open("./config/styles/buttons_text.css", "r") as fh:
             style = fh.read()
-            self.scrolling_tags.setStyleSheet(style)
+            self.scroll_tags.setStyleSheet(style)
+            self.button_search_new.setStyleSheet(style)
+            self.button_sort_by.setStyleSheet(style)
 
         with open("./config/styles/buttons.css", "r") as fh:
             style = fh.read()

@@ -1,24 +1,16 @@
-QScrollArea
+QToolBar, QScrollArea, QTabWidget, QSplitter, .QWidget
 {
     background: #333333;
-    /*border: 0px;*/
+    border: 0px;
     /*margin: 0;*/
 }
 
-QTabWidget
+QTabWidget, QSplitter, QTableView
 {
     border: 0px;
-    /*margin: 0px;*/
 }
 
-QSplitter
+QLabel
 {
-    /*border-style: transparent;*/
-    border: 0px;
-    /*margin: 0px;*/
-}
-
-QTableView
-{
-    border: 0px;
+    color: white
 }

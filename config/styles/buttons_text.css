@@ -1,0 +1,19 @@
+QPushButton
+{
+    color: white;
+    background: #F1103A;
+    border-radius: 10px;
+    margin-left: 10px;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+QPushButton:checked
+{
+    color: white;
+    background: grey;
+    /*border-radius: 10px;*/
+    /*margin-left: 10px;*/
+    /*padding: 5px;*/
+    /*margin-top: 5px;*/
+}

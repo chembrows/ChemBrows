@@ -32,13 +32,19 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
         painter.setRenderHint(QtGui.QPainter.SmoothPixmapTransform)
 
-        # # Bool to color lines
-        # red = False
+        # Get the read/unread state of an article. Colors the cell
+        # if the article is unread
+        read = index.sibling(index.row(), 12).data()
+        if read == 0:
+            grey = False
+        else:
+            grey = True
 
-        # If the data are not complete (i.e 'verif' is False), color red
-        verif = index.sibling(index.row(), 11).data()
-        if verif == 0:
-            red = True
+
+        # # If the data are not complete (i.e 'verif' is False), color red
+        # verif = index.sibling(index.row(), 11).data()
+        # if verif == 0:
+            # red = True
 
         date = index.sibling(index.row(), 4).data()
 
@@ -99,19 +105,8 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             if type(percentage) is not float:
                 percentage = 0
 
-            # Get the read/unread state of an article
-            read = index.sibling(index.row(), 12).data()
-
             # Get the like state of the post
             liked = index.sibling(index.row(), 9).data()
-
-            # # New if the article was gathered on the last refresh, and if the user
-            # # hasn't restarted the program
-            # try:
-                # new = index.sibling(index.row(), 0).data() > self.parent.max_id_for_new
-            # except TypeError:
-                # self.parent.l.debug("No max id. Probably the first refresh of the program.")
-                # new = True
 
             # Constant, proportional to the size of one cell
             DIMENSION = options.rect.width() * 0.05
@@ -137,7 +132,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
                 painter.drawPixmap(pos_x, pos_y, DIMENSION * 0.7, DIMENSION * 0.7, pixmap)
 
-
             # If the post is liked, display the like star.
             # Else, display the unlike star
             if liked == 1:
@@ -162,23 +156,9 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_empty.png"))
                 painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
 
-            # # Display a picture to warn the user if the article is new (gathered on the last
-            # # refresh)
-            # if new and read:
-                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/new.png"))
-                # painter.drawPixmap(pos_x - 2 * DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
+            if not grey:
+                painter.fillRect(option.rect, QtGui.QColor(231, 231, 231, 80))
 
-            # if red:
-                # painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
-
-
-        # Actions on the date
-        elif index.column() == 4:
-
-            if red:
-                painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))
-
-            painter.drawText(option.rect, QtCore.Qt.AlignCenter, prettyDate(date))
 
         # Thumbnail's index
         elif index.column() == 8:
