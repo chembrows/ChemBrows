@@ -32,19 +32,13 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
         painter.setRenderHint(QtGui.QPainter.SmoothPixmapTransform)
 
+        # Constant, proportional to the size of one cell
+        # DIMENSION = option.rect.width() * 0.05
+        DIMENSION = 35
+
         # Get the read/unread state of an article. Colors the cell
         # if the article is unread
         read = index.sibling(index.row(), 12).data()
-        if read == 0:
-            grey = False
-        else:
-            grey = True
-
-
-        # # If the data are not complete (i.e 'verif' is False), color red
-        # verif = index.sibling(index.row(), 11).data()
-        # if verif == 0:
-            # red = True
 
         date = index.sibling(index.row(), 4).data()
 
@@ -57,6 +51,15 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             options = QtGui.QStyleOptionViewItemV4(option)
             self.initStyleOption(options, index)
 
+            # If the article is unread, color the background of the cell
+            if read == 0:
+                grey = False
+            else:
+                grey = True
+
+            if not grey:
+                painter.fillRect(option.rect, QtGui.QColor(231, 231, 231))
+
             painter.save()
 
             # Tansform the text into a QDocument
@@ -67,6 +70,15 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             text_option.setWrapMode(QtGui.QTextOption.WordWrap)
             doc.setDefaultTextOption(text_option)
 
+            title = options.text
+            width_title = painter.fontMetrics().width(title)
+
+            # Cut the title at the end of a word if it is too long
+            while width_title / 3 > options.rect.width():
+                title = title.split(' ')[:-1]
+                title = ' '.join(title) + "..."
+                width_title = painter.fontMetrics().width(title)
+
             journal = index.sibling(index.row(), 5).data()
             date = prettyDate(index.sibling(index.row(), 4).data())
 
@@ -74,29 +86,42 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             adding_infos = ""
             adding_infos += "<br><br>"
             adding_infos += "<b><font color='gray'>Published in: </font></b><i>{0}</i>, {1}".format(journal, date)
-            adding_infos += "<br><br>"
-            adding_infos += "<b><font color='gray'>Hot Paperness: </font></b>"
+            # adding_infos += "<br><br>"
+            # adding_infos += "<b><font color='gray'>Hot Paperness: </font></b>"
 
-            doc.setHtml(options.text + adding_infos)
+            # doc.setHtml(options.text + adding_infos)
+            doc.setHtml(title + adding_infos)
 
             # Set the width of the text = the width of the rect
             doc.setTextWidth(options.rect.width())
 
             height = doc.documentLayout().documentSize().height()
 
-            if height > options.rect.height():
-                doc.setHtml(options.text)
+            if height > options.rect.height() - DIMENSION:
+                # doc.setHtml(options.text)
+                doc.setHtml(title)
                 doc.setTextWidth(options.rect.width())
                 height = doc.documentLayout().documentSize().height()
 
             options.text = ""
             options.widget.style().drawControl(QtGui.QStyle.CE_ItemViewItem, options, painter)
 
-            # Center the text vertically
-            height = doc.documentLayout().documentSize().height()
+            # Do not center the text vertically, causes too much bugs
             painter.translate(options.rect.left(), options.rect.top() + options.rect.height() / 2.5 - height / 2)
+            # painter.translate(options.rect.left(), options.rect.top())
 
-            clip = QtCore.QRectF(0, 0, options.rect.width(), options.rect.height())
+            clip = QtCore.QRectF(0, -(options.rect.height() / 2.5 - height / 2), options.rect.width(), options.rect.height())
+            # clip = QtCore.QRectF(0, 0, options.rect.width(), options.rect.height())
+
+            # Change the background color of the cell here, won't be
+            # possible later
+            if option.state & QtGui.QStyle.State_Selected:
+                painter.fillRect(clip, QtGui.QColor(120, 187, 222))
+            elif grey:
+                painter.fillRect(clip, QtGui.QColor(231, 231, 231))
+            else:
+                painter.fillRect(clip, QtGui.QColor(255, 255, 255))
+
             doc.drawContents(painter, clip)
 
             painter.restore()
@@ -107,10 +132,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             # Get the like state of the post
             liked = index.sibling(index.row(), 9).data()
-
-            # Constant, proportional to the size of one cell
-            DIMENSION = options.rect.width() * 0.05
-            # DIMENSION = 35
 
             # Draw peppers. A full pepper if the match percentage
             # of an article is superior to the element of the list.
@@ -127,7 +148,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 pixmap = QtGui.QPixmap(path)
                 # pixmap = pixmap.scaled(DIMENSION, DIMENSION, QtCore.Qt.IgnoreAspectRatio,  QtCore.Qt.SmoothTransformation)
 
-                pos_x = option.rect.x() + DIMENSION * 4 + DIMENSION * 0.5 * index
+                pos_x = option.rect.x() + DIMENSION * 0.5 * index
                 pos_y = option.rect.y() + option.rect.height() - DIMENSION * 0.8
 
                 painter.drawPixmap(pos_x, pos_y, DIMENSION * 0.7, DIMENSION * 0.7, pixmap)
@@ -146,22 +167,21 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)
 
-            # A picture to display the read/unread state
-            if read:
-                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/unread.png"))
-                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_full.png"))
-                painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
-            else:
-                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read.png"))
-                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_empty.png"))
-                painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
-
-            if not grey:
-                painter.fillRect(option.rect, QtGui.QColor(231, 231, 231, 80))
+            # # A picture to display the read/unread state
+            # if read:
+                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/unread.png"))
+                # # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_full.png"))
+                # painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
+            # else:
+                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read.png"))
+                # # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_empty.png"))
+                # painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
 
 
         # Thumbnail's index
         elif index.column() == 8:
+
+            painter.fillRect(option.rect, QtGui.QColor(255, 255, 255))
 
             if type(index.data()) is str and index.data() != "Empty":
                 path_photo = "./graphical_abstracts/" + index.data()
@@ -216,6 +236,3 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         else:
             # Using default painter
             QtGui.QStyledItemDelegate.paint(self, painter, option, index)
-
-            if red:
-                painter.fillRect(option.rect, QtGui.QColor(255, 3, 59, 90))

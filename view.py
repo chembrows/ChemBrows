@@ -99,7 +99,7 @@ class ViewPerso(QtGui.QTableView):
 
     def updateHeight(self):
 
-        self.verticalHeader().setDefaultSectionSize(self.height() * 0.2)
+        self.verticalHeader().setDefaultSectionSize(self.height() * 0.17)
 
 
     def resizeCells(self, new_size):
