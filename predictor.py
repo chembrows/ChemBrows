@@ -13,10 +13,10 @@ from sklearn.feature_extraction import text
 
 # DEBUG
 import datetime
+from memory_profiler import profile
 
 from log import MyLog
 
-from memory_profiler import profile
 
 class Predictor(QtCore.QThread):
 
@@ -156,10 +156,11 @@ class Predictor(QtCore.QThread):
 
         query.prepare("UPDATE papers SET percentage_match = ? WHERE id = ?")
 
+
         for id_bdd, percentage in zip(list_id, list_percentages):
 
             # Convert the percentage to a float, because the number is
-            # probably a type used by numpy
+            # probably a type used by numpy. MANDATORY
             params = (float(percentage), id_bdd)
 
             for value in params:

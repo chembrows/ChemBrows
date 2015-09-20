@@ -496,20 +496,19 @@ class Fenetre(QtGui.QMainWindow):
         self.exitAction.triggered.connect(self.closeEvent)
 
         # Action to refresh the posts
-        self.parseAction = QtGui.QAction(QtGui.QIcon('images/refresh.png'), '&Refresh', self)
-        # self.parseAction.setIconSize(QtCore.QSize(36, 36))
+        self.parseAction = QtGui.QAction('&Refresh', self)
         self.parseAction.setShortcut('F5')
         self.parseAction.setToolTip("Refresh: download new posts")
         self.parseAction.triggered.connect(self.parse)
 
         # Action to calculate the percentages of match
-        self.calculatePercentageMatchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_040_stats.png'), '&Percentages', self)
+        self.calculatePercentageMatchAction = QtGui.QAction('&Percentages', self)
         self.calculatePercentageMatchAction.setShortcut('F6')
         self.calculatePercentageMatchAction.setToolTip("Re-calculate Hot Paperness")
         self.calculatePercentageMatchAction.triggered.connect(lambda: self.calculatePercentageMatch(update=True))
 
         # Action to like a post
-        self.toggleLikeAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_343_thumbs_up'), 'Toggle like', self)
+        self.toggleLikeAction = QtGui.QAction('Toggle like', self)
         self.toggleLikeAction.setShortcut('L')
         self.toggleLikeAction.triggered.connect(self.toggleLike)
 
@@ -880,7 +879,7 @@ class Fenetre(QtGui.QMainWindow):
         self.button_refresh.clicked.connect(self.parse)
 
         # Button in the toolbar: calculate paperness
-        self.button_calculate_percentage.clicked.connect(self.calculatePercentageMatch)
+        self.button_calculate_percentage.clicked.connect(lambda: self.calculatePercentageMatch(True))
 
         # Button in the toolbar: advanced search
         self.button_advanced_search.clicked.connect(lambda: AdvancedSearch(self))
@@ -1448,7 +1447,6 @@ class Fenetre(QtGui.QMainWindow):
             table.setModel(proxy)
 
 
-
     def toggleRead(self):
 
         """Method to invert the value of new.
@@ -1749,7 +1747,6 @@ class Fenetre(QtGui.QMainWindow):
             self.progress.show()
             app.processEvents()
 
-            # self.predictor.calculatePercentageMatch()
             self.predictor.start()
 
             self.predictor.finished.connect(whenDone)
