@@ -181,12 +181,14 @@ class Worker(QtCore.QThread):
                     else:
                         continue
 
+                # Artice complete, skip it
                 elif doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
                     self.count_futures_images += 1
                     self.l.debug("Skipping")
                     continue
 
 
+                # Artice not complete, try to complete it
                 elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
 
                     # How to update the entry
@@ -295,6 +297,7 @@ class Worker(QtCore.QThread):
                     continue
 
 
+                # Article complete, skip it
                 elif doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
                     self.count_futures_images += 1
                     self.count_futures_urls += 1
@@ -302,6 +305,7 @@ class Worker(QtCore.QThread):
                     continue
 
 
+                # Artice not complete, try to complete it
                 elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
 
                     url = getattr(entry, 'feedburner_origlink', entry.link)
@@ -311,7 +315,6 @@ class Worker(QtCore.QThread):
                     if dl_page:
                         self.parent.counter_updates += 1
 
-                        # future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers, verify=bool_verify)
                         future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers)
                         future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
@@ -319,8 +322,9 @@ class Worker(QtCore.QThread):
                         continue
 
                     elif dl_image:
+                        if doi == "10.1039/C5SC02547H":
+                            print("dl image")
                         self.parent.counter_updates += 1
-
                         self.count_futures_urls += 1
 
                         graphical_abstract = data['graphical_abstract']
@@ -332,7 +336,6 @@ class Worker(QtCore.QThread):
                                        'Connection': 'close',
                                        'Referer': url}
 
-                            # future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT, verify=bool_verify)
                             future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
@@ -344,7 +347,6 @@ class Worker(QtCore.QThread):
 
                     url = getattr(entry, 'feedburner_origlink', entry.link)
 
-                    # future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers, verify=bool_verify)
                     future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
@@ -371,7 +373,6 @@ class Worker(QtCore.QThread):
 
         """Callback to handle the response of the futures trying to
         download the page of the articles"""
-
 
         self.count_futures_urls += 1
 
@@ -410,26 +411,21 @@ class Worker(QtCore.QThread):
             self.l.debug("Rejecting article {}, no author".format(title))
             return
 
-        # Checking if the data are complete
-        if type(abstract) is not str or type(authors) is not str:
-            verif = 0
-        else:
-            verif = 1
+        # # Checking if the data are complete
+        # if type(abstract) is not str or type(authors) is not str:
+            # verif = 0
+        # else:
+            # verif = 1
 
         if doi in self.list_doi:
-            query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, verif=?, topic_simple=? WHERE doi=?")
-            params = (title, date, authors, abstract, verif, topic_simple, doi)
+            query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, topic_simple=? WHERE doi=?")
+            params = (title, date, authors, abstract, topic_simple, doi)
             self.l.debug("Updating {0} in the database".format(doi))
         else:
-            query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
-                           VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, url, verif, new, topic_simple)\
+                           VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
-            if graphical_abstract != "Empty":
-                path_picture = functions.simpleChar(graphical_abstract)
-            else:
-                path_picture = "Empty"
-
-            params = (doi, title, date, journal_abb, authors, abstract, path_picture, url, verif, 1, topic_simple)
+            params = (doi, title, date, journal_abb, authors, abstract, url, 1, topic_simple)
             self.l.debug("Adding {0} to the database".format(doi))
             self.parent.counter += 1
 
@@ -463,40 +459,38 @@ class Worker(QtCore.QThread):
             response = future.result()
         except requests.exceptions.ReadTimeout:
             self.l.error("ReadTimeout for image: {}".format(entry_url))
-            params = (0, doi)
+            # params = (0, doi)
         except requests.exceptions.ConnectionError:
             self.l.error("ConnectionError for image: {}".format(entry_url))
-            params = (0, doi)
+            # params = (0, doi)
         except requests.exceptions.MissingSchema:
             self.l.error("MissingSchema for image: {}".format(entry_url))
-            params = (0, doi)
+            # params = (0, doi)
         except ConnectionResetError:
             self.l.error("ConnectionResetError for {}".format(entry_url))
-            params = (0, doi)
+            # params = (0, doi)
         except socket.timeout:
             self.l.error("socket.timeout for {}".format(entry_url))
-            params = (0, doi)
+            # params = (0, doi)
         else:
             # If the picture was dled correctly
             if response.status_code is requests.codes.ok:
-
-                path = self.path
-
                 try:
                     # Save the page
-                    with iopen(path + functions.simpleChar(response.url), 'wb') as file:
+                    with iopen(self.path + functions.simpleChar(response.url), 'wb') as file:
                         file.write(response.content)
                         self.l.debug("Image ok")
                 except OSError:
-                    params = (0, doi)
+                    params = ("Empty", doi)
+                    pass
                 else:
-                    params = (1, doi)
+                    params = (functions.simpleChar(response.url), doi)
             else:
                 self.l.debug("Bad return code: {}".format(response.status_code))
-                params = (0, doi)
+                params = ("Empty", doi)
 
         finally:
-            query.prepare("UPDATE papers SET verif=? WHERE doi=?")
+            query.prepare("UPDATE papers SET graphical_abstract=? WHERE doi=?")
 
             for value in params:
                 query.addBindValue(value)
@@ -516,28 +510,29 @@ class Worker(QtCore.QThread):
             return True
 
 
-    def listDoi(self, journal_abb):
+def listDoi(self, journal_abb):
 
-        """Function to get the doi from the database.
-        Also returns a list of booleans to check if the data are complete"""
+    """Function to get the doi from the database.
+    Also returns a list of booleans to check if the data are complete"""
 
-        list_doi = []
-        list_ok = []
+    list_doi = []
+    list_ok = []
 
-        query = QtSql.QSqlQuery(self.bdd)
-        query.prepare("SELECT * FROM papers WHERE journal=?")
-        query.addBindValue(journal_abb)
-        query.exec_()
+    query = QtSql.QSqlQuery(self.bdd)
+    query.prepare("SELECT * FROM papers WHERE journal=?")
+    query.addBindValue(journal_abb)
+    query.exec_()
 
-        while query.next():
-            record = query.record()
-            list_doi.append(record.value('doi'))
+    while query.next():
+        record = query.record()
+        list_doi.append(record.value('doi'))
 
-            if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
-                # Try to download the images again if it didn't work before
-                list_ok.append(True)
-            else:
-                list_ok.append(False)
+        # if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
+        if record.value('graphical_abstract') != "Empty":
+            # Try to download the images again if it didn't work before
+            list_ok.append(True)
+        else:
+            list_ok.append(False)
 
         if self.parent.debug_mod:
             query.prepare("SELECT doi FROM debug WHERE journal=?")

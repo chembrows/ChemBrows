@@ -514,7 +514,7 @@ def getData(company, journal, entry, response=None):
         abstract = "Empty"
     if graphical_abstract is None:
         graphical_abstract = "Empty"
-    if author is None or author == "":
+    if author is None or author == '':
         author = "Empty"
 
 
@@ -610,14 +610,14 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("elsevier", journal, entry, response)
-        print(abstract)
-        # print(graphical_abstract)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("rsc", journal, entry, response)
+        # print(abstract)
+        print(graphical_abstract)
         # print(authors)
         # print(title)
         # print("\n")
 
-    urls_test = ["debug/journ.htm"]
+    urls_test = ["debug/SC.htm"]
 
     session = FuturesSession(max_workers=20)
 
@@ -633,11 +633,12 @@ if __name__ == "__main__":
     print(journal)
 
     for entry in feed.entries:
-        print(entry)
         url = entry.link
 
-        # if not "Climate change" in entry.title and not "Pressure due" in entry.title:
-            # continue
+        if not "congener" in entry.title:
+            continue
+
+        print(entry.title)
 
         # print(url)
 
@@ -649,8 +650,7 @@ if __name__ == "__main__":
         # print(url)
         # getDoi(journal, entry)
 
-        # future = session.get(url, headers=headers, timeout=20)
-        # future = session.get(url, timeout=20, verify=False)
-        # future.add_done_callback(functools.partial(print_result, journal, entry))
+        future = session.get(url, headers=headers, timeout=20)
+        future.add_done_callback(functools.partial(print_result, journal, entry))
 
-        break
+        # break

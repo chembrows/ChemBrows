@@ -79,6 +79,4 @@ class WebViewPerso(QtWebKit.QWebView):
         # # Zoom only if ctrl is pressed
         if modifiers == QtCore.Qt.ControlModifier:
             self.x += float(event.delta() / 120)
-            print(self.x)
-            print(1 + self.x /10)
             self.setZoomFactor(1 + self.x / 10)
