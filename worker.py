@@ -510,36 +510,36 @@ class Worker(QtCore.QThread):
             return True
 
 
-def listDoi(self, journal_abb):
+    def listDoi(self, journal_abb):
 
-    """Function to get the doi from the database.
-    Also returns a list of booleans to check if the data are complete"""
+        """Function to get the doi from the database.
+        Also returns a list of booleans to check if the data are complete"""
 
-    list_doi = []
-    list_ok = []
+        list_doi = []
+        list_ok = []
 
-    query = QtSql.QSqlQuery(self.bdd)
-    query.prepare("SELECT * FROM papers WHERE journal=?")
-    query.addBindValue(journal_abb)
-    query.exec_()
+        query = QtSql.QSqlQuery(self.bdd)
+        query.prepare("SELECT * FROM papers WHERE journal=?")
+        query.addBindValue(journal_abb)
+        query.exec_()
 
-    while query.next():
-        record = query.record()
-        list_doi.append(record.value('doi'))
+        while query.next():
+            record = query.record()
+            list_doi.append(record.value('doi'))
 
-        # if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
-        if record.value('graphical_abstract') != "Empty":
-            # Try to download the images again if it didn't work before
-            list_ok.append(True)
-        else:
-            list_ok.append(False)
+            # if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
+            if record.value('graphical_abstract') != "Empty":
+                # Try to download the images again if it didn't work before
+                list_ok.append(True)
+            else:
+                list_ok.append(False)
 
-        if self.parent.debug_mod:
-            query.prepare("SELECT doi FROM debug WHERE journal=?")
-            query.addBindValue(journal_abb)
-            query.exec_()
-            while query.next():
-                record = query.record()
-                list_doi.append(record.value('doi'))
+            if self.parent.debug_mod:
+                query.prepare("SELECT doi FROM debug WHERE journal=?")
+                query.addBindValue(journal_abb)
+                query.exec_()
+                while query.next():
+                    record = query.record()
+                    list_doi.append(record.value('doi'))
 
-        return list_doi, list_ok
+            return list_doi, list_ok
