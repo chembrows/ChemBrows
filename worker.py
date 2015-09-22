@@ -10,7 +10,7 @@ import functools
 from requests_futures.sessions import FuturesSession
 import requests
 from io import open as iopen
-import ssl
+# import ssl
 import socket
 
 # DEBUG
@@ -19,14 +19,6 @@ import socket
 
 import hosts
 import functions
-
-
-# Monkey patch to avoid connection errors while trying to dl
-# a RSS page w/ an invalid SSL certificate. This patch is used
-# to fix erros w/ Synlett and Synthesis
-# http://stackoverflow.com/questions/28282797/feedparser-parse-ssl-certificate-verify-failed
-if hasattr(ssl, '_create_unverified_context'):
-    ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class Worker(QtCore.QThread):
@@ -124,22 +116,8 @@ class Worker(QtCore.QThread):
                 care_image = tuple_data[3][index]
                 break
 
-        # # Make unverified HTTPS requests for Thieme company
-        # try:
-            # if company == 'thieme':
-                # # bool_verify = False
-                # bool_verify = True
-            # else:
-                # bool_verify = True
-
-        # # Condition occurs when the RSS page is not properly formatted.
-        # # The page can have a journal, but the company can't be identified
-        # except UnboundLocalError:
-            # self.l.critical("Problem parsing {}".format(journal))
-            # self.l.critical("Problem parsing URL {}".format(self.url_feed))
-
         try:
-            self.list_doi, self.list_ok = self.listDoi(journal_abb)
+            self.list_doi = self.listDoi(journal_abb)
         except UnboundLocalError:
             self.l.error("Journal not recognized ! Aborting")
             return
@@ -178,18 +156,20 @@ class Worker(QtCore.QThread):
                         query.prepare("INSERT INTO debug (doi, title, journal, url) VALUES(?, ?, ?, ?)")
                         params = (doi, title, journal_abb, url)
                         self.l.debug("Inserting {0} in table debug".format(doi))
+                        for value in params:
+                            query.addBindValue(value)
+                        query.exec_()
                     else:
                         continue
 
                 # Artice complete, skip it
-                elif doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
+                elif doi in self.list_doi and self.list_doi[doi]:
                     self.count_futures_images += 1
                     self.l.debug("Skipping")
                     continue
 
-
                 # Artice not complete, try to complete it
-                elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
+                elif doi in self.list_doi and not self.list_doi[doi]:
 
                     # How to update the entry
                     dl_page, dl_image, data = hosts.updateData(company, journal, entry, care_image)
@@ -232,28 +212,30 @@ class Worker(QtCore.QThread):
                         self.l.debug("Rejecting article {}, no author".format(title))
                         continue
 
-                    if type(abstract) is not str or type(title) is not str:
-                        verif = 0
-                    else:
-                        verif = 1
-
-                    if graphical_abstract != "Empty":
-                        path_picture = functions.simpleChar(graphical_abstract)
-                    else:
-                        path_picture = "Empty"
-
-                    query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, graphical_abstract, url, verif, new, topic_simple)\
+                    query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, url, new, topic_simple)\
                                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                     # Set new to 1 and not to true
-                    params = (doi, title, date, journal_abb, authors, abstract, path_picture, url, verif, 1, topic_simple)
+                    params = (doi, title, date, journal_abb, authors, abstract, url, 1, topic_simple)
                     self.l.debug("Adding {0} to the database".format(doi))
                     self.parent.counter += 1
                     self.new_entries_worker += 1
 
+                    for value in params:
+                        query.addBindValue(value)
+                    query.exec_()
+
                     if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
                         self.count_futures_images += 1
-                    else:
 
+                        # This block is executed when you delete the db, but not the images.
+                        # Allows to update the graphical_abstract in db accordingly
+                        if os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
+                            query.prepare("UPDATE papers SET graphical_abstract=? WHERE doi=?")
+                            params = (functions.simpleChar(graphical_abstract), doi)
+                            for value in params:
+                                query.addBindValue(value)
+                            query.exec_()
+                    else:
                         headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                                    'Connection': 'close',
                                    'Referer': url}
@@ -261,9 +243,6 @@ class Worker(QtCore.QThread):
                         future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
-                for value in params:
-                    query.addBindValue(value)
-                query.exec_()
 
         else:
 
@@ -298,15 +277,15 @@ class Worker(QtCore.QThread):
 
 
                 # Article complete, skip it
-                elif doi in self.list_doi and self.list_ok[self.list_doi.index(doi)]:
+                elif doi in self.list_doi and self.list_doi[doi]:
                     self.count_futures_images += 1
                     self.count_futures_urls += 1
                     self.l.debug("Skipping")
                     continue
 
 
-                # Artice not complete, try to complete it
-                elif doi in self.list_doi and not self.list_ok[self.list_doi.index(doi)]:
+                # Article not complete, try to complete it
+                elif doi in self.list_doi and not self.list_doi[doi]:
 
                     url = getattr(entry, 'feedburner_origlink', entry.link)
 
@@ -322,8 +301,6 @@ class Worker(QtCore.QThread):
                         continue
 
                     elif dl_image:
-                        if doi == "10.1039/C5SC02547H":
-                            print("dl image")
                         self.parent.counter_updates += 1
                         self.count_futures_urls += 1
 
@@ -411,23 +388,12 @@ class Worker(QtCore.QThread):
             self.l.debug("Rejecting article {}, no author".format(title))
             return
 
-        # # Checking if the data are complete
-        # if type(abstract) is not str or type(authors) is not str:
-            # verif = 0
-        # else:
-            # verif = 1
+        query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, url, new, topic_simple)\
+                       VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
-        if doi in self.list_doi:
-            query.prepare("UPDATE papers SET title=?, date=?, authors=?, abstract=?, topic_simple=? WHERE doi=?")
-            params = (title, date, authors, abstract, topic_simple, doi)
-            self.l.debug("Updating {0} in the database".format(doi))
-        else:
-            query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, url, verif, new, topic_simple)\
-                           VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-
-            params = (doi, title, date, journal_abb, authors, abstract, url, 1, topic_simple)
-            self.l.debug("Adding {0} to the database".format(doi))
-            self.parent.counter += 1
+        params = (doi, title, date, journal_abb, authors, abstract, url, 1, topic_simple)
+        self.l.debug("Adding {0} to the database".format(doi))
+        self.parent.counter += 1
 
         for value in params:
             query.addBindValue(value)
@@ -435,8 +401,18 @@ class Worker(QtCore.QThread):
         self.new_entries_worker += 1
         query.exec_()
 
+        # Don't try to dl the image if its url is 'Empty', or if the image already exists
         if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
             self.count_futures_images += 1
+
+            # This block is executed when you delete the db, but not the images.
+            # Allows to update the graphical_abstract in db accordingly
+            if os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
+                query.prepare("UPDATE papers SET graphical_abstract=? WHERE doi=?")
+                params = (functions.simpleChar(graphical_abstract), doi)
+                for value in params:
+                    query.addBindValue(value)
+                query.exec_()
         else:
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                        'Connection': 'close',
@@ -459,19 +435,18 @@ class Worker(QtCore.QThread):
             response = future.result()
         except requests.exceptions.ReadTimeout:
             self.l.error("ReadTimeout for image: {}".format(entry_url))
-            # params = (0, doi)
+            params = ("Empty", doi)
         except requests.exceptions.ConnectionError:
             self.l.error("ConnectionError for image: {}".format(entry_url))
-            # params = (0, doi)
+            params = ("Empty", doi)
         except requests.exceptions.MissingSchema:
             self.l.error("MissingSchema for image: {}".format(entry_url))
-            # params = (0, doi)
         except ConnectionResetError:
             self.l.error("ConnectionResetError for {}".format(entry_url))
-            # params = (0, doi)
+            params = ("Empty", doi)
         except socket.timeout:
             self.l.error("socket.timeout for {}".format(entry_url))
-            # params = (0, doi)
+            params = ("Empty", doi)
         else:
             # If the picture was dled correctly
             if response.status_code is requests.codes.ok:
@@ -482,7 +457,6 @@ class Worker(QtCore.QThread):
                         self.l.debug("Image ok")
                 except OSError:
                     params = ("Empty", doi)
-                    pass
                 else:
                     params = (functions.simpleChar(response.url), doi)
             else:
@@ -515,31 +489,40 @@ class Worker(QtCore.QThread):
         """Function to get the doi from the database.
         Also returns a list of booleans to check if the data are complete"""
 
-        list_doi = []
-        list_ok = []
+        # list_doi = []
+        # list_ok = []
 
         query = QtSql.QSqlQuery(self.bdd)
         query.prepare("SELECT * FROM papers WHERE journal=?")
         query.addBindValue(journal_abb)
         query.exec_()
 
+        result = dict()
+
         while query.next():
             record = query.record()
-            list_doi.append(record.value('doi'))
+            # list_doi.append(record.value('doi'))
+            doi = record.value('doi')
 
-            # if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
-            if record.value('graphical_abstract') != "Empty":
-                # Try to download the images again if it didn't work before
-                list_ok.append(True)
-            else:
-                list_ok.append(False)
+            not_empty = record.value('graphical_abstract') != "Empty"
+            result[doi] = not_empty
 
-            if self.parent.debug_mod:
-                query.prepare("SELECT doi FROM debug WHERE journal=?")
-                query.addBindValue(journal_abb)
-                query.exec_()
-                while query.next():
-                    record = query.record()
-                    list_doi.append(record.value('doi'))
+            # # if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
+            # if record.value('graphical_abstract') != "Empty":
+                # # Try to download the images again if it didn't work before
+                # list_ok.append(True)
+            # else:
+                # list_ok.append(False)
 
-            return list_doi, list_ok
+        if self.parent.debug_mod:
+            query.prepare("SELECT doi FROM debug WHERE journal=?")
+            query.addBindValue(journal_abb)
+            query.exec_()
+            while query.next():
+                record = query.record()
+                doi = record.value('doi')
+                # list_doi.append(record.value('doi'))
+                result[doi] = None
+
+        # return list_doi, list_ok
+        return result

@@ -73,11 +73,14 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             title = options.text
             width_title = painter.fontMetrics().width(title)
 
-            # Cut the title at the end of a word if it is too long
-            while width_title / 3 > options.rect.width():
-                title = title.split(' ')[:-1]
-                title = ' '.join(title) + "..."
-                width_title = painter.fontMetrics().width(title)
+            # Check if the width is correct. Useful when the program
+            # has nos prefs for the interface
+            if options.rect.width() > 0:
+                # Cut the title at the end of a word if it is too long
+                while width_title / 3 > options.rect.width():
+                    title = title.split(' ')[:-1]
+                    title = ' '.join(title) + "..."
+                    width_title = painter.fontMetrics().width(title)
 
             journal = index.sibling(index.row(), 5).data()
             date = prettyDate(index.sibling(index.row(), 4).data())

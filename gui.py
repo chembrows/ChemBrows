@@ -642,14 +642,8 @@ class Fenetre(QtGui.QMainWindow):
         self.options.setValue("final_splitter", self.splitter2.saveState())
 
         # Save the sorting method
-        try:
-            self.options.setValue("sorting_method", self.sorting_method)
-        except AttributeError:
-            self.options.setValue("sorting_method", 1)
-        try:
-            self.options.setValue("sorting_reversed", self.sorting_reversed)
-        except AttributeError:
-            self.options.setValue("sorting_reversed", False)
+        self.options.setValue("sorting_method", self.sorting_method)
+        self.options.setValue("sorting_reversed", self.sorting_reversed)
 
         self.options.endGroup()
 
@@ -721,9 +715,7 @@ class Fenetre(QtGui.QMainWindow):
                                  topic_options=topic_entries,
                                  author_options=author_entries)
 
-
-        # Si des réglages pour la fenêtre
-        # sont disponibles, on les importe et applique
+        # If windows settings are available, import and use them
         if "Window" in self.options.childGroups():
 
             self.restoreGeometry(self.options.value("Window/window_geometry"))
@@ -734,7 +726,6 @@ class Fenetre(QtGui.QMainWindow):
                 if header_state is not None:
                     each_table.horizontalHeader().restoreState(self.options.value("Window/header_state{0}".format(index)))
 
-            # self.splitter1.restoreState(self.options.value("Window/central_splitter"))
             self.splitter2.restoreState(self.options.value("Window/final_splitter"))
 
             # # Bloc to restore the check of the sorting method, in the View menu
@@ -751,10 +742,10 @@ class Fenetre(QtGui.QMainWindow):
                     if button.text() in self.tags_selected:
                         button.setChecked(True)
 
-        try:
-            self.changeSortingMethod(self.sorting_method, self.sorting_reversed)
-        except AttributeError:
-            self.changeSortingMethod(1, False)
+        # Create 2 attributes to store how the articles are sorted
+        self.sorting_method = getattr(self, 'sorting_method', 0)
+        self.sorting_reversed = getattr(self, 'sorting_reversed', False)
+        self.changeSortingMethod(self.sorting_method, self.sorting_reversed)
 
         self.getJournalsToCare()
 
