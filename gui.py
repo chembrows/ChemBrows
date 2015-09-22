@@ -1818,25 +1818,25 @@ class Fenetre(QtGui.QMainWindow):
         self.button_refresh.setIcon(QtGui.QIcon("./images/refresh.png"))
         self.button_refresh.setIconSize(QtCore.QSize(36, 36))
         self.button_refresh.setToolTip("Refresh: download new posts")
+        self.button_refresh.setAccessibleName('toolbar_round_button')
 
         # Percentage calculation button
         self.button_calculate_percentage = QtGui.QPushButton()
         self.button_calculate_percentage.setIcon(QtGui.QIcon("./images/stats.png"))
         self.button_calculate_percentage.setIconSize(QtCore.QSize(36, 36))
         self.button_calculate_percentage.setToolTip("Re-calculate Hot Paperness")
+        self.button_calculate_percentage.setAccessibleName('toolbar_round_button')
 
         # Button to display new articles, or view them all
         self.button_search_new = QtGui.QPushButton('View unread')
         self.button_search_new.setToolTip("Display unread articles")
+        self.button_search_new.setAccessibleName('toolbar_button')
 
+        # Button to change the sorting method of the articles
         self.button_sort_by = QtGui.QPushButton()
         self.button_sort_by.setToolTip("Sort articles by date or Hot Paperness")
         self.button_sort_by.clicked.connect(lambda: self.changeSortingMethod(None, self.sortingReversedAction.isChecked()))
-
-        # self.changeSortingAction = QtGui.QAction(self)
-        # self.changeSortingAction.triggered.connect(lambda: self.changeSortingMethod(None,
-                                                                                    # reverse=self.sortingReversedAction.isChecked()))
-        # self.changeSortingAction.setToolTip("Sort articles by date or Hot Paperness")
+        self.button_sort_by.setAccessibleName('toolbar_button')
 
         # Create a research bar and set its size
         self.line_research = QtGui.QLineEdit()
@@ -1849,6 +1849,7 @@ class Fenetre(QtGui.QMainWindow):
         self.button_advanced_search.setIcon(QtGui.QIcon("./images/advanced_search.png"))
         self.button_advanced_search.setIconSize(QtCore.QSize(36, 36))
         self.button_advanced_search.setToolTip("Advanced search: more powerful research")
+        self.button_advanced_search.setAccessibleName('toolbar_round_button')
 
         self.toolbar.addWidget(self.button_refresh)
         self.toolbar.addWidget(self.button_calculate_percentage)
@@ -2024,9 +2025,6 @@ class Fenetre(QtGui.QMainWindow):
             self.button_zoom_less.setStyleSheet(style)
             self.button_zoom_more.setStyleSheet(style)
             self.button_color_read.setStyleSheet(style)
-
-        with open("./config/styles/buttons_toolbar.css", "r") as fh:
-            style = fh.read()
             self.button_refresh.setStyleSheet(style)
             self.button_calculate_percentage.setStyleSheet(style)
             self.button_advanced_search.setStyleSheet(style)
