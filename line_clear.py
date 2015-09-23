@@ -13,30 +13,18 @@ class ButtonLineEdit(QtGui.QLineEdit):
 
         super(ButtonLineEdit, self).__init__(parent)
 
+        # Create a button and connect it to the clear method
         self.button = QtGui.QToolButton(self)
+        self.button.clicked.connect(self.clear)
+        self.button.setCursor(QtCore.Qt.PointingHandCursor)
+
+        self.button.setFocusPolicy(QtCore.Qt.NoFocus)
         self.button.setIcon(QtGui.QIcon(icon_file))
-        self.button.setStyleSheet('border: 0px; padding: 0px;')
-        self.button.setCursor(QtCore.Qt.ArrowCursor)
-        self.button.clicked.connect(self.buttonClicked.emit)
 
-        frameWidth = self.style().pixelMetric(QtGui.QStyle.PM_DefaultFrameWidth)
-        buttonSize = self.button.sizeHint()
+        # Remove the elements of a button: border, background
+        self.button.setStyleSheet("background: transparent; border: none;")
 
-        self.setStyleSheet('QLineEdit {padding-right: %dpx; }' % (buttonSize.width() + frameWidth + 1))
-        self.setMinimumSize(max(self.minimumSizeHint().width(), buttonSize.width() + frameWidth * 2 + 2),
-                            max(self.minimumSizeHint().height(), buttonSize.height() + frameWidth * 2 + 2))
-
-
-    def resizeEvent(self, event):
-
-        # self.button.setIconSize(QtCore.QSize(self.button.width() / 2, self.button.height() / 2))
-        self.button.setIconSize(QtCore.QSize(self.button.height() / 2, self.button.width() / 2))
-
-        buttonSize = self.button.sizeHint()
-        frameWidth = self.style().pixelMetric(QtGui.QStyle.PM_DefaultFrameWidth)
-        # self.button.move(self.rect().right() - frameWidth * 6 - buttonSize.width(),
-        self.button.move(self.rect().right() - frameWidth - buttonSize.width(),
-                         (self.rect().bottom() - buttonSize.height() + 1) / 2)
-
-
-        super(ButtonLineEdit, self).resizeEvent(event)
+        layout = QtGui.QHBoxLayout(self)
+        layout.addWidget(self.button, 0, QtCore.Qt.AlignRight)
+        self.setTextMargins(0, 0, self.button.sizeHint().width(), 0)
+        layout.setMargin(5)

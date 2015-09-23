@@ -1,0 +1,32 @@
+Welcome to ChemBrows, a software that helps you to tame the flood of scientific literature
+--
+First things first: select the journals you want to follow 
+
+(you can change this selection afterwards in Settings)
+--
+Double-click on an article to see the article on the publisher's website
+--
+Here come the cool features: 
+--
+A dock appears on the left side of the window, to display/hide journal(s) 
+--
+Savable searches allow you to follow your topics of interest and/or your favorite authors
+--
+If you want to check out articles of interest later, simply put them in the TO-READ list
+--
+The very cool feature now: Chembrows includes machine learning ! 
+--
+Chembrows learns from your input and classifies the articles by "Hot Paperness"
+
+    - Displaying AND Liking articles INCREASES the "Hot Paperness" of similar reasearch works
+
+    - Displaying WITHOUT Liking articles DECREASES the "Hot Paperness" of similar reaseach works
+
+--
+Don't forget: the more you feed ChemBrows, the more Chembrows feeds you back with relevant articles
+--
+You are now ready to download articles! 
+
+(it may take some time at the first execution, be patient...)
+--
+Enjoy Chembrows and feel free to provide us with your feedback at <a href="http://www.chembrows.com">www.chembrows.com</a>

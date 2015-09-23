@@ -20,12 +20,10 @@ class Tuto(QtGui.QDialog):
 
         self.setModal(True)
 
-        self.list_slides = []
-
         # Get the text of the slides from config files
-        for slide in sorted(os.listdir("./config/tuto")):
-            with open('./config/tuto/{0}'.format(slide), 'r') as f:
-                self.list_slides.append(f.read())
+        with open('./config/tuto.txt', 'r') as f:
+            content = f.read()
+            self.list_slides = content.split('--')
 
         self.initUI()
         self.defineSlots()
@@ -43,7 +41,8 @@ class Tuto(QtGui.QDialog):
         # the last and the first slides are displayed. Also changes the
         # buttons when it has to
         if index <= 0:
-            self.text_diapo.setText(self.list_slides[0])
+            # self.text_diapo.setText(self.list_slides[0])
+            self.text_diapo.setHtml(self.list_slides[0])
             self.previous_button.setEnabled(False)
         elif index >= len(self.list_slides) - 1:
             self.next_button.setEnabled(False)

@@ -2,13 +2,20 @@ QPushButton
 {
     border: 0px;
     margin-top: 5px;
-    max-width: 36px;
-    max-height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    max-width: 40px;
+    max-height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    background: transparent;
 }
 
 QPushButton[accessibleName="toolbar_round_button"]
 {
     margin-left: 10px;
+}
+
+QPushButton:pressed
+{
+    background: white;
+    border-radius: 20px;
 }

@@ -117,7 +117,7 @@ class Worker(QtCore.QThread):
                 break
 
         try:
-            self.list_doi = self.listDoi(journal_abb)
+            self.dico_doi = self.listDoi(journal_abb)
         except UnboundLocalError:
             self.l.error("Journal not recognized ! Aborting")
             return
@@ -151,7 +151,7 @@ class Worker(QtCore.QThread):
                     self.l.debug("Rejecting {0}".format(doi))
 
                     # Insert the crappy articles in a rescue database
-                    if self.parent.debug_mod and doi not in self.list_doi:
+                    if self.parent.debug_mod and doi not in self.dico_doi:
                         url = getattr(entry, 'feedburner_origlink', entry.link)
                         query.prepare("INSERT INTO debug (doi, title, journal, url) VALUES(?, ?, ?, ?)")
                         params = (doi, title, journal_abb, url)
@@ -163,13 +163,13 @@ class Worker(QtCore.QThread):
                         continue
 
                 # Artice complete, skip it
-                elif doi in self.list_doi and self.list_doi[doi]:
+                elif doi in self.dico_doi and self.dico_doi[doi]:
                     self.count_futures_images += 1
                     self.l.debug("Skipping")
                     continue
 
                 # Artice not complete, try to complete it
-                elif doi in self.list_doi and not self.list_doi[doi]:
+                elif doi in self.dico_doi and not self.dico_doi[doi]:
 
                     # How to update the entry
                     dl_page, dl_image, data = hosts.updateData(company, journal, entry, care_image)
@@ -263,7 +263,7 @@ class Worker(QtCore.QThread):
                     self.parent.counter_rejected += 1
                     self.l.debug("Rejecting {0}".format(doi))
 
-                    if self.parent.debug_mod and doi not in self.list_doi:
+                    if self.parent.debug_mod and doi not in self.dico_doi:
                         url = getattr(entry, 'feedburner_origlink', entry.link)
                         query.prepare("INSERT INTO debug (doi, title, journal, url) VALUES(?, ?, ?, ?)")
                         params = (doi, title, journal_abb, url)
@@ -277,7 +277,7 @@ class Worker(QtCore.QThread):
 
 
                 # Article complete, skip it
-                elif doi in self.list_doi and self.list_doi[doi]:
+                elif doi in self.dico_doi and self.dico_doi[doi]:
                     self.count_futures_images += 1
                     self.count_futures_urls += 1
                     self.l.debug("Skipping")
@@ -285,7 +285,7 @@ class Worker(QtCore.QThread):
 
 
                 # Article not complete, try to complete it
-                elif doi in self.list_doi and not self.list_doi[doi]:
+                elif doi in self.dico_doi and not self.dico_doi[doi]:
 
                     url = getattr(entry, 'feedburner_origlink', entry.link)
 
@@ -489,9 +489,6 @@ class Worker(QtCore.QThread):
         """Function to get the doi from the database.
         Also returns a list of booleans to check if the data are complete"""
 
-        # list_doi = []
-        # list_ok = []
-
         query = QtSql.QSqlQuery(self.bdd)
         query.prepare("SELECT * FROM papers WHERE journal=?")
         query.addBindValue(journal_abb)
@@ -501,28 +498,16 @@ class Worker(QtCore.QThread):
 
         while query.next():
             record = query.record()
-            # list_doi.append(record.value('doi'))
             doi = record.value('doi')
 
             not_empty = record.value('graphical_abstract') != "Empty"
             result[doi] = not_empty
-
-            # # if record.value('verif') == 1 and record.value('graphical_abstract') != "Empty":
-            # if record.value('graphical_abstract') != "Empty":
-                # # Try to download the images again if it didn't work before
-                # list_ok.append(True)
-            # else:
-                # list_ok.append(False)
 
         if self.parent.debug_mod:
             query.prepare("SELECT doi FROM debug WHERE journal=?")
             query.addBindValue(journal_abb)
             query.exec_()
             while query.next():
-                record = query.record()
-                doi = record.value('doi')
-                # list_doi.append(record.value('doi'))
-                result[doi] = None
+                result[query.record().value('doi')] = None
 
-        # return list_doi, list_ok
         return result
