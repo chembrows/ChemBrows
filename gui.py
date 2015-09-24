@@ -1484,7 +1484,23 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to clean the database. Called from
         the window settings, but better to be here. Also
-        deletes the unused pictures present in the graphical_abstracts folder"""
+        deletes the unused pictures present in the
+        graphical_abstracts folder"""
+
+        mes = "You are about to clean your database, and you might loose data.\n\n\
+If you do not know what you are doing, you should cancel now.\n\n\
+If you click OK, the cleaning process will start"
+
+        choice = QtGui.QMessageBox.critical(self, "Cleaning database", mes,
+                                            QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Cancel)
+
+        if choice == QtGui.QMessageBox.Cancel:
+            return
+
+        progress = QtGui.QProgressDialog("Deleting articles from unfollowed journals", None, 0, 100, self)
+        progress.setWindowTitle("Cleaning database")
+        progress.show()
+        app.processEvents()
 
         query = QtSql.QSqlQuery(self.bdd)
 
@@ -1507,9 +1523,13 @@ class Fenetre(QtGui.QMainWindow):
 
         self.l.error(self.bdd.lastError().text())
 
-        self.l.debug("Removed unintersting journals from the database")
+        self.l.info("Removed unintersting journals from the database")
 
-        query.exec_("DELETE FROM papers WHERE verif=0")
+        progress.setLabelText("Deleting articles with empty abstracts")
+        progress.setValue(20)
+        app.processEvents()
+
+
         query.exec_("DELETE FROM papers WHERE abstract=''")
 
         if not self.bdd.commit():
@@ -1517,14 +1537,17 @@ class Fenetre(QtGui.QMainWindow):
         else:
             self.l.info("Removed incomplete articles from the database")
 
-        query.exec_("SELECT graphical_abstract FROM papers")
+        progress.setLabelText("Deleting useless images")
+        progress.setValue(40)
+        app.processEvents()
+
+        query.exec_("SELECT graphical_abstract FROM papers WHERE graphical_abstract != 'Empty'")
 
         images_path = []
         while query.next():
-            record = query.record()
-            images_path.append(record.value('graphical_abstract'))
+            images_path.append(query.record().value('graphical_abstract'))
 
-        images_path = [path for path in images_path if path != 'Empty']
+        # images_path = [path for path in images_path if path != 'Empty']
 
         # Delete all the images which are not in the database (so not
         # corresponding to any article)
@@ -1534,6 +1557,10 @@ class Fenetre(QtGui.QMainWindow):
                     os.remove(os.path.abspath("./graphical_abstracts/{0}".format(fichier)))
 
         self.l.debug("Deleted all the useless images")
+
+        progress.setLabelText("Building list of filtered articles")
+        progress.setValue(60)
+        app.processEvents()
 
         query.exec_("SELECT id, doi, title, journal, url FROM papers")
 
@@ -1555,6 +1582,10 @@ class Fenetre(QtGui.QMainWindow):
 
         self.l.info("{} entries rejected will be deleted".format(len(articles_to_reject)))
 
+        progress.setLabelText("Deleting filtered articles")
+        progress.setValue(80)
+        app.processEvents()
+
         requete = "DELETE FROM papers WHERE id IN ("
 
         # Building the query
@@ -1571,14 +1602,24 @@ class Fenetre(QtGui.QMainWindow):
 
         # If the program is not in debug mod, exit the method
         if not self.debug_mod:
+            progress.setValue(100)
+            app.processEvents()
+            progress.reset()
             return
+
+        progress.setLabelText("Building list of filtered articles")
+        progress.setValue(85)
+        app.processEvents()
 
         # Build a list of DOIs to avoid duplicate in debug table
         list_doi = []
-        query.exec_("SELECT * FROM debug")
+        query.exec_("SELECT doi FROM debug")
         while query.next():
-            record = query.record()
-            list_doi.append(record.value('doi'))
+            list_doi.append(query.record().value('doi'))
+
+        progress.setLabelText("Inserting filtered articles in debug db")
+        progress.setValue(90)
+        app.processEvents()
 
         # Insert all the rejected articles in the debug table
         self.bdd.transaction()
@@ -1594,6 +1635,10 @@ class Fenetre(QtGui.QMainWindow):
             self.l.critical("Problem while inserting rejected articles, cleanDb")
         else:
             self.l.info("Inserting rejected articles into the database")
+
+        progress.setValue(100)
+        app.processEvents()
+        progress.reset()
 
 
     def openInBrowser(self):
