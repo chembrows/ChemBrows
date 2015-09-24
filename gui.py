@@ -1840,7 +1840,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Create a research bar and set its size
         self.line_research = QtGui.QLineEdit()
-        self.line_research = ButtonLineEdit('images/glyphicons_197_remove')
+        self.line_research = ButtonLineEdit('images/glyphicons_197_remove', self)
         self.line_research.setToolTip("Quick search")
         self.line_research.setFixedSize(self.line_research.sizeHint())
 

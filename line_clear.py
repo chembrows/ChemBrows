@@ -15,8 +15,9 @@ class ButtonLineEdit(QtGui.QLineEdit):
 
         # Create a button and connect it to the clear method
         self.button = QtGui.QToolButton(self)
-        self.button.clicked.connect(self.clear)
         self.button.setCursor(QtCore.Qt.PointingHandCursor)
+        self.button.clicked.connect(self.clear)
+        self.button.clicked.connect(parent.searchByButton)
 
         self.button.setFocusPolicy(QtCore.Qt.NoFocus)
         self.button.setIcon(QtGui.QIcon(icon_file))

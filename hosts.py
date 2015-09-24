@@ -610,14 +610,14 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("rsc", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("elsevier", journal, entry, response)
         # print(abstract)
         print(graphical_abstract)
         # print(authors)
         # print(title)
         # print("\n")
 
-    urls_test = ["debug/SC.htm"]
+    urls_test = ["debug/bio.htm"]
 
     session = FuturesSession(max_workers=20)
 
@@ -635,9 +635,6 @@ if __name__ == "__main__":
     for entry in feed.entries:
         url = entry.link
 
-        if not "congener" in entry.title:
-            continue
-
         print(entry.title)
 
         # print(url)
@@ -653,4 +650,4 @@ if __name__ == "__main__":
         future = session.get(url, headers=headers, timeout=20)
         future.add_done_callback(functools.partial(print_result, journal, entry))
 
-        # break
+        break

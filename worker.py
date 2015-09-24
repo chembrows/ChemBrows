@@ -213,7 +213,7 @@ class Worker(QtCore.QThread):
                         continue
 
                     query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, url, new, topic_simple)\
-                                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
                     # Set new to 1 and not to true
                     params = (doi, title, date, journal_abb, authors, abstract, url, 1, topic_simple)
                     self.l.debug("Adding {0} to the database".format(doi))
@@ -327,6 +327,7 @@ class Worker(QtCore.QThread):
                     future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
+
         while not self.checkFuturesRunning():
             self.sleep(0.5)
 
@@ -398,8 +399,8 @@ class Worker(QtCore.QThread):
         for value in params:
             query.addBindValue(value)
 
-        self.new_entries_worker += 1
         query.exec_()
+        self.new_entries_worker += 1
 
         # Don't try to dl the image if its url is 'Empty', or if the image already exists
         if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
