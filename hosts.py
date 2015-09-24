@@ -49,6 +49,9 @@ def updateData(company, journal, entry, care_image):
     dl_page = True
     graphical_abstract = None
 
+    # NOTE:
+    # company = 'npg' is not mentionned, but dl_image & dl_page are True
+
     if company == 'rsc':
         dl_page = False
 

@@ -38,7 +38,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
         # Get the read/unread state of an article. Colors the cell
         # if the article is unread
-        read = index.sibling(index.row(), 12).data()
+        read = index.sibling(index.row(), 11).data()
 
         date = index.sibling(index.row(), 4).data()
 

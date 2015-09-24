@@ -146,9 +146,8 @@ class ViewPerso(QtGui.QTableView):
         self.hideColumn(7)  # Hide abstracts
         self.hideColumn(9)  # Hide like
         self.hideColumn(10)  # Hide urls
-        self.hideColumn(11)  # Hide verif
-        self.hideColumn(12)  # Hide new
-        self.hideColumn(13)  # Hide topic_simple
+        self.hideColumn(11)  # Hide new
+        self.hideColumn(12)  # Hide topic_simple
 
         # Move the graphical abstract to first
         self.horizontalHeader().moveSection(8, 0)

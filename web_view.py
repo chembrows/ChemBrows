@@ -14,7 +14,7 @@ class WebViewPerso(QtWebKit.QWebView):
         self.parent = parent
 
         # Attribute to store the background state: dark or light
-        self.dark = 0
+        # self.dark = 0
 
         self.x = 0
         self.setRenderHint(QtGui.QPainter.Antialiasing)
@@ -29,7 +29,7 @@ class WebViewPerso(QtWebKit.QWebView):
         """Change the background and the font colors of the abstract
         reading area, through a boolean"""
 
-        self.dark = 1 - self.dark
+        self.parent.dark = 1 - self.parent.dark
         self.setHtml()
 
 
@@ -41,7 +41,7 @@ class WebViewPerso(QtWebKit.QWebView):
             string = self.page().mainFrame().toHtml().split("</style>")[-1]
 
         # Change the background and font colors
-        if self.dark == 1:
+        if self.parent.dark == 1:
             self.setStyleSheet("background-color: grey;")
             string = "<style>body {color:white}</style>" + string
         else:

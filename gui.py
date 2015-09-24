@@ -292,7 +292,7 @@ class Fenetre(QtGui.QMainWindow):
         query = QtSql.QSqlQuery(self.bdd)
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
-                     liked INTEGER, url TEXT, verif INTEGER, new INTEGER, topic_simple TEXT)")
+                     liked INTEGER, url TEXT, new INTEGER, topic_simple TEXT)")
 
         if self.debug_mod:
             query.exec_("CREATE TABLE IF NOT EXISTS debug \
@@ -645,6 +645,8 @@ class Fenetre(QtGui.QMainWindow):
         self.options.setValue("sorting_method", self.sorting_method)
         self.options.setValue("sorting_reversed", self.sorting_reversed)
 
+        self.options.setValue("dark", self.dark)
+
         self.options.endGroup()
 
         # Be sure self.options finished its tasks.
@@ -733,6 +735,9 @@ class Fenetre(QtGui.QMainWindow):
             self.sorting_method = self.options.value("Window/sorting_method", 1, int)
             self.sorting_reversed = self.options.value("Window/sorting_reversed", False, bool)
 
+            # Boolean: the background of the abstract zone is dark or not
+            self.dark = self.options.value("Window/dark", False, bool)
+
             # Restore the journals selected (buttons pushed)
             self.tags_selected = self.options.value("Window/tags_selected", [])
             if self.tags_selected == self.getJournalsToCare():
@@ -741,10 +746,12 @@ class Fenetre(QtGui.QMainWindow):
                 for button in self.list_buttons_tags:
                     if button.text() in self.tags_selected:
                         button.setChecked(True)
+        else:
+            # Create 2 attributes to store how the articles are sorted
+            self.sorting_method = 0
+            self.sorting_reversed = False
+            self.dark = False
 
-        # Create 2 attributes to store how the articles are sorted
-        self.sorting_method = getattr(self, 'sorting_method', 0)
-        self.sorting_reversed = getattr(self, 'sorting_reversed', False)
         self.changeSortingMethod(self.sorting_method, self.sorting_reversed)
 
         self.getJournalsToCare()
@@ -1952,7 +1959,7 @@ class Fenetre(QtGui.QMainWindow):
         self.button_share_mail.hide()
 
         # A QWebView to render the sometimes rich text of the abstracts
-        self.text_abstract = WebViewPerso()
+        self.text_abstract = WebViewPerso(self)
 
         # Building the grid
         self.grid_area_right_top.addWidget(prelabel_title, 0, 0, 1, 4)
