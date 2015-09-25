@@ -72,7 +72,6 @@ class Fenetre(QtGui.QMainWindow):
         self.list_tables_in_tabs = []
         self.list_proxies_in_tabs = []
 
-
         # Call processEvents regularly for the splash screen
         start_time = datetime.datetime.now()
 
@@ -205,6 +204,7 @@ class Fenetre(QtGui.QMainWindow):
             # The program is in debug mod if it's not frozen
             self.debug_mod = True
             self.l.info("This version of ChemBrows is NOT a frozen version")
+            self.l.info("You are running ChemBrows in debug mode")
 
 
     def logConnection(self):
@@ -471,6 +471,12 @@ class Fenetre(QtGui.QMainWindow):
             self.parsing = False
 
             self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+
+            mes = "{} new articles were added to your database !"
+            mes = mes.format(self.counter)
+
+            QtGui.QMessageBox.information(self, "New articles", mes,
+                                          QtGui.QMessageBox.Ok)
 
         else:
             if self.urls:
@@ -973,7 +979,7 @@ class Fenetre(QtGui.QMainWindow):
         self.button_search_new.setText("View unread")
         for proxy in self.list_proxies_in_tabs:
             proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
-            proxy.setFilterKeyColumn(12)
+            proxy.setFilterKeyColumn(11)
 
         # Update the size of the columns of the view if the central
         # splitter moved
@@ -1160,7 +1166,7 @@ class Fenetre(QtGui.QMainWindow):
             self.button_search_new.setText("View all")
             proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
             proxy.setFilterRegExp(QtCore.QRegExp("[1]"))
-            proxy.setFilterKeyColumn(12)
+            proxy.setFilterKeyColumn(11)
             self.updateCellSize()
 
         # Else, do the contrary
@@ -1168,7 +1174,7 @@ class Fenetre(QtGui.QMainWindow):
             self.button_search_new.setText("View unread")
             for proxy in self.list_proxies_in_tabs:
                 proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
-                proxy.setFilterKeyColumn(12)
+                proxy.setFilterKeyColumn(11)
 
         self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
@@ -1350,7 +1356,7 @@ class Fenetre(QtGui.QMainWindow):
 
         for proxy in self.list_proxies_in_tabs:
             proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
-            proxy.setFilterKeyColumn(12)
+            proxy.setFilterKeyColumn(11)
 
         self.tags_selected = self.getJournalsToCare()
         self.searchByButton()
@@ -1402,7 +1408,7 @@ class Fenetre(QtGui.QMainWindow):
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         id_bdd = table.model().index(element.row(), 0).data()
-        new = table.model().index(element.row(), 12).data()
+        new = table.model().index(element.row(), 11).data()
 
         # update_new: to check if the user is currently clicking
         # on the read icon. If so, don't mark the article as read
@@ -1414,9 +1420,9 @@ class Fenetre(QtGui.QMainWindow):
             line = table.selectionModel().currentIndex().row()
 
             # Change the data in the model
-            table.model().setData(table.model().index(line, 12), 0)
+            table.model().setData(table.model().index(line, 11), 0)
 
-            index = table.model().index(line, 12)
+            index = table.model().index(line, 11)
 
             table.model().dataChanged.emit(index, index)
 
@@ -1452,13 +1458,13 @@ class Fenetre(QtGui.QMainWindow):
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         id_bdd = table.model().index(table.selectionModel().currentIndex().row(), 0).data()
-        new = table.model().index(table.selectionModel().currentIndex().row(), 12).data()
+        new = table.model().index(table.selectionModel().currentIndex().row(), 11).data()
         line = table.selectionModel().currentIndex().row()
 
         # Invert the value of new
         new = 1 - new
 
-        index = table.model().index(line, 12)
+        index = table.model().index(line, 11)
 
         table.model().setData(index, new)
         table.model().dataChanged.emit(index, index)
@@ -1757,42 +1763,58 @@ If you click OK, the cleaning process will start"
         """Slot to calculate the match percentage.
         If update= False, does not update the view"""
 
+        self.model.submitAll()
+
         self.predictor = Predictor(self.l, self.bdd)
 
-        if self.predictor is not None:
+        mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n\
+Feed it more !"
 
-            self.model.submitAll()
+        # Display a message if the classifier is not trained yet
+        if self.predictor.initializePipeline() is None and update:
+            QtGui.QMessageBox.information(self, "Feed ChemBrows", mes,
+                                          QtGui.QMessageBox.Ok)
 
-            def whenDone():
-                self.progress.reset()
+            # Re-sort otherwise the display looks messy
+            self.searchByButton()
+            return
 
-                if update:
-                    self.updateView()
+        def whenDone():
+            self.progress.reset()
 
-                self.parsing = False
+            # Display a message if the classifier is not trained yet
+            if not self.predictor.calculated_something:
+                QtGui.QMessageBox.information(self, "Feed ChemBrows", mes,
+                                              QtGui.QMessageBox.Ok)
+                app.processEvents()
 
-                if update:
-                    self.searchByButton()
+            if update:
+                self.updateView()
 
-                self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+            self.parsing = False
 
-                del self.predictor
+            if update:
+                self.searchByButton()
+
+            self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+
+            del self.predictor
 
 
-            self.parsing = True
+        self.parsing = True
 
-            # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
-            # If the range is set to 0, get a busy progress bar,
-            # without percentage
-            app.processEvents()
-            self.progress = QtGui.QProgressDialog("Calculating Hot Paperness...", None, 0, 0, self)
-            self.progress.setWindowTitle("Hot Paperness calculation")
-            self.progress.show()
-            app.processEvents()
+        # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
+        # If the range is set to 0, get a busy progress bar,
+        # without percentage
+        app.processEvents()
+        self.progress = QtGui.QProgressDialog("Calculating Hot Paperness...", None, 0, 0, self)
+        self.progress.setWindowTitle("Hot Paperness calculation")
+        self.progress.show()
+        app.processEvents()
 
-            self.predictor.start()
+        self.predictor.start()
 
-            self.predictor.finished.connect(whenDone)
+        self.predictor.finished.connect(whenDone)
 
 
     def toggleLike(self):

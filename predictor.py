@@ -37,10 +37,7 @@ class Predictor(QtCore.QThread):
 
         self.getStopWords()
 
-        if self.initializePipeline() is None:
-            return None
-        else:
-            return self
+        self.calculated_something = False
 
 
     def __del__(self):
@@ -99,7 +96,7 @@ class Predictor(QtCore.QThread):
 
         if not self.x_train or 0 not in self.y_train:
             self.l.error("Not enough data yet to feed the classifier")
-            return None
+            return
 
         self.classifier = Pipeline([
             ('vectorizer', CountVectorizer(
@@ -115,6 +112,8 @@ class Predictor(QtCore.QThread):
 
         elsapsed_time = datetime.datetime.now() - start_time
         self.l.debug("Initializing classifier in {0}".format(elsapsed_time))
+
+        return True
 
 
     # @profile
@@ -178,8 +177,10 @@ class Predictor(QtCore.QThread):
             elsapsed_time = datetime.datetime.now() - start_time
             self.l.info("Done calculating match percentages in {0} s".format(elsapsed_time))
 
+        self.calculated_something = True
+
 
 if __name__ == "__main__":
     logger = MyLog()
     predictor = Predictor(logger)
-    predictor.calculatePercentageMatch(True)
+    # predictor.calculatePercentageMatch(True)
