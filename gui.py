@@ -450,11 +450,6 @@ class Fenetre(QtGui.QMainWindow):
 
         if self.count_threads == self.urls_max:
 
-            # # Commit all the changes to the database
-            # if not self.bdd.commit():
-                # self.l.error(self.bdd.lastError().text())
-                # self.l.error("Problem when comitting data")
-
             self.l.info("{} new entries added to the database".format(self.counter))
             self.l.info("{} entries rejected".format(self.counter_rejected))
             self.l.info("{} attempts to update entries".format(self.counter_updates))
@@ -471,12 +466,6 @@ class Fenetre(QtGui.QMainWindow):
             self.parsing = False
 
             self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
-
-            mes = "{} new articles were added to your database !"
-            mes = mes.format(self.counter)
-
-            QtGui.QMessageBox.information(self, "New articles", mes,
-                                          QtGui.QMessageBox.Ok)
 
         else:
             if self.urls:
@@ -1794,18 +1783,20 @@ Feed it more !"
                                               QtGui.QMessageBox.Ok)
                 app.processEvents()
 
-            if update:
-                self.updateView()
-
-            self.parsing = False
-
-            if update:
-                self.searchByButton()
-
             self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
             del self.predictor
 
+            if update:
+                self.updateView()
+                self.searchByButton()
+            else:
+                mes = "{} new articles were added to your database !"
+                mes = mes.format(self.counter)
+                QtGui.QMessageBox.information(self, "New articles", mes,
+                                              QtGui.QMessageBox.Ok)
+
+            self.parsing = False
 
         self.parsing = True
 
