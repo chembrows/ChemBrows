@@ -328,8 +328,9 @@ class Worker(QtCore.QThread):
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
 
 
-        while not self.checkFuturesRunning():
-            self.sleep(0.5)
+        # Check if the counters are full
+        while self.count_futures_images + self.count_futures_urls != len(self.feed.entries) * 2:
+            self.sleep(1)
 
         if not self.bdd.commit():
             self.l.error(self.bdd.lastError().text())
@@ -472,17 +473,6 @@ class Worker(QtCore.QThread):
 
             self.new_entries_worker += 1
             query.exec_()
-
-
-    def checkFuturesRunning(self):
-
-        """Method to check if some futures are still running.
-        Returns True if all the futures are done"""
-
-        if self.count_futures_images + self.count_futures_urls != len(self.feed.entries) * 2:
-            return False
-        else:
-            return True
 
 
     def listDoi(self, journal_abb):

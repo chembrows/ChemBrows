@@ -55,7 +55,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        self.l.setLevel(20)
+        # self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -133,7 +133,7 @@ class Fenetre(QtGui.QMainWindow):
         # Show the window
         self.show()
         splash.finish(self)
-        self.l.debug("splash.finish took {}".
+        self.l.debug("splash.finish() took {}".
                      format(datetime.datetime.now() - diff_time))
 
         self.l.info("Boot took {}".
@@ -690,16 +690,22 @@ class Fenetre(QtGui.QMainWindow):
             table.list_new_ids = []
             table.list_id_articles = []
 
+            # Try to speed things up
+            append_new = table.list_new_ids.append
+            append_articles = table.list_id_articles.append
+
             req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
             count_query.exec_(req_str)
 
             while count_query.next():
                 record = count_query.record()
 
-                table.list_id_articles.append(record.value('id'))
+                # table.list_id_articles.append(record.value('id'))
+                append_articles(record.value('id'))
 
                 if record.value('new') == 1:
-                    table.list_new_ids.append(record.value('id'))
+                    # table.list_new_ids.append(record.value('id'))
+                    append_new(record.value('id'))
 
         # Set the notifications for each tab
         for index in range(1, self.onglets.count()):
