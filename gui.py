@@ -1762,8 +1762,8 @@ If you click OK, the cleaning process will start"
 
         self.predictor = Predictor(self.l, self.bdd)
 
-        mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n\
-Feed it more !"
+        mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
+        mes += "Feed it more !"
 
         # Display a message if the classifier is not trained yet
         if self.predictor.initializePipeline() is None and update:
@@ -1775,6 +1775,9 @@ Feed it more !"
             return
 
         def whenDone():
+            mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
+            mes += "Feed it more !"
+
             self.progress.reset()
 
             # Display a message if the classifier is not trained yet
@@ -1788,7 +1791,6 @@ Feed it more !"
             del self.predictor
 
             if update:
-                self.updateView()
                 self.searchByButton()
             else:
                 mes = "{} new articles were added to your database !"

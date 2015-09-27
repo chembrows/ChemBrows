@@ -64,7 +64,7 @@ class Predictor(QtCore.QThread):
 
     def initializePipeline(self):
 
-        """Initialize the pipeline for text analysis"""
+        """Initialize the pipeline for text analysis. 0 is the liked class"""
 
         start_time = datetime.datetime.now()
 
@@ -75,7 +75,7 @@ class Predictor(QtCore.QThread):
 
         query = QtSql.QSqlQuery(self.bdd)
 
-        query.exec_("SELECT * FROM papers WHERE new=0 OR liked=1")
+        query.exec_("SELECT * FROM papers WHERE new=0")
 
         while query.next():
             record = query.record()
@@ -86,7 +86,8 @@ class Predictor(QtCore.QThread):
             if type(abstract) is not str or abstract == 'Empty':
                 continue
 
-            if type(record.value('liked')) is int:
+            liked = record.value('liked')
+            if type(liked) is int and liked == 1:
                 category = 0
             else:
                 category = 1
@@ -94,7 +95,8 @@ class Predictor(QtCore.QThread):
             self.x_train.append(abstract)
             self.y_train.append(category)
 
-        if not self.x_train or 0 not in self.y_train:
+        # To count for RuntimeWarning: divide by zero encountered in log
+        if not self.x_train or 0 not in self.y_train or not 1 in self.y_train:
             self.l.error("Not enough data yet to feed the classifier")
             return
 
