@@ -52,6 +52,8 @@ def updateData(company, journal, entry, care_image):
     # NOTE:
     # company = 'npg' is not mentionned, but dl_image & dl_page are True
 
+    # TODO: npg2
+
     if company == 'rsc':
         dl_page = False
 
@@ -504,6 +506,51 @@ def getData(company, journal, entry, response=None):
             if r:
                 graphical_abstract = r[0]['src']
 
+
+    elif company == 'npg2':
+
+        title = entry.title
+        date = entry.date
+        abstract = entry.summary
+        graphical_abstract = None
+
+        url = entry.links[0]['href']
+
+        try:
+            author = [dic['name'] for dic in entry.authors]
+            if author:
+                if len(author) > 1:
+                    author = ", ".join(author)
+                else:
+                    author = author[0]
+            else:
+                author = None
+        except AttributeError:
+            author = None
+
+        if response.status_code is requests.codes.ok or response.status_code == 401:
+
+            print('page dled')
+
+            strainer = SoupStrainer("h1", attrs={"class": "tighten-line-height small-space-below"})
+            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            r = soup.h1
+            if r is not None:
+                title = r.renderContents().decode()
+
+            strainer = SoupStrainer("div", attrs={"id": "abstract-content"})
+            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            r = soup.p
+            if r is not None:
+                abstract = r.renderContents().decode()
+
+            strainer = SoupStrainer("img")
+            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            r = soup.find_all("img", attrs={"alt": "Figure 1"})
+            if r:
+                if "f1.jpg" in r[0]["src"]:
+                    graphical_abstract = "http://www.nature.com" + r[0]["src"]
+
     else:
         return None
 
@@ -542,7 +589,7 @@ def getDoi(company, journal, entry):
     elif company == 'wiley':
         doi = entry.prism_doi
 
-    elif company == 'npg':
+    elif company == 'npg' or company == 'npg2':
         doi = entry.prism_doi
 
     elif company == 'science':
@@ -613,14 +660,17 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("elsevier", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("npg2", journal, entry, response)
         # print(abstract)
-        print(graphical_abstract)
+        # print("\n")
+        # print(graphical_abstract)
+        # print("\n")
         # print(authors)
+        # print("\n")
         # print(title)
         # print("\n")
 
-    urls_test = ["debug/bio.htm"]
+    urls_test = ["debug/npg.htm"]
 
     session = FuturesSession(max_workers=20)
 
@@ -629,7 +679,10 @@ if __name__ == "__main__":
     feed = feedparser.parse(urls_test[0])
     journal = feed['feed']['title']
 
-    headers = {'User-agent': 'Mozilla/5.0',
+    # headers = {'User-agent': 'Mozilla/5.0',
+               # 'Connection': 'close'}
+
+    headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
 
@@ -640,7 +693,7 @@ if __name__ == "__main__":
 
         print(entry.title)
 
-        # print(url)
+        print(url)
 
         # url = entry.feedburner_origlink
         # title = entry.title

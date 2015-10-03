@@ -55,7 +55,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        # self.l.setLevel(20)
+        self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -364,15 +364,9 @@ class Fenetre(QtGui.QMainWindow):
         # Create a dictionnary w/ all the data concerning the journals
         # implemented in the program: names, abbreviations, urls
         self.dict_journals = {}
-        self.dict_journals["rsc"] = hosts.getJournals("rsc")
-        self.dict_journals["acs"] = hosts.getJournals("acs")
-        self.dict_journals["wiley"] = hosts.getJournals("wiley")
-        self.dict_journals["npg"] = hosts.getJournals("npg")
-        self.dict_journals["science"] = hosts.getJournals("science")
-        self.dict_journals["nas"] = hosts.getJournals("nas")
-        self.dict_journals["elsevier"] = hosts.getJournals("elsevier")
-        self.dict_journals["thieme"] = hosts.getJournals("thieme")
-        self.dict_journals["beilstein"] = hosts.getJournals("beilstein")
+        for company in os.listdir("./journals"):
+            company = company.split('.')[0]
+            self.dict_journals[company] = hosts.getJournals(company)
 
         # Disabling the parse action to avoid double start
         self.parseAction.setEnabled(False)

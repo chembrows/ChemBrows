@@ -35,5 +35,7 @@
 ^Book and Media Recommendations:
 ^Graphical Abstract:
 ^Masthead:
-^Reply to the Letter
+^Reply to
 ^Erratum:
+^Concluding remarks:
+^QnAs

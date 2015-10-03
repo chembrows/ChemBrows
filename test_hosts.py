@@ -30,6 +30,7 @@ def test_getJournals():
     elsevier = hosts.getJournals("elsevier")
     thieme = hosts.getJournals("thieme")
     beil = hosts.getJournals("beilstein")
+    npg2 = hosts.getJournals("npg2")
 
     assert type(rsc) == tuple
     assert type(acs) == tuple
@@ -40,8 +41,9 @@ def test_getJournals():
     assert type(elsevier) == tuple
     assert type(thieme) == tuple
     assert type(beil) == tuple
+    assert type(npg2) == tuple
 
-    total = rsc + acs + wiley + npg + science + nas + elsevier + thieme + beil
+    total = rsc + acs + wiley + npg + science + nas + elsevier + thieme + beil + npg2
 
     for publisher in total:
         for chain in publisher:
@@ -62,9 +64,10 @@ def journalsUrls():
     elsevier_urls = hosts.getJournals("elsevier")[2]
     thieme_urls = hosts.getJournals("thieme")[2]
     beil_urls = hosts.getJournals("beilstein")[2]
+    npg2_urls = hosts.getJournals("npg2")[2]
 
     urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls + \
-           nas_urls + elsevier_urls + thieme_urls + beil_urls
+           nas_urls + elsevier_urls + thieme_urls + beil_urls + npg2_urls
 
     return urls
 
@@ -90,6 +93,7 @@ def test_getData(journalsUrls):
     elsevier = hosts.getJournals("elsevier")[0]
     thieme = hosts.getJournals("thieme")[0]
     beil = hosts.getJournals("beilstein")[0]
+    npg2 = hosts.getJournals("npg2")[0]
 
     # All the journals are tested
     for site in list_sites:
@@ -117,6 +121,8 @@ def test_getData(journalsUrls):
             company = 'thieme'
         elif journal in beil:
             company = 'beilstein'
+        elif journal in npg2:
+            company = 'npg2'
 
         print("\n")
         print(journal)
@@ -163,6 +169,7 @@ def test_getDoi(journalsUrls):
     elsevier = hosts.getJournals("elsevier")[0]
     thieme = hosts.getJournals("thieme")[0]
     beil = hosts.getJournals("beilstein")[0]
+    npg2 = hosts.getJournals("npg2")[0]
 
     list_sites = journalsUrls
 
@@ -188,6 +195,8 @@ def test_getDoi(journalsUrls):
             company = 'thieme'
         elif journal in beil:
             company = 'beilstein'
+        elif journal in npg2:
+            company = 'npg2'
 
         print("{}: {}".format(site, len(feed.entries)))
 
