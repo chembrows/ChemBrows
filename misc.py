@@ -14,13 +14,14 @@ def checkData():
     bdd.row_factory = sqlite3.Row
     c = bdd.cursor()
 
-    c.execute("SELECT * FROM papers WHERE journal='Sci. Rep.'")
+    c.execute("SELECT * FROM papers WHERE graphical_abstract is NULL")
 
     results = c.fetchall()
 
     for line in results:
         id_bdd = line['id']
         graphical = line['graphical_abstract']
+        print(graphical)
 
         if graphical is None:
             graphical = 'Empty'

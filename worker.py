@@ -212,10 +212,13 @@ class Worker(QtCore.QThread):
                         self.l.debug("Rejecting article {}, no author".format(title))
                         continue
 
-                    query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, url, new, topic_simple)\
-                                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                    query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, graphical_abstract, url, new, topic_simple)\
+                                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+
                     # Set new to 1 and not to true
-                    params = (doi, title, date, journal_abb, authors, abstract, url, 1, topic_simple)
+                    params = (doi, title, date, journal_abb, authors, abstract,
+                              graphical_abstract, url, 1, topic_simple)
+
                     self.l.debug("Adding {0} to the database".format(doi))
                     self.parent.counter += 1
                     self.new_entries_worker += 1
@@ -390,17 +393,24 @@ class Worker(QtCore.QThread):
             self.l.debug("Rejecting article {}, no author".format(title))
             return
 
-        query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, url, new, topic_simple)\
-                       VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        # Check if the DOI is already in the db. Mandatory, bc sometimes
+        # updateData will tell the worker to dl the page before downloading
+        # the picture
+        if doi not in self.dico_doi:
+            query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, graphical_abstract, url, new, topic_simple)\
+                           VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
-        params = (doi, title, date, journal_abb, authors, abstract, url, 1, topic_simple)
-        self.l.debug("Adding {0} to the database".format(doi))
-        self.parent.counter += 1
+            params = (doi, title, date, journal_abb, authors, abstract,
+                      graphical_abstract, url, 1, topic_simple)
 
-        for value in params:
-            query.addBindValue(value)
+            self.l.debug("Adding {0} to the database".format(doi))
+            self.parent.counter += 1
 
-        query.exec_()
+            for value in params:
+                query.addBindValue(value)
+
+            query.exec_()
+
         self.new_entries_worker += 1
 
         # Don't try to dl the image if its url is 'Empty', or if the image already exists
@@ -492,6 +502,10 @@ class Worker(QtCore.QThread):
             doi = record.value('doi')
 
             not_empty = record.value('graphical_abstract') != "Empty"
+            # if record.value('graphical_abstract') == 'Empty' or type(record.value('graphical_abstract')) == QtCore.QPyNullVariant:
+                # not_empty = False
+            # else:
+                # not_empty = True
             result[doi] = not_empty
 
         if self.parent.debug_mod:

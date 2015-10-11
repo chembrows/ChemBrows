@@ -660,17 +660,17 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("npg2", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("rsc", journal, entry, response)
         # print(abstract)
         # print("\n")
-        # print(graphical_abstract)
+        print(graphical_abstract)
         # print("\n")
         # print(authors)
         # print("\n")
         # print(title)
         # print("\n")
 
-    urls_test = ["debug/npg.htm"]
+    urls_test = ["debug/CC.htm"]
 
     session = FuturesSession(max_workers=20)
 
@@ -691,12 +691,15 @@ if __name__ == "__main__":
     for entry in feed.entries:
         url = entry.link
 
-        print(entry.title)
+        # print(entry.title)
 
-        print(url)
+        # print(url)
 
         # url = entry.feedburner_origlink
-        # title = entry.title
+        title = entry.title
+
+        if "cross reactive" not in title:
+            continue
         # print(url)
         # print(title)
         # print(entry)
