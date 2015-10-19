@@ -47,6 +47,23 @@ class AdvancedSearch(QtGui.QDialog):
         for query in self.options.childGroups():
             self.tabs.addTab(self.createForm(), query)
 
+        # Try to restore the geometry of the AdvancedSearch window
+        try:
+            self.restoreGeometry(self.options.value("window_geometry"))
+        except TypeError:
+            self.logger.debug("Can't restore window geometry for AdvancedSearch")
+
+
+    def closeEvent(self, event):
+
+        """Actions to perform when closing the window.
+        Mainly saves the window geometry"""
+
+        self.logger.debug("Saving windows state for AdvancedSearch")
+        self.options.setValue("window_geometry", self.saveGeometry())
+
+        super(AdvancedSearch, self).closeEvent(event)
+
 
     def defineSlots(self):
 
@@ -57,6 +74,8 @@ class AdvancedSearch(QtGui.QDialog):
         self.tabs.currentChanged.connect(self.tabChanged)
 
         self.button_delete_search.clicked.connect(self.deleteSearch)
+
+        self.destroyed.connect(self.closeEvent)
 
 
     def deleteSearch(self):
@@ -287,15 +306,13 @@ class AdvancedSearch(QtGui.QDialog):
 
         """Handles the display"""
 
-        self.parent.window_search = QtGui.QWidget()
-        self.parent.window_search.setWindowTitle('Advanced Search')
+        self.setWindowTitle('Advanced Search')
 
         self.tabs = QtGui.QTabWidget()
 
         query = self.createForm()
 
         self.tabs.addTab(query, "New query")
-
 
         # ----------------- BUTTONS -----------------------------------------
 
@@ -312,8 +329,8 @@ class AdvancedSearch(QtGui.QDialog):
         self.button_delete_search.hide()
         self.vbox_global.addWidget(self.button_search_and_save)
 
-        self.parent.window_search.setLayout(self.vbox_global)
-        self.parent.window_search.show()
+        self.setLayout(self.vbox_global)
+        self.show()
 
 
 if __name__ == '__main__':

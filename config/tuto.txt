@@ -11,6 +11,7 @@ Here come the cool features:
 A dock appears on the left side of the window, to display/hide journal(s) 
 --
 Savable searches allow you to follow your topics of interest and/or your favorite authors
+!!!advanced_search.png
 --
 If you want to check out articles of interest later, simply put them in the TO-READ list
 --

@@ -4,7 +4,7 @@
 
 import sys
 import os
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 
 
 class Tuto(QtGui.QDialog):
@@ -25,6 +25,9 @@ class Tuto(QtGui.QDialog):
             content = f.read()
             self.list_slides = content.split('--')
 
+        # Index of the slide
+        self.index = 0
+
         self.initUI()
         self.defineSlots()
 
@@ -33,26 +36,44 @@ class Tuto(QtGui.QDialog):
 
         """Slot to change the slide"""
 
-        index = self.list_slides.index(self.text_diapo.text())
-
-        index += increment
+        self.index += increment
 
         # Some conditions to properly set the text of the tuto, when
         # the last and the first slides are displayed. Also changes the
         # buttons when it has to
-        if index <= 0:
-            # self.text_diapo.setText(self.list_slides[0])
-            self.text_diapo.setHtml(self.list_slides[0])
+        if self.index <= 0:
+            text = self.parseSlide(self.list_slides[0])
+            self.text_diapo.setText(text)
+
             self.previous_button.setEnabled(False)
-        elif index >= len(self.list_slides) - 1:
+        elif self.index >= len(self.list_slides) - 1:
+            text = self.parseSlide(self.list_slides[-1])
+            self.text_diapo.setText(text)
+
             self.next_button.setEnabled(False)
             self.quit_button.setText("Finish")
-            self.text_diapo.setText(self.list_slides[-1])
         else:
+            text = self.parseSlide(self.list_slides[self.index])
+            self.text_diapo.setText(text)
+
             self.next_button.setEnabled(True)
             self.previous_button.setEnabled(True)
             self.quit_button.setText("Quit tuto")
-            self.text_diapo.setText(self.list_slides[index])
+
+
+    def parseSlide(self, text):
+
+        try:
+            path = './images/' + text.split('!!!')[1].rstrip()
+            self.label_image.show()
+            image = QtGui.QPixmap(path)
+            image = image.scaledToWidth(80, QtCore.Qt.SmoothTransformation)
+            self.label_image.setPixmap(image)
+            return text.split('!!!')[0]
+        except IndexError:
+            self.label_image.hide()
+            self.adjustSize()
+            return text
 
 
     def defineSlots(self):
@@ -76,6 +97,10 @@ class Tuto(QtGui.QDialog):
         self.text_diapo = QtGui.QLabel()
         self.text_diapo.setText(self.list_slides[0])
 
+        self.label_image = QtGui.QLabel()
+        self.label_image.setAlignment(QtCore.Qt.AlignHCenter)
+        self.label_image.hide()
+
         self.quit_button = QtGui.QPushButton("Quit tuto", self)
         self.previous_button = QtGui.QPushButton("Previous", self)
         self.next_button = QtGui.QPushButton("Next", self)
@@ -90,6 +115,7 @@ class Tuto(QtGui.QDialog):
         self.hbox_buttons.addWidget(self.next_button)
 
         self.vbox_global.addWidget(self.text_diapo)
+        self.vbox_global.addWidget(self.label_image)
         self.vbox_global.addLayout(self.hbox_buttons)
 
         self.setLayout(self.vbox_global)

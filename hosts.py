@@ -530,8 +530,6 @@ def getData(company, journal, entry, response=None):
 
         if response.status_code is requests.codes.ok or response.status_code == 401:
 
-            print('page dled')
-
             strainer = SoupStrainer("h1", attrs={"class": "tighten-line-height small-space-below"})
             soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
             r = soup.h1
