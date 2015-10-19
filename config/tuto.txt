@@ -1,6 +1,6 @@
 Welcome to ChemBrows, a software that helps you to tame the flood of scientific literature
 --
-First things first: select the journals you want to follow 
+First things first: select the kind of journals you want to follow 
 
 (you can change this selection afterwards in Settings)
 --

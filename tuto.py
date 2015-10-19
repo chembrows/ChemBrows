@@ -18,6 +18,11 @@ class Tuto(QtGui.QDialog):
 
         self.parent = parent
 
+        if type(parent) is QtGui.QWidget:
+            self.test = True
+        else:
+            self.test = False
+
         self.setModal(True)
 
         # Get the text of the slides from config files
@@ -37,6 +42,25 @@ class Tuto(QtGui.QDialog):
         """Slot to change the slide"""
 
         self.index += increment
+
+        # Show or hide the combo_box
+        if self.index == 1:
+            self.combo_choice.show()
+        else:
+            self.combo_choice.hide()
+
+        if self.index == 2:
+            # Get the choice of field from the user
+            choice = self.combo_choice.currentText()
+
+            if not self.test:
+                # Set the journals to parse options of the parent
+                with open('./config/fields/{0}'.format(choice), 'r') as config:
+                    self.parent.options.setValue("journals_to_parse",
+                                                  [line.rstrip() for line in config])
+                # Update the journals buttons on the left dock
+                self.parent.displayTags()
+                self.parent.resetView()
 
         # Some conditions to properly set the text of the tuto, when
         # the last and the first slides are displayed. Also changes the
@@ -101,6 +125,11 @@ class Tuto(QtGui.QDialog):
         self.label_image.setAlignment(QtCore.Qt.AlignHCenter)
         self.label_image.hide()
 
+        choices = sorted(os.listdir('./config/fields/'))
+        self.combo_choice = QtGui.QComboBox()
+        self.combo_choice.addItems(choices)
+        self.combo_choice.hide()
+
         self.quit_button = QtGui.QPushButton("Quit tuto", self)
         self.previous_button = QtGui.QPushButton("Previous", self)
         self.next_button = QtGui.QPushButton("Next", self)
@@ -116,6 +145,7 @@ class Tuto(QtGui.QDialog):
 
         self.vbox_global.addWidget(self.text_diapo)
         self.vbox_global.addWidget(self.label_image)
+        self.vbox_global.addWidget(self.combo_choice)
         self.vbox_global.addLayout(self.hbox_buttons)
 
         self.setLayout(self.vbox_global)
