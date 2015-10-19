@@ -54,10 +54,15 @@ class Tuto(QtGui.QDialog):
             choice = self.combo_choice.currentText()
 
             if not self.test:
-                # Set the journals to parse options of the parent
-                with open('./config/fields/{0}'.format(choice), 'r') as config:
-                    self.parent.options.setValue("journals_to_parse",
-                                                  [line.rstrip() for line in config])
+
+                if choice == 'All':
+                    self.parent.options.remove("journals_to_parse")
+
+                else:
+                    # Set the journals to parse options of the parent
+                    with open('./config/fields/{0}'.format(choice), 'r') as config:
+                        self.parent.options.setValue("journals_to_parse",
+                                                      [line.rstrip() for line in config])
                 # Update the journals buttons on the left dock
                 self.parent.displayTags()
                 self.parent.resetView()
@@ -125,7 +130,7 @@ class Tuto(QtGui.QDialog):
         self.label_image.setAlignment(QtCore.Qt.AlignHCenter)
         self.label_image.hide()
 
-        choices = sorted(os.listdir('./config/fields/'))
+        choices = ['All'] + sorted(os.listdir('./config/fields/'))
         self.combo_choice = QtGui.QComboBox()
         self.combo_choice.addItems(choices)
         self.combo_choice.hide()
