@@ -54,10 +54,8 @@ class Tuto(QtGui.QDialog):
             choice = self.combo_choice.currentText()
 
             if not self.test:
-
                 if choice == 'All':
                     self.parent.options.remove("journals_to_parse")
-
                 else:
                     # Set the journals to parse options of the parent
                     with open('./config/fields/{0}'.format(choice), 'r') as config:

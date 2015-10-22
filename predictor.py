@@ -157,7 +157,6 @@ class Predictor(QtCore.QThread):
 
         query.prepare("UPDATE papers SET percentage_match = ? WHERE id = ?")
 
-
         for id_bdd, percentage in zip(list_id, list_percentages):
 
             # Convert the percentage to a float, because the number is
@@ -185,4 +184,5 @@ class Predictor(QtCore.QThread):
 if __name__ == "__main__":
     logger = MyLog()
     predictor = Predictor(logger)
-    # predictor.calculatePercentageMatch(True)
+    predictor.initializePipeline()
+    predictor.calculatePercentageMatch(True)
