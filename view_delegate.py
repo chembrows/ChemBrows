@@ -5,7 +5,9 @@
 import os
 from PyQt4 import QtCore, QtGui
 
+# Personal
 from functions import prettyDate
+import config.settings as settings
 
 
 class ViewDelegate(QtGui.QStyledItemDelegate):
@@ -34,7 +36,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
         # Constant, proportional to the size of one cell
         # DIMENSION = option.rect.width() * 0.05
-        DIMENSION = 35
+        DIMENSION = settings.DIMENSION
 
         # Check if the post is in the to-read list
         waited = index.sibling(index.row(), 0).data() in self.parent.waiting_list.list_id_articles

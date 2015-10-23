@@ -4,6 +4,9 @@
 
 from PyQt4 import QtGui, QtCore
 
+# Personal
+import config.settings as settings
+
 
 class ViewPerso(QtGui.QTableView):
 
@@ -53,7 +56,7 @@ class ViewPerso(QtGui.QTableView):
 
         # Constant to set the size of the zone in the bottom right
         # corner, where the user can click to toggle liked state
-        DIMENSION = self.columnWidth(3) * 0.07
+        DIMENSION = settings.DIMENSION
 
         # Attribute to shunt parent.markOneRead if the user is clicking
         # on the read/unread icon
