@@ -889,6 +889,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.button_search_new.clicked.connect(self.searchNew)
 
+        self.button_settings.clicked.connect(lambda: Settings(self))
+
 
     def updateCellSize(self):
 
@@ -2024,6 +2026,16 @@ If you click OK, the cleaning process will start"
         self.button_advanced_search.setToolTip("Advanced search: more powerful research")
         self.button_advanced_search.setAccessibleName('toolbar_round_button')
 
+        self.button_settings = QtGui.QPushButton()
+        self.button_settings.setIcon(QtGui.QIcon("./images/settings.png"))
+        self.button_settings.setIconSize(QtCore.QSize(36, 36))
+        self.button_settings.setToolTip("Preferences, settings")
+        self.button_settings.setAccessibleName('toolbar_round_button')
+
+        # Empty widget acting like a spacer
+        self.empty_widget = QtGui.QWidget()
+        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred);
+
         self.toolbar.addWidget(self.button_refresh)
         self.toolbar.addWidget(self.button_calculate_percentage)
         self.toolbar.addSeparator()
@@ -2033,6 +2045,8 @@ If you click OK, the cleaning process will start"
         self.toolbar.addWidget(QtGui.QLabel('Search : '))
         self.toolbar.addWidget(self.line_research)
         self.toolbar.addWidget(self.button_advanced_search)
+        self.toolbar.addWidget(self.empty_widget)
+        self.toolbar.addWidget(self.button_settings)
 
         # Create a button to reset everything
         # self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_170_step_backward'), 'Back')
@@ -2040,10 +2054,6 @@ If you click OK, the cleaning process will start"
         # self.toolbar.addWidget(self.button_view_all)
 
 
-        # Empty widget acting like a spacer
-        # self.empty_widget = QtGui.QWidget()
-        # self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred);
-        # self.toolbar.addWidget(self.empty_widget)
 
 
         # ------------------------- LEFT AREA --------------------------------
@@ -2181,7 +2191,6 @@ If you click OK, the cleaning process will start"
 
         with open("./config/styles/style.css", "r") as fh:
             style = fh.read()
-            # self.setStyleSheet(style)
             self.central_widget.setStyleSheet(style)
             self.toolbar.setStyleSheet(style)
 
@@ -2202,6 +2211,7 @@ If you click OK, the cleaning process will start"
             self.button_calculate_percentage.setStyleSheet(style)
             self.button_advanced_search.setStyleSheet(style)
             self.line_research.setStyleSheet(style)
+            self.button_settings.setStyleSheet(style)
 
 
 if __name__ == '__main__':
