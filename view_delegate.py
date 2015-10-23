@@ -36,6 +36,9 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         # DIMENSION = option.rect.width() * 0.05
         DIMENSION = 35
 
+        # Check if the post is in the to-read list
+        waited = index.sibling(index.row(), 0).data() in self.parent.waiting_list.list_id_articles
+
         # Get the read/unread state of an article. Colors the cell
         # if the article is unread
         read = index.sibling(index.row(), 11).data()
@@ -166,6 +169,18 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
 
             pos_x = option.rect.x() + option.rect.width() - DIMENSION
+            pos_y = option.rect.y() + option.rect.height() - DIMENSION
+
+            painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)
+
+            if waited:
+                path = "./images/unwait.png"
+            else:
+                path = "./images/wait.png"
+
+            pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
+
+            pos_x = option.rect.x() + option.rect.width() - 2 * DIMENSION
             pos_y = option.rect.y() + option.rect.height() - DIMENSION
 
             painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)

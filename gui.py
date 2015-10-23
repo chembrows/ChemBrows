@@ -30,8 +30,6 @@ import hosts
 from updater import Updater
 from line_clear import ButtonLineEdit
 from signing import Signing
-
-# TEST
 from tuto import Tuto
 from my_twit import MyTwit
 
@@ -607,12 +605,17 @@ class Fenetre(QtGui.QMainWindow):
     # @profile
     def closeEvent(self, event):
 
-        """Méthode pr effetcuer des actions avant de
-        quitter, comme sauver les options dans un fichier
-        de conf"""
+        """Method to perform actions before exiting.
+        Allows to save the prefs in a file"""
 
         # http://stackoverflow.com/questions/9249500/
         # pyside-pyqt-detect-if-user-trying-to-close-window
+
+        # Save the to-read list
+        if self.waiting_list.list_id_articles:
+            self.options.setValue("ids_waited", self.waiting_list.list_id_articles)
+        else:
+            self.options.remove("ids_waited")
 
         # Record the window state and appearance
         self.options.beginGroup("Window")
@@ -683,11 +686,9 @@ class Fenetre(QtGui.QMainWindow):
             while count_query.next():
                 record = count_query.record()
 
-                # table.list_id_articles.append(record.value('id'))
                 append_articles(record.value('id'))
 
                 if record.value('new') == 1:
-                    # table.list_new_ids.append(record.value('id'))
                     append_new(record.value('id'))
 
         # Set the notifications for each tab
@@ -700,6 +701,9 @@ class Fenetre(QtGui.QMainWindow):
 
         """Restore the prefs of the window"""
 
+        # Restore the to-read list
+        ids_waited = self.options.value("ids_waited", [])
+        self.createToRead(ids_waited)
 
         searches_saved = QtCore.QSettings("searches.ini", QtCore.QSettings.IniFormat)
 
@@ -975,6 +979,42 @@ class Fenetre(QtGui.QMainWindow):
         self.updateCellSize()
 
 
+    def createToRead(self, list_ids):
+
+        proxy = QtGui.QSortFilterProxyModel()
+
+        proxy.setSourceModel(self.model)
+        self.list_proxies_in_tabs.append(proxy)
+
+        # Create the view, and give it the model
+        tableau = ViewPerso(self)
+        tableau.name_search = "To read"
+
+        requete = "SELECT * FROM papers WHERE id IN("
+
+        # Building the query
+        for each_id in list_ids:
+            if each_id != list_ids[-1]:
+                requete = requete + str(each_id) + ", "
+            else:
+                requete = requete + str(each_id) + ")"
+
+        tableau.base_query = requete
+
+        tableau.setModel(proxy)
+        tableau.setItemDelegate(ViewDelegate(self))
+        tableau.setSelectionBehavior(tableau.SelectRows)
+        tableau.updateHeight()
+        tableau.initUI()
+
+        self.list_tables_in_tabs.append(tableau)
+
+        # Define an attribute for the to read list
+        self.waiting_list = tableau
+
+        self.onglets.addTab(tableau, "To read")
+
+
     def createSearchTab(self, name_search, query, topic_options=None, author_options=None, update=False):
 
         """Slot called from AdvancedSearch, when a new search is added,
@@ -1112,6 +1152,16 @@ class Fenetre(QtGui.QMainWindow):
             self.tags_selected = self.getJournalsToCare()
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+
+        # Update the base query of the to-read list
+        if table is self.waiting_list:
+            requete = "SELECT * FROM papers WHERE id IN("
+            for each_id in table.list_id_articles:
+                if each_id != table.list_id_articles[-1]:
+                    requete = requete + str(each_id) + ", "
+                else:
+                    requete = requete + str(each_id) + ")"
+            table.base_query = requete
 
         self.query = QtSql.QSqlQuery(self.bdd)
 
@@ -1375,7 +1425,7 @@ class Fenetre(QtGui.QMainWindow):
     def updateNotifications(self, id_bdd, remove=True):
 
         """Slot to update the number of unread articles,
-        in each tab. Called by markOneRead and toggleRead"""
+        in each tab. Called by markOneRead, toggleRead and toggleWait"""
 
         for index in range(1, self.onglets.count()):
 
@@ -1418,6 +1468,62 @@ class Fenetre(QtGui.QMainWindow):
             table.selectRow(line)
 
             self.updateNotifications(id_bdd)
+
+
+    def toggleWait(self):
+
+        """Method to put/unput an article in the To-read list"""
+
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        line = table.selectionModel().currentIndex().row()
+        id_bdd = table.model().index(line, 0).data()
+        new = table.model().index(line, 11).data()
+        waited = id_bdd in self.waiting_list.list_id_articles
+
+        # Check if the to read list is empty
+        empty = self.waiting_list.list_id_articles == []
+
+        if waited:
+            self.waiting_list.list_id_articles.remove(id_bdd)
+
+            # The post is not a new post in the to read list anymore
+            if id_bdd in self.waiting_list.list_new_ids:
+                self.waiting_list.list_new_ids.remove(id_bdd)
+
+            # Immediately visually remove the post from the to read list
+            # if the to read list is displayed
+            if table is self.waiting_list:
+                self.searchByButton()
+
+            # Update the cells bc the scroll bar can disappear when
+            # posts are removed from the to read list
+            self.updateCellSize()
+            self.updateNotifications(id_bdd)
+        else:
+            self.waiting_list.list_id_articles.append(id_bdd)
+
+            if new == 1:
+                self.waiting_list.list_new_ids.append(id_bdd)
+
+        # Update the notifications of the to-read list
+        index = self.list_tables_in_tabs.index(self.waiting_list)
+        self.onglets.setNotifications(index, len(self.waiting_list.list_new_ids))
+
+        # If the to read list was empty and is not anymore, fix the
+        # header of the to read list
+        if empty and len(self.waiting_list.list_id_articles) == 1:
+            self.waiting_list.hideColumn(0)  # Hide id
+            self.waiting_list.hideColumn(1)  # Hide percentage match
+            self.waiting_list.hideColumn(2)  # Hide doi
+            self.waiting_list.hideColumn(4)  # Hide date
+            self.waiting_list.hideColumn(5)  # Hide journals
+            self.waiting_list.hideColumn(6)  # Hide authors
+            self.waiting_list.hideColumn(7)  # Hide abstracts
+            self.waiting_list.hideColumn(9)  # Hide like
+            self.waiting_list.hideColumn(10)  # Hide urls
+            self.waiting_list.hideColumn(11)  # Hide new
+            self.waiting_list.hideColumn(12)  # Hide topic_simple
+            self.waiting_list.horizontalHeader().moveSection(8, 0)
 
 
     def updateView(self):

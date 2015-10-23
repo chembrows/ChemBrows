@@ -46,7 +46,7 @@ class ViewPerso(QtGui.QTableView):
 
     def mousePressEvent(self, e):
 
-        """Adding some action to the normal mousePressEvent.
+        """Adding some actions to the normal mousePressEvent.
         Determine if the user clicked in the right bottom corner.
         If yes, the user clicked on the 'like star', so the liked
         state is toggled from the parent toggleLike method"""
@@ -65,14 +65,13 @@ class ViewPerso(QtGui.QTableView):
         # Get the current cell as a QRect
         rect = self.visualRect(self.selectionModel().currentIndex())
 
-        # Get the x and y coordinates of the mouse click
-        x = e.x()
-        y = e.y()
+        # Get the coordinates of the mouse click
+        x, y = e.x(), e.y()
 
         # area_y: to check if the click is in the bottom part of the post
-        # area_*_x: to check if the click is on the read/unread icon,
+        # area_*_x: to check if the click is on the to-read icon,
         # or the like icon
-        area_like_x, area_read_x, area_y = False, False, False
+        area_like_x, area_wait_x, area_y = False, False, False
 
         # If the click was on the right bottom corner, start the real buisness
         if y <= rect.y() + rect.height() and y >= rect.y() + rect.height() - DIMENSION:
@@ -80,9 +79,7 @@ class ViewPerso(QtGui.QTableView):
         if x <= rect.x() + rect.width() and x >= rect.x() + rect.width() - DIMENSION:
             area_like_x = True
         if x >= rect.x() + rect.width() - 2 * DIMENSION and x <= rect.x() + rect.width() - DIMENSION:
-            area_read_x = True
-
-        # if not area_read_x:
+            area_wait_x = True
 
         if area_like_x and area_y:
             self.parent.toggleLike()
@@ -91,10 +88,10 @@ class ViewPerso(QtGui.QTableView):
             # while the article is not marked as read
             self.clicked.emit(self.selectionModel().currentIndex())
 
-        elif area_read_x and area_y:
+        # Icon to-read
+        elif area_wait_x and area_y:
             self.update_new = True
-            self.parent.toggleRead()
-            self.clicked.emit(self.selectionModel().currentIndex())
+            self.parent.toggleWait()
 
 
     def updateHeight(self):
