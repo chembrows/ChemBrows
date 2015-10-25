@@ -551,6 +551,10 @@ class Fenetre(QtGui.QMainWindow):
         self.emptyWaitAction = QtGui.QAction('Empty to-read list', self)
         self.emptyWaitAction.triggered.connect(self.emptyWait)
 
+        # Action add/remove a post of the to-read list. For the right click
+        self.toggleWaitAction = QtGui.QAction('Add/remove to to-read list', self)
+        self.toggleWaitAction.triggered.connect(self.toggleWait)
+
         # Action to serve use as a separator
         self.separatorAction = QtGui.QAction(self)
         self.separatorAction.setSeparator(True)
@@ -848,6 +852,7 @@ class Fenetre(QtGui.QMainWindow):
         menu.addAction(self.toggleLikeAction)
         menu.addAction(self.toggleReadAction)
         menu.addAction(self.openInBrowserAction)
+        menu.addAction(self.toggleWaitAction)
 
         menu.exec_(self.mapToGlobal(new_pos))
 
@@ -1991,6 +1996,7 @@ If you click OK, the cleaning process will start"
         self.toolMenu.addAction(self.toggleReadAction)
         self.toolMenu.addAction(self.toggleLikeAction)
         self.toolMenu.addAction(self.openInBrowserAction)
+        self.toolMenu.addAction(self.toggleWaitAction)
         self.toolMenu.addAction(self.emptyWaitAction)
 
         self.viewMenu = self.menubar.addMenu("&View")

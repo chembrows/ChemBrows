@@ -9,14 +9,14 @@ import feedparser
 import functools
 from requests_futures.sessions import FuturesSession
 import requests
-from io import open as iopen
-# import ssl
 import socket
+from io import BytesIO
+from PIL import Image
 
 # DEBUG
 # from memory_profiler import profile
 
-
+# Personal
 import hosts
 import functions
 
@@ -464,9 +464,10 @@ class Worker(QtCore.QThread):
             if response.status_code is requests.codes.ok:
                 try:
                     # Save the page
-                    with iopen(self.path + functions.simpleChar(response.url), 'wb') as file:
-                        file.write(response.content)
-                        self.l.debug("Image ok")
+                    io = BytesIO(response.content)
+                    Image.open(io).convert('RGB').save(self.path + functions.simpleChar(response.url),
+                                                       format='JPEG')
+                    self.l.debug("Image ok")
                 except OSError:
                     params = ("Empty", doi)
                 else:
