@@ -547,6 +547,10 @@ class Fenetre(QtGui.QMainWindow):
         self.sortingReversedAction = QtGui.QAction('Reverse order', self, checkable=True)
         self.sortingReversedAction.triggered.connect(lambda: self.changeSortingMethod(self.sorting_method, True))
 
+        # Action to change the sorting method of the views, reverse the results. In the menu
+        self.emptyWaitAction = QtGui.QAction('Empty to-read list', self)
+        self.emptyWaitAction.triggered.connect(self.emptyWait)
+
         # Action to serve use as a separator
         self.separatorAction = QtGui.QAction(self)
         self.separatorAction.setSeparator(True)
@@ -1497,9 +1501,10 @@ class Fenetre(QtGui.QMainWindow):
             if table is self.waiting_list:
                 self.searchByButton()
 
-            # Update the cells bc the scroll bar can disappear when
-            # posts are removed from the to read list
-            self.updateCellSize()
+                # Update the cells bc the scroll bar can disappear when
+                # posts are removed from the to read list
+                self.updateCellSize()
+
             self.updateNotifications(id_bdd)
         else:
             self.waiting_list.list_id_articles.append(id_bdd)
@@ -1526,6 +1531,24 @@ class Fenetre(QtGui.QMainWindow):
             self.waiting_list.hideColumn(11)  # Hide new
             self.waiting_list.hideColumn(12)  # Hide topic_simple
             self.waiting_list.horizontalHeader().moveSection(8, 0)
+
+
+    def emptyWait(self):
+
+        """Method to empty the to-read list"""
+
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+
+        self.waiting_list.list_id_articles = []
+        self.waiting_list.list_new_ids = []
+
+        # Update the notifications of the to-read list
+        index = self.list_tables_in_tabs.index(self.waiting_list)
+        self.onglets.setNotifications(index, 0)
+
+        if table is self.waiting_list:
+            self.searchByButton()
+            self.updateCellSize()
 
 
     def updateView(self):
@@ -1968,6 +1991,7 @@ If you click OK, the cleaning process will start"
         self.toolMenu.addAction(self.toggleReadAction)
         self.toolMenu.addAction(self.toggleLikeAction)
         self.toolMenu.addAction(self.openInBrowserAction)
+        self.toolMenu.addAction(self.emptyWaitAction)
 
         self.viewMenu = self.menubar.addMenu("&View")
         self.sortMenu = self.viewMenu.addMenu("Sorting")

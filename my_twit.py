@@ -12,9 +12,7 @@ from twitter.api import Twitter
 from twitter.oauth import OAuth, write_token_file, read_token_file
 
 from log import MyLog
-
-# Tweets are 140 characters long
-LEN_TWEET = 140
+import config.settings as settings
 
 
 class MyTwit(QtGui.QDialog):
@@ -132,6 +130,8 @@ class MyTwit(QtGui.QDialog):
         except AttributeError:
             pass
 
+        LEN_TWEET = settings.LEN_TWEET
+
         # -2 for 2 spaces, -10 for #ChemBrows
         if len(self.title) > LEN_TWEET - len_data - 2 - 10:
             title = self.title[:LEN_TWEET - len_data - 2 - 10 - 3]
@@ -157,7 +157,7 @@ class MyTwit(QtGui.QDialog):
                     imagedata = image.read()
 
                 id_img = t_up.media.upload(media=imagedata)["media_id_string"]
-                print(id_img)
+                # print(id_img)
             else:
                 self.l.debug("No image, check box not checked")
                 id_img = None
@@ -172,16 +172,7 @@ class MyTwit(QtGui.QDialog):
 
         text = self.text_tweet.toPlainText() + " #ChemBrows"
 
-        # print("total:")
         # print(len(text))
-
-        # print("title:")
-        # print(len(self.title))
-
-        # print("total - link:")
-        # print(len(text) - len(self.link))
-
-        # print(text)
 
         if id_img is None:
             try:
