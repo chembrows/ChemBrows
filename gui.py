@@ -33,6 +33,9 @@ from signing import Signing
 from tuto import Tuto
 from my_twit import MyTwit
 
+# TEST
+import constants
+
 # To debug and profile. Comment for prod
 # from memory_profiler import profile
 
@@ -58,9 +61,6 @@ class Fenetre(QtGui.QMainWindow):
 
         self.parsing = False
 
-        # Object to store options and preferences
-        self.options = QtCore.QSettings("config/options.ini", QtCore.QSettings.IniFormat)
-
         QtGui.qApp.installEventFilter(self)
 
         # List to store the tags checked
@@ -81,6 +81,15 @@ class Fenetre(QtGui.QMainWindow):
         self.l.debug("bootCheckList took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
+
+        if not self.debug_mod:
+            self.DATA_PATH = constants.DATA_PATH
+        else:
+            self.DATA_PATH = "."
+
+        # Object to store options and preferences
+        self.options = QtCore.QSettings(self.DATA_PATH + "/config/options.ini", QtCore.QSettings.IniFormat)
+
 
         # Connect to the database & log the connection
         app.processEvents()
@@ -283,7 +292,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Set the database
         self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        self.bdd.setDatabaseName("fichiers.sqlite")
+        self.bdd.setDatabaseName(self.DATA_PATH + "/fichiers.sqlite")
 
         self.bdd.open()
 
@@ -656,7 +665,7 @@ class Fenetre(QtGui.QMainWindow):
         self.model.submitAll()
 
         # Close the database connection
-        self.bdd.removeDatabase("fichiers.sqlite")
+        self.bdd.removeDatabase(self.DATA_PATH + "/fichiers.sqlite")
         self.bdd.close()
 
         QtGui.qApp.quit()
@@ -713,7 +722,7 @@ class Fenetre(QtGui.QMainWindow):
         ids_waited = self.options.value("ids_waited", [])
         self.createToRead(ids_waited)
 
-        searches_saved = QtCore.QSettings("searches.ini", QtCore.QSettings.IniFormat)
+        searches_saved = QtCore.QSettings(self.DATA_PATH + "/config/searches.ini", QtCore.QSettings.IniFormat)
 
         # Restore the saved searches
         for search_name in searches_saved.childGroups():

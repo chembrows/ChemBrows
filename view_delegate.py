@@ -7,7 +7,9 @@ from PyQt4 import QtCore, QtGui
 
 # Personal
 from functions import prettyDate
-import config.settings as settings
+
+# TEST
+import constants
 
 
 class ViewDelegate(QtGui.QStyledItemDelegate):
@@ -26,6 +28,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         super(ViewDelegate, self).__init__(parent)
 
         self.parent = parent
+        self.DATA_PATH = self.parent.DATA_PATH
 
 
     def paint(self, painter, option, index):
@@ -36,7 +39,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
         # Constant, proportional to the size of one cell
         # DIMENSION = option.rect.width() * 0.05
-        DIMENSION = settings.DIMENSION
+        DIMENSION = constants.DIMENSION
 
         # Check if the post is in the to-read list
         waited = index.sibling(index.row(), 0).data() in self.parent.waiting_list.list_id_articles
@@ -204,7 +207,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             painter.fillRect(option.rect, QtGui.QColor(255, 255, 255))
 
             if type(index.data()) is str and index.data() != "Empty":
-                path_photo = "./graphical_abstracts/" + index.data()
+                path_photo = self.DATA_PATH + "/graphical_abstracts/" + index.data()
                 # self.parent.l.debug(path_photo)
 
                 if os.path.exists(path_photo):

@@ -40,11 +40,13 @@ class Worker(QtCore.QThread):
         self.bdd = bdd
         self.dict_journals = dict_journals
 
+        self.parent = parent
+
         # Define a path attribute to easily change it
         # for the tests
-        self.path = "./graphical_abstracts/"
-
-        self.parent = parent
+        self.DATA_PATH = self.parent.DATA_PATH + "/graphical_abstracts/"
+        if not os.path.exists(self.DATA_PATH):
+            os.makedirs(self.DATA_PATH)
 
         # Set the timeout for the futures
         # W/ a large timeout, less chances to get en exception
@@ -181,7 +183,7 @@ class Worker(QtCore.QThread):
 
                         graphical_abstract = data['graphical_abstract']
 
-                        if os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
+                        if os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
                             self.count_futures_images += 1
                         else:
                             url = getattr(entry, 'feedburner_origlink', entry.link)
@@ -227,12 +229,12 @@ class Worker(QtCore.QThread):
                         query.addBindValue(value)
                     query.exec_()
 
-                    if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
+                    if graphical_abstract == "Empty" or os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
                         self.count_futures_images += 1
 
                         # This block is executed when you delete the db, but not the images.
                         # Allows to update the graphical_abstract in db accordingly
-                        if os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
+                        if os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
                             query.prepare("UPDATE papers SET graphical_abstract=? WHERE doi=?")
                             params = (functions.simpleChar(graphical_abstract), doi)
                             for value in params:
@@ -309,7 +311,7 @@ class Worker(QtCore.QThread):
 
                         graphical_abstract = data['graphical_abstract']
 
-                        if os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
+                        if os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
                             self.count_futures_images += 1
                         else:
                             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
@@ -414,12 +416,12 @@ class Worker(QtCore.QThread):
         self.new_entries_worker += 1
 
         # Don't try to dl the image if its url is 'Empty', or if the image already exists
-        if graphical_abstract == "Empty" or os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
+        if graphical_abstract == "Empty" or os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
             self.count_futures_images += 1
 
             # This block is executed when you delete the db, but not the images.
             # Allows to update the graphical_abstract in db accordingly
-            if os.path.exists(self.path + functions.simpleChar(graphical_abstract)):
+            if os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
                 query.prepare("UPDATE papers SET graphical_abstract=? WHERE doi=?")
                 params = (functions.simpleChar(graphical_abstract), doi)
                 for value in params:
@@ -465,7 +467,7 @@ class Worker(QtCore.QThread):
                 try:
                     # Save the page
                     io = BytesIO(response.content)
-                    Image.open(io).convert('RGB').save(self.path + functions.simpleChar(response.url),
+                    Image.open(io).convert('RGB').save(self.DATA_PATH + functions.simpleChar(response.url),
                                                        format='JPEG')
                     self.l.debug("Image ok")
                 except OSError:

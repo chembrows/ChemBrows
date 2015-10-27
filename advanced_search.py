@@ -29,7 +29,9 @@ class AdvancedSearch(QtGui.QDialog):
             self.logger = self.parent.l
             self.test = False
 
-        self.options = QtCore.QSettings("searches.ini", QtCore.QSettings.IniFormat)
+        DATA_PATH = self.parent.DATA_PATH
+
+        self.options = QtCore.QSettings(DATA_PATH + "/config/searches.ini", QtCore.QSettings.IniFormat)
 
         # List to store the lineEdit, with the value of
         # the search fields

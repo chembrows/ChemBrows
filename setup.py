@@ -4,11 +4,11 @@
 
 import sys
 import os
-# from esky.bdist_esky import Executable
 import esky.bdist_esky
-# from cx_Freeze import setup, Executable
 from esky.bdist_esky import Executable as Executable_Esky
 from cx_Freeze import setup, Executable
+
+
 
 
 def get_all_files_in_dir(directory):
@@ -33,6 +33,18 @@ my_data_files = []
 my_data_files += get_all_files_in_dir('.{}images{}'.format(os.sep, os.sep))
 my_data_files += get_all_files_in_dir('.{}journals{}'.format(os.sep, os.sep))
 my_data_files += get_all_files_in_dir('.{}config{}'.format(os.sep, os.sep))
+my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.sep, os.sep, os.sep))
+my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.sep, os.sep, os.sep))
+
+# Remove sensitive files
+my_data_files.remove(('./config/', ['./config/searches.ini']))
+my_data_files.remove(('./config/', ['./config/options.ini']))
+my_data_files.remove(('./config/', ['./config/twitter_credentials']))
+
+# import scipy
+# scipy_path = os.path.dirname(scipy.__file__)
+# includefiles = [scipy_path]
+# print(includefiles)
 
 # GUI applications require a different base on Windows (the default is for a
 # console application).
@@ -108,25 +120,35 @@ includes = [
             'scipy.sparse.csgraph._validation',
             'sklearn.utils.sparsetools._graph_validation',
             'scipy.special._ufuncs_cxx',
+            'lxml',
+            'gzip',
            ]
 
 # Dependencies are automatically detected, but it might need fine tuning.
 build_exe_options = {
+                     # 'build_exe': {
+                                   # 'include_files': includefiles,
+                                  # },
                      'bdist_esky': {
                                     'freezer_module': 'cx_Freeze',
                                     'includes': includes,
                                     'excludes': excludes,
-                                   }
+                                   },
                      }
 
 
 exe_esky = Executable_Esky("gui.py", gui_only=True)
 exe_cx = Executable(script="gui.py", base=base, compress=False)
 
+# Get the current version from the version file
+with open('config/version.txt', 'r') as version_file:
+    version = version_file.read()
+
 setup(name="ChemBrows",
-      version="0.1",
+      version=version,
       description="ChemBrows keeps you up-to-date with scientific litterature",
       data_files=my_data_files,
       options=build_exe_options,
       scripts=[exe_esky],
+      executables=[exe_cx],
       )

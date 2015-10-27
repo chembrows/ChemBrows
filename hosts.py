@@ -57,7 +57,7 @@ def updateData(company, journal, entry, care_image):
     if company == 'rsc':
         dl_page = False
 
-        soup = BeautifulSoup(entry.summary, "lxml")
+        soup = BeautifulSoup(entry.summary)
         r = soup("img", align="center")
         if r:
             graphical_abstract = r[0]['src']
@@ -66,7 +66,7 @@ def updateData(company, journal, entry, care_image):
     elif company == 'wiley':
         dl_page = False
 
-        soup = BeautifulSoup(entry.summary, "lxml")
+        soup = BeautifulSoup(entry.summary)
         r = soup("a", attrs={"class": "figZoom"})
         if r:
             graphical_abstract = r[0].extract()
@@ -76,7 +76,7 @@ def updateData(company, journal, entry, care_image):
     elif company == 'acs':
         dl_page = False
 
-        soup = BeautifulSoup(entry.summary, "lxml")
+        soup = BeautifulSoup(entry.summary)
         r = soup("img", alt="TOC Graphic")
         if r:
             graphical_abstract = r[0]['src']
@@ -94,7 +94,7 @@ def updateData(company, journal, entry, care_image):
         dl_page = False
 
         if entry.summary != "":
-            soup = BeautifulSoup(entry.summary, "lxml")
+            soup = BeautifulSoup(entry.summary)
             r = soup.find_all("img")
             if r:
                 graphical_abstract = r[0]['src']
@@ -103,7 +103,7 @@ def updateData(company, journal, entry, care_image):
     elif company == 'beilstein':
         dl_page = False
 
-        soup = BeautifulSoup(entry.summary, "lxml")
+        soup = BeautifulSoup(entry.summary)
         r = soup.find_all("img")
         if r:
             graphical_abstract = r[0]['src']
@@ -145,7 +145,7 @@ def getData(company, journal, entry, response=None):
         graphical_abstract = None
         author = None
 
-        soup = BeautifulSoup(entry.summary, "lxml")
+        soup = BeautifulSoup(entry.summary)
 
         r = soup("img", align="center")
         if r:
@@ -157,7 +157,7 @@ def getData(company, journal, entry, response=None):
             # Strainer: get a soup with only the interesting part.
             # Don't load the complete tree in memory. Saves RAM
             strainer = SoupStrainer("h2", attrs={"class": "alpH1"})
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             title = soup.h2
 
             if title is not None:
@@ -165,7 +165,7 @@ def getData(company, journal, entry, response=None):
 
             # # Get the abstrat (w/ html)
             strainer = SoupStrainer("p", xmlns="http://www.rsc.org/schema/rscart38")
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.p
 
             if r is not None:
@@ -174,7 +174,7 @@ def getData(company, journal, entry, response=None):
                     abstract = None
 
             strainer = SoupStrainer("meta", attrs={"name": "citation_author"})
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
 
             # Here, multiple tags (results) are expected, so perform
             # the search, even if the tree contains only the result
@@ -199,7 +199,7 @@ def getData(company, journal, entry, response=None):
 
         abstract = None
 
-        soup = BeautifulSoup(entry.summary, "lxml")
+        soup = BeautifulSoup(entry.summary)
         try:
             # Remove the title "Abstract" from the abstract
             soup("h3")[0].extract()
@@ -221,7 +221,7 @@ def getData(company, journal, entry, response=None):
 
             # # Get the title (w/ html)
             strainer = SoupStrainer("span", attrs={"class": "mainTitle"})
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.span
             if r is not None:
                 try:
@@ -257,7 +257,7 @@ def getData(company, journal, entry, response=None):
 
         graphical_abstract = None
 
-        soup = BeautifulSoup(entry.summary, "lxml")
+        soup = BeautifulSoup(entry.summary)
         r = soup("img", alt="TOC Graphic")
         if r:
             graphical_abstract = r[0]['src']
@@ -266,13 +266,13 @@ def getData(company, journal, entry, response=None):
         if response.status_code is requests.codes.ok:
 
             strainer = SoupStrainer("p", attrs={"class": "articleBody_abstractText"})
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.p
             if r is not None:
                 abstract = r.renderContents().decode()
 
             strainer = SoupStrainer("h1", attrs={"class": "articleTitle"})
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.h1
             if r is not None:
                 title = r.renderContents().decode()
@@ -302,19 +302,19 @@ def getData(company, journal, entry, response=None):
         if response.status_code is requests.codes.ok or response.status_code == 401:
 
             strainer = SoupStrainer("h1", attrs={"class": "article-heading"})
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.h1
             if r is not None:
                 title = r.renderContents().decode()
 
             strainer = SoupStrainer("div", attrs={"id": "first-paragraph"})
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.div
             if r is not None:
                 abstract = r.renderContents().decode()
 
             strainer = SoupStrainer("img")
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.find_all("img", attrs={"class": "fig"})
             if r:
                 if "f1.jpg" in r[0]["src"]:
@@ -366,14 +366,14 @@ def getData(company, journal, entry, response=None):
 
             # Get the correct title, not the one in the RSS
             strainer = SoupStrainer("h1", id="article-title-1")
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.find_all("h1", id="article-title-1")
             if r:
                 title = r[0].renderContents().decode()
 
             # Get the authors
             strainer = SoupStrainer("a", attrs={"class": "name-search"})
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.find_all("a", attrs={"class": "name-search"})
             if r:
                 author = [tag.text for tag in r]
@@ -382,7 +382,7 @@ def getData(company, journal, entry, response=None):
             # Try to get the complete abstract. Sometimes it's available, sometimes
             # the article only contains an extract
             strainer = SoupStrainer("div", attrs={"class": "section abstract"})
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             if soup.p is not None:
                 abstract = soup.p.renderContents().decode()
             else:
@@ -409,7 +409,7 @@ def getData(company, journal, entry, response=None):
             except IndexError:
                 author = None
 
-            soup = BeautifulSoup(abstract, "lxml")
+            soup = BeautifulSoup(abstract)
 
             r = soup.find_all("img")
             if r:
@@ -453,7 +453,7 @@ def getData(company, journal, entry, response=None):
 
                 # Get the abstract, and clean it
                 strainer = SoupStrainer("section", id="abstract")
-                soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+                soup = BeautifulSoup(response.text, parse_only=strainer)
                 abstract = soup.section
 
                 abstract("div", attrs={"class": "articleFunctions"})[0].extract()
@@ -470,7 +470,7 @@ def getData(company, journal, entry, response=None):
                 abstract = abstract.renderContents().decode()
 
             strainer = SoupStrainer("span", id="authorlist")
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.find_all("span", id="authorlist")
             if r:
                 author = r[0].text
@@ -496,7 +496,7 @@ def getData(company, journal, entry, response=None):
             author = author[0]
 
         if entry.summary != "":
-            soup = BeautifulSoup(entry.summary, "lxml")
+            soup = BeautifulSoup(entry.summary)
             r = soup.find_all("p")
 
             if r:
@@ -531,19 +531,19 @@ def getData(company, journal, entry, response=None):
         if response.status_code is requests.codes.ok or response.status_code == 401:
 
             strainer = SoupStrainer("h1", attrs={"class": "tighten-line-height small-space-below"})
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.h1
             if r is not None:
                 title = r.renderContents().decode()
 
             strainer = SoupStrainer("div", attrs={"id": "abstract-content"})
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.p
             if r is not None:
                 abstract = r.renderContents().decode()
 
             strainer = SoupStrainer("img")
-            soup = BeautifulSoup(response.text, "lxml", parse_only=strainer)
+            soup = BeautifulSoup(response.text, parse_only=strainer)
             r = soup.find_all("img", attrs={"alt": "Figure 1"})
             if r:
                 if "f1.jpg" in r[0]["src"]:
@@ -554,7 +554,7 @@ def getData(company, journal, entry, response=None):
 
 
     if abstract is not None:
-        topic_simple = " " + functions.simpleChar(BeautifulSoup(abstract, "lxml").text) + functions.simpleChar(title) + " "
+        topic_simple = " " + functions.simpleChar(BeautifulSoup(abstract).text) + functions.simpleChar(title) + " "
     else:
         topic_simple = " " + functions.simpleChar(title) + " "
 
@@ -574,7 +574,7 @@ def getDoi(company, journal, entry):
     """Get the DOI id of a post, to save time"""
 
     if company == 'rsc':
-        soup = BeautifulSoup(entry.summary, "lxml")
+        soup = BeautifulSoup(entry.summary)
         r = soup("div")
         try:
             doi = r[0].text.split("DOI: ")[1].split(",")[0]

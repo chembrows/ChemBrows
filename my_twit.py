@@ -12,7 +12,9 @@ from twitter.api import Twitter
 from twitter.oauth import OAuth, write_token_file, read_token_file
 
 from log import MyLog
-import config.settings as settings
+
+# TEST
+import constants
 
 
 class MyTwit(QtGui.QDialog):
@@ -34,10 +36,12 @@ class MyTwit(QtGui.QDialog):
         # Get the logger of the parent window or create one
         self.l = getattr(parent, 'l', MyLog())
 
+        DATA_PATH = self.parent.DATA_PATH
+
         self.CONSUMER_KEY = 'IaTVXKtZ7uBjzcVWzsVmMYKtP'
         self.CONSUMER_SECRET = '8hsz0Zj3CupFfvJMAhpG3UjMLs7HZjGywRsjRJI8IcjIA4NrEk'
 
-        self.MY_TWITTER_CREDS = './config/twitter_credentials'
+        self.MY_TWITTER_CREDS = DATA_PATH + '/config/twitter_credentials'
 
         self.initUI()
         self.defineSlots()
@@ -130,7 +134,7 @@ class MyTwit(QtGui.QDialog):
         except AttributeError:
             pass
 
-        LEN_TWEET = settings.LEN_TWEET
+        LEN_TWEET = constants.LEN_TWEET
 
         # -2 for 2 spaces, -10 for #ChemBrows
         if len(self.title) > LEN_TWEET - len_data - 2 - 10:

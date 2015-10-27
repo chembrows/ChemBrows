@@ -13,8 +13,9 @@ from sklearn.feature_extraction import text
 
 # DEBUG
 import datetime
-from memory_profiler import profile
+# from memory_profiler import profile
 
+# Personal
 from log import MyLog
 
 
