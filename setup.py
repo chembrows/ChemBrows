@@ -4,11 +4,8 @@
 
 import sys
 import os
-import esky.bdist_esky
 from esky.bdist_esky import Executable as Executable_Esky
 from cx_Freeze import setup, Executable
-
-
 
 
 def get_all_files_in_dir(directory):
@@ -40,11 +37,6 @@ my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.sep, os.se
 my_data_files.remove(('./config/', ['./config/searches.ini']))
 my_data_files.remove(('./config/', ['./config/options.ini']))
 my_data_files.remove(('./config/', ['./config/twitter_credentials']))
-
-# import scipy
-# scipy_path = os.path.dirname(scipy.__file__)
-# includefiles = [scipy_path]
-# print(includefiles)
 
 # GUI applications require a different base on Windows (the default is for a
 # console application).
@@ -120,15 +112,10 @@ includes = [
             'scipy.sparse.csgraph._validation',
             'sklearn.utils.sparsetools._graph_validation',
             'scipy.special._ufuncs_cxx',
-            'lxml',
-            'gzip',
            ]
 
 # Dependencies are automatically detected, but it might need fine tuning.
 build_exe_options = {
-                     # 'build_exe': {
-                                   # 'include_files': includefiles,
-                                  # },
                      'bdist_esky': {
                                     'freezer_module': 'cx_Freeze',
                                     'includes': includes,
