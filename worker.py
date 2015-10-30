@@ -10,11 +10,14 @@ import functools
 from requests_futures.sessions import FuturesSession
 import requests
 import socket
+
 from io import BytesIO
 from PIL import Image
+# from io import open as iopen
 
 # DEBUG
 # from memory_profiler import profile
+import sys
 
 # Personal
 import hosts
@@ -248,7 +251,6 @@ class Worker(QtCore.QThread):
                         future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
 
-
         else:
 
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
@@ -324,8 +326,11 @@ class Worker(QtCore.QThread):
                     else:
                         self.count_futures_urls += 1
                         self.count_futures_images += 1
+                        continue
 
                 else:
+
+                    self.l.debug("Starting adding new entry")
 
                     url = getattr(entry, 'feedburner_origlink', entry.link)
 
@@ -358,6 +363,7 @@ class Worker(QtCore.QThread):
         """Callback to handle the response of the futures trying to
         download the page of the articles"""
 
+        self.l.debug("Page dled")
         self.count_futures_urls += 1
 
         try:
@@ -378,13 +384,22 @@ class Worker(QtCore.QThread):
             self.l.error("socket.timeout for {}".format(journal))
             self.count_futures_images += 1
             return
+        except Exception as e:
+            self.l.error("Unknown exception {} for {}".format(e, journal))
+            self.count_futures_images += 1
+            return
 
         query = QtSql.QSqlQuery(self.bdd)
 
         try:
             title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry, response)
+            # self.l.debug("ck 1.7")
         except TypeError:
             self.l.error("getData returned None for {}".format(journal))
+            self.count_futures_images += 1
+            return
+        except Exception as e:
+            self.l.error("Unknown exception completeData {}".format(e))
             self.count_futures_images += 1
             return
 
@@ -418,6 +433,7 @@ class Worker(QtCore.QThread):
         # Don't try to dl the image if its url is 'Empty', or if the image already exists
         if graphical_abstract == "Empty" or os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
             self.count_futures_images += 1
+            self.l.debug("Image already dled")
 
             # This block is executed when you delete the db, but not the images.
             # Allows to update the graphical_abstract in db accordingly
@@ -428,6 +444,7 @@ class Worker(QtCore.QThread):
                     query.addBindValue(value)
                 query.exec_()
         else:
+            self.l.debug("Page dled, adding future image")
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                        'Connection': 'close',
                        'Referer': url}
@@ -440,8 +457,6 @@ class Worker(QtCore.QThread):
 
         """Callback to handle the response of the futures
         downloading a picture"""
-
-        self.count_futures_images += 1
 
         query = QtSql.QSqlQuery(self.bdd)
 
@@ -469,6 +484,8 @@ class Worker(QtCore.QThread):
                     io = BytesIO(response.content)
                     Image.open(io).convert('RGB').save(self.DATA_PATH + functions.simpleChar(response.url),
                                                        format='JPEG')
+                    # with iopen(self.path + functions.simpleChar(response.url), 'wb') as file:
+                        # file.write(response.content)
                     self.l.debug("Image ok")
                 except OSError:
                     params = ("Empty", doi)
@@ -486,6 +503,8 @@ class Worker(QtCore.QThread):
 
             self.new_entries_worker += 1
             query.exec_()
+
+        self.count_futures_images += 1
 
 
     def listDoi(self, journal_abb):

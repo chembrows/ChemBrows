@@ -56,7 +56,7 @@ class Fenetre(QtGui.QMainWindow):
         app.processEvents()
 
         self.l = logger
-        self.l.setLevel(20)
+        # self.l.setLevel(20)
         self.l.info('Starting the program')
 
         self.parsing = False
@@ -948,7 +948,7 @@ class Fenetre(QtGui.QMainWindow):
             if type(graphical_abstract) is str and graphical_abstract != "Empty":
                 # Get the path of the graphical abstract
                 base = "<br/><br/><p align='center'><img src='file:///{}' align='center' /></p>"
-                base = base.format(os.path.abspath("./graphical_abstracts/" + graphical_abstract))
+                base = base.format(os.path.abspath(self.DATA_PATH + "/graphical_abstracts/" + graphical_abstract))
                 abstract += base
         except TypeError:
             self.l.debug("No graphical abstract for this post, displayInfos()")

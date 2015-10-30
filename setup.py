@@ -34,9 +34,9 @@ my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.sep, os.se
 my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.sep, os.sep, os.sep))
 
 # Remove sensitive files
-my_data_files.remove(('./config/', ['./config/searches.ini']))
-my_data_files.remove(('./config/', ['./config/options.ini']))
-my_data_files.remove(('./config/', ['./config/twitter_credentials']))
+my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}searches.ini'.format(os.sep, os.sep)]))
+my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}options.ini'.format(os.sep, os.sep)]))
+my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}twitter_credentials'.format(os.sep, os.sep)]))
 
 # GUI applications require a different base on Windows (the default is for a
 # console application).
@@ -45,7 +45,7 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
     base = "Win32GUI"
 
     # Copy the sqlite driver
-    my_data_files.append(('sqldrivers', ['C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers/qsqlite4.dll']))
+    my_data_files.append(('sqldrivers', ['C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers\qsqlite4.dll']))
 
     # # Copy the plugins to load images
     # my_data_files.append('C:\Python34\Lib\site-packages\PyQt4\plugins\imageformats\\')
@@ -129,7 +129,7 @@ exe_cx = Executable(script="gui.py", base=base, compress=False)
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
-    version = version_file.read()
+    version = version_file.read().rstrip()
 
 setup(name="ChemBrows",
       version=version,
