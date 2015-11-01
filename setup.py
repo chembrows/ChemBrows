@@ -36,6 +36,7 @@ my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.sep, os.se
 # Remove sensitive files
 my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}searches.ini'.format(os.sep, os.sep)]))
 my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}options.ini'.format(os.sep, os.sep)]))
+my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}options.ini_save'.format(os.sep, os.sep)]))
 my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}twitter_credentials'.format(os.sep, os.sep)]))
 
 # GUI applications require a different base on Windows (the default is for a

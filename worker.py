@@ -48,8 +48,6 @@ class Worker(QtCore.QThread):
         # Define a path attribute to easily change it
         # for the tests
         self.DATA_PATH = self.parent.DATA_PATH + "/graphical_abstracts/"
-        if not os.path.exists(self.DATA_PATH):
-            os.makedirs(self.DATA_PATH)
 
         # Set the timeout for the futures
         # W/ a large timeout, less chances to get en exception

@@ -4,7 +4,7 @@
 
 import sys
 import os
-from PyQt4 import QtGui, QtSql, QtCore, QtWebKit
+from PyQt4 import QtGui, QtSql, QtCore
 import datetime
 import urllib
 import fnmatch
@@ -42,7 +42,8 @@ import constants
 
 class Fenetre(QtGui.QMainWindow):
 
-    def __init__(self, logger):
+    # def __init__(self, logger):
+    def __init__(self):
 
         super(Fenetre, self).__init__()
 
@@ -50,15 +51,37 @@ class Fenetre(QtGui.QMainWindow):
         # http://eli.thegreenplace.net/2009/05/09/creating-splash-screens-in-pyqt
         # CAREFUL, there is a bug with the splash screen
         # https://bugreports.qt.io/browse/QTBUG-24910
-        splash_pix = QtGui.QPixmap('images/splash.png')
+        splash_pix = QtGui.QPixmap('./images/splash.png')
         splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
         splash.show()
         app.processEvents()
 
-        self.l = logger
-        # self.l.setLevel(20)
+        # Check if the running ChemBrows is a frozen app
+        if getattr(sys, "frozen", False):
+            # The program is NOT in debug mod if it's frozen
+            self.debug_mod = False
+            self.DATA_PATH = constants.DATA_PATH
+
+            # Create the user directory if it doesn't exist
+            os.makedirs(self.DATA_PATH, exist_ok=True)
+
+        else:
+            # The program is in debug mod if it's not frozen
+            self.debug_mod = True
+            self.DATA_PATH = "."
+
+        # Create the logger
+        self.l = MyLog(self.DATA_PATH + "/activity.log")
+        self.l.setLevel(20)
         self.l.info('Starting the program')
 
+        if self.debug_mod:
+            self.l.info("You are running ChemBrows in debug mode")
+            self.l.info("This version of ChemBrows is NOT a frozen version")
+        else:
+            self.l.info("This version of ChemBrows is a frozen version")
+
+        # Bool to check if the program is collecting data
         self.parsing = False
 
         QtGui.qApp.installEventFilter(self)
@@ -82,14 +105,9 @@ class Fenetre(QtGui.QMainWindow):
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
-        if not self.debug_mod:
-            self.DATA_PATH = constants.DATA_PATH
-        else:
-            self.DATA_PATH = "."
 
         # Object to store options and preferences
         self.options = QtCore.QSettings(self.DATA_PATH + "/config/options.ini", QtCore.QSettings.IniFormat)
-
 
         # Connect to the database & log the connection
         app.processEvents()
@@ -155,16 +173,11 @@ class Fenetre(QtGui.QMainWindow):
 
         # Create the folder to store the graphical_abstracts if
         # it doesn't exist
-        if not os.path.exists('./graphical_abstracts/'):
-            os.makedirs('./graphical_abstracts')
+        # http://stackoverflow.com/questions/12517451/python-automatically-creating-directories-with-file-output
+        os.makedirs(self.DATA_PATH + '/graphical_abstracts', exist_ok=True)
 
         # Check if the running ChemBrows is a frozen app
-        if getattr(sys, "frozen", False):
-
-            self.l.info("This version of ChemBrows is a frozen version")
-
-            # The program is NOT in debug mod if it's frozen
-            self.debug_mod = False
+        if not self.debug_mod:
 
             update = Updater(self.l)
 
@@ -206,12 +219,6 @@ class Fenetre(QtGui.QMainWindow):
 
                     update.start()
                     update.finished.connect(whenDone)
-
-        else:
-            # The program is in debug mod if it's not frozen
-            self.debug_mod = True
-            self.l.info("This version of ChemBrows is NOT a frozen version")
-            self.l.info("You are running ChemBrows in debug mode")
 
 
     def logConnection(self):
@@ -269,6 +276,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Check if there is a user_id. If not, register the user
         if self.options.value("user_id", None) is None:
+
             sign = Signing(self)
 
             # When the user is registered, start the tuto
@@ -1691,10 +1699,10 @@ If you click OK, the cleaning process will start"
 
         # Delete all the images which are not in the database (so not
         # corresponding to any article)
-        for directory in os.walk("./graphical_abstracts/"):
+        for directory in os.walk(self.DATA_PATH + "/graphical_abstracts/"):
             for fichier in directory[2]:
                 if fichier not in images_path:
-                    os.remove(os.path.abspath("./graphical_abstracts/{0}".format(fichier)))
+                    os.remove(os.path.abspath(self.DATA_PATH + "/graphical_abstracts/{0}".format(fichier)))
 
         self.l.debug("Deleted all the useless images")
 
@@ -1775,6 +1783,15 @@ If you click OK, the cleaning process will start"
             self.l.critical("Problem while inserting rejected articles, cleanDb")
         else:
             self.l.info("Inserting rejected articles into the database")
+
+        self.bdd.close()
+        self.bdd.open()
+        query = QtSql.QSqlQuery(self.bdd)
+
+        # Vacuum the db. Removes free space from db
+        query.prepare("VACUUM papers")
+        query.exec_()
+        self.l.info("Data base vacuumed")
 
         progress.setValue(100)
         app.processEvents()
@@ -2254,11 +2271,12 @@ If you click OK, the cleaning process will start"
 
 
 if __name__ == '__main__':
-    logger = MyLog()
+    # logger = MyLog()
     # try:
     app = QtGui.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon('./images/icon_main.png'))
-    ex = Fenetre(logger)
+    # ex = Fenetre(logger)
+    ex = Fenetre()
     app.processEvents()
     sys.exit(app.exec_())
 

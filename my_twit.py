@@ -36,12 +36,12 @@ class MyTwit(QtGui.QDialog):
         # Get the logger of the parent window or create one
         self.l = getattr(parent, 'l', MyLog())
 
-        DATA_PATH = self.parent.DATA_PATH
+        self.DATA_PATH = self.parent.DATA_PATH
 
         self.CONSUMER_KEY = 'IaTVXKtZ7uBjzcVWzsVmMYKtP'
         self.CONSUMER_SECRET = '8hsz0Zj3CupFfvJMAhpG3UjMLs7HZjGywRsjRJI8IcjIA4NrEk'
 
-        self.MY_TWITTER_CREDS = DATA_PATH + '/config/twitter_credentials'
+        self.MY_TWITTER_CREDS = self.DATA_PATH + '/config/twitter_credentials'
 
         self.initUI()
         self.defineSlots()
@@ -157,7 +157,7 @@ class MyTwit(QtGui.QDialog):
                 t_up = Twitter(domain='upload.twitter.com',
                                auth=OAuth(oauth_token, oauth_secret, self.CONSUMER_KEY, self.CONSUMER_SECRET))
 
-                with open("./graphical_abstracts/{}".format(self.graphical), "rb") as image:
+                with open(self.DATA_PATH + "/graphical_abstracts/{}".format(self.graphical), "rb") as image:
                     imagedata = image.read()
 
                 id_img = t_up.media.upload(media=imagedata)["media_id_string"]

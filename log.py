@@ -2,19 +2,20 @@
 # coding: utf-8
 
 
+import os
 import logging
- 
 from logging.handlers import RotatingFileHandler
- 
+
+
 class MyLog(logging.Logger):
 
     """ Création d'un logger personnalisé. Un logger simple, déjà
-    configuré, est généré à l'appel de la classe. Il écrit dans le 
+    configuré, est généré à l'appel de la classe. Il écrit dans le
     fichier activity.log, et dans la console.
     on peut logger avec logger.(info|warn|debug|error|critical).
     http://sametmax.com/ecrire-des-logs-en-python/ """
 
-    def __init__(self, total=True):
+    def __init__(self, output_file, total=True):
 
         super(MyLog, self).__init__(self)
 
@@ -30,7 +31,7 @@ class MyLog(logging.Logger):
 
         # création d'un handler qui va rediriger une écriture du log vers
         # un fichier en mode 'append', avec 1 backup et une taille max de 1Mo
-        self.file_handler = RotatingFileHandler('activity.log', 'a', 1000000, 1)
+        self.file_handler = RotatingFileHandler(output_file, 'a', 1000000, 1)
         # on lui met le niveau sur DEBUG, on lui dit qu'il doit utiliser le formateur
         # créé précédement et on ajoute ce handler au logger
         self.file_handler.setLevel(logging.DEBUG)
