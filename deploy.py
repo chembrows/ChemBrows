@@ -16,8 +16,8 @@ import distutils.util
 from zipfile import ZipFile
 # import build_inno_setup
 
-create_installer = True
 app_name = 'ChemBrows'
+create_installer = True
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
@@ -54,7 +54,7 @@ else:
 
 
 # Create installer
-if create_installer:
+if create_installer and sys.platform in ['win32', 'cygwin', 'win64']:
     # TODO: find location
     innoSetupLoc = "C:\Program Files\Inno Setup 5\ISCC"
 

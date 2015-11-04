@@ -72,7 +72,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Create the logger
         self.l = MyLog(self.DATA_PATH + "/activity.log")
-        self.l.setLevel(20)
+        # self.l.setLevel(20)
         self.l.info('Starting the program')
 
         if self.debug_mod:
@@ -217,8 +217,8 @@ class Fenetre(QtGui.QMainWindow):
                     self.progress.show()
                     app.processEvents()
 
-                    update.start()
                     update.finished.connect(whenDone)
+                    update.start()
 
 
     def logConnection(self):
@@ -1055,19 +1055,16 @@ class Fenetre(QtGui.QMainWindow):
             for index in range(self.onglets.count()):
                 if name_search == self.onglets.tabText(index):
                     self.list_tables_in_tabs[index].base_query = query
-
                     self.list_tables_in_tabs[index].topic_entries = topic_options
                     self.list_tables_in_tabs[index].author_entries = author_options
+                    break
 
-                    if self.onglets.tabText(self.onglets.currentIndex()) == name_search:
-                        # Update the view
-                        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
-                        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
-                        self.model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
-                        proxy.setSourceModel(self.model)
-                        table.setModel(proxy)
+            if self.onglets.tabText(self.onglets.currentIndex()) == name_search:
+                self.searchByButton()
+            else:
+                self.updateView()
+
             self.loadNotifications()
-            self.updateView()
 
             return
 
@@ -1290,7 +1287,6 @@ class Fenetre(QtGui.QMainWindow):
                     if index == 0:
                         if '*' in person:
                             matching = fnmatch.filter(authors, person)
-                            # matching = functions.match(authors, person)
                             if not matching:
                                 adding = False
                                 break
@@ -1299,7 +1295,6 @@ class Fenetre(QtGui.QMainWindow):
                     if index == 1:
                         if '*' in person:
                             matching = fnmatch.filter(authors, person)
-                            # matching = functions.match(authors, person)
                             if matching:
                                 list_adding_or.append(True)
                                 break
@@ -1318,10 +1313,12 @@ class Fenetre(QtGui.QMainWindow):
                     if index == 2:
                         if '*' in person:
                             matching = fnmatch.filter(authors, person)
-                            # matching = functions.match(authors, person)
                             if matching:
                                 adding = False
                                 break
+                        else:
+                            if any(person in element for element in authors):
+                                adding = False
 
                 if True not in list_adding_or and list_adding_or:
                     adding = False
@@ -1967,9 +1964,9 @@ If you click OK, the cleaning process will start"
         self.progress.show()
         app.processEvents()
 
+        self.predictor.finished.connect(whenDone)
         self.predictor.start()
 
-        self.predictor.finished.connect(whenDone)
 
 
     def toggleLike(self):
