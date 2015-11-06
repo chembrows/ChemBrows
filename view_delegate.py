@@ -162,7 +162,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 pos_x = option.rect.x() + DIMENSION * 0.5 * index
                 pos_y = option.rect.y() + option.rect.height() - DIMENSION * 0.8
 
-                painter.drawPixmap(pos_x, pos_y, DIMENSION * 0.7, DIMENSION * 0.7, pixmap)
+                painter.drawPixmap(pos_x, pos_y, DIMENSION * 0.75, DIMENSION * 0.75, pixmap)
 
             # If the post is liked, display the like star.
             # Else, display the unlike star
@@ -185,7 +185,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
 
-            pos_x = option.rect.x() + option.rect.width() - 2 * DIMENSION
+            pos_x = option.rect.x() + option.rect.width() - 2 * DIMENSION - 5
             pos_y = option.rect.y() + option.rect.height() - DIMENSION
 
             painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)

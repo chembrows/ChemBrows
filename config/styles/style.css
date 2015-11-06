@@ -3,12 +3,6 @@ QToolBar, QScrollArea, QTabWidget, QSplitter, .QWidget
     /*background: #333333;*/
     background: #726E73;
     border: 0px;
-    /*margin: 0;*/
-}
-
-QTabWidget, QSplitter, QTableView
-{
-    border: 0px;
 }
 
 QLabel

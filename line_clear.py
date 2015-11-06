@@ -23,7 +23,7 @@ class ButtonLineEdit(QtGui.QLineEdit):
         self.button.setIcon(QtGui.QIcon(icon_file))
 
         # Remove the elements of a button: border, background
-        self.button.setStyleSheet("background: transparent; border: none;")
+        self.button.setStyleSheet("background: transparent; border: none; margin-top: 5px;")
 
         layout = QtGui.QHBoxLayout(self)
         layout.addWidget(self.button, 0, QtCore.Qt.AlignRight)

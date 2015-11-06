@@ -2067,10 +2067,10 @@ If you click OK, the cleaning process will start"
         self.button_sort_by.setAccessibleName('toolbar_button')
 
         # Create a research bar and set its size
-        self.line_research = QtGui.QLineEdit()
         self.line_research = ButtonLineEdit('images/glyphicons_197_remove', self)
         self.line_research.setToolTip("Quick search")
-        self.line_research.setFixedSize(self.line_research.sizeHint())
+        self.line_research.setPlaceholderText("Quick search")
+        self.line_research.setFixedSize(self.line_research.sizeHint().width(), self.line_research.sizeHint().height() * 1.3)
 
         # Advanced search button
         self.button_advanced_search = QtGui.QPushButton()
@@ -2091,11 +2091,10 @@ If you click OK, the cleaning process will start"
 
         self.toolbar.addWidget(self.button_refresh)
         self.toolbar.addWidget(self.button_calculate_percentage)
-        self.toolbar.addSeparator()
+        # self.toolbar.addSeparator()
         self.toolbar.addWidget(self.button_search_new)
         self.toolbar.addWidget(self.button_sort_by)
-        self.toolbar.addSeparator()
-        self.toolbar.addWidget(QtGui.QLabel('Search : '))
+        # self.toolbar.addSeparator()
         self.toolbar.addWidget(self.line_research)
         self.toolbar.addWidget(self.button_advanced_search)
         self.toolbar.addWidget(self.empty_widget)
@@ -2128,6 +2127,7 @@ If you click OK, the cleaning process will start"
         # Creation of a gridLayout to handle the top right area
         self.area_right_top = QtGui.QWidget()
         self.grid_area_right_top = QtGui.QGridLayout()
+        self.grid_area_right_top.setContentsMargins(0, 0, 0, 0)
         self.area_right_top.setLayout(self.grid_area_right_top)
 
         # Here I set a prelabel: a label w/ just "Title: " to label the title.
@@ -2164,27 +2164,27 @@ If you click OK, the cleaning process will start"
         # Buttons for the display of the article: zoom & dark background
         self.button_zoom_less = QtGui.QPushButton()
         self.button_zoom_less.setIcon(QtGui.QIcon('./images/zoom_out.png'))
-        self.button_zoom_less.setIconSize(QtCore.QSize(36, 36))
+        self.button_zoom_less.setIconSize(QtCore.QSize(30, 30))
         self.button_zoom_less.hide()
         self.button_zoom_more = QtGui.QPushButton()
         self.button_zoom_more.setIcon(QtGui.QIcon('./images/zoom_in.png'))
-        self.button_zoom_more.setIconSize(QtCore.QSize(36, 36))
+        self.button_zoom_more.setIconSize(QtCore.QSize(30, 30))
         self.button_zoom_more.hide()
         self.button_color_read = QtGui.QPushButton()
         self.button_color_read.setIcon(QtGui.QIcon('./images/black_text.png'))
-        self.button_color_read.setIconSize(QtCore.QSize(36, 36))
+        self.button_color_read.setIconSize(QtCore.QSize(30, 30))
         self.button_color_read.hide()
 
         # Button to share on twitter
         self.button_twitter = QtGui.QPushButton()
         self.button_twitter.setIcon(QtGui.QIcon('./images/twitter.png'))
-        self.button_twitter.setIconSize(QtCore.QSize(36, 36))
+        self.button_twitter.setIconSize(QtCore.QSize(30, 30))
         self.button_twitter.hide()
 
         # Button to share by email
         self.button_share_mail = QtGui.QPushButton()
         self.button_share_mail.setIcon(QtGui.QIcon('./images/email.png'))
-        self.button_share_mail.setIconSize(QtCore.QSize(36, 36))
+        self.button_share_mail.setIconSize(QtCore.QSize(30, 30))
         self.button_share_mail.hide()
 
         # A QWebView to render the sometimes rich text of the abstracts
@@ -2247,11 +2247,12 @@ If you click OK, the cleaning process will start"
             self.central_widget.setStyleSheet(style)
             self.toolbar.setStyleSheet(style)
 
-        with open("./config/styles/buttons_text.css", "r") as fh:
+        with open("./config/styles/toolbar.css", "r") as fh:
             style = fh.read()
             self.scroll_tags.setStyleSheet(style)
             self.button_search_new.setStyleSheet(style)
             self.button_sort_by.setStyleSheet(style)
+            self.line_research.setStyleSheet(style)
 
         with open("./config/styles/buttons.css", "r") as fh:
             style = fh.read()
@@ -2263,7 +2264,6 @@ If you click OK, the cleaning process will start"
             self.button_refresh.setStyleSheet(style)
             self.button_calculate_percentage.setStyleSheet(style)
             self.button_advanced_search.setStyleSheet(style)
-            self.line_research.setStyleSheet(style)
             self.button_settings.setStyleSheet(style)
 
 

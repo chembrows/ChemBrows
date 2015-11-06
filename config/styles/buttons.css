@@ -12,6 +12,7 @@ QPushButton
 QPushButton[accessibleName="toolbar_round_button"]
 {
     margin-left: 10px;
+    margin-right: 10px;
 }
 
 QPushButton:pressed

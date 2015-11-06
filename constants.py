@@ -20,7 +20,7 @@ DATA_PATH = dirs.user_config_dir
 
 
 # Setting for the size of the icons
-DIMENSION = 35
+DIMENSION = 30
 
 # Tweets are 140 characters long
 LEN_TWEET = 140
