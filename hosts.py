@@ -504,7 +504,10 @@ def getData(company, journal, entry, response=None):
 
             r = soup.find_all("img")
             if r:
-                graphical_abstract = r[0]['src']
+                # This company can change the background of the GA through
+                # the url. If nothing is done, the bg is black, so turn it
+                # to white. Doesn't affect images with unchangeable bg
+                graphical_abstract = r[0]['src'] + '&background=FFFFFF'
 
 
     elif company == 'npg2':

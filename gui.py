@@ -1137,9 +1137,9 @@ class Fenetre(QtGui.QMainWindow):
         self.vbox_all_tags.setAlignment(QtCore.Qt.AlignTop)
         self.scroll_tags.setWidget(self.scrolling_tags)
 
-        # Get the pixles which need to be added
+        # Get the pixels which need to be added
         # +10 because of margin-left for the buttons
-        add = self.vbox_all_tags.getContentsMargins()[0] * 2 + 2 + 10 + \
+        add = self.vbox_all_tags.getContentsMargins()[0] * 2 + 2 + 20 + \
             self.scroll_tags.verticalScrollBar().sizeHint().width()
 
         # self.scroll_tags.setFixedWidth(size + add)

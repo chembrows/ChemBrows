@@ -17,7 +17,7 @@ from PIL import Image
 
 # DEBUG
 # from memory_profiler import profile
-import sys
+# import sys
 
 # Personal
 import hosts
