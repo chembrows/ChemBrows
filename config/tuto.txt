@@ -14,6 +14,7 @@ Savable searches allow you to follow your topics of interest and/or your favorit
 !!!advanced_search.png
 --
 If you want to check out articles of interest later, simply put them in the TO-READ list
+!!!unwait.png
 --
 The very cool feature now: Chembrows includes machine learning ! 
 --
@@ -21,10 +22,11 @@ Chembrows learns from your input and classifies the articles by "Hot Paperness"
 
     - Displaying AND Liking articles INCREASES the "Hot Paperness" of similar reasearch works
 
-    - Displaying WITHOUT Liking articles DECREASES the "Hot Paperness" of similar reaseach works
-
+    - Displaying WITHOUT Liking articles DECREASES the "Hot Paperness" of similar research works
+!!!like.png
 --
 Don't forget: the more you feed ChemBrows, the more Chembrows feeds you back with relevant articles
+!!!stats.png
 --
 You are now ready to download articles! 
 

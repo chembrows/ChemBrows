@@ -1102,7 +1102,6 @@ class Fenetre(QtGui.QMainWindow):
         One button per journal. Only display the journals
         selected in the settings window"""
 
-
         try:
             del self.list_buttons_tags
             self.clearLayout(self.vbox_all_tags)
@@ -1137,15 +1136,8 @@ class Fenetre(QtGui.QMainWindow):
         self.vbox_all_tags.setAlignment(QtCore.Qt.AlignTop)
         self.scroll_tags.setWidget(self.scrolling_tags)
 
-        # Get the pixels which need to be added
-        # +10 because of margin-left for the buttons
-        add = self.vbox_all_tags.getContentsMargins()[0] * 2 + 2 + 20 + \
-            self.scroll_tags.verticalScrollBar().sizeHint().width()
-
-        # self.scroll_tags.setFixedWidth(size + add)
-        self.scroll_tags.setFixedWidth(size + add)
-
-        self.scrolling_tags.adjustSize()
+        # Adjust the size of the left dock
+        self.scroll_tags.setFixedWidth(self.scrolling_tags.size().width())
 
 
     def stateButtons(self, pressed):
@@ -2113,6 +2105,9 @@ If you click OK, the cleaning process will start"
         # Create scrollarea to put the journals buttons
         self.scroll_tags = QtGui.QScrollArea()
 
+        # Always disable the horizontal scroll bar of the left dock
+        self.scroll_tags.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+
         # Create scrolling zone
         # http://www.mattmurrayanimation.com/archives/tag/how-do-i-use-a-qscrollarea-in-pyqt
         self.scrolling_tags = QtGui.QWidget()
@@ -2127,7 +2122,7 @@ If you click OK, the cleaning process will start"
         # Creation of a gridLayout to handle the top right area
         self.area_right_top = QtGui.QWidget()
         self.grid_area_right_top = QtGui.QGridLayout()
-        self.grid_area_right_top.setContentsMargins(0, 0, 0, 0)
+        self.grid_area_right_top.setContentsMargins(10, 0, 0, 0)
         self.area_right_top.setLayout(self.grid_area_right_top)
 
         # Here I set a prelabel: a label w/ just "Title: " to label the title.
@@ -2224,10 +2219,10 @@ If you click OK, the cleaning process will start"
         # Main part of the window in a tab.
         # Allows to create other tabs
         self.onglets = TabPerso(self)
-        # self.onglets.setContentsMargins(0, 0, 0, 0)
 
         self.central_widget = QtGui.QWidget()
         self.hbox_central = QtGui.QHBoxLayout()
+        self.hbox_central.setContentsMargins(0, 0, 0, 0)
         self.central_widget.setLayout(self.hbox_central)
 
         self.splitter2 = QtGui.QSplitter(QtCore.Qt.Horizontal)

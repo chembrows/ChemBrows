@@ -103,6 +103,10 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # doc.setHtml(options.text + adding_infos)
             doc.setHtml(title + adding_infos)
 
+            font = doc.defaultFont()
+            font.setPointSize(11)
+            doc.setDefaultFont(font)
+
             # Set the width of the text = the width of the rect
             doc.setTextWidth(options.rect.width())
 

@@ -9,3 +9,8 @@ QLabel
 {
     color: white
 }
+
+QWidget
+{
+    font-size: 11pt
+}
