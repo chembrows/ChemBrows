@@ -32,7 +32,12 @@ class Predictor(QtCore.QThread):
         self.y_train = []
         self.classifier = None
 
-        self.bdd = bdd
+        if bdd is None:
+            self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
+            self.bdd.setDatabaseName("fichiers.sqlite")
+            self.bdd.open()
+        else:
+            self.bdd = bdd
 
         self.l = logger
 
@@ -68,11 +73,6 @@ class Predictor(QtCore.QThread):
         """Initialize the pipeline for text analysis. 0 is the liked class"""
 
         start_time = datetime.datetime.now()
-
-        if self.bdd is None:
-            self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-            self.bdd.setDatabaseName("fichiers.sqlite")
-            self.bdd.open()
 
         query = QtSql.QSqlQuery(self.bdd)
 
@@ -137,7 +137,6 @@ class Predictor(QtCore.QThread):
         x_test = []
 
         while query.next():
-
             record = query.record()
             abstract = record.value('abstract')
             x_test.append(abstract)

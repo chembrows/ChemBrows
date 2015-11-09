@@ -82,7 +82,6 @@ class Worker(QtCore.QThread):
         self.l.debug("Entering worker")
         self.l.debug(self.url_feed)
 
-
         # Get the RSS page of the url provided
         try:
             self.feed = feedparser.parse(self.url_feed)
@@ -482,10 +481,9 @@ class Worker(QtCore.QThread):
                     io = BytesIO(response.content)
                     Image.open(io).convert('RGB').save(self.DATA_PATH + functions.simpleChar(response.url),
                                                        format='JPEG')
-                    # with iopen(self.path + functions.simpleChar(response.url), 'wb') as file:
-                        # file.write(response.content)
                     self.l.debug("Image ok")
-                except OSError:
+                except Exception as e:
+                    self.l.error("An error occured in pictureDownloaded: {}".format(e))
                     params = ("Empty", doi)
                 else:
                     params = (functions.simpleChar(response.url), doi)
@@ -522,10 +520,6 @@ class Worker(QtCore.QThread):
             doi = record.value('doi')
 
             not_empty = record.value('graphical_abstract') != "Empty"
-            # if record.value('graphical_abstract') == 'Empty' or type(record.value('graphical_abstract')) == QtCore.QPyNullVariant:
-                # not_empty = False
-            # else:
-                # not_empty = True
             result[doi] = not_empty
 
         if self.parent.debug_mod:

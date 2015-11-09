@@ -610,13 +610,6 @@ class Fenetre(QtGui.QMainWindow):
 
         self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
-        # for table in self.list_tables_in_tabs:
-            # Qt.AscendingOrder   0   starts with 'AAA' ends with 'ZZZ'
-            # Qt.DescendingOrder  1   starts with 'ZZZ' ends with 'AAA'
-            # if "reverse order" in unchecked, reverse = False = 0
-            # -> 1 - reverse = 1 -> DescendingOrder -> starts with the
-            # highest percentages
-
 
     def updateModel(self):
 
@@ -1070,14 +1063,8 @@ class Fenetre(QtGui.QMainWindow):
 
         proxy = QtGui.QSortFilterProxyModel()
 
-        # TESTING
-        # W/ a non dynamic sorting filter, I can use
-        # the proxy to filter the new articles, which is much
-        # faster than doing a query
-
         proxy.setSourceModel(self.model)
         self.list_proxies_in_tabs.append(proxy)
-
 
         # Create the view, and give it the model
         tableau = ViewPerso(self)
