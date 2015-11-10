@@ -64,7 +64,6 @@ class Fenetre(QtGui.QMainWindow):
 
             # Create the user directory if it doesn't exist
             os.makedirs(self.DATA_PATH, exist_ok=True)
-
         else:
             # The program is in debug mod if it's not frozen
             self.debug_mod = True
@@ -1013,7 +1012,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Create the view, and give it the model
         tableau = ViewPerso(self)
-        tableau.name_search = "To read"
+        tableau.name_search = "ToRead"
 
         requete = "SELECT * FROM papers WHERE id IN("
 
@@ -1037,7 +1036,7 @@ class Fenetre(QtGui.QMainWindow):
         # Define an attribute for the to read list
         self.waiting_list = tableau
 
-        self.onglets.addTab(tableau, "To read")
+        self.onglets.addTab(tableau, "ToRead")
 
 
     def createSearchTab(self, name_search, query, topic_options=None, author_options=None, update=False):
@@ -1110,9 +1109,14 @@ class Fenetre(QtGui.QMainWindow):
 
         size = 0
 
+        with open("./config/styles/buttons.css", "r") as fh:
+            style = fh.read()
+
         for journal in journals_to_care:
 
             button = QtGui.QPushButton(journal)
+            button.setAccessibleName("button_text_left")
+            button.setStyleSheet(style)
             button.setCheckable(True)
             button.adjustSize()
 
@@ -1853,7 +1857,7 @@ If you click OK, the cleaning process will start"
         link = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
 
         # Create a simple title, by removing html tags (tags are not accepted in a mail subject)
-        simple_title = functions.removeHtml(title) + " : spotted with chemBrows"
+        simple_title = functions.removeHtml(title) + " : spotted by ChemBrows"
 
         # Conctsruct the body structure
         # body = "<span style='font-weight:bold'>{}</span></br> \
@@ -1863,7 +1867,7 @@ If you click OK, the cleaning process will start"
                 # Click on this link to see the article on the editor's website: <a href=\"{}\">editor's website</a></br></br> \
                 # This article was spotted with chemBrows.</br> Learn more about chemBrows : notre site web"
 
-        body = "Click on this link to see the article on the editor's website: {}\n This article was spotted with chemBrows.\n Learn more about chemBrows : www.chembrows.com"
+        body = "Click on this link to see the article on the editor's website: {}\n\nThis article was spotted by ChemBrows: www.chembrows.com"
         body = body.format(link)
 
         url = "mailto:?subject={}&body={}"
@@ -2040,14 +2044,14 @@ If you click OK, the cleaning process will start"
 
         # Button to display new articles, or view them all
         self.button_search_new = QtGui.QPushButton('View unread')
-        self.button_search_new.setToolTip("Display unread articles")
-        self.button_search_new.setAccessibleName('toolbar_button')
+        self.button_search_new.setToolTip("Display unread or all articles")
+        self.button_search_new.setAccessibleName('toolbar_text_button')
 
         # Button to change the sorting method of the articles
         self.button_sort_by = QtGui.QPushButton()
         self.button_sort_by.setToolTip("Sort articles by date or Hot Paperness")
         self.button_sort_by.clicked.connect(lambda: self.changeSortingMethod(None, self.sortingReversedAction.isChecked()))
-        self.button_sort_by.setAccessibleName('toolbar_button')
+        self.button_sort_by.setAccessibleName('toolbar_text_button')
 
         # Create a research bar and set its size
         self.line_research = ButtonLineEdit('images/glyphicons_197_remove', self)
@@ -2059,7 +2063,7 @@ If you click OK, the cleaning process will start"
         self.button_advanced_search = QtGui.QPushButton()
         self.button_advanced_search.setIcon(QtGui.QIcon("./images/advanced_search.png"))
         self.button_advanced_search.setIconSize(QtCore.QSize(36, 36))
-        self.button_advanced_search.setToolTip("Advanced search: more powerful research")
+        self.button_advanced_search.setToolTip("Create filters")
         self.button_advanced_search.setAccessibleName('toolbar_round_button')
 
         self.button_settings = QtGui.QPushButton()
@@ -2074,10 +2078,10 @@ If you click OK, the cleaning process will start"
 
         self.toolbar.addWidget(self.button_refresh)
         self.toolbar.addWidget(self.button_calculate_percentage)
-        # self.toolbar.addSeparator()
+        self.toolbar.addSeparator()
         self.toolbar.addWidget(self.button_search_new)
         self.toolbar.addWidget(self.button_sort_by)
-        # self.toolbar.addSeparator()
+        self.toolbar.addSeparator()
         self.toolbar.addWidget(self.line_research)
         self.toolbar.addWidget(self.button_advanced_search)
         self.toolbar.addWidget(self.empty_widget)
@@ -2151,26 +2155,31 @@ If you click OK, the cleaning process will start"
         self.button_zoom_less = QtGui.QPushButton()
         self.button_zoom_less.setIcon(QtGui.QIcon('./images/zoom_out.png'))
         self.button_zoom_less.setIconSize(QtCore.QSize(30, 30))
+        self.button_zoom_less.setAccessibleName('round_button_article')
         self.button_zoom_less.hide()
         self.button_zoom_more = QtGui.QPushButton()
         self.button_zoom_more.setIcon(QtGui.QIcon('./images/zoom_in.png'))
         self.button_zoom_more.setIconSize(QtCore.QSize(30, 30))
+        self.button_zoom_more.setAccessibleName('round_button_article')
         self.button_zoom_more.hide()
         self.button_color_read = QtGui.QPushButton()
         self.button_color_read.setIcon(QtGui.QIcon('./images/black_text.png'))
         self.button_color_read.setIconSize(QtCore.QSize(30, 30))
+        self.button_color_read.setAccessibleName('round_button_article')
         self.button_color_read.hide()
 
         # Button to share on twitter
         self.button_twitter = QtGui.QPushButton()
         self.button_twitter.setIcon(QtGui.QIcon('./images/twitter.png'))
         self.button_twitter.setIconSize(QtCore.QSize(30, 30))
+        self.button_twitter.setAccessibleName('round_button_article')
         self.button_twitter.hide()
 
         # Button to share by email
         self.button_share_mail = QtGui.QPushButton()
         self.button_share_mail.setIcon(QtGui.QIcon('./images/email.png'))
         self.button_share_mail.setIconSize(QtCore.QSize(30, 30))
+        self.button_share_mail.setAccessibleName('round_button_article')
         self.button_share_mail.hide()
 
         # A QWebView to render the sometimes rich text of the abstracts
@@ -2236,10 +2245,15 @@ If you click OK, the cleaning process will start"
 
         with open("./config/styles/toolbar.css", "r") as fh:
             style = fh.read()
-            self.scroll_tags.setStyleSheet(style)
+            # self.scroll_tags.setStyleSheet(style)
             self.button_search_new.setStyleSheet(style)
             self.button_sort_by.setStyleSheet(style)
             self.line_research.setStyleSheet(style)
+
+            self.button_refresh.setStyleSheet(style)
+            self.button_calculate_percentage.setStyleSheet(style)
+            self.button_advanced_search.setStyleSheet(style)
+            self.button_settings.setStyleSheet(style)
 
         with open("./config/styles/buttons.css", "r") as fh:
             style = fh.read()
@@ -2248,10 +2262,6 @@ If you click OK, the cleaning process will start"
             self.button_zoom_less.setStyleSheet(style)
             self.button_zoom_more.setStyleSheet(style)
             self.button_color_read.setStyleSheet(style)
-            self.button_refresh.setStyleSheet(style)
-            self.button_calculate_percentage.setStyleSheet(style)
-            self.button_advanced_search.setStyleSheet(style)
-            self.button_settings.setStyleSheet(style)
 
 
 if __name__ == '__main__':

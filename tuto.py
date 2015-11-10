@@ -16,6 +16,7 @@ class Tuto(QtGui.QDialog):
 
         super(Tuto, self).__init__(parent)
 
+
         self.parent = parent
 
         if type(parent) is QtGui.QWidget:
@@ -94,7 +95,7 @@ class Tuto(QtGui.QDialog):
             path = './images/' + text.split('!!!')[1].rstrip()
             self.label_image.show()
             image = QtGui.QPixmap(path)
-            image = image.scaledToWidth(80, QtCore.Qt.SmoothTransformation)
+            image = image.scaledToWidth(60, QtCore.Qt.SmoothTransformation)
             self.label_image.setPixmap(image)
             return text.split('!!!')[0]
         except IndexError:
@@ -121,12 +122,20 @@ class Tuto(QtGui.QDialog):
 
         """Handles the display"""
 
+        self.setWindowTitle('Tutorial')
+
         self.text_diapo = QtGui.QLabel()
-        self.text_diapo.setText(self.list_slides[0])
+        # font = self.text_diapo.font()
+        # font.setPointSize(11)
+        # self.text_diapo.setFont(font)
 
         self.label_image = QtGui.QLabel()
         self.label_image.setAlignment(QtCore.Qt.AlignHCenter)
         self.label_image.hide()
+
+        # Parse the images that could be present on the first slide
+        text = self.parseSlide(self.list_slides[0])
+        self.text_diapo.setText(text)
 
         choices = ['All'] + sorted(os.listdir('./config/fields/'))
         self.combo_choice = QtGui.QComboBox()

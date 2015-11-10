@@ -61,7 +61,7 @@ class WebViewPerso(QtWebKit.QWebView):
         else:
             increment = -1
 
-        self.x += increment * 0.25
+        self.x += increment * 0.5
 
         self.setZoomFactor(1 + self.x / 10)
 

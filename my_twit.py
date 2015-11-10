@@ -33,10 +33,10 @@ class MyTwit(QtGui.QDialog):
         self.link = link
         self.graphical = graphical
 
-        # Get the logger of the parent window or create one
-        self.l = getattr(parent, 'l', MyLog())
-
         self.DATA_PATH = self.parent.DATA_PATH
+
+        # Get the logger of the parent window or create one
+        self.l = getattr(parent, 'l', MyLog(self.DATA_PATH + "/activity.log"))
 
         self.CONSUMER_KEY = 'IaTVXKtZ7uBjzcVWzsVmMYKtP'
         self.CONSUMER_SECRET = '8hsz0Zj3CupFfvJMAhpG3UjMLs7HZjGywRsjRJI8IcjIA4NrEk'

@@ -1,19 +1,18 @@
 Welcome to ChemBrows, a software that helps you to tame the flood of scientific literature
+!!!icon_main.png
 --
-First things first: select the kind of journals you want to follow 
+First things first: select the journals you want to follow 
 
 (you can change this selection afterwards in Settings)
 --
 Double-click on an article to see the article on the publisher's website
 --
-Here come the cool features: 
---
-A dock appears on the left side of the window, to display/hide journal(s) 
+A dock appears on the left side of the window, to display/hide journal(s) upon mouse hovering
 --
 Savable searches allow you to follow your topics of interest and/or your favorite authors
 !!!advanced_search.png
 --
-If you want to check out articles of interest later, simply put them in the TO-READ list
+If you want to check out articles of interest later, simply put them in the ToRead list
 !!!unwait.png
 --
 The very cool feature now: Chembrows includes machine learning ! 
