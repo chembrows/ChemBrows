@@ -105,7 +105,6 @@ class Fenetre(QtGui.QMainWindow):
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
-
         # Object to store options and preferences
         self.options = QtCore.QSettings(self.DATA_PATH + "/config/options.ini", QtCore.QSettings.IniFormat)
 
@@ -683,6 +682,7 @@ class Fenetre(QtGui.QMainWindow):
         each table"""
 
         count_query = QtSql.QSqlQuery(self.bdd)
+        count_query.setForwardOnly(True)
 
         # Don't treat the articles if it's the main tab, it's
         # useless because the article will be concerned for sure
@@ -701,6 +701,8 @@ class Fenetre(QtGui.QMainWindow):
             req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
             count_query.exec_(req_str)
 
+            # start_time = datetime.datetime.now()
+
             while count_query.next():
                 record = count_query.record()
 
@@ -708,6 +710,8 @@ class Fenetre(QtGui.QMainWindow):
 
                 if record.value('new') == 1:
                     append_new(record.value('id'))
+
+            # print(datetime.datetime.now() - start_time)
 
         # Set the notifications for each tab
         for index in range(1, self.onglets.count()):
@@ -2209,7 +2213,8 @@ If you click OK, the cleaning process will start"
 
         self.central_widget = QtGui.QWidget()
         self.hbox_central = QtGui.QHBoxLayout()
-        self.hbox_central.setContentsMargins(0, 0, 0, 0)
+        # (int left, int top, int right, int bottom) getContentsMargins (self)
+        self.hbox_central.setContentsMargins(0, 5, 0, 5)
         self.central_widget.setLayout(self.hbox_central)
 
         self.splitter2 = QtGui.QSplitter(QtCore.Qt.Horizontal)
