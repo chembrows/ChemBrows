@@ -14,18 +14,19 @@ def checkData():
     bdd.row_factory = sqlite3.Row
     c = bdd.cursor()
 
-    c.execute("SELECT * FROM papers WHERE graphical_abstract is NULL")
+    c.execute("CREATE TABLE results AS SELECT * FROM papers WHERE journal='J. Chromatogr. A'")
+    # c.execute("SELECT * FROM papers WHERE graphical_abstract is NULL")
 
-    results = c.fetchall()
+    # results = c.fetchall()
 
-    for line in results:
-        id_bdd = line['id']
-        graphical = line['graphical_abstract']
-        print(graphical)
+    # for line in results:
+        # id_bdd = line['id']
+        # graphical = line['graphical_abstract']
+        # print(graphical)
 
-        if graphical is None:
-            graphical = 'Empty'
-            c.execute("UPDATE papers SET graphical_abstract = ? WHERE id = ?", (graphical, id_bdd))
+        # if graphical is None:
+            # graphical = 'Empty'
+            # c.execute("UPDATE papers SET graphical_abstract = ? WHERE id = ?", (graphical, id_bdd))
 
     bdd.commit()
     c.close()

@@ -698,11 +698,16 @@ class Fenetre(QtGui.QMainWindow):
             append_articles = table.list_id_articles.append
 
             req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
+
+            print(req_str)
+
             count_query.exec_(req_str)
 
-            # start_time = datetime.datetime.now()
+            start_time = datetime.datetime.now()
 
+            i = 0
             while count_query.next():
+                i += 1
                 record = count_query.record()
 
                 append_articles(record.value('id'))
@@ -710,12 +715,13 @@ class Fenetre(QtGui.QMainWindow):
                 if record.value('new') == 1:
                     append_new(record.value('id'))
 
-            # print(datetime.datetime.now() - start_time)
+            print(datetime.datetime.now() - start_time)
+            print("Nbr of entries processed: {}".format(i))
 
-        # Set the notifications for each tab
-        for index in range(1, self.onglets.count()):
-            notifs = len(self.onglets.widget(index).list_new_ids)
-            self.onglets.setNotifications(index, notifs)
+            # Set the notifications for each tab
+            for index in range(1, self.onglets.count()):
+                notifs = len(self.onglets.widget(index).list_new_ids)
+                self.onglets.setNotifications(index, notifs)
 
 
     def restoreSettings(self):
@@ -1324,10 +1330,10 @@ class Fenetre(QtGui.QMainWindow):
             # Building the query
             for each_id in list_ids:
                 if each_id != list_ids[-1]:
-                    requete = requete + "\"" + str(each_id) + "\"" + ", "
+                    requete = requete + str(each_id) + ", "
                 # Close the query if last
                 else:
-                    requete = requete + "\"" + str(each_id) + "\"" + ")"
+                    requete = requete + str(each_id) + ")"
 
             return requete
 
@@ -1524,7 +1530,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # If the to read list was empty and is not anymore, fix the
         # header of the to read list
-        if empty and len(self.waiting_list.list_id_articles) == 1:
+        if table is self.waiting_list and empty and len(self.waiting_list.list_id_articles) == 1:
             self.waiting_list.hideColumn(0)  # Hide id
             self.waiting_list.hideColumn(1)  # Hide percentage match
             self.waiting_list.hideColumn(2)  # Hide doi

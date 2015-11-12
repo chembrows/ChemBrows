@@ -30,5 +30,6 @@ Don't forget: the more you feed ChemBrows, the more Chembrows feeds you back wit
 You are now ready to download articles! 
 
 (it may take some time at the first execution, be patient...)
+!!!refresh.png
 --
 Enjoy Chembrows and feel free to provide us with your feedback at <a href="http://www.chembrows.com">www.chembrows.com</a>
