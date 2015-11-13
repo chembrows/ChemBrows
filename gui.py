@@ -1113,21 +1113,12 @@ class Fenetre(QtGui.QMainWindow):
 
         journals_to_care.sort()
 
-        size = 0
-
-        with open("./config/styles/buttons.css", "r") as fh:
-            style = fh.read()
-
         for journal in journals_to_care:
 
             button = QtGui.QPushButton(journal)
             button.setAccessibleName("button_text_left")
-            button.setStyleSheet(style)
             button.setCheckable(True)
             button.adjustSize()
-
-            if button.width() > size:
-                size = button.width()
 
             button.clicked[bool].connect(self.stateButtons)
             self.vbox_all_tags.addWidget(button)
@@ -1138,6 +1129,7 @@ class Fenetre(QtGui.QMainWindow):
         self.scroll_tags.setWidget(self.scrolling_tags)
 
         # Adjust the size of the left dock
+        self.scrolling_tags.adjustSize()
         self.scroll_tags.setFixedWidth(self.scrolling_tags.size().width())
 
 
@@ -1530,7 +1522,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # If the to read list was empty and is not anymore, fix the
         # header of the to read list
-        if table is self.waiting_list and empty and len(self.waiting_list.list_id_articles) == 1:
+        if empty and len(self.waiting_list.list_id_articles) == 1:
             self.waiting_list.hideColumn(0)  # Hide id
             self.waiting_list.hideColumn(1)  # Hide percentage match
             self.waiting_list.hideColumn(2)  # Hide doi
@@ -2251,7 +2243,6 @@ If you click OK, the cleaning process will start"
 
         with open("./config/styles/toolbar.css", "r") as fh:
             style = fh.read()
-            # self.scroll_tags.setStyleSheet(style)
             self.button_search_new.setStyleSheet(style)
             self.button_sort_by.setStyleSheet(style)
             self.line_research.setStyleSheet(style)
@@ -2263,6 +2254,7 @@ If you click OK, the cleaning process will start"
 
         with open("./config/styles/buttons.css", "r") as fh:
             style = fh.read()
+            self.scroll_tags.setStyleSheet(style)
             self.button_twitter.setStyleSheet(style)
             self.button_share_mail.setStyleSheet(style)
             self.button_zoom_less.setStyleSheet(style)
