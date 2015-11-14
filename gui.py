@@ -673,12 +673,14 @@ class Fenetre(QtGui.QMainWindow):
 
 
     # @profile
-    def loadNotifications(self):
+    def loadNotifications(self, tab_number=None):
 
         """Method to find the number of unread articles,
         for each search. Load a list of id, for the unread articles,
         in each table. And a list of id, for the concerned articles, for
-        each table"""
+        each table. tab_number is here to load the notifications only for
+        a particular tab, when loadNotifications is called after an update
+        from an AdvancedSearch window"""
 
         count_query = QtSql.QSqlQuery(self.bdd)
         count_query.setForwardOnly(True)
@@ -686,6 +688,10 @@ class Fenetre(QtGui.QMainWindow):
         # Don't treat the articles if it's the main tab, it's
         # useless because the article will be concerned for sure
         for table in self.list_tables_in_tabs[1:]:
+
+            # If a particular tab is targeted, jump to it
+            if tab_number is not None and self.list_tables_in_tabs.index(table) != tab_number:
+                continue
 
             # Empty these lists, because when loadNotifications is called
             # several times during the use, the nbr of unread articles is
@@ -699,24 +705,18 @@ class Fenetre(QtGui.QMainWindow):
 
             req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
 
-            print(req_str)
-
             count_query.exec_(req_str)
 
-            start_time = datetime.datetime.now()
+            id_index = count_query.record().indexOf('id')
+            new_index = count_query.record().indexOf('new')
 
-            i = 0
             while count_query.next():
-                i += 1
                 record = count_query.record()
+                id_value = record.value(id_index)
+                append_articles(id_value)
 
-                append_articles(record.value('id'))
-
-                if record.value('new') == 1:
-                    append_new(record.value('id'))
-
-            print(datetime.datetime.now() - start_time)
-            print("Nbr of entries processed: {}".format(i))
+                if record.value(new_index) == 1:
+                    append_new(id_value)
 
             # Set the notifications for each tab
             for index in range(1, self.onglets.count()):
@@ -1059,14 +1059,13 @@ class Fenetre(QtGui.QMainWindow):
                     self.list_tables_in_tabs[index].base_query = query
                     self.list_tables_in_tabs[index].topic_entries = topic_options
                     self.list_tables_in_tabs[index].author_entries = author_options
+                    self.loadNotifications(index)
                     break
 
             if self.onglets.tabText(self.onglets.currentIndex()) == name_search:
                 self.searchByButton()
             else:
                 self.updateView()
-
-            self.loadNotifications()
 
             return
 
