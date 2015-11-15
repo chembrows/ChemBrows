@@ -4,10 +4,10 @@
 
 import sys
 import os
-# from esky.bdist_esky import Executable as Executable_Esky
-from esky.bdist_esky import Executable
-# from cx_Freeze import setup, Executable
-from distutils.core import setup
+from esky.bdist_esky import Executable as Executable_Esky
+# from esky.bdist_esky import Executable
+from cx_Freeze import setup, Executable
+# from distutils.core import setup
 
 
 # --------------------------------------------------
@@ -180,9 +180,9 @@ build_exe_options = {
                      }
 
 
-# exe_esky = Executable_Esky("gui.py", gui_only=True)
-exe_esky = Executable("gui.py", gui_only=True)
-# exe_cx = Executable(script="gui.py", base=base, compress=False)
+exe_esky = Executable_Esky("gui.py", gui_only=True)
+# exe_esky = Executable("gui.py", gui_only=True)
+exe_cx = Executable(script="gui.py", base=base, compress=False)
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
@@ -194,5 +194,5 @@ setup(name="ChemBrows",
       data_files=my_data_files,
       options=build_exe_options,
       scripts=[exe_esky],
-      # executables=[exe_cx],
+      executables=[exe_cx],
       )
