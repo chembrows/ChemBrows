@@ -103,10 +103,11 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
     # Copy the sqlite driver
     my_data_files.append(('sqldrivers', ['C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers\qsqlite4.dll']))
 
-    freezer = 'cx_Freeze'
+    FREEZER = 'cx_Freeze'
 
 elif sys.platform == 'darwin':
-    freezer = 'py2app'
+    FREEZER = 'py2app'
+    FREEZER_OPTIONS = dict(argv_emulation=False)
 
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
@@ -174,7 +175,8 @@ includes = [
 # Dependencies are automatically detected, but it might need fine tuning.
 build_exe_options = {
                      'bdist_esky': {
-                                    'freezer_module': freezer,
+                                    'freezer_module': FREEZER,
+                                    'freezer_options': FREEZER_OPTIONS,
                                     'includes': includes,
                                     'excludes': excludes,
                                    },
