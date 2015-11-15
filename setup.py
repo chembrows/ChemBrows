@@ -4,10 +4,10 @@
 
 import sys
 import os
-from esky.bdist_esky import Executable as Executable_Esky
-# from esky.bdist_esky import Executable
-from cx_Freeze import setup, Executable
-# from distutils.core import setup
+# from esky.bdist_esky import Executable as Executable_Esky
+from esky.bdist_esky import Executable
+# from cx_Freeze import setup, Executable
+from distutils.core import setup
 
 
 # --------------------------------------------------
@@ -103,13 +103,14 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
     # Copy the sqlite driver
     my_data_files.append(('sqldrivers', ['C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers\qsqlite4.dll']))
 
-    # # Copy the plugins to load images
-    # my_data_files.append('C:\Python34\Lib\site-packages\PyQt4\plugins\imageformats\\')
+    freezer = 'cx_Freeze'
 
 elif sys.platform == 'darwin':
-    pass
+    freezer = 'py2app'
+
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
+    freezer = 'cx_Freeze'
 
 
 excludes = [
@@ -173,16 +174,16 @@ includes = [
 # Dependencies are automatically detected, but it might need fine tuning.
 build_exe_options = {
                      'bdist_esky': {
-                                    'freezer_module': 'cx_Freeze',
+                                    'freezer_module': freezer,
                                     'includes': includes,
                                     'excludes': excludes,
                                    },
                      }
 
 
-exe_esky = Executable_Esky("gui.py", gui_only=True)
-# exe_esky = Executable("gui.py", gui_only=True)
-exe_cx = Executable(script="gui.py", base=base, compress=False)
+# exe_esky = Executable_Esky("gui.py", gui_only=True)
+exe_esky = Executable("gui.py", gui_only=True)
+# exe_cx = Executable(script="gui.py", base=base, compress=False)
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
@@ -194,5 +195,5 @@ setup(name="ChemBrows",
       data_files=my_data_files,
       options=build_exe_options,
       scripts=[exe_esky],
-      executables=[exe_cx],
+      # executables=[exe_cx],
       )
