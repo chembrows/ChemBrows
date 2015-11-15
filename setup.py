@@ -7,7 +7,8 @@ import os
 # from esky.bdist_esky import Executable as Executable_Esky
 from esky.bdist_esky import Executable
 # from cx_Freeze import setup, Executable
-from distutils.core import setup
+# from distutils.core import setup
+from setuptools import setup
 # from cx_Freeze import setup, Executable
 
 from glob import glob
