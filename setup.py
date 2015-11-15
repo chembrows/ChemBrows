@@ -8,6 +8,7 @@ import os
 from esky.bdist_esky import Executable
 # from cx_Freeze import setup, Executable
 from distutils.core import setup
+# from cx_Freeze import setup, Executable
 
 
 # --------------------------------------------------
@@ -94,6 +95,8 @@ try:
 except ValueError:
     pass
 
+print(my_data_files)
+
 # GUI applications require a different base on Windows (the default is for a
 # console application).
 base = None
@@ -104,6 +107,7 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
     my_data_files.append(('sqldrivers', ['C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers\qsqlite4.dll']))
 
     FREEZER = 'cx_Freeze'
+    FREEZER_OPTIONS = dict()
 
 elif sys.platform == 'darwin':
     FREEZER = 'py2app'
@@ -111,7 +115,8 @@ elif sys.platform == 'darwin':
 
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
-    freezer = 'cx_Freeze'
+    FREEZER = 'cx_Freeze'
+    FREEZER_OPTIONS = dict()
 
 
 excludes = [
@@ -179,6 +184,7 @@ build_exe_options = {
                                     'freezer_options': FREEZER_OPTIONS,
                                     'includes': includes,
                                     'excludes': excludes,
+				    'enable_appdata_dir': True,
                                    },
                      }
 
