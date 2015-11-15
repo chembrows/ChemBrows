@@ -10,6 +10,8 @@ from esky.bdist_esky import Executable
 from distutils.core import setup
 # from cx_Freeze import setup, Executable
 
+from glob import glob
+
 
 # --------------------------------------------------
 # http://blog.gmane.org/gmane.comp.python.cx-freeze.user/month=20140201
@@ -52,43 +54,36 @@ from distutils.core import setup
 # --------------------------------------------------
 
 
-# def get_all_files_in_dir(directory):
+def get_all_files_in_dir(directory):
 
-    # """Get all the files in a directory, and
-    # return a list bdist formatted"""
+    """Get all the files in a directory, and
+    return a list bdist formatted"""
 
-    # list_files = []
+    list_files = []
 
-    # for file in os.listdir(directory):
-        # f1 = directory + file
-        # if os.path.isfile(f1):  # skip directories
-            # f2 = (directory, [f1])
-            # list_files.append(f2)
+    for file in os.listdir(directory):
+        f1 = directory + file
+        if os.path.isfile(f1):  # skip directories
+            f2 = (directory, [f1])
+            list_files.append(f2)
 
-    # return list_files
-
-def get_all_files_in_dir(dir_name, excluded=None):
-    all_files = []
-    for dir_info in os.walk(dir_name):
-        path = dir_info[0]
-        files = dir_info[2]
-        files_in_dir = []
-        for file_name in files:
-            path_with_filename = "%s%s%s" % (path, os.sep, file_name)
-            if not excluded or not path_with_filename in excluded:
-                files_in_dir.append(path_with_filename)
-        all_files.append((path, files_in_dir))
-    return all_files
-
+    return list_files
 
 my_data_files = []
 
 # Add the data in images, journals, and config
-my_data_files += get_all_files_in_dir('.{}images{}'.format(os.sep, os.sep))
-my_data_files += get_all_files_in_dir('.{}journals{}'.format(os.sep, os.sep))
-my_data_files += get_all_files_in_dir('.{}config{}'.format(os.sep, os.sep))
-my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.sep, os.sep, os.sep))
-my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.sep, os.sep, os.sep))
+# my_data_files += get_all_files_in_dir('.{}images{}'.format(os.sep, os.sep))
+# my_data_files += get_all_files_in_dir('.{}journals{}'.format(os.sep, os.sep))
+# my_data_files += get_all_files_in_dir('.{}config{}'.format(os.sep, os.sep))
+# my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.sep, os.sep, os.sep))
+# my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.sep, os.sep, os.sep))
+
+# my_data_files += get_all_files_in_dir(os.path.join('images'))
+# my_data_files += get_all_files_in_dir(os.path.join('config'))
+# my_data_files += get_all_files_in_dir(os.path.join('journals'))
+# my_data_files += get_all_files_in_dir(os.path.join('config', 'fields'))
+# my_data_files += get_all_files_in_dir(os.path.join('config', 'styles'))
+
 
 # Remove sensitive files
 try:
@@ -108,7 +103,6 @@ try:
 except ValueError:
     pass
 
-print(my_data_files)
 
 # GUI applications require a different base on Windows (the default is for a
 # console application).
@@ -125,11 +119,15 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
 elif sys.platform == 'darwin':
     FREEZER = 'py2app'
     FREEZER_OPTIONS = dict(argv_emulation=False)
+    my_data_files = [("images", glob(r'./images/*')), ("journals", glob(r'./journals/*')), ("config", glob(r'./config/*'))]
 
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
     FREEZER = 'cx_Freeze'
     FREEZER_OPTIONS = dict()
+    my_data_files = [("images", glob(r'./images/*')), ("journals", glob(r'./journals/*')), ("config", glob(r'./config/*'))]
+
+print(my_data_files)
 
 
 excludes = [
@@ -197,7 +195,6 @@ build_exe_options = {
                                     'freezer_options': FREEZER_OPTIONS,
                                     'includes': includes,
                                     'excludes': excludes,
-				    'enable_appdata_dir': True,
                                    },
                      }
 
