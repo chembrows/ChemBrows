@@ -125,7 +125,11 @@ else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
     FREEZER = 'cx_Freeze'
     FREEZER_OPTIONS = dict()
-    my_data_files = [("images", glob(r'./images/*')), ("journals", glob(r'./journals/*')), ("config", glob(r'./config/*'))]
+    my_data_files = [("images", glob(r'./images/*')),
+	             ("journals", glob(r'./journals/*')),
+		     ("config", glob(r'./config/*')),
+	             ("config/fields", glob(r'./config/fields/*')),
+	             ("config/styles", glob(r'./config/styles/*'))]
 
 print(my_data_files)
 
