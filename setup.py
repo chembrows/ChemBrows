@@ -75,9 +75,9 @@ my_data_files = []
 # Add the data in images, journals, and config
 my_data_files += get_all_files_in_dir('.{}images{}'.format(os.path.sep, os.path.sep))
 my_data_files += get_all_files_in_dir('.{}journals{}'.format(os.path.sep, os.path.sep))
-my_data_files += get_all_files_in_dir('.{}config{}'.format(os.path.sep, os.path.sep))
-my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.path.sep, os.path.sep, os.path.sep))
-my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.path.sep, os.path.sep, os.path.sep))
+# my_data_files += get_all_files_in_dir('.{}config{}'.format(os.path.sep, os.path.sep))
+# my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.path.sep, os.path.sep, os.path.sep))
+# my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.path.sep, os.path.sep, os.path.sep))
 
 # my_data_files += get_all_files_in_dir(os.path.join('images'))
 # my_data_files += get_all_files_in_dir(os.path.join('config'))
@@ -87,22 +87,22 @@ my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.path.sep, 
 
 
 # Remove sensitive files
-try:
-    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}searches.ini'.format(os.path.sep, os.path.sep)]))
-except ValueError:
-    pass
-try:
-    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}options.ini'.format(os.path.sep, os.path.sep)]))
-except ValueError:
-    pass
-try:
-    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}options.ini_save'.format(os.path.sep, os.path.sep)]))
-except ValueError:
-    pass
-try:
-    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}twitter_credentials'.format(os.path.sep, os.path.sep)]))
-except ValueError:
-    pass
+# try:
+    # my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}searches.ini'.format(os.path.sep, os.path.sep)]))
+# except ValueError:
+    # pass
+# try:
+    # my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}options.ini'.format(os.path.sep, os.path.sep)]))
+# except ValueError:
+    # pass
+# try:
+    # my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}options.ini_save'.format(os.path.sep, os.path.sep)]))
+# except ValueError:
+    # pass
+# try:
+    # my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}twitter_credentials'.format(os.path.sep, os.path.sep)]))
+# except ValueError:
+    # pass
 
 
 # GUI applications require a different base on Windows (the default is for a
@@ -201,8 +201,9 @@ exe_esky = Executable("gui.py", gui_only=True)
 # exe_cx = Executable(script="gui.py", base=base, compress=False)
 
 # Get the current version from the version file
-with open('config/version.txt', 'r') as version_file:
-    version = version_file.read().rstrip()
+# with open('config/version.txt', 'r') as version_file:
+    # version = version_file.read().rstrip()
+version = '1'
 
 setup(name="ChemBrows",
       version=version,
