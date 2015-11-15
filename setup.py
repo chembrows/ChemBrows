@@ -4,8 +4,51 @@
 
 import sys
 import os
-from esky.bdist_esky import Executable as Executable_Esky
-from cx_Freeze import setup, Executable
+# from esky.bdist_esky import Executable as Executable_Esky
+from esky.bdist_esky import Executable
+# from cx_Freeze import setup, Executable
+from distutils.core import setup
+
+
+# --------------------------------------------------
+# http://blog.gmane.org/gmane.comp.python.cx-freeze.user/month=20140201
+
+# With PyQt5.2 there is a problem in the way that the PyQt modules are built that causes cx_freeze to stop with an error because a .dylib cannot be found.
+
+# If cx_freeze terminates with a message like:
+
+# > FileNotFoundError: [Errno 2] No such file or directory: 'libQtCore.dylib'
+
+# then cd into the location for the PyQt5 modules, probably
+
+# > /Library/Frameworks/Python.framework/Versions/Current/lib/python3.3/site-packages/PyQt5
+
+# and use the otool command to display their depencies, e.g.
+
+# > $ otool -L ./QtCore.so
+# > ./QtCore.so:
+# >     libQtCore.dylib (compatibility version 0.0.0, current version 0.0.0)
+# >     /usr/local/Qt-5.2.0/lib/QtCore.framework/Versions/5/QtCore (compatibility version 5.2.0, current version 5.2.0)
+# >     /usr/lib/libstdc++.6.dylib (compatibility version 7.0.0, current version 60.0.0)
+# >     /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1197.1.1)
+
+# There is an apparent dependency on libQtCore.dylib but this is an artifact of the way the module was built. This should be corrected in a future release of PyQt5. But for now, apply the following command:
+
+# > $ sudo install_name_tool -id $PWD/QtCore.so QtCore.so
+
+# This has to be done for each module the frozen app imports, QtWidgets, QtWebKit, etc.
+
+
+# --------------------------------------------------
+
+# http://stackoverflow.com/questions/22728468/osx-pillow-incompatible-library-version-libtiff-5-dylib-libjpeg-8-dylib
+
+# For errors of this kind:
+# ImportError: dlopen(/Library/Python/2.7/site-packages/PIL/_imaging.so, 2): Library not loaded: /usr/local/lib/libjpeg.8.dylib
+  # Referenced from: /usr/local/lib/libtiff.5.dylib
+
+
+# --------------------------------------------------
 
 
 def get_all_files_in_dir(directory):
@@ -38,17 +81,14 @@ try:
     my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}searches.ini'.format(os.sep, os.sep)]))
 except ValueError:
     pass
-
 try:
     my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}options.ini'.format(os.sep, os.sep)]))
 except ValueError:
     pass
-
 try:
     my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}options.ini_save'.format(os.sep, os.sep)]))
 except ValueError:
     pass
-
 try:
     my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}twitter_credentials'.format(os.sep, os.sep)]))
 except ValueError:
@@ -140,8 +180,9 @@ build_exe_options = {
                      }
 
 
-exe_esky = Executable_Esky("gui.py", gui_only=True)
-exe_cx = Executable(script="gui.py", base=base, compress=False)
+# exe_esky = Executable_Esky("gui.py", gui_only=True)
+exe_esky = Executable("gui.py", gui_only=True)
+# exe_cx = Executable(script="gui.py", base=base, compress=False)
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
@@ -153,5 +194,5 @@ setup(name="ChemBrows",
       data_files=my_data_files,
       options=build_exe_options,
       scripts=[exe_esky],
-      executables=[exe_cx],
+      # executables=[exe_cx],
       )
