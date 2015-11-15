@@ -52,20 +52,33 @@ from distutils.core import setup
 # --------------------------------------------------
 
 
-def get_all_files_in_dir(directory):
+# def get_all_files_in_dir(directory):
 
-    """Get all the files in a directory, and
-    return a list bdist formatted"""
+    # """Get all the files in a directory, and
+    # return a list bdist formatted"""
 
-    list_files = []
+    # list_files = []
 
-    for file in os.listdir(directory):
-        f1 = directory + file
-        if os.path.isfile(f1):  # skip directories
-            f2 = (directory, [f1])
-            list_files.append(f2)
+    # for file in os.listdir(directory):
+        # f1 = directory + file
+        # if os.path.isfile(f1):  # skip directories
+            # f2 = (directory, [f1])
+            # list_files.append(f2)
 
-    return list_files
+    # return list_files
+
+def get_all_files_in_dir(dir_name, excluded=None):
+    all_files = []
+    for dir_info in os.walk(dir_name):
+        path = dir_info[0]
+        files = dir_info[2]
+        files_in_dir = []
+        for file_name in files:
+            path_with_filename = "%s%s%s" % (path, os.sep, file_name)
+            if not excluded or not path_with_filename in excluded:
+                files_in_dir.append(path_with_filename)
+        all_files.append((path, files_in_dir))
+    return all_files
 
 
 my_data_files = []
