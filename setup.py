@@ -72,11 +72,11 @@ def get_all_files_in_dir(directory):
 my_data_files = []
 
 # Add the data in images, journals, and config
-# my_data_files += get_all_files_in_dir('.{}images{}'.format(os.sep, os.sep))
-# my_data_files += get_all_files_in_dir('.{}journals{}'.format(os.sep, os.sep))
-# my_data_files += get_all_files_in_dir('.{}config{}'.format(os.sep, os.sep))
-# my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.sep, os.sep, os.sep))
-# my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.sep, os.sep, os.sep))
+my_data_files += get_all_files_in_dir('.{}images{}'.format(os.path.sep, os.path.sep))
+my_data_files += get_all_files_in_dir('.{}journals{}'.format(os.path.sep, os.path.sep))
+my_data_files += get_all_files_in_dir('.{}config{}'.format(os.path.sep, os.path.sep))
+my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.path.sep, os.path.sep, os.path.sep))
+my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.path.sep, os.path.sep, os.path.sep))
 
 # my_data_files += get_all_files_in_dir(os.path.join('images'))
 # my_data_files += get_all_files_in_dir(os.path.join('config'))
@@ -87,19 +87,19 @@ my_data_files = []
 
 # Remove sensitive files
 try:
-    my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}searches.ini'.format(os.sep, os.sep)]))
+    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}searches.ini'.format(os.path.sep, os.path.sep)]))
 except ValueError:
     pass
 try:
-    my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}options.ini'.format(os.sep, os.sep)]))
+    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}options.ini'.format(os.path.sep, os.path.sep)]))
 except ValueError:
     pass
 try:
-    my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}options.ini_save'.format(os.sep, os.sep)]))
+    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}options.ini_save'.format(os.path.sep, os.path.sep)]))
 except ValueError:
     pass
 try:
-    my_data_files.remove(('.{}config{}'.format(os.sep, os.sep), ['.{}config{}twitter_credentials'.format(os.sep, os.sep)]))
+    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}twitter_credentials'.format(os.path.sep, os.path.sep)]))
 except ValueError:
     pass
 
@@ -119,20 +119,12 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
 elif sys.platform == 'darwin':
     FREEZER = 'py2app'
     FREEZER_OPTIONS = dict(argv_emulation=False)
-    my_data_files = [("images", glob(r'./images/*')), ("journals", glob(r'./journals/*')), ("config", glob(r'./config/*'))]
-
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
     FREEZER = 'cx_Freeze'
     FREEZER_OPTIONS = dict()
-    my_data_files = [("images", glob(r'./images/*')),
-	             ("journals", glob(r'./journals/*')),
-		     ("config", glob(r'./config/*')),
-	             ("config/fields", glob(r'./config/fields/*')),
-	             ("config/styles", glob(r'./config/styles/*'))]
 
 print(my_data_files)
-
 
 excludes = [
             # Personal modules
