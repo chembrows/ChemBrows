@@ -1,0 +1,31 @@
+QPushButton[accessibleName="round_button_article"]
+{
+    border: 0px;
+    margin-top: 5px;
+    max-width: 36px;
+    max-height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    background: transparent;
+}
+
+QPushButton[accessibleName="round_button_article"]:pressed
+{
+    background: white;
+    border-radius: 18px;
+}
+
+QPushButton[accessibleName="button_text_left"]
+{
+    background: grey;
+	color: white;
+	border-radius: 10px;
+	padding: 8px;
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+QPushButton[accessibleName="button_text_left"]:checked
+{
+    background: #EF4C39;
+}

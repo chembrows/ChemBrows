@@ -1,0 +1,41 @@
+^\[Errata\]
+^\[Editorial\]
+^\[In Brief\]
+^\[Books et al.\]
+^Correction(\r\n|\r|\n|\s)*to
+^Correction(\r\n|\r|\n|\s)*for
+^Correction:
+^Corrigendum(\r\n|\r|\n|\s)*to
+^Corrigendum:
+^Editorial
+^Call for Papers
+^In This Issue
+^Contributors to this issue
+^Cumulative author index
+^Spotlights(\r\n|\r|\n|\s)*on
+^Graphical(\r\n|\r|\n|\s)*(C|c)ontents(\r\n|\r|\n|\s)*(L|l)ist
+^Contents:
+^\[Book Review\]
+^\[This Week in Science\]
+^\[Podcast\]
+^\[New Products\]
+^Stereochemistry abstracts
+^Tetrahedron: Asymmetry Reports
+^Comment(\r\n|\r|\n|\s)*on
+^Response(\r\n|\r|\n|\s)*to
+^SYNFORM(\r\n|\r|\n|\s)*
+^Science of Synthesis
+^Profile of
+^\[Technical Response\]
+^\[Editors' Choice\]
+^\[Association Affairs\]
+^Editors' Choice
+^Retraction for
+^Retraction of
+^Book and Media Recommendations:
+^Graphical Abstract:
+^Masthead:
+^Reply to
+^Erratum:
+^Concluding remarks:
+^QnAs

@@ -1,0 +1,15 @@
+QToolBar, QScrollArea, QTabWidget, QSplitter, .QWidget
+{
+    background: #726E73;
+    border: 0px;
+}
+
+QLabel
+{
+    color: white
+}
+
+QWidget
+{
+    font-size: 11pt
+}
