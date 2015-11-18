@@ -54,6 +54,18 @@ from glob import glob
 
 # --------------------------------------------------
 
+# To correct:
+# TypeError: dyld_find() got an unexpected keyword argument 'loader'
+
+# http://stackoverflow.com/questions/31240052/py2app-typeerror-dyld-find-got-an-unexpected-keyword-argument-loader
+
+# Open the file /virtenv/lib/python3.4/site-packages/macholib/dyld.py and replace each instance of loader_path with loader
+
+# --------------------------------------------------
+
+# /usr/local/lib/python3.4/site-packages/esky/bdist_esky
+# ligne 122 modifier config en config-3.4m)
+
 
 def get_all_files_in_dir(directory):
 
