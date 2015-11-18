@@ -212,7 +212,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             if type(index.data()) is str and index.data() != "Empty":
                 path_photo = self.DATA_PATH + "/graphical_abstracts/" + index.data()
-                # self.parent.l.debug(path_photo)
 
                 if os.path.exists(path_photo):
                     # --- la photo existe: on l'affiche dans la case -------------

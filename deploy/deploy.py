@@ -12,9 +12,7 @@ import sys
 import os
 import subprocess
 import distutils.util
-# import shutil
 from zipfile import ZipFile
-# import build_inno_setup
 
 app_name = 'ChemBrows'
 create_installer = True
@@ -29,18 +27,30 @@ if distutils.util.get_platform() == 'win-amd64':
 else:
     installerName = 'setup {0} {1} (32bit)'.format(app_name, version)
 
-# Name of Esky zip file (without zip extension)
-filename = '{0}-{1}.{2}'.format(app_name, version,
-                                distutils.util.get_platform())
+
+if sys.platform == 'darwin':
+    platform = distutils.util.get_platform().replace('.', '_')
+    # import os, shutil, fnmatch
+    # folder = './dist/'
+    # for the_file in os.listdir(folder):
+        # file_path = os.path.join(folder, the_file)
+        # if fnmatch.fnmatch(file_path, "*.app"):
+            # os.remove(file_path)
+else:
+    platform = distutils.util.get_platform()
 
 # Freeze !!!
-subprocess.call('python setup.py bdist_esky', shell=True)
+subprocess.call('python3 setup.py bdist_esky', shell=True)
 print('done with esky')
 
 # Unzip file
 print('unzipping')
 
-with ZipFile(os.path.join('dist', filename + '.zip'), "r") as zf:
+
+# Name of Esky zip file (without zip extension)
+filename = '{}-{}.{}'.format(app_name, version, platform)
+
+with ZipFile(os.path.join('./dist', filename + '.zip'), "r") as zf:
     zf.extractall('./dist/' + filename)
 
 print('unzipping done')
@@ -48,14 +58,12 @@ print('unzipping done')
 if sys.platform in ['win32', 'cygwin', 'win64']:
     pass
 elif sys.platform == 'darwin':
-    pass
+    os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 755)
 else:
     os.chmod('./dist/{}/{}/gui'.format(filename, filename), 755)
 
-
 # Create installer
 if create_installer and sys.platform in ['win32', 'cygwin', 'win64']:
-    # TODO: find location
     innoSetupLoc = "C:\Program Files\Inno Setup 5\ISCC"
 
     architecture = sys.platform
@@ -67,7 +75,7 @@ if create_installer and sys.platform in ['win32', 'cygwin', 'win64']:
           "/dVersion={}" \
           "/dArchitecture={}" \
           "/dOutputBaseFilename={}" \
-          inno_installer.iss'.format(innoSetupLoc,
+          deploy/inno_installer.iss'.format(innoSetupLoc,
                                      app_name,
                                      version,
                                      architecture,

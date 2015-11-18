@@ -4,14 +4,8 @@
 
 import sys
 import os
-# from esky.bdist_esky import Executable as Executable_Esky
 from esky.bdist_esky import Executable
-# from cx_Freeze import setup, Executable
-# from distutils.core import setup
 from setuptools import setup
-# from cx_Freeze import setup, Executable
-
-from glob import glob
 
 
 # --------------------------------------------------
@@ -54,6 +48,48 @@ from glob import glob
 
 # --------------------------------------------------
 
+# https://github.com/Homebrew/homebrew/issues/11122
+
+# To solve:
+    
+# On Mac OS X, you might be loading two sets of Qt binaries into the same process. Check that all plugins are compiled against the right Qt binaries. Export DYLD_PRINT_LIBRARIES=1 and check that only one set of binaries are being loaded.
+
+# AND:
+
+# Database error: Driver not loaded Driver not loaded
+
+# create a qt.conf file in Content/Resources:
+
+# #Provide QT with a bogus path to avoid double loading of libs
+# #Needed for QT4.8.0 on OSX 10.7
+# [Paths]
+# Plugins = Resources/plugins
+
+# And make the following tree:
+# Contents/Resources/plugins/sqldrivers/libqsqlite.dylib
+
+# Same thing for imageformats
+
+# --------------------------------------------------
+
+# if the package is bundled with Esky, to produce a simple runnable.app:
+
+# modify dist/ChemBrows-0.8.0.macosx-10_10-x86_64/ChemBrows.app/Contents/Info.plist to get:
+
+    # <key>CFBundleExecutable</key>
+    # <string>launcher</string>
+
+# Then create /dist/ChemBrows-0.8.0.macosx-10_10-x86_64/ChemBrows.app/Contents/MacOS/launcher,
+# and put that inside:
+
+# #!/usr/bin/env bash
+# cd "${0%/*}"
+# open ../../ChemBrows-0.8.0.macosx-10_10-x86_64/ChemBrows.app
+
+# Don't forget to chmod +x launcher, and VERY IMPORTANT, rename the .app top folder, and rename it
+# back after, otherwise the changes in Info.plist will not count 
+
+
 
 def get_all_files_in_dir(directory):
 
@@ -75,34 +111,27 @@ my_data_files = []
 # Add the data in images, journals, and config
 my_data_files += get_all_files_in_dir('.{}images{}'.format(os.path.sep, os.path.sep))
 my_data_files += get_all_files_in_dir('.{}journals{}'.format(os.path.sep, os.path.sep))
-# my_data_files += get_all_files_in_dir('.{}config{}'.format(os.path.sep, os.path.sep))
-# my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.path.sep, os.path.sep, os.path.sep))
-# my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.path.sep, os.path.sep, os.path.sep))
-
-# my_data_files += get_all_files_in_dir(os.path.join('images'))
-# my_data_files += get_all_files_in_dir(os.path.join('config'))
-# my_data_files += get_all_files_in_dir(os.path.join('journals'))
-# my_data_files += get_all_files_in_dir(os.path.join('config', 'fields'))
-# my_data_files += get_all_files_in_dir(os.path.join('config', 'styles'))
-
+my_data_files += get_all_files_in_dir('.{}config{}'.format(os.path.sep, os.path.sep))
+my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.path.sep, os.path.sep, os.path.sep))
+my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.path.sep, os.path.sep, os.path.sep))
 
 # Remove sensitive files
-# try:
-    # my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}searches.ini'.format(os.path.sep, os.path.sep)]))
-# except ValueError:
-    # pass
-# try:
-    # my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}options.ini'.format(os.path.sep, os.path.sep)]))
-# except ValueError:
-    # pass
-# try:
-    # my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}options.ini_save'.format(os.path.sep, os.path.sep)]))
-# except ValueError:
-    # pass
-# try:
-    # my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}twitter_credentials'.format(os.path.sep, os.path.sep)]))
-# except ValueError:
-    # pass
+try:
+    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}searches.ini'.format(os.path.sep, os.path.sep)]))
+except ValueError:
+    pass
+try:
+    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}options.ini'.format(os.path.sep, os.path.sep)]))
+except ValueError:
+    pass
+try:
+    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}options.ini_save'.format(os.path.sep, os.path.sep)]))
+except ValueError:
+    pass
+try:
+    my_data_files.remove(('.{}config{}'.format(os.path.sep, os.path.sep), ['.{}config{}twitter_credentials'.format(os.path.sep, os.path.sep)]))
+except ValueError:
+    pass
 
 
 # GUI applications require a different base on Windows (the default is for a
@@ -119,7 +148,13 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
 
 elif sys.platform == 'darwin':
     FREEZER = 'py2app'
+    my_data_files.append(('plugins/sqldrivers', ['/usr/local/Cellar/qt/4.8.7/plugins/sqldrivers/libqsqlite.dylib']))
+    my_data_files.append(('plugins/imageformats', ['/usr/local/Cellar/qt/4.8.7/plugins/imageformats/libqgif.dylib']))
+    my_data_files.append(('plugins/imageformats', ['/usr/local/Cellar/qt/4.8.7/plugins/imageformats/libqico.dylib']))
+    my_data_files.append(('plugins/imageformats', ['/usr/local/Cellar/qt/4.8.7/plugins/imageformats/libqjpeg.dylib']))
+    my_data_files.append(('.', ['./deploy/qt.conf']))
     FREEZER_OPTIONS = dict(argv_emulation=False)
+    FREEZER_OPTIONS = dict()
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
     FREEZER = 'cx_Freeze'
@@ -196,14 +231,11 @@ build_exe_options = {
                      }
 
 
-# exe_esky = Executable_Esky("gui.py", gui_only=True)
 exe_esky = Executable("gui.py", gui_only=True)
-# exe_cx = Executable(script="gui.py", base=base, compress=False)
 
 # Get the current version from the version file
-# with open('config/version.txt', 'r') as version_file:
-    # version = version_file.read().rstrip()
-version = '1'
+with open('config/version.txt', 'r') as version_file:
+    version = version_file.read().rstrip()
 
 setup(name="ChemBrows",
       version=version,
@@ -211,5 +243,4 @@ setup(name="ChemBrows",
       data_files=my_data_files,
       options=build_exe_options,
       scripts=[exe_esky],
-      # executables=[exe_cx],
       )
