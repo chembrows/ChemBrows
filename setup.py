@@ -172,7 +172,6 @@ elif sys.platform == 'darwin':
     my_data_files.append(('plugins/imageformats', ['/usr/local/Cellar/qt/4.8.7/plugins/imageformats/libqico.dylib']))
     my_data_files.append(('plugins/imageformats', ['/usr/local/Cellar/qt/4.8.7/plugins/imageformats/libqjpeg.dylib']))
     my_data_files.append(('.', ['./deploy/qt.conf']))
-    FREEZER_OPTIONS = dict(argv_emulation=False)
     FREEZER_OPTIONS = dict()
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))

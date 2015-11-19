@@ -57,17 +57,18 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
     pass
 elif sys.platform == 'darwin':
 
-    # Get the path where the chnages will be made
-    path_fixes = 'dist/{}/{}.app/{}/{}.app/Contents/'.format(filename, app_name, filename, app_name)
+    os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o744)
 
-    # TODO: necessary ? This file should not execute
-    os.chmod(path_fixes + 'MacOS/gui', 755)
+    # Get the path where the chnages will be made
+    path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
 
     # Modify CFBundleExecutable in the Info.plist of the bundle.app
-    with open(path_fixes + 'Info.plist', 'w+') as info_plist:
+    with open(path_fixes + 'Info.plist', 'r+') as info_plist:
         text = info_plist.read()
         text = text.replace('<string>gui</string>', '<string>launcher</string>')
+        info_plist.seek(0)
         info_plist.write(text)
+        info_plist.truncate()
 
     with open(path_fixes + 'MacOS/launcher', 'w+') as launcher:
         text = "#!/usr/bin/env bash"
@@ -76,14 +77,16 @@ elif sys.platform == 'darwin':
         text += "\n"
         # text += "open ../../ChemBrows-0.8.0.macosx-10_10-x86_64/ChemBrows.app"
         text += "open ../../{}/{}.app".format(filename, app_name)
+        launcher.write(text)
 
-    os.chmod(path_fixes + 'MacOS/launcher', 755)
+    os.chmod(path_fixes + 'MacOS/launcher', 0o744)
 
 
     # TODO: créer fichier launcher avec path correct
           # modifier fichier Info.plist
           # renommer-renommer bundle.app
 else:
+    # TODO: change to 0o755 ?
     os.chmod('./dist/{}/{}/gui'.format(filename, filename), 755)
 
 
