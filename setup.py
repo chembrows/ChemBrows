@@ -48,10 +48,28 @@ from setuptools import setup
 
 # --------------------------------------------------
 
+# To correct:
+# TypeError: dyld_find() got an unexpected keyword argument 'loader'
+
+# http://stackoverflow.com/questions/31240052/py2app-typeerror-dyld-find-got-an-unexpected-keyword-argument-loader
+
+# Open the file /virtenv/lib/python3.4/site-packages/macholib/dyld.py and replace each instance of loader_path with loader
+
+# --------------------------------------------------
+
+# To solve:
+
+# error: can't copy 'dist/EskyExample-0.0.1.macosx-10_6-intel/EskyExample-0.0.1.macosx-10_6-intel/EskyExample.app/Contents/Resources/lib/python3.3/config': doesn't exist or not a regular file
+
+# /usr/local/lib/python3.4/site-packages/esky/bdist_esky
+# ligne 122 modifier config en config-3.4m)
+
+# --------------------------------------------------
+
+
 # https://github.com/Homebrew/homebrew/issues/11122
 
 # To solve:
-    
 # On Mac OS X, you might be loading two sets of Qt binaries into the same process. Check that all plugins are compiled against the right Qt binaries. Export DYLD_PRINT_LIBRARIES=1 and check that only one set of binaries are being loaded.
 
 # AND:
@@ -87,7 +105,8 @@ from setuptools import setup
 # open ../../ChemBrows-0.8.0.macosx-10_10-x86_64/ChemBrows.app
 
 # Don't forget to chmod +x launcher, and VERY IMPORTANT, rename the .app top folder, and rename it
-# back after, otherwise the changes in Info.plist will not count 
+# back after, otherwise the changes in Info.plist will not count
+
 
 
 
@@ -153,7 +172,6 @@ elif sys.platform == 'darwin':
     my_data_files.append(('plugins/imageformats', ['/usr/local/Cellar/qt/4.8.7/plugins/imageformats/libqico.dylib']))
     my_data_files.append(('plugins/imageformats', ['/usr/local/Cellar/qt/4.8.7/plugins/imageformats/libqjpeg.dylib']))
     my_data_files.append(('.', ['./deploy/qt.conf']))
-    FREEZER_OPTIONS = dict(argv_emulation=False)
     FREEZER_OPTIONS = dict()
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
