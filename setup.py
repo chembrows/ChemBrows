@@ -57,15 +57,19 @@ from setuptools import setup
 
 # --------------------------------------------------
 
+# To solve:
+
+# error: can't copy 'dist/EskyExample-0.0.1.macosx-10_6-intel/EskyExample-0.0.1.macosx-10_6-intel/EskyExample.app/Contents/Resources/lib/python3.3/config': doesn't exist or not a regular file
+
 # /usr/local/lib/python3.4/site-packages/esky/bdist_esky
 # ligne 122 modifier config en config-3.4m)
 
+# --------------------------------------------------
 
 
 # https://github.com/Homebrew/homebrew/issues/11122
 
 # To solve:
-    
 # On Mac OS X, you might be loading two sets of Qt binaries into the same process. Check that all plugins are compiled against the right Qt binaries. Export DYLD_PRINT_LIBRARIES=1 and check that only one set of binaries are being loaded.
 
 # AND:
@@ -101,7 +105,9 @@ from setuptools import setup
 # open ../../ChemBrows-0.8.0.macosx-10_10-x86_64/ChemBrows.app
 
 # Don't forget to chmod +x launcher, and VERY IMPORTANT, rename the .app top folder, and rename it
-# back after, otherwise the changes in Info.plist will not count 
+# back after, otherwise the changes in Info.plist will not count
+
+
 
 
 def get_all_files_in_dir(directory):
