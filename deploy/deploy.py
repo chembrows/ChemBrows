@@ -13,6 +13,7 @@ import os
 import subprocess
 import distutils.util
 from zipfile import ZipFile
+from shutil import copyfile
 
 app_name = 'ChemBrows'
 create_installer = True
@@ -65,7 +66,14 @@ elif sys.platform == 'darwin':
     # Modify CFBundleExecutable in the Info.plist of the bundle.app
     with open(path_fixes + 'Info.plist', 'r+') as info_plist:
         text = info_plist.read()
+
+        # Modify the executable
         text = text.replace('<string>gui</string>', '<string>launcher</string>')
+
+        # Set LSUIElement to 1 to avoid double icons
+        text = text.replace('<dict>\n\t<key>CFBundleDevelopmentRegion</key>',
+                            '<dict>\n\t<key>LSUIElement</key>\n\t<string>1</string>')
+
         info_plist.seek(0)
         info_plist.write(text)
         info_plist.truncate()
@@ -75,16 +83,14 @@ elif sys.platform == 'darwin':
         text += "\n"
         text += "cd \"${0%/*}\""
         text += "\n"
-        # text += "open ../../ChemBrows-0.8.0.macosx-10_10-x86_64/ChemBrows.app"
         text += "open ../../{}/{}.app".format(filename, app_name)
         launcher.write(text)
 
     os.chmod(path_fixes + 'MacOS/launcher', 0o744)
 
+    copyfile('../images/icon.icns', path_fixes + 'Resources/')
 
-    # TODO: créer fichier launcher avec path correct
-          # modifier fichier Info.plist
-          # renommer-renommer bundle.app
+
 else:
     # TODO: change to 0o755 ?
     os.chmod('./dist/{}/{}/gui'.format(filename, filename), 755)
@@ -111,3 +117,22 @@ if create_installer and sys.platform in ['win32', 'cygwin', 'win64']:
                                      architecture,
                                      installerName)
          )
+
+elif create_installer and sys.platform == 'darwin':
+
+    with open('deploy/template.packproj', 'r') as template:
+        text = template.read()
+
+        text = text.replace('LICENSE_PATH', os.path.abspath('LICENSE.txt'))
+        text = text.replace('VERSION_DESCRIPTION', version)
+        text = text.replace('INFO_STRING', 'ChemBrows {} Copyrights © 2015 ChemBrows'.format(version))
+        text = text.replace('ICON_FILE', os.path.abspath('images/icon.icns'))
+        text = text.replace('VERSION_SIMPLE', version)
+        text = text.replace('MAJOR_VERSION', version.split('.')[0])
+        text = text.replace('MINOR_VERSION', version.split('.')[1])
+        text = text.replace('APP_PATH', os.path.abspath('dist/{}/{}.app'.format(filename, app_name)))
+
+        with open('deploy/chembrows.packproj', 'w') as packproj:
+            packproj.write(text)
+
+    subprocess.call('freeze deploy/chembrows.packproj', shell=True)

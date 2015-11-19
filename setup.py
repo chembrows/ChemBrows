@@ -8,6 +8,11 @@ from esky.bdist_esky import Executable
 from setuptools import setup
 
 
+# Useful links:
+
+# http://stackoverflow.com/questions/1596945/building-osx-app-bundle
+# https://discussions.apple.com/thread/1496021
+
 # --------------------------------------------------
 # http://blog.gmane.org/gmane.comp.python.cx-freeze.user/month=20140201
 
@@ -107,6 +112,16 @@ from setuptools import setup
 # Don't forget to chmod +x launcher, and VERY IMPORTANT, rename the .app top folder, and rename it
 # back after, otherwise the changes in Info.plist will not count
 
+# --------------------------------------------------
+
+# To avoid double icon on Mac OS:
+
+# Create the section:
+
+# <key>LSUIElement</key>
+# <string>1</string>
+
+# In the first Info.plist file (the highest one in the folder tree).
 
 
 
@@ -176,9 +191,11 @@ elif sys.platform == 'darwin':
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
     FREEZER = 'cx_Freeze'
-    FREEZER_OPTIONS = dict()
-
-print(my_data_files)
+    FREEZER_OPTIONS = {
+                       "plist": {
+                                 'CFBundleIconFile': 'images/icon.icns',
+                                 }
+                      }
 
 excludes = [
             # Personal modules

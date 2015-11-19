@@ -28,7 +28,7 @@
 						<key>Mode</key>
 						<integer>1</integer>
 						<key>Path</key>
-						<string>/Users/chembrows/Desktop/ChemBrows/LICENSE.txt</string>
+						<string>LICENSE_PATH</string>
 						<key>Path Type</key>
 						<integer>1</integer>
 					</dict>
@@ -75,7 +75,7 @@
 									<key>GID</key>
 									<integer>20</integer>
 									<key>Path</key>
-									<string>/Users/chembrows/Desktop/ChemBrows/dist/ChemBrows-0.8.0.macosx-10_10-x86_64/ChemBrows.app</string>
+									<string>APP_PATH</string>
 									<key>Path Type</key>
 									<integer>1</integer>
 									<key>Privileges</key>
@@ -593,15 +593,15 @@
 						<key>IFPkgDescriptionTitle</key>
 						<string>ChemBrows</string>
 						<key>IFPkgDescriptionVersion</key>
-						<string>9999999</string>
+						<string>VERSION_DESCRIPTION</string>
 					</dict>
 				</dict>
 				<key>Display Information</key>
 				<dict>
 					<key>CFBundleGetInfoString</key>
-					<string>ChemBrows 9999999 Copyrights © 2015 ChemBrows</string>
+					<string>INFO_STRING</string>
 					<key>CFBundleIconFile</key>
-					<string>/Users/chembrows/Desktop/ChemBrows/images/icon.icns</string>
+					<string>ICON_FILE</string>
 					<key>CFBundleIconFile Path Type</key>
 					<integer>1</integer>
 					<key>CFBundleIdentifier</key>
@@ -609,7 +609,7 @@
 					<key>CFBundleName</key>
 					<string>ChemBrows</string>
 					<key>CFBundleShortVersionString</key>
-					<string>9999999</string>
+					<string>VERSION_SIMPLE</string>
 				</dict>
 				<key>Options</key>
 				<dict>
@@ -635,9 +635,9 @@
 				<key>Version</key>
 				<dict>
 					<key>IFMajorVersion</key>
-					<integer>9999999</integer>
+					<integer>MAJOR_VERSION</integer>
 					<key>IFMinorVersion</key>
-					<integer>9999999</integer>
+					<integer>MINOR_VERSION</integer>
 				</dict>
 			</dict>
 		</dict>
