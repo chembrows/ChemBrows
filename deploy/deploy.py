@@ -72,7 +72,7 @@ elif sys.platform == 'darwin':
 
         # Set LSUIElement to 1 to avoid double icons
         text = text.replace('<dict>\n\t<key>CFBundleDevelopmentRegion</key>',
-                            '<dict>\n\t<key>LSUIElement</key>\n\t<string>1</string>')
+                            '<dict>\n\t<key>LSUIElement</key>\n\t<string>1</string>\n\t<key>CFBundleDevelopmentRegion</key>')
 
         info_plist.seek(0)
         info_plist.write(text)
@@ -88,7 +88,12 @@ elif sys.platform == 'darwin':
 
     os.chmod(path_fixes + 'MacOS/launcher', 0o744)
 
-    copyfile('../images/icon.icns', path_fixes + 'Resources/')
+    print('Mac OS fixes applied')
+
+    print('Starting copying icons')
+    copyfile('images/icon.icns', path_fixes + 'Resources/PythonApplet.icns')
+    copyfile('images/icon.icns', 'dist/{}/{}.app/{}/{}.app/Contents/Resources/PythonApplet.icns'.format(filename, app_name, filename, app_name))
+    print('Done copying icons')
 
 
 else:
@@ -120,19 +125,25 @@ if create_installer and sys.platform in ['win32', 'cygwin', 'win64']:
 
 elif create_installer and sys.platform == 'darwin':
 
+    print('Creating a .pkg for Mac OS...')
+
     with open('deploy/template.packproj', 'r') as template:
         text = template.read()
 
+        simplified_version = version.split('.')[:-1]
+        simplified_version = '.'.join(simplified_version)
         text = text.replace('LICENSE_PATH', os.path.abspath('LICENSE.txt'))
-        text = text.replace('VERSION_DESCRIPTION', version)
-        text = text.replace('INFO_STRING', 'ChemBrows {} Copyrights © 2015 ChemBrows'.format(version))
+        text = text.replace('VERSION_DESCRIPTION', simplified_version)
+        text = text.replace('INFO_STRING', 'ChemBrows {} Copyrights © 2015 ChemBrows'.format(simplified_version))
         text = text.replace('ICON_FILE', os.path.abspath('images/icon.icns'))
-        text = text.replace('VERSION_SIMPLE', version)
+        text = text.replace('VERSION_SIMPLE', simplified_version)
         text = text.replace('MAJOR_VERSION', version.split('.')[0])
         text = text.replace('MINOR_VERSION', version.split('.')[1])
         text = text.replace('APP_PATH', os.path.abspath('dist/{}/{}.app'.format(filename, app_name)))
 
-        with open('deploy/chembrows.packproj', 'w') as packproj:
+        with open('dist/chembrows.packproj', 'w') as packproj:
             packproj.write(text)
 
-    subprocess.call('freeze deploy/chembrows.packproj', shell=True)
+    subprocess.call('freeze dist/chembrows.packproj -d dist/', shell=True)
+    print('Done creating a .pkg for Mac OS...')
+

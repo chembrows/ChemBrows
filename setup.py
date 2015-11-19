@@ -191,11 +191,7 @@ elif sys.platform == 'darwin':
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
     FREEZER = 'cx_Freeze'
-    FREEZER_OPTIONS = {
-                       "plist": {
-                                 'CFBundleIconFile': 'images/icon.icns',
-                                 }
-                      }
+    FREEZER_OPTIONS = dict()
 
 excludes = [
             # Personal modules
