@@ -27,7 +27,7 @@ class Updater(QtCore.QThread):
         self.l = logger
         self.update_available = False
 
-        self.app = esky.Esky(sys.executable, "http://chembrows.com/downloads/")
+        self.app = esky.Esky(sys.executable, "http://chembrows.com/downloads/updates/")
 
         # Get the number of the latest version
         try:
