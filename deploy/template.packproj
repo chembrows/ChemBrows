@@ -605,7 +605,7 @@
 					<key>CFBundleIconFile Path Type</key>
 					<integer>1</integer>
 					<key>CFBundleIdentifier</key>
-					<string>com.mygreatcompany.pkg.ChemBrows</string>
+					<string>com.ChemBrows.pkg.ChemBrows</string>
 					<key>CFBundleName</key>
 					<string>ChemBrows</string>
 					<key>CFBundleShortVersionString</key>
