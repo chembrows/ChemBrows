@@ -33,11 +33,13 @@ else:
 # get_platform returns a different string than the one used by py2app
 if sys.platform == 'darwin':
     platform = distutils.util.get_platform().replace('.', '_')
+    python_exe = 'python3'
 else:
     platform = distutils.util.get_platform()
+    python_exe = 'python'
 
 # Freeze !!!
-subprocess.call('python3 setup.py bdist_esky', shell=True)
+subprocess.call('{} setup.py bdist_esky'.format(python_exe), shell=True)
 print('done with esky')
 
 # Unzip file
