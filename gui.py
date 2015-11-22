@@ -32,9 +32,9 @@ from line_clear import ButtonLineEdit
 from signing import Signing
 from tuto import Tuto
 from my_twit import MyTwit
-
-# TEST
 import constants
+
+from styles import MyStyles
 
 # To debug and profile. Comment for prod
 # from memory_profiler import profile
@@ -79,6 +79,9 @@ class Fenetre(QtGui.QMainWindow):
             self.l.info("This version of ChemBrows is NOT a frozen version")
         else:
             self.l.info("This version of ChemBrows is a frozen version")
+
+        # TEST
+        self.styles = MyStyles(app)
 
         # Bool to check if the program is collecting data
         self.parsing = False
@@ -970,7 +973,7 @@ class Fenetre(QtGui.QMainWindow):
         self.button_share_mail.show()
 
         self.label_date.setText(date)
-        self.label_title.setText("<span style='font-size:12pt; font-weight:bold'>{0}</span>".format(title))
+        self.label_title.setText("<span style='font-size:{}pt; font-weight:bold'>{}</span>".format(self.styles.FONT_SIZE * 1.1, title))
         self.label_journal.setText(journal)
 
         if type(abstract) is str:
@@ -1985,6 +1988,10 @@ If you click OK, the cleaning process will start"
         # self.showMaximized()
         self.setWindowTitle('ChemBrows')
 
+        font = QtGui.QFont()
+        font.setPointSize(self.styles.FONT_SIZE)
+        app.setFont(font)
+
         # ------------------------- BUILDING THE MENUS -------------------------------------------------------------
 
         self.menubar = self.menuBar()
@@ -2028,14 +2035,14 @@ If you click OK, the cleaning process will start"
         # set their style
         self.button_refresh = QtGui.QPushButton()
         self.button_refresh.setIcon(QtGui.QIcon("./images/refresh.png"))
-        self.button_refresh.setIconSize(QtCore.QSize(36, 36))
+        self.button_refresh.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_refresh.setToolTip("Refresh: download new posts")
         self.button_refresh.setAccessibleName('toolbar_round_button')
 
         # Percentage calculation button
         self.button_calculate_percentage = QtGui.QPushButton()
         self.button_calculate_percentage.setIcon(QtGui.QIcon("./images/stats.png"))
-        self.button_calculate_percentage.setIconSize(QtCore.QSize(36, 36))
+        self.button_calculate_percentage.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_calculate_percentage.setToolTip("Re-calculate Hot Paperness")
         self.button_calculate_percentage.setAccessibleName('toolbar_round_button')
 
@@ -2059,13 +2066,13 @@ If you click OK, the cleaning process will start"
         # Advanced search button
         self.button_advanced_search = QtGui.QPushButton()
         self.button_advanced_search.setIcon(QtGui.QIcon("./images/advanced_search.png"))
-        self.button_advanced_search.setIconSize(QtCore.QSize(36, 36))
+        self.button_advanced_search.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_advanced_search.setToolTip("Create filters")
         self.button_advanced_search.setAccessibleName('toolbar_round_button')
 
         self.button_settings = QtGui.QPushButton()
         self.button_settings.setIcon(QtGui.QIcon("./images/settings.png"))
-        self.button_settings.setIconSize(QtCore.QSize(36, 36))
+        self.button_settings.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_settings.setToolTip("Preferences, settings")
         self.button_settings.setAccessibleName('toolbar_round_button')
 
@@ -2151,31 +2158,31 @@ If you click OK, the cleaning process will start"
         # Buttons for the display of the article: zoom & dark background
         self.button_zoom_less = QtGui.QPushButton()
         self.button_zoom_less.setIcon(QtGui.QIcon('./images/zoom_out.png'))
-        self.button_zoom_less.setIconSize(QtCore.QSize(30, 30))
+        self.button_zoom_less.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_zoom_less.setAccessibleName('round_button_article')
         self.button_zoom_less.hide()
         self.button_zoom_more = QtGui.QPushButton()
         self.button_zoom_more.setIcon(QtGui.QIcon('./images/zoom_in.png'))
-        self.button_zoom_more.setIconSize(QtCore.QSize(30, 30))
+        self.button_zoom_more.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_zoom_more.setAccessibleName('round_button_article')
         self.button_zoom_more.hide()
         self.button_color_read = QtGui.QPushButton()
         self.button_color_read.setIcon(QtGui.QIcon('./images/black_text.png'))
-        self.button_color_read.setIconSize(QtCore.QSize(30, 30))
+        self.button_color_read.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_color_read.setAccessibleName('round_button_article')
         self.button_color_read.hide()
 
         # Button to share on twitter
         self.button_twitter = QtGui.QPushButton()
         self.button_twitter.setIcon(QtGui.QIcon('./images/twitter.png'))
-        self.button_twitter.setIconSize(QtCore.QSize(30, 30))
+        self.button_twitter.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_twitter.setAccessibleName('round_button_article')
         self.button_twitter.hide()
 
         # Button to share by email
         self.button_share_mail = QtGui.QPushButton()
         self.button_share_mail.setIcon(QtGui.QIcon('./images/email.png'))
-        self.button_share_mail.setIconSize(QtCore.QSize(30, 30))
+        self.button_share_mail.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_share_mail.setAccessibleName('round_button_article')
         self.button_share_mail.hide()
 
@@ -2235,30 +2242,29 @@ If you click OK, the cleaning process will start"
 
         self.setCentralWidget(self.central_widget)
 
-        with open("./config/styles/style.css", "r") as fh:
-            style = fh.read()
-            self.central_widget.setStyleSheet(style)
-            self.toolbar.setStyleSheet(style)
+        # Stylesheet for general style
+        stylesheet = self.styles.styleGeneral()
+        self.central_widget.setStyleSheet(stylesheet)
+        self.toolbar.setStyleSheet(stylesheet)
 
-        with open("./config/styles/toolbar.css", "r") as fh:
-            style = fh.read()
-            self.button_search_new.setStyleSheet(style)
-            self.button_sort_by.setStyleSheet(style)
-            self.line_research.setStyleSheet(style)
+        # Stylesheet for the toolbar
+        stylesheet = self.styles.styleToolbar()
+        self.button_search_new.setStyleSheet(stylesheet)
+        self.button_sort_by.setStyleSheet(stylesheet)
+        self.line_research.setStyleSheet(stylesheet)
+        self.button_refresh.setStyleSheet(stylesheet)
+        self.button_calculate_percentage.setStyleSheet(stylesheet)
+        self.button_advanced_search.setStyleSheet(stylesheet)
+        self.button_settings.setStyleSheet(stylesheet)
 
-            self.button_refresh.setStyleSheet(style)
-            self.button_calculate_percentage.setStyleSheet(style)
-            self.button_advanced_search.setStyleSheet(style)
-            self.button_settings.setStyleSheet(style)
-
-        with open("./config/styles/buttons.css", "r") as fh:
-            style = fh.read()
-            self.scroll_tags.setStyleSheet(style)
-            self.button_twitter.setStyleSheet(style)
-            self.button_share_mail.setStyleSheet(style)
-            self.button_zoom_less.setStyleSheet(style)
-            self.button_zoom_more.setStyleSheet(style)
-            self.button_color_read.setStyleSheet(style)
+        # Stylesheet for the buttons
+        stylesheet = self.styles.styleButtons()
+        self.scroll_tags.setStyleSheet(stylesheet)
+        self.button_twitter.setStyleSheet(stylesheet)
+        self.button_share_mail.setStyleSheet(stylesheet)
+        self.button_zoom_less.setStyleSheet(stylesheet)
+        self.button_zoom_more.setStyleSheet(stylesheet)
+        self.button_color_read.setStyleSheet(stylesheet)
 
 
 if __name__ == '__main__':

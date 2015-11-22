@@ -8,9 +8,6 @@ from PyQt4 import QtCore, QtGui
 # Personal
 from functions import prettyDate
 
-# TEST
-import constants
-
 
 class ViewDelegate(QtGui.QStyledItemDelegate):
 
@@ -38,8 +35,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         painter.setRenderHint(QtGui.QPainter.SmoothPixmapTransform)
 
         # Constant, proportional to the size of one cell
-        # DIMENSION = option.rect.width() * 0.05
-        DIMENSION = constants.DIMENSION
+        DIMENSION = self.parent.styles.ICON_SIZE_SMALL
 
         # Check if the post is in the to-read list
         waited = index.sibling(index.row(), 0).data() in self.parent.waiting_list.list_id_articles
@@ -104,7 +100,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             doc.setHtml(title + adding_infos)
 
             font = doc.defaultFont()
-            font.setPointSize(11)
+            font.setPointSize(self.parent.styles.FONT_SIZE)
             doc.setDefaultFont(font)
 
             # Set the width of the text = the width of the rect

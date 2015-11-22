@@ -17,10 +17,5 @@ DATA_PATH = dirs.user_config_dir
 # 'C:\\Users\\trentm\\AppData\\Local\\Acme\\SuperApp'
 # '/home/trentm/.config/superapp
 
-
-
-# Setting for the size of the icons
-DIMENSION = 30
-
 # Tweets are 140 characters long
 LEN_TWEET = 140
