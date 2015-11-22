@@ -12,12 +12,9 @@ class MyStyles():
     def __init__(self, app):
 
         self.font = app.font()
-        print(self.font.pointSize())
 
         screen_rect = app.desktop().screenGeometry()
         self.height = screen_rect.height()
-
-        print(self.height)
 
         # # Scale by screen resolution: HD or not
         # if self.height >= 900:

@@ -60,7 +60,7 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
     pass
 elif sys.platform == 'darwin':
 
-    os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o744)
+    os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
 
     # Get the path where the chnages will be made
     path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
@@ -88,7 +88,7 @@ elif sys.platform == 'darwin':
         text += "open ../../{}/{}.app".format(filename, app_name)
         launcher.write(text)
 
-    os.chmod(path_fixes + 'MacOS/launcher', 0o744)
+    os.chmod(path_fixes + 'MacOS/launcher', 0o777)
 
     print('Mac OS fixes applied')
 
@@ -100,7 +100,7 @@ elif sys.platform == 'darwin':
 
 else:
     # TODO: change to 0o755 ?
-    os.chmod('./dist/{}/{}/gui'.format(filename, filename), 755)
+    os.chmod('./dist/{}/{}/gui'.format(filename, filename), 0o777)
 
 
 
