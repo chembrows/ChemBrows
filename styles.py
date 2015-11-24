@@ -18,24 +18,24 @@ class MyStyles():
 
         print(self.height)
 
-        # # Scale by screen resolution: HD or not
-        # if self.height >= 900:
-            # self.FONT_SIZE = 11
-            # self.DIMENSION = 40
-            # self.ICON_SIZE_BIG = 36
-            # self.ICON_SIZE_SMALL = 30
-        # else:
-            # self.FONT_SIZE = 8
-            # self.DIMENSION = 30
-            # self.ICON_SIZE_BIG = 27
-            # self.ICON_SIZE_SMALL = 22
+        # Scale by screen resolution: HD or not
+        if self.height >= 900:
+            self.FONT_SIZE = 12
+            self.DIMENSION = 40
+            self.ICON_SIZE_BIG = 36
+            self.ICON_SIZE_SMALL = 30
+        else:
+            self.FONT_SIZE = 8
+            self.DIMENSION = 30
+            self.ICON_SIZE_BIG = 27
+            self.ICON_SIZE_SMALL = 23
 
-        # Scale everything to always have the same proportion
-        self.FONT_SIZE = 11 * self.height / 1080
-        print(self.FONT_SIZE)
-        self.DIMENSION = 40 * self.height / 1080
-        self.ICON_SIZE_BIG = 36 * self.height / 1080
-        self.ICON_SIZE_SMALL = 30 * self.height / 1080
+        # # Scale everything to always have the same proportion
+        # self.FONT_SIZE = 11 * self.height / 1080
+        # print(self.FONT_SIZE)
+        # self.DIMENSION = 40 * self.height / 1080
+        # self.ICON_SIZE_BIG = 36 * self.height / 1080
+        # self.ICON_SIZE_SMALL = 30 * self.height / 1080
 
 
     def styleToolbar(self):
@@ -132,7 +132,7 @@ class MyStyles():
             QPushButton[accessibleName="round_button_article"]:pressed
             {{
                 background: white;
-                border-radius: {1}px;
+                border-radius: {4}px;
             }}
 
             QPushButton[accessibleName="button_text_left"]
@@ -151,8 +151,11 @@ class MyStyles():
             }}
         """
 
-        stylesheet = stylesheet.format(self.DIMENSION, self.DIMENSION / 4,
-                                       self.DIMENSION / 8, self.DIMENSION / 5)
+        # Scale from ICON_SIZE_BIG, not from dimension, otherwiser the blank
+        # around the button_pressed is too wide
+        stylesheet = stylesheet.format(self.ICON_SIZE_BIG, self.DIMENSION / 4,
+                                       self.ICON_SIZE_BIG / 8, self.DIMENSION / 5,
+                                       self.ICON_SIZE_BIG / 2)
 
         return stylesheet
 

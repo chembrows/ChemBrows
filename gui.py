@@ -33,7 +33,6 @@ from signing import Signing
 from tuto import Tuto
 from my_twit import MyTwit
 import constants
-
 from styles import MyStyles
 
 # To debug and profile. Comment for prod
@@ -80,7 +79,6 @@ class Fenetre(QtGui.QMainWindow):
         else:
             self.l.info("This version of ChemBrows is a frozen version")
 
-        # TEST
         self.styles = MyStyles(app)
 
         # Bool to check if the program is collecting data
@@ -1995,11 +1993,10 @@ If you click OK, the cleaning process will start"
         # self.showMaximized()
         self.setWindowTitle('ChemBrows')
 
-        QtGui.QFontDatabase.addApplicationFont('config/Lucida Grande.ttf')
-        font = QtGui.QFont('Lucida Grande', self.styles.FONT_SIZE)
-        print(font.family())
-        print(font.pointSize())
-        # font.setPointSize(self.styles.FONT_SIZE)
+        # QtGui.QFontDatabase.addApplicationFont('config/Lucida Grande.ttf')
+        # font = QtGui.QFont('Lucida Grande', self.styles.FONT_SIZE)
+        font = QtGui.QFont()
+        font.setPointSize(self.styles.FONT_SIZE)
         app.setFont(font)
 
         # ------------------------- BUILDING THE MENUS -------------------------------------------------------------
@@ -2105,8 +2102,6 @@ If you click OK, the cleaning process will start"
         # self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_170_step_backward'), 'Back')
         # self.button_view_all = QtGui.QPushButton('View all')
         # self.toolbar.addWidget(self.button_view_all)
-
-
 
 
         # ------------------------- LEFT AREA --------------------------------
