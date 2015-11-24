@@ -1995,8 +1995,11 @@ If you click OK, the cleaning process will start"
         # self.showMaximized()
         self.setWindowTitle('ChemBrows')
 
-        font = QtGui.QFont()
-        font.setPointSize(self.styles.FONT_SIZE)
+        QtGui.QFontDatabase.addApplicationFont('config/Lucida Grande.ttf')
+        font = QtGui.QFont('Lucida Grande', self.styles.FONT_SIZE)
+        print(font.family())
+        print(font.pointSize())
+        # font.setPointSize(self.styles.FONT_SIZE)
         app.setFont(font)
 
         # ------------------------- BUILDING THE MENUS -------------------------------------------------------------
