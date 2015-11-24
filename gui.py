@@ -263,10 +263,13 @@ class Fenetre(QtGui.QMainWindow):
                 req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
             self.l.info(req.text)
         except requests.exceptions.ReadTimeout:
-            self.l.error("checkAccess. ReadTimeout while contacting the server")
+            self.l.error("logConnection. ReadTimeout while contacting the server")
             return
         except requests.exceptions.ConnectTimeout:
-            self.l.error("checkAccess. ConnectionTimeout while contacting the server")
+            self.l.error("logConnection. ConnectionTimeout while contacting the server")
+            return
+        except Exception as e:
+            self.l.critical("logConnection: cannot reach server. {}".format(e))
             return
 
 
@@ -1463,7 +1466,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # update_new: to check if the user is currently clicking
         # on the read icon. If so, don't mark the article as read
-        if new == 0 or table.update_new == True:
+        if new == 0 or table.toread_icon == True:
             return
         else:
 
@@ -1505,6 +1508,9 @@ class Fenetre(QtGui.QMainWindow):
             # Immediately visually remove the post from the to read list
             # if the to read list is displayed
             if table is self.waiting_list:
+
+                # Submit changes to the model, the viewport is about to change
+                self.model.submitAll()
                 self.searchByButton()
 
                 # Update the cells bc the scroll bar can disappear when
@@ -1537,6 +1543,7 @@ class Fenetre(QtGui.QMainWindow):
             self.waiting_list.hideColumn(11)  # Hide new
             self.waiting_list.hideColumn(12)  # Hide topic_simple
             self.waiting_list.horizontalHeader().moveSection(8, 0)
+
 
 
     def emptyWait(self):

@@ -61,7 +61,7 @@ class ViewPerso(QtGui.QTableView):
 
         # Attribute to shunt parent.markOneRead if the user is clicking
         # on the read/unread icon
-        self.update_new = False
+        self.toread_icon = False
 
         # Call the parent class function
         super(ViewPerso, self).mousePressEvent(e)
@@ -94,7 +94,7 @@ class ViewPerso(QtGui.QTableView):
 
         # Icon to-read
         elif area_wait_x and area_y:
-            self.update_new = True
+            self.toread_icon = True
             self.parent.toggleWait()
 
 
