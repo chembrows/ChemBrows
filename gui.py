@@ -108,8 +108,9 @@ class Fenetre(QtGui.QMainWindow):
         # Object to store options and preferences
         self.options = QtCore.QSettings(self.DATA_PATH + "/config/options.ini", QtCore.QSettings.IniFormat)
 
-        # Connect to the database & log the connection
         app.processEvents()
+
+        # Connect to the database & log the connection
         self.connectionBdd()
         self.defineActions()
         self.logConnection()
@@ -230,7 +231,6 @@ class Fenetre(QtGui.QMainWindow):
         # Check if there is a user_id. If so, log the connection
         user_id = self.options.value("user_id", None)
         if user_id is None:
-            self.max_id_for_new = 0
             return
 
         count_query = QtSql.QSqlQuery(self.bdd)
@@ -258,8 +258,10 @@ class Fenetre(QtGui.QMainWindow):
             if self.debug_mod:
                 req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=1)
             else:
-                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
-            self.l.info(req.text)
+                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=5)
+
+            self.l.info('Server response: {}'.format(req.text))
+
         except requests.exceptions.ReadTimeout:
             self.l.error("logConnection. ReadTimeout while contacting the server")
             return
@@ -269,6 +271,15 @@ class Fenetre(QtGui.QMainWindow):
         except Exception as e:
             self.l.critical("logConnection: cannot reach server. {}".format(e))
             return
+
+        if "user_id unregistered" in req.text:
+            mes = "Wrong user_id. A new one will be created.\nYou will not loose any data."
+            choice = QtGui.QMessageBox.critical(self, "Wrong user_id", mes)
+
+            if choice == QtGui.QMessageBox.Ok:
+                # Erase the key 'user_id' from the options if it is invalid
+                self.options.remove("user_id")
+                self.l.error("The user_id was wrong. Set it to None")
 
 
     def finishBoot(self):
@@ -836,7 +847,8 @@ class Fenetre(QtGui.QMainWindow):
                             # before resizing the cells
                             QtCore.QTimer.singleShot(20, self.updateCellSize)
                 except AttributeError:
-                    self.l.debug("Event filter, AttributeError, probably starting the program")
+                    # self.l.debug("Event filter, AttributeError, probably starting the program")
+                    pass
 
             elif event.type() == QtCore.QEvent.Leave and source is self:
                 self.scroll_tags.hide()

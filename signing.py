@@ -32,6 +32,19 @@ class Signing(QtGui.QDialog):
         self.defineSlots()
 
 
+    def closeEvent(self, event):
+
+        """Actions to perform when closing the window.
+        Exit ChemBrows if the user closes this window"""
+
+        self.parent.l.critical("The use did not sign in")
+
+        super(Signing, self).closeEvent(event)
+
+        # Close the app if the user does not signin
+        self.parent.closeEvent(event)
+
+
     def askQuestion(self):
 
         questions = [
@@ -89,18 +102,12 @@ class Signing(QtGui.QDialog):
         else:
             self.line_question.setStyleSheet(None)
 
-        # TODO: transformer statut en nombre
-
         if validate:
             payload = {
                        'status': self.combo_status.currentIndex(),
                        'email': self.line_email.text(),
                       }
 
-            # payload = {
-                       # 'status': 0,
-                       # 'email': 'jp@um2.fr',
-                      # }
             try:
                 r = requests.post("http://chembrows.com/cgi-bin/sign.py", params=payload)
             except requests.exceptions.ReadTimeout:
@@ -126,8 +133,6 @@ class Signing(QtGui.QDialog):
             elif response[-1] == 'A user with this email already exists':
                 QtGui.QMessageBox.critical(self, "Signing up error", "A user with the same email already exists. Please use another email or contact us.",
                                            QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
-
-            # TODO: gérer le cas où le serveur réponde "Wrong data". Peu probable
 
 
     def initUI(self):
