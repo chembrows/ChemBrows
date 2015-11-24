@@ -147,7 +147,6 @@ my_data_files += get_all_files_in_dir('.{}images{}'.format(os.path.sep, os.path.
 my_data_files += get_all_files_in_dir('.{}journals{}'.format(os.path.sep, os.path.sep))
 my_data_files += get_all_files_in_dir('.{}config{}'.format(os.path.sep, os.path.sep))
 my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.path.sep, os.path.sep, os.path.sep))
-my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.path.sep, os.path.sep, os.path.sep))
 
 # Remove sensitive files
 try:

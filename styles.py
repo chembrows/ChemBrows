@@ -24,11 +24,13 @@ class MyStyles():
             self.DIMENSION = 40
             self.ICON_SIZE_BIG = 36
             self.ICON_SIZE_SMALL = 30
+            self.RADIUS = 18
         else:
             self.FONT_SIZE = 8
             self.DIMENSION = 30
             self.ICON_SIZE_BIG = 27
             self.ICON_SIZE_SMALL = 23
+            self.RADIUS = 12
 
         # # Scale everything to always have the same proportion
         # self.FONT_SIZE = 11 * self.height / 1080
@@ -154,8 +156,8 @@ class MyStyles():
         # Scale from ICON_SIZE_BIG, not from dimension, otherwiser the blank
         # around the button_pressed is too wide
         stylesheet = stylesheet.format(self.ICON_SIZE_BIG, self.DIMENSION / 4,
-                                       self.ICON_SIZE_BIG / 8, self.DIMENSION / 5,
-                                       self.ICON_SIZE_BIG / 2)
+                                       self.DIMENSION / 8, self.DIMENSION / 5,
+                                       self.RADIUS)
 
         return stylesheet
 
