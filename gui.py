@@ -54,7 +54,7 @@ class Fenetre(QtGui.QMainWindow):
 
             # http://stackoverflow.com/questions/10293808/how-to-get-the-path-of-the-executing-frozen-script
             self.resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-            # QtGui.QApplication.addLibraryPath(self.resource_dir)
+            QtGui.QApplication.addLibraryPath(self.resource_dir)
 
             # Create the user directory if it doesn't exist
             os.makedirs(self.DATA_PATH, exist_ok=True)
@@ -281,14 +281,8 @@ class Fenetre(QtGui.QMainWindow):
             return
 
         if "user_id unregistered" in req.text:
-            # mes = "Wrong user_id. A new one will be created.\nYou will not loose any data."
-            # choice = QtGui.QMessageBox.critical(self, "Wrong user_id", mes)
-
-            # if choice == QtGui.QMessageBox.Ok:
-                # Erase the key 'user_id' from the options if it is invalid
             self.options.remove("user_id")
             self.l.error("The user_id was wrong. Set it to None")
-                # return
 
 
     def finishBoot(self):
