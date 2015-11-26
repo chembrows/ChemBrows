@@ -16,8 +16,6 @@ class MyStyles():
         screen_rect = app.desktop().screenGeometry()
         self.height = screen_rect.height()
 
-        print(self.height)
-
         # Scale by screen resolution: HD or not
         if self.height >= 900:
             self.FONT_SIZE = 12
@@ -31,13 +29,6 @@ class MyStyles():
             self.ICON_SIZE_BIG = 27
             self.ICON_SIZE_SMALL = 23
             self.RADIUS = 12
-
-        # # Scale everything to always have the same proportion
-        # self.FONT_SIZE = 11 * self.height / 1080
-        # print(self.FONT_SIZE)
-        # self.DIMENSION = 40 * self.height / 1080
-        # self.ICON_SIZE_BIG = 36 * self.height / 1080
-        # self.ICON_SIZE_SMALL = 30 * self.height / 1080
 
 
     def styleToolbar(self):

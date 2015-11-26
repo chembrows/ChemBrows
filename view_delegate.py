@@ -19,7 +19,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
     http://stackoverflow.com/questions/6464741/qtableview-with-a-column-of-images
     """
 
-
     def __init__(self, parent):
 
         super(ViewDelegate, self).__init__(parent)
@@ -151,9 +150,9 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             for index, perc in enumerate(nbr_peppers):
 
                 if percentage >= perc:
-                    path = "./images/pepper_full.png"
+                    path = os.path.join(self.parent.resource_dir, "images/pepper_full.png")
                 else:
-                    path = "./images/pepper_empty.png"
+                    path = os.path.join(self.parent.resource_dir, "images/pepper_empty.png")
 
                 # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
                 pixmap = QtGui.QPixmap(path)
@@ -167,9 +166,9 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # If the post is liked, display the like star.
             # Else, display the unlike star
             if liked == 1:
-                path = "./images/like.png"
+                path = os.path.join(self.parent.resource_dir, "images/like.png")
             else:
-                path = "./images/not_like.png"
+                path = os.path.join(self.parent.resource_dir, "images/not_like.png")
 
             pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
 
@@ -179,9 +178,9 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)
 
             if waited:
-                path = "./images/unwait.png"
+                path = os.path.join(self.parent.resource_dir, "images/unwait.png")
             else:
-                path = "./images/wait.png"
+                path = os.path.join(self.parent.resource_dir, "images/wait.png")
 
             pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
 
@@ -235,7 +234,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             else:
                 # The picture doesn't exist: display a "not available image"
-                pixmap = QtGui.QPixmap("./images/not_available.png")
+                pixmap = QtGui.QPixmap(os.path.join(self.parent.resource_dir, "images/not_available.png"))
 
                 wcase, hcase = option.rect.width(), option.rect.height()
                 wpix, hpix =  pixmap.width(), pixmap.height()

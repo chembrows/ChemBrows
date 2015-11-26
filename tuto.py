@@ -16,7 +16,6 @@ class Tuto(QtGui.QDialog):
 
         super(Tuto, self).__init__(parent)
 
-
         self.parent = parent
 
         if type(parent) is QtGui.QWidget:
@@ -27,7 +26,7 @@ class Tuto(QtGui.QDialog):
         self.setModal(True)
 
         # Get the text of the slides from config files
-        with open('./config/tuto.txt', 'r') as f:
+        with open(os.path.join(self.parent.resource_dir, 'config/tuto.txt'), 'r') as f:
             content = f.read()
             self.list_slides = content.split('--')
 
@@ -59,7 +58,7 @@ class Tuto(QtGui.QDialog):
                     self.parent.options.remove("journals_to_parse")
                 else:
                     # Set the journals to parse options of the parent
-                    with open('./config/fields/{0}'.format(choice), 'r') as config:
+                    with open(os.path.join(self.parent.resource_dir, 'config/fields/{0}'.format(choice)), 'r') as config:
                         self.parent.options.setValue("journals_to_parse",
                                                       [line.rstrip() for line in config])
                 # Update the journals buttons on the left dock
@@ -137,7 +136,7 @@ class Tuto(QtGui.QDialog):
         text = self.parseSlide(self.list_slides[0])
         self.text_diapo.setText(text)
 
-        choices = ['All'] + sorted(os.listdir('./config/fields/'))
+        choices = ['All'] + sorted(os.listdir(os.path.join(self.parent.resource_dir, 'config/fields/')))
         self.combo_choice = QtGui.QComboBox()
         self.combo_choice.addItems(choices)
         self.combo_choice.hide()

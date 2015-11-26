@@ -260,7 +260,6 @@ build_exe_options = {
                                    },
                      }
 
-
 exe_esky = Executable("gui.py", gui_only=True)
 
 # Get the current version from the version file

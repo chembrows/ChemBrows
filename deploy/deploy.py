@@ -61,16 +61,17 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
 elif sys.platform == 'darwin':
 
     os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
+    os.chmod('dist/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
 
-    # Get the path where the chnages will be made
+    # Get the path where the changes will be made
     path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
 
     # Modify CFBundleExecutable in the Info.plist of the bundle.app
     with open(path_fixes + 'Info.plist', 'r+') as info_plist:
         text = info_plist.read()
 
-        # Modify the executable
-        text = text.replace('<string>gui</string>', '<string>launcher</string>')
+        # # Modify the executable
+        # text = text.replace('<string>gui</string>', '<string>launcher</string>')
 
         # Set LSUIElement to 1 to avoid double icons
         text = text.replace('<dict>\n\t<key>CFBundleDevelopmentRegion</key>',
@@ -80,15 +81,15 @@ elif sys.platform == 'darwin':
         info_plist.write(text)
         info_plist.truncate()
 
-    with open(path_fixes + 'MacOS/launcher', 'w+') as launcher:
-        text = "#!/usr/bin/env bash"
-        text += "\n"
-        text += "cd \"${0%/*}\""
-        text += "\n"
-        text += "open ../../{}/{}.app".format(filename, app_name)
-        launcher.write(text)
+    # with open(path_fixes + 'MacOS/launcher', 'w+') as launcher:
+        # text = "#!/usr/bin/env bash"
+        # text += "\n"
+        # text += "cd \"${0%/*}\""
+        # text += "\n"
+        # text += "open ../../{}/{}.app".format(filename, app_name)
+        # launcher.write(text)
 
-    os.chmod(path_fixes + 'MacOS/launcher', 0o777)
+    # os.chmod(path_fixes + 'MacOS/launcher', 0o777)
 
     print('Mac OS fixes applied')
 
@@ -99,10 +100,8 @@ elif sys.platform == 'darwin':
 
 
 else:
-    # TODO: change to 0o755 ?
+    os.chmod('./dist/{}/gui'.format(filename, filename), 0o777)
     os.chmod('./dist/{}/{}/gui'.format(filename, filename), 0o777)
-
-
 
 
 # Create installer for windows

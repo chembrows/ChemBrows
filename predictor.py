@@ -4,6 +4,7 @@
 
 from PyQt4 import QtSql, QtCore
 
+import sys, os
 import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer
@@ -61,7 +62,12 @@ class Predictor(QtCore.QThread):
 
         my_additional_stop_words = []
 
-        with open('config/stop_words.txt', 'r') as config:
+        if getattr(sys, "frozen", False):
+            resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+        else:
+            resource_dir = '.'
+
+        with open(os.path.join(resource_dir, 'config/stop_words.txt'), 'r') as config:
             for word in config.readlines():
                 my_additional_stop_words.append(word.rstrip())
 

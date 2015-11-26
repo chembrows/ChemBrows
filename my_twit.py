@@ -126,7 +126,6 @@ class MyTwit(QtGui.QDialog):
         try:
             if self.check_graphical.checkState() == 2:
                 len_data += 24
-                print("media present")
         except AttributeError:
             pass
 
@@ -169,8 +168,6 @@ class MyTwit(QtGui.QDialog):
                                      self.CONSUMER_KEY, self.CONSUMER_SECRET))
 
         text = self.text_tweet.toPlainText() + " #ChemBrows"
-
-        print(len(text))
 
         if id_img is None:
             try:
