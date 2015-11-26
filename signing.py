@@ -26,6 +26,9 @@ class Signing(QtGui.QDialog):
 
         self.parent = parent
 
+        # Attribute to check if the login was valid
+        self.validated = False
+
         self.setModal(True)
 
         self.initUI()
@@ -37,12 +40,12 @@ class Signing(QtGui.QDialog):
         """Actions to perform when closing the window.
         Exit ChemBrows if the user closes this window"""
 
-        self.parent.l.critical("The use did not sign in")
-
         super(Signing, self).closeEvent(event)
 
         # Close the app if the user does not signin
-        self.parent.closeEvent(event)
+        if not self.validated:
+            self.parent.l.critical("The user did not sign in")
+            self.parent.closeEvent(event)
 
 
     def askQuestion(self):
@@ -129,7 +132,7 @@ class Signing(QtGui.QDialog):
             if 'user_id' in response[-1]:
                 self.parent.options.setValue('user_id', response[-1].split(':')[-1])
                 self.accept()
-                del self
+                self.validated = True
             elif response[-1] == 'A user with this email already exists':
                 QtGui.QMessageBox.critical(self, "Signing up error", "A user with the same email already exists. Please use another email or contact us.",
                                            QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)

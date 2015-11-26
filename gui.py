@@ -281,13 +281,14 @@ class Fenetre(QtGui.QMainWindow):
             return
 
         if "user_id unregistered" in req.text:
-            mes = "Wrong user_id. A new one will be created.\nYou will not loose any data."
-            choice = QtGui.QMessageBox.critical(self, "Wrong user_id", mes)
+            # mes = "Wrong user_id. A new one will be created.\nYou will not loose any data."
+            # choice = QtGui.QMessageBox.critical(self, "Wrong user_id", mes)
 
-            if choice == QtGui.QMessageBox.Ok:
+            # if choice == QtGui.QMessageBox.Ok:
                 # Erase the key 'user_id' from the options if it is invalid
-                self.options.remove("user_id")
-                self.l.error("The user_id was wrong. Set it to None")
+            self.options.remove("user_id")
+            self.l.error("The user_id was wrong. Set it to None")
+                # return
 
 
     def finishBoot(self):
