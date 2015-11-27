@@ -64,6 +64,7 @@ class Fenetre(QtGui.QMainWindow):
             self.DATA_PATH = "."
             self.resource_dir = self.DATA_PATH
 
+        app.setWindowIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/icon_main.png')))
 
         # Display a splash screen when booting
         # http://eli.thegreenplace.net/2009/05/09/creating-splash-screens-in-pyqt
@@ -186,6 +187,8 @@ class Fenetre(QtGui.QMainWindow):
 
         # Check if the running ChemBrows is a frozen app
         if not self.debug_mod:
+
+            return
 
             update = Updater(self.l)
 
@@ -2282,14 +2285,8 @@ If you click OK, the cleaning process will start"
 if __name__ == '__main__':
     # logger = MyLog()
     # try:
-    # Check if the running ChemBrows is a frozen app
-    if getattr(sys, "frozen", False):
-        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    else:
-        resource_dir = '.'
 
     app = QtGui.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon(os.path.join(resource_dir, 'images/icon_main.png')))
     # ex = Fenetre(logger)
     ex = Fenetre()
     app.processEvents()

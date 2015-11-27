@@ -66,20 +66,20 @@ elif sys.platform == 'darwin':
     # Get the path where the changes will be made
     path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
 
-    # Modify CFBundleExecutable in the Info.plist of the bundle.app
-    with open(path_fixes + 'Info.plist', 'r+') as info_plist:
-        text = info_plist.read()
+    # # Modify CFBundleExecutable in the Info.plist of the bundle.app
+    # with open(path_fixes + 'Info.plist', 'r+') as info_plist:
+        # text = info_plist.read()
 
-        # # Modify the executable
-        # text = text.replace('<string>gui</string>', '<string>launcher</string>')
+        # # # Modify the executable
+        # # text = text.replace('<string>gui</string>', '<string>launcher</string>')
 
-        # Set LSUIElement to 1 to avoid double icons
-        text = text.replace('<dict>\n\t<key>CFBundleDevelopmentRegion</key>',
-                            '<dict>\n\t<key>LSUIElement</key>\n\t<string>1</string>\n\t<key>CFBundleDevelopmentRegion</key>')
+        # # Set LSUIElement to 1 to avoid double icons
+        # text = text.replace('<dict>\n\t<key>CFBundleDevelopmentRegion</key>',
+                            # '<dict>\n\t<key>LSUIElement</key>\n\t<string>1</string>\n\t<key>CFBundleDevelopmentRegion</key>')
 
-        info_plist.seek(0)
-        info_plist.write(text)
-        info_plist.truncate()
+        # info_plist.seek(0)
+        # info_plist.write(text)
+        # info_plist.truncate()
 
     # with open(path_fixes + 'MacOS/launcher', 'w+') as launcher:
         # text = "#!/usr/bin/env bash"

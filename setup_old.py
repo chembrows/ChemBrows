@@ -1,86 +1,59 @@
 #!/usr/bin/python
-# -*-coding:Utf-8 -*
+# coding: utf-8
 
-# http://stackoverflow.com/questions/14215303/scipy-with-py2exe
-# http://stackoverflow.com/questions/11308941/executable-created-by-py2exe-not-working
-# http://www.py2exe.org/index.cgi/data_files
-# http://stackoverflow.com/questions/2747860/having-py2exe-include-my-data-files-like-include-package-data
-# http://stackoverflow.com/questions/1570542/when-using-py2exe-pyqt-application-cannot-load-sqlite-database
 
-from distutils.core import setup
-import py2exe
-import os
-
+import sys, os
+from cx_Freeze import setup, Executable
 
 my_data_files = []
 
-# Copy the images for the GUI
-for file in os.listdir('./images/'):
-    f1 = './images/' + file
-    if os.path.isfile(f1):  # skip directories
-        f2 = 'images', [f1]
-        my_data_files.append(f2)
+my_data_files += ['.{}images{}'.format(os.path.sep, os.path.sep)]
+my_data_files += ['.{}journals{}'.format(os.path.sep, os.path.sep)]
+my_data_files += ['.{}config{}'.format(os.path.sep, os.path.sep)]
+my_data_files += ['.{}config{}fields{}'.format(os.path.sep, os.path.sep, os.path.sep)]
 
-# Copy the config files for the journals
-for file in os.listdir('./journals/'):
-    f1 = './journals/' + file
-    if os.path.isfile(f1):  # skip directories
-        f2 = 'journals', [f1]
-        my_data_files.append(f2)
+base = None
+if sys.platform in ['win32', 'cygwin', 'win64']:
+    base = "Win32GUI"
+    my_data_files.append(('C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers\qsqlite4.dll', 'sqldrivers\qsqlite4.dll'))
+elif sys.platform == 'darwin':
+    pass
+else:
+    my_data_files.append(('/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so', 'sqldrivers/libqsqlite.so'))
 
-# Copy the config files
-for file in os.listdir('./config/'):
-    f1 = './config/' + file
-    if os.path.isfile(f1):  # skip directories
-        f2 = 'config', [f1]
-        my_data_files.append(f2)
 
-# Create an empty directory to store the graphical abstracts
-my_data_files.append(('graphical_abstracts/', ''))
+excludes = [
+            'test_hosts',
+            'test_worker',
+            'misc',
+           ]
 
-# Copy the sqlite driver
-my_data_files.append(('sqldrivers', ('C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers\qsqlite4.dll',)))
+includes = [
+            'sip',
+            'PyQt4.QtCore',
+            'PyQt4.QtGui',
+            'PyQt4.QtNetwork',
+            'PyQt4.QtSql',
+            'scipy.special.specfun',
+            'scipy.integrate.vode',
+            'scipy.integrate.lsoda',
+            'scipy.sparse.csgraph._validation',
+            'sklearn.utils.sparsetools._graph_validation',
+            'scipy.special._ufuncs_cxx',
+           ]
 
-# Copy the plugins to load images
-for file in os.listdir('C:\Python34\Lib\site-packages\PyQt4\plugins\imageformats\\'):
-    f1 = 'C:\Python34\Lib\site-packages\PyQt4\plugins\imageformats\\' + file
-    if os.path.isfile(f1):  # skip directories
-        f2 = 'imageformats', [f1]
-        my_data_files.append(f2)
+options = {
+           "includes": includes,
+           "excludes": excludes,
+           "include_files": my_data_files,
+           }
+
+exe = Executable("gui.py", base=base)
 
 setup(
-    windows=[{'script': 'gui.py'}],
-    data_files=my_data_files,
-    options={
-        'py2exe': {
-            'compressed': True,
-            'optimize': 2,
-            # 'excludes': [
-                # '_gtkagg',
-                # '_tkagg',
-                # '_agg2',
-                # '_cairo',
-                # '_cocoaagg',
-                # '_fltkagg',
-                # '_gtk',
-                # '_gtkcairo',
-                # '_ssl',
-                # 'doctest',
-                # 'pdb',
-                # 'unitest',
-                # 'pydoc_data',
-                # 'tcl'
-                # ]
-            'includes': [
-                'sip',
-                'PyQt4.QtCore',
-                'PyQt4.QtGui',
-                'PyQt4.QtNetwork',
-                'PyQt4.QtSql',
-                'scipy.sparse.csgraph._validation',
-                'sklearn.utils.sparsetools._graph_validation',
-                'scipy.special._ufuncs_cxx'
-                ]
-            }
-        },
+    name="monprogramme",
+    version="1.00",
+    description="monprogramme",
+    options={"build_exe": options},
+    executables=[exe]
     )
