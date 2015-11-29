@@ -17,7 +17,11 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
     base = "Win32GUI"
     my_data_files.append(('C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers\qsqlite4.dll', 'sqldrivers\qsqlite4.dll'))
 elif sys.platform == 'darwin':
-    pass
+    my_data_files.append(('/usr/local/Cellar/qt/4.8.7/plugins/sqldrivers/libqsqlite.dylib', 'plugins/sqldrivers'))
+    my_data_files.append(('/usr/local/Cellar/qt/4.8.7/plugins/imageformats/libqgif.dylib', 'plugins/imageformats'))
+    my_data_files.append(('/usr/local/Cellar/qt/4.8.7/plugins/imageformats/libqico.dylib', 'plugins/imageformats'))
+    my_data_files.append(('/usr/local/Cellar/qt/4.8.7/plugins/imageformats/libqjpeg.dylib', 'plugins/imageformats'))
+    my_data_files.append('./deploy/qt.conf')
 else:
     my_data_files.append(('/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so', 'sqldrivers/libqsqlite.so'))
 

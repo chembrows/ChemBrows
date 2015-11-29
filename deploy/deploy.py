@@ -16,7 +16,7 @@ from zipfile import ZipFile
 from shutil import copyfile
 
 app_name = 'ChemBrows'
-create_installer = True
+create_installer = False
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
@@ -60,11 +60,11 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
     pass
 elif sys.platform == 'darwin':
 
-    os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
-    os.chmod('dist/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
+    # os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
+    # os.chmod('dist/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
 
-    # Get the path where the changes will be made
-    path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
+    # # Get the path where the changes will be made
+    # path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
 
     # # Modify CFBundleExecutable in the Info.plist of the bundle.app
     # with open(path_fixes + 'Info.plist', 'r+') as info_plist:
@@ -91,12 +91,13 @@ elif sys.platform == 'darwin':
 
     # os.chmod(path_fixes + 'MacOS/launcher', 0o777)
 
-    print('Mac OS fixes applied')
+    # print('Mac OS fixes applied')
 
-    print('Starting copying icons')
-    copyfile('images/icon.icns', path_fixes + 'Resources/PythonApplet.icns')
-    copyfile('images/icon.icns', 'dist/{}/{}.app/{}/{}.app/Contents/Resources/PythonApplet.icns'.format(filename, app_name, filename, app_name))
-    print('Done copying icons')
+    # print('Starting copying icons')
+    # copyfile('images/icon.icns', path_fixes + 'Resources/PythonApplet.icns')
+    # copyfile('images/icon.icns', 'dist/{}/{}.app/{}/{}.app/Contents/Resources/PythonApplet.icns'.format(filename, app_name, filename, app_name))
+    # print('Done copying icons')
+    pass
 
 
 else:
