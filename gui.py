@@ -188,8 +188,6 @@ class Fenetre(QtGui.QMainWindow):
         # Check if the running ChemBrows is a frozen app
         if not self.debug_mod:
 
-            return
-
             update = Updater(self.l)
 
             if update is None:
