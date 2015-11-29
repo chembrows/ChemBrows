@@ -12,15 +12,15 @@ from twitter.api import Twitter
 from twitter.oauth import OAuth, write_token_file, read_token_file
 
 from log import MyLog
-
-# TEST
 import constants
 
 
 class MyTwit(QtGui.QDialog):
 
-
     """Module to authenticate the user on Twitter. Allows to tweet"""
+    # http://www.adrianjock.com/twitter-myth-url-shorteners/
+    # https://dev.twitter.com/faq#3
+    # https://dev.twitter.com/rest/reference/get/help/configuration
 
 
     def __init__(self, parent, title, link, graphical=None):
@@ -118,32 +118,27 @@ class MyTwit(QtGui.QDialog):
 
         """Method to shorten the title if it is too long"""
 
-        # Twitter shortens its URLs to 22 characters
-        if self.link[0:5] == 'http:' and len(self.link) > 22:
-            len_data = 22
-        elif self.link[0:5] == 'https' and len(self.link) > 23:
-            len_data = 23
-        else:
-            len_data = len(self.link)
+        # All links are 23 characters long, even the shorter ones
+        len_data = 23
 
-        # If graphical abstract included, shorten the title of 23
-        # characters
+        # If graphical abstract included, shorten the title of 24 characters
+        # https://dev.twitter.com/rest/reference/get/help/configuration
         try:
             if self.check_graphical.checkState() == 2:
-                len_data += 23
+                len_data += 24
         except AttributeError:
             pass
 
         LEN_TWEET = constants.LEN_TWEET
 
-        # -2 for 2 spaces, -10 for #ChemBrows
-        if len(self.title) > LEN_TWEET - len_data - 2 - 10:
-            title = self.title[:LEN_TWEET - len_data - 2 - 10 - 3]
+        # -1 for 1 space, -10 for #ChemBrows
+        if len(self.title) >= LEN_TWEET - len_data - 1 - 10:
+            title = self.title[:LEN_TWEET - len_data - 1 - 10 - 3].rstrip()
             title += "..."
         else:
-            title = self.title
+            title = self.title + " "
 
-        self.text_tweet.setText(title + " " + self.link)
+        self.text_tweet.setText(title + self.link)
 
 
     def postTweet(self):
@@ -161,7 +156,6 @@ class MyTwit(QtGui.QDialog):
                     imagedata = image.read()
 
                 id_img = t_up.media.upload(media=imagedata)["media_id_string"]
-                # print(id_img)
             else:
                 self.l.debug("No image, check box not checked")
                 id_img = None
@@ -173,24 +167,21 @@ class MyTwit(QtGui.QDialog):
         twitter = Twitter(auth=OAuth(oauth_token, oauth_secret,
                                      self.CONSUMER_KEY, self.CONSUMER_SECRET))
 
-
         text = self.text_tweet.toPlainText() + " #ChemBrows"
-
-        # print(len(text))
 
         if id_img is None:
             try:
                 twitter.statuses.update(status=text)
             except Exception as e:
                 self.l.error(e)
-                QtGui.QMessageBox.critical(self, "Twitter error", "ChemBrows could not tweet that.\nYour tweet is probably too long.",
+                QtGui.QMessageBox.critical(self, "Twitter error", "ChemBrows could not tweet that.\nYour tweet is probably too long: {} chara.".format(len(text)),
                                            QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
         else:
             try:
                 twitter.statuses.update(status=text, media_ids=id_img)
             except Exception as e:
                 self.l.error(e)
-                QtGui.QMessageBox.critical(self, "Twitter error", "ChemBrows could not tweet that.\nYour tweet is probably too long.",
+                QtGui.QMessageBox.critical(self, "Twitter error", "ChemBrows could not tweet that.\nYour tweet is probably too long: {} chara.".format(len(text)),
                                            QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
 
         self.close()
@@ -240,5 +231,6 @@ if __name__ == '__main__':
 
     app = QtGui.QApplication(sys.argv)
     parent = QtGui.QWidget()
+    parent.DATA_PATH = '.'
     obj = MyTwit(parent, "Bismuth(III) benzohydroxamates: powerful anti-bacterial activity against Helicobacter pylori and hydrolysis to a unique Bi34 oxido-cluster [Bi34O22(BHA)22(H-BHA)14(DMSO)6]", "http://rss.sciencedirect.com/action/redirectFile?&zone=main&currentActivity=feed&usageType=outward&url=http%3A%2F%2Fwww.sciencedirect.com%2Fscience%3F_ob%3DGatewayURL%26_origin%3DIRSSSEARCH%26_method%3DcitationSearch%26_piikey%3DS1570023215301690%26_version%3D1%26md5%3Df9384b4e2c6cb811dfe38691852b8429", "http www nature com srep 2015 150701 srep11739 images_article srep11739 f1 jpg")
     sys.exit(app.exec_())

@@ -147,7 +147,6 @@ my_data_files += get_all_files_in_dir('.{}images{}'.format(os.path.sep, os.path.
 my_data_files += get_all_files_in_dir('.{}journals{}'.format(os.path.sep, os.path.sep))
 my_data_files += get_all_files_in_dir('.{}config{}'.format(os.path.sep, os.path.sep))
 my_data_files += get_all_files_in_dir('.{}config{}fields{}'.format(os.path.sep, os.path.sep, os.path.sep))
-my_data_files += get_all_files_in_dir('.{}config{}styles{}'.format(os.path.sep, os.path.sep, os.path.sep))
 
 # Remove sensitive files
 try:
@@ -178,7 +177,7 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
     my_data_files.append(('sqldrivers', ['C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers\qsqlite4.dll']))
 
     FREEZER = 'cx_Freeze'
-    FREEZER_OPTIONS = dict()
+    FREEZER_OPTIONS = {"include_msvcr": True}
 
 elif sys.platform == 'darwin':
     FREEZER = 'py2app'
@@ -192,6 +191,7 @@ else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
     FREEZER = 'cx_Freeze'
     FREEZER_OPTIONS = dict()
+
 
 excludes = [
             # Personal modules
@@ -260,7 +260,6 @@ build_exe_options = {
                                     'excludes': excludes,
                                    },
                      }
-
 
 exe_esky = Executable("gui.py", gui_only=True)
 

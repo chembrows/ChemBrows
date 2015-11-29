@@ -16,7 +16,7 @@ from zipfile import ZipFile
 from shutil import copyfile
 
 app_name = 'ChemBrows'
-create_installer = True
+create_installer = False
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
@@ -33,11 +33,13 @@ else:
 # get_platform returns a different string than the one used by py2app
 if sys.platform == 'darwin':
     platform = distutils.util.get_platform().replace('.', '_')
+    python_exe = 'python3'
 else:
     platform = distutils.util.get_platform()
+    python_exe = 'python'
 
 # Freeze !!!
-subprocess.call('python3 setup.py bdist_esky', shell=True)
+subprocess.call('{} setup.py bdist_esky'.format(python_exe), shell=True)
 print('done with esky')
 
 # Unzip file
@@ -58,49 +60,49 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
     pass
 elif sys.platform == 'darwin':
 
-    os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o744)
+    # os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
+    # os.chmod('dist/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
 
-    # Get the path where the chnages will be made
-    path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
+    # # Get the path where the changes will be made
+    # path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
 
-    # Modify CFBundleExecutable in the Info.plist of the bundle.app
-    with open(path_fixes + 'Info.plist', 'r+') as info_plist:
-        text = info_plist.read()
+    # # Modify CFBundleExecutable in the Info.plist of the bundle.app
+    # with open(path_fixes + 'Info.plist', 'r+') as info_plist:
+        # text = info_plist.read()
 
-        # Modify the executable
-        text = text.replace('<string>gui</string>', '<string>launcher</string>')
+        # # # Modify the executable
+        # # text = text.replace('<string>gui</string>', '<string>launcher</string>')
 
-        # Set LSUIElement to 1 to avoid double icons
-        text = text.replace('<dict>\n\t<key>CFBundleDevelopmentRegion</key>',
-                            '<dict>\n\t<key>LSUIElement</key>\n\t<string>1</string>\n\t<key>CFBundleDevelopmentRegion</key>')
+        # # Set LSUIElement to 1 to avoid double icons
+        # text = text.replace('<dict>\n\t<key>CFBundleDevelopmentRegion</key>',
+                            # '<dict>\n\t<key>LSUIElement</key>\n\t<string>1</string>\n\t<key>CFBundleDevelopmentRegion</key>')
 
-        info_plist.seek(0)
-        info_plist.write(text)
-        info_plist.truncate()
+        # info_plist.seek(0)
+        # info_plist.write(text)
+        # info_plist.truncate()
 
-    with open(path_fixes + 'MacOS/launcher', 'w+') as launcher:
-        text = "#!/usr/bin/env bash"
-        text += "\n"
-        text += "cd \"${0%/*}\""
-        text += "\n"
-        text += "open ../../{}/{}.app".format(filename, app_name)
-        launcher.write(text)
+    # with open(path_fixes + 'MacOS/launcher', 'w+') as launcher:
+        # text = "#!/usr/bin/env bash"
+        # text += "\n"
+        # text += "cd \"${0%/*}\""
+        # text += "\n"
+        # text += "open ../../{}/{}.app".format(filename, app_name)
+        # launcher.write(text)
 
-    os.chmod(path_fixes + 'MacOS/launcher', 0o744)
+    # os.chmod(path_fixes + 'MacOS/launcher', 0o777)
 
-    print('Mac OS fixes applied')
+    # print('Mac OS fixes applied')
 
-    print('Starting copying icons')
-    copyfile('images/icon.icns', path_fixes + 'Resources/PythonApplet.icns')
-    copyfile('images/icon.icns', 'dist/{}/{}.app/{}/{}.app/Contents/Resources/PythonApplet.icns'.format(filename, app_name, filename, app_name))
-    print('Done copying icons')
+    # print('Starting copying icons')
+    # copyfile('images/icon.icns', path_fixes + 'Resources/PythonApplet.icns')
+    # copyfile('images/icon.icns', 'dist/{}/{}.app/{}/{}.app/Contents/Resources/PythonApplet.icns'.format(filename, app_name, filename, app_name))
+    # print('Done copying icons')
+    pass
 
 
 else:
-    # TODO: change to 0o755 ?
-    os.chmod('./dist/{}/{}/gui'.format(filename, filename), 755)
-
-
+    os.chmod('./dist/{}/gui'.format(filename, filename), 0o777)
+    os.chmod('./dist/{}/{}/gui'.format(filename, filename), 0o777)
 
 
 # Create installer for windows

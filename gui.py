@@ -32,9 +32,8 @@ from line_clear import ButtonLineEdit
 from signing import Signing
 from tuto import Tuto
 from my_twit import MyTwit
-
-# TEST
 import constants
+from styles import MyStyles
 
 # To debug and profile. Comment for prod
 # from memory_profiler import profile
@@ -47,20 +46,15 @@ class Fenetre(QtGui.QMainWindow):
 
         super(Fenetre, self).__init__()
 
-        # Display a splash screen when booting
-        # http://eli.thegreenplace.net/2009/05/09/creating-splash-screens-in-pyqt
-        # CAREFUL, there is a bug with the splash screen
-        # https://bugreports.qt.io/browse/QTBUG-24910
-        splash_pix = QtGui.QPixmap('./images/splash.png')
-        splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
-        splash.show()
-        app.processEvents()
-
         # Check if the running ChemBrows is a frozen app
         if getattr(sys, "frozen", False):
             # The program is NOT in debug mod if it's frozen
             self.debug_mod = False
             self.DATA_PATH = constants.DATA_PATH
+
+            # http://stackoverflow.com/questions/10293808/how-to-get-the-path-of-the-executing-frozen-script
+            self.resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+            QtGui.QApplication.addLibraryPath(self.resource_dir)
 
             # Create the user directory if it doesn't exist
             os.makedirs(self.DATA_PATH, exist_ok=True)
@@ -68,17 +62,33 @@ class Fenetre(QtGui.QMainWindow):
             # The program is in debug mod if it's not frozen
             self.debug_mod = True
             self.DATA_PATH = "."
+            self.resource_dir = self.DATA_PATH
+
+        app.setWindowIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/icon_main.png')))
+
+        # Display a splash screen when booting
+        # http://eli.thegreenplace.net/2009/05/09/creating-splash-screens-in-pyqt
+        # CAREFUL, there is a bug with the splash screen
+        # https://bugreports.qt.io/browse/QTBUG-24910
+        splash_pix = QtGui.QPixmap(os.path.join(self.resource_dir, 'images/splash.png'))
+        splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+        splash.show()
+        app.processEvents()
 
         # Create the logger
         self.l = MyLog(self.DATA_PATH + "/activity.log")
+        self.l.debug('Resources dir: {}'.format(self.resource_dir))
         # self.l.setLevel(20)
         self.l.info('Starting the program')
+        self.l.info(QtGui.QApplication.libraryPaths())
 
         if self.debug_mod:
             self.l.info("You are running ChemBrows in debug mode")
             self.l.info("This version of ChemBrows is NOT a frozen version")
         else:
             self.l.info("This version of ChemBrows is a frozen version")
+
+        self.styles = MyStyles(app)
 
         # Bool to check if the program is collecting data
         self.parsing = False
@@ -107,8 +117,9 @@ class Fenetre(QtGui.QMainWindow):
         # Object to store options and preferences
         self.options = QtCore.QSettings(self.DATA_PATH + "/config/options.ini", QtCore.QSettings.IniFormat)
 
-        # Connect to the database & log the connection
         app.processEvents()
+
+        # Connect to the database & log the connection
         self.connectionBdd()
         self.defineActions()
         self.logConnection()
@@ -177,6 +188,8 @@ class Fenetre(QtGui.QMainWindow):
         # Check if the running ChemBrows is a frozen app
         if not self.debug_mod:
 
+            return
+
             update = Updater(self.l)
 
             if update is None:
@@ -229,7 +242,6 @@ class Fenetre(QtGui.QMainWindow):
         # Check if there is a user_id. If so, log the connection
         user_id = self.options.value("user_id", None)
         if user_id is None:
-            self.max_id_for_new = 0
             return
 
         count_query = QtSql.QSqlQuery(self.bdd)
@@ -257,14 +269,23 @@ class Fenetre(QtGui.QMainWindow):
             if self.debug_mod:
                 req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=1)
             else:
-                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=3)
-            self.l.info(req.text)
+                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=5)
+
+            self.l.info('Server response: {}'.format(req.text))
+
         except requests.exceptions.ReadTimeout:
-            self.l.error("checkAccess. ReadTimeout while contacting the server")
+            self.l.error("logConnection. ReadTimeout while contacting the server")
             return
         except requests.exceptions.ConnectTimeout:
-            self.l.error("checkAccess. ConnectionTimeout while contacting the server")
+            self.l.error("logConnection. ConnectionTimeout while contacting the server")
             return
+        except Exception as e:
+            self.l.critical("logConnection: cannot reach server. {}".format(e))
+            return
+
+        if "user_id unregistered" in req.text:
+            self.options.remove("user_id")
+            self.l.error("The user_id was wrong. Set it to None")
 
 
     def finishBoot(self):
@@ -285,7 +306,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Shows a dialogBox w/ the version number"""
 
-        with open('config/version.txt', 'r') as version_file:
+        with open(os.path.join(self.resource_dir, 'config/version.txt'), 'r') as version_file:
             version = version_file.read()
         message = "You are using ChemBrows version {}\nwww.chembrows.com".format(version)
         QtGui.QMessageBox.about(self, "About ChemBrows", message)
@@ -335,8 +356,8 @@ class Fenetre(QtGui.QMainWindow):
         # with all the journals
         if not journals:
             # self.journals_to_care = []
-            for company in os.listdir("./journals"):
-                with open('./journals/{0}'.format(company), 'r') as config:
+            for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
+                with open(os.path.join(self.resource_dir, 'journals/{0}'.format(company)), 'r') as config:
                     for line in config:
                         # Take the abbreviation
                         journals.append(line.split(" : ")[1])
@@ -357,8 +378,8 @@ class Fenetre(QtGui.QMainWindow):
         # with all the journals
         if not self.journals_to_parse:
             self.journals_to_parse = []
-            for company in os.listdir("./journals"):
-                with open('journals/{0}'.format(company), 'r') as config:
+            for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
+                with open(os.path.join(self.resource_dir, 'journals/{0}'.format(company)), 'r') as config:
                     for line in config:
                         self.journals_to_parse.append(line.split(" : ")[1])
 
@@ -366,8 +387,8 @@ class Fenetre(QtGui.QMainWindow):
             self.options.setValue("journals_to_parse", self.journals_to_parse)
 
         self.urls = []
-        for company in os.listdir("./journals"):
-            with open('journals/{0}'.format(company), 'r') as config:
+        for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
+            with open(os.path.join(self.resource_dir, 'journals/{0}'.format(company)), 'r') as config:
                 for line in config:
                     if line.split(" : ")[1] in self.journals_to_parse:
                         line = line.split(" : ")[2]
@@ -377,7 +398,7 @@ class Fenetre(QtGui.QMainWindow):
         # Create a dictionnary w/ all the data concerning the journals
         # implemented in the program: names, abbreviations, urls
         self.dict_journals = {}
-        for company in os.listdir("./journals"):
+        for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
             company = company.split('.')[0]
             self.dict_journals[company] = hosts.getJournals(company)
 
@@ -492,7 +513,7 @@ class Fenetre(QtGui.QMainWindow):
         appelée à la création de la classe"""
 
         # Action to quit
-        self.exitAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_063_power'), '&Quit', self)
+        self.exitAction = QtGui.QAction(QtGui.QIcon(os.path.join(self.resource_dir, 'images/glyphicons_063_power')), '&Quit', self)
         self.exitAction.setShortcut('Ctrl+Q')
         self.exitAction.setStatusTip("Quit")
         self.exitAction.triggered.connect(self.closeEvent)
@@ -544,11 +565,6 @@ class Fenetre(QtGui.QMainWindow):
         self.toggleReadAction = QtGui.QAction('Toggle read', self)
         self.toggleReadAction.setShortcut('M')
         self.toggleReadAction.triggered.connect(self.toggleRead)
-
-        # Start advanced search
-        self.advanced_searchAction = QtGui.QAction(QtGui.QIcon('images/glyphicons_025_binoculars'), 'Advanced search', self)
-        self.advanced_searchAction.setToolTip("Advanced earch")
-        self.advanced_searchAction.triggered.connect(lambda: AdvancedSearch(self))
 
         # Action to change the sorting method of the views. In the menu
         self.sortingPercentageAction = QtGui.QAction('By Hot Paperness', self, checkable=True)
@@ -832,7 +848,8 @@ class Fenetre(QtGui.QMainWindow):
                             # before resizing the cells
                             QtCore.QTimer.singleShot(20, self.updateCellSize)
                 except AttributeError:
-                    self.l.debug("Event filter, AttributeError, probably starting the program")
+                    # self.l.debug("Event filter, AttributeError, probably starting the program")
+                    pass
 
             elif event.type() == QtCore.QEvent.Leave and source is self:
                 self.scroll_tags.hide()
@@ -970,7 +987,7 @@ class Fenetre(QtGui.QMainWindow):
         self.button_share_mail.show()
 
         self.label_date.setText(date)
-        self.label_title.setText("<span style='font-size:12pt; font-weight:bold'>{0}</span>".format(title))
+        self.label_title.setText("<span style='font-size:{}pt; font-weight:bold'>{}</span>".format(self.styles.FONT_SIZE * 1.1, title))
         self.label_journal.setText(journal)
 
         if type(abstract) is str:
@@ -1460,7 +1477,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # update_new: to check if the user is currently clicking
         # on the read icon. If so, don't mark the article as read
-        if new == 0 or table.update_new == True:
+        if new == 0 or table.toread_icon == True:
             return
         else:
 
@@ -1502,6 +1519,9 @@ class Fenetre(QtGui.QMainWindow):
             # Immediately visually remove the post from the to read list
             # if the to read list is displayed
             if table is self.waiting_list:
+
+                # Submit changes to the model, the viewport is about to change
+                self.model.submitAll()
                 self.searchByButton()
 
                 # Update the cells bc the scroll bar can disappear when
@@ -1534,6 +1554,7 @@ class Fenetre(QtGui.QMainWindow):
             self.waiting_list.hideColumn(11)  # Hide new
             self.waiting_list.hideColumn(12)  # Hide topic_simple
             self.waiting_list.horizontalHeader().moveSection(8, 0)
+
 
 
     def emptyWait(self):
@@ -1985,6 +2006,14 @@ If you click OK, the cleaning process will start"
         # self.showMaximized()
         self.setWindowTitle('ChemBrows')
 
+        font = QtGui.QFont()
+        font.setPointSize(self.styles.FONT_SIZE)
+        font.setStyleStrategy(QtGui.QFont.PreferAntialias)
+        app.setFont(font)
+
+        self.l.debug('Font: {}'.format(font.family()))
+        self.l.debug('Font size: {}pt'.format(self.styles.FONT_SIZE))
+
         # ------------------------- BUILDING THE MENUS -------------------------------------------------------------
 
         self.menubar = self.menuBar()
@@ -2027,15 +2056,15 @@ If you click OK, the cleaning process will start"
         # Refresh button. I use buttons and not actions because I want to
         # set their style
         self.button_refresh = QtGui.QPushButton()
-        self.button_refresh.setIcon(QtGui.QIcon("./images/refresh.png"))
-        self.button_refresh.setIconSize(QtCore.QSize(36, 36))
+        self.button_refresh.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/refresh.png")))
+        self.button_refresh.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_refresh.setToolTip("Refresh: download new posts")
         self.button_refresh.setAccessibleName('toolbar_round_button')
 
         # Percentage calculation button
         self.button_calculate_percentage = QtGui.QPushButton()
-        self.button_calculate_percentage.setIcon(QtGui.QIcon("./images/stats.png"))
-        self.button_calculate_percentage.setIconSize(QtCore.QSize(36, 36))
+        self.button_calculate_percentage.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/stats.png")))
+        self.button_calculate_percentage.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_calculate_percentage.setToolTip("Re-calculate Hot Paperness")
         self.button_calculate_percentage.setAccessibleName('toolbar_round_button')
 
@@ -2051,21 +2080,21 @@ If you click OK, the cleaning process will start"
         self.button_sort_by.setAccessibleName('toolbar_text_button')
 
         # Create a research bar and set its size
-        self.line_research = ButtonLineEdit('images/glyphicons_197_remove', self)
+        self.line_research = ButtonLineEdit(os.path.join(self.resource_dir, 'images/glyphicons_197_remove'), self)
         self.line_research.setToolTip("Quick search")
         self.line_research.setPlaceholderText("Quick search")
         self.line_research.setFixedSize(self.line_research.sizeHint().width(), self.line_research.sizeHint().height() * 1.3)
 
         # Advanced search button
         self.button_advanced_search = QtGui.QPushButton()
-        self.button_advanced_search.setIcon(QtGui.QIcon("./images/advanced_search.png"))
-        self.button_advanced_search.setIconSize(QtCore.QSize(36, 36))
+        self.button_advanced_search.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/advanced_search.png")))
+        self.button_advanced_search.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_advanced_search.setToolTip("Create filters")
         self.button_advanced_search.setAccessibleName('toolbar_round_button')
 
         self.button_settings = QtGui.QPushButton()
-        self.button_settings.setIcon(QtGui.QIcon("./images/settings.png"))
-        self.button_settings.setIconSize(QtCore.QSize(36, 36))
+        self.button_settings.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/settings.png")))
+        self.button_settings.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_settings.setToolTip("Preferences, settings")
         self.button_settings.setAccessibleName('toolbar_round_button')
 
@@ -2083,13 +2112,6 @@ If you click OK, the cleaning process will start"
         self.toolbar.addWidget(self.button_advanced_search)
         self.toolbar.addWidget(self.empty_widget)
         self.toolbar.addWidget(self.button_settings)
-
-        # Create a button to reset everything
-        # self.button_back = QtGui.QPushButton(QtGui.QIcon('images/glyphicons_170_step_backward'), 'Back')
-        # self.button_view_all = QtGui.QPushButton('View all')
-        # self.toolbar.addWidget(self.button_view_all)
-
-
 
 
         # ------------------------- LEFT AREA --------------------------------
@@ -2150,32 +2172,32 @@ If you click OK, the cleaning process will start"
 
         # Buttons for the display of the article: zoom & dark background
         self.button_zoom_less = QtGui.QPushButton()
-        self.button_zoom_less.setIcon(QtGui.QIcon('./images/zoom_out.png'))
-        self.button_zoom_less.setIconSize(QtCore.QSize(30, 30))
+        self.button_zoom_less.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/zoom_out.png')))
+        self.button_zoom_less.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_zoom_less.setAccessibleName('round_button_article')
         self.button_zoom_less.hide()
         self.button_zoom_more = QtGui.QPushButton()
-        self.button_zoom_more.setIcon(QtGui.QIcon('./images/zoom_in.png'))
-        self.button_zoom_more.setIconSize(QtCore.QSize(30, 30))
+        self.button_zoom_more.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/zoom_in.png')))
+        self.button_zoom_more.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_zoom_more.setAccessibleName('round_button_article')
         self.button_zoom_more.hide()
         self.button_color_read = QtGui.QPushButton()
-        self.button_color_read.setIcon(QtGui.QIcon('./images/black_text.png'))
-        self.button_color_read.setIconSize(QtCore.QSize(30, 30))
+        self.button_color_read.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/black_text.png')))
+        self.button_color_read.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_color_read.setAccessibleName('round_button_article')
         self.button_color_read.hide()
 
         # Button to share on twitter
         self.button_twitter = QtGui.QPushButton()
-        self.button_twitter.setIcon(QtGui.QIcon('./images/twitter.png'))
-        self.button_twitter.setIconSize(QtCore.QSize(30, 30))
+        self.button_twitter.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/twitter.png')))
+        self.button_twitter.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_twitter.setAccessibleName('round_button_article')
         self.button_twitter.hide()
 
         # Button to share by email
         self.button_share_mail = QtGui.QPushButton()
-        self.button_share_mail.setIcon(QtGui.QIcon('./images/email.png'))
-        self.button_share_mail.setIconSize(QtCore.QSize(30, 30))
+        self.button_share_mail.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/email.png')))
+        self.button_share_mail.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_share_mail.setAccessibleName('round_button_article')
         self.button_share_mail.hide()
 
@@ -2235,37 +2257,36 @@ If you click OK, the cleaning process will start"
 
         self.setCentralWidget(self.central_widget)
 
-        with open("./config/styles/style.css", "r") as fh:
-            style = fh.read()
-            self.central_widget.setStyleSheet(style)
-            self.toolbar.setStyleSheet(style)
+        # Stylesheet for general style
+        stylesheet = self.styles.styleGeneral()
+        self.central_widget.setStyleSheet(stylesheet)
+        self.toolbar.setStyleSheet(stylesheet)
 
-        with open("./config/styles/toolbar.css", "r") as fh:
-            style = fh.read()
-            self.button_search_new.setStyleSheet(style)
-            self.button_sort_by.setStyleSheet(style)
-            self.line_research.setStyleSheet(style)
+        # Stylesheet for the toolbar
+        stylesheet = self.styles.styleToolbar()
+        self.button_search_new.setStyleSheet(stylesheet)
+        self.button_sort_by.setStyleSheet(stylesheet)
+        self.line_research.setStyleSheet(stylesheet)
+        self.button_refresh.setStyleSheet(stylesheet)
+        self.button_calculate_percentage.setStyleSheet(stylesheet)
+        self.button_advanced_search.setStyleSheet(stylesheet)
+        self.button_settings.setStyleSheet(stylesheet)
 
-            self.button_refresh.setStyleSheet(style)
-            self.button_calculate_percentage.setStyleSheet(style)
-            self.button_advanced_search.setStyleSheet(style)
-            self.button_settings.setStyleSheet(style)
-
-        with open("./config/styles/buttons.css", "r") as fh:
-            style = fh.read()
-            self.scroll_tags.setStyleSheet(style)
-            self.button_twitter.setStyleSheet(style)
-            self.button_share_mail.setStyleSheet(style)
-            self.button_zoom_less.setStyleSheet(style)
-            self.button_zoom_more.setStyleSheet(style)
-            self.button_color_read.setStyleSheet(style)
+        # Stylesheet for the buttons
+        stylesheet = self.styles.styleButtons()
+        self.scroll_tags.setStyleSheet(stylesheet)
+        self.button_twitter.setStyleSheet(stylesheet)
+        self.button_share_mail.setStyleSheet(stylesheet)
+        self.button_zoom_less.setStyleSheet(stylesheet)
+        self.button_zoom_more.setStyleSheet(stylesheet)
+        self.button_color_read.setStyleSheet(stylesheet)
 
 
 if __name__ == '__main__':
     # logger = MyLog()
     # try:
+
     app = QtGui.QApplication(sys.argv)
-    app.setWindowIcon(QtGui.QIcon('./images/icon_main.png'))
     # ex = Fenetre(logger)
     ex = Fenetre()
     app.processEvents()

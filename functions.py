@@ -4,14 +4,18 @@
 
 import sys
 import os
-from PyQt4 import QtSql
 import arrow
 import re
 
 
 def unidecodePerso(string):
 
-    with open('./config/data.bin', 'rb') as f:
+    if getattr(sys, "frozen", False):
+        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    else:
+        resource_dir = '.'
+
+    with open(os.path.join(resource_dir, 'config/data.bin'), 'rb') as f:
         _replaces = f.read().decode('utf8').split('\x00')
 
     chars = []
@@ -23,10 +27,11 @@ def unidecodePerso(string):
             continue
 
         try:
-            chars.append(_replaces[codepoint-1])
+            chars.append(_replaces[codepoint - 1])
         except IndexError:
             pass
     return "".join(chars)
+
 
 def prettyDate(date):
 
@@ -47,7 +52,6 @@ def simpleChar(string):
     # http://www.siteduzero.com/forum-83-810635-p1-sqlite-recherche-avec-like-insensible-a-la-casse.html#r7767300
 
     # http://stackoverflow.com/questions/5574042/string-slugification-in-python
-    # string = unidecode.unidecode(string).lower()
     string = unidecodePerso(string).lower()
 
     return re.sub(r'\W+', ' ', string)
@@ -227,11 +231,13 @@ if __name__ == "__main__":
     # like(10)
     # _, dois = listDoi()
     # print(dois)
-    queryString("sper**mine")
-    queryString("*sperm*")
-    queryString("spermine")
+    # queryString("sper**mine")
+    # queryString("*sperm*")
+    # queryString("spermine")
     # checkData()
 
-    match(['jean-patrick francoia', 'robert pascal', 'laurent vial'], "r* pascal")
+    # match(['jean-patrick francoia', 'robert pascal', 'laurent vial'], "r* pascal")
 
-    print(simpleChar("Hello docteur, j€ vous emmerdë$"))
+    # print(simpleChar("Hello docteur, j€ vous emmerdë$"))
+    # unidecodePerso('test')
+    pass

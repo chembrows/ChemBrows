@@ -97,8 +97,8 @@ class Settings(QtGui.QDialog):
         labels_checkboxes = []
 
         # Get labels of the future check boxes of the journals to be parsed
-        for company in os.listdir("./journals"):
-            with open('journals/{0}'.format(company), 'r') as config:
+        for company in os.listdir(os.path.join(self.parent.resource_dir, "journals")):
+            with open(os.path.join(self.parent.resource_dir, 'journals/{0}'.format(company)), 'r') as config:
                 labels_checkboxes += [line.split(" : ")[1] for line in config]
 
         labels_checkboxes.sort()

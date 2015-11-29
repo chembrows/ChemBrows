@@ -23,8 +23,8 @@ OutputDir=C:\Users\djipey\Desktop
 OutputBaseFilename={#OutputBaseFilename}
 Compression=lzma
 SolidCompression=yes
-SetupIconFile=images/icon.ico
-LicenseFile=LICENSE.txt
+SetupIconFile=../images/icon.ico
+LicenseFile=../LICENSE.txt
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -43,11 +43,11 @@ Source: "C:\Users\djipey\Desktop\ChemBrows_freeze\dist\{#AppName}-{#Version}.{#A
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppName}-{#Version}.{#Architecture}\{#MyAppExeName}"; IconFilename: "C:\Users\djipey\Desktop\ChemBrows_freeze\dist\{#AppName}-{#Version}.{#Architecture}\{#AppName}-{#Version}.{#Architecture}\images\icon.ico"
+Name: "{group}\{#AppName}"; Filename: "{app}\{#AppName}-{#Version}.{#Architecture}\{#MyAppExeName}"; IconFilename: "{app}\{#AppName}-{#Version}.{#Architecture}\images\icon.ico"
+Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppName}-{#Version}.{#Architecture}\{#MyAppExeName}"; IconFilename: "{app}\{#AppName}-{#Version}.{#Architecture}\images\icon.ico"; Tasks: desktopicon
 Name: "{group}\{cm:ProgramOnTheWeb,{#AppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppName}-{#Version}.{#Architecture}\{#MyAppExeName}"; IconFilename: "C:\Users\djipey\Desktop\ChemBrows_freeze\dist\{#AppName}-{#Version}.{#Architecture}\{#AppName}-{#Version}.{#Architecture}\images\icon.ico"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppName}-{#Version}.{#Architecture}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: {app}\{#MyAppExeName}; Description: {cm:LaunchProgram,{#AppName}}; Flags: nowait postinstall skipifsilent
 

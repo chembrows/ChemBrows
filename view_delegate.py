@@ -8,9 +8,6 @@ from PyQt4 import QtCore, QtGui
 # Personal
 from functions import prettyDate
 
-# TEST
-import constants
-
 
 class ViewDelegate(QtGui.QStyledItemDelegate):
 
@@ -21,7 +18,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
     To draw a picture in a cell:
     http://stackoverflow.com/questions/6464741/qtableview-with-a-column-of-images
     """
-
 
     def __init__(self, parent):
 
@@ -38,8 +34,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         painter.setRenderHint(QtGui.QPainter.SmoothPixmapTransform)
 
         # Constant, proportional to the size of one cell
-        # DIMENSION = option.rect.width() * 0.05
-        DIMENSION = constants.DIMENSION
+        DIMENSION = self.parent.styles.ICON_SIZE_SMALL
 
         # Check if the post is in the to-read list
         waited = index.sibling(index.row(), 0).data() in self.parent.waiting_list.list_id_articles
@@ -104,7 +99,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             doc.setHtml(title + adding_infos)
 
             font = doc.defaultFont()
-            font.setPointSize(11)
+            font.setPointSize(self.parent.styles.FONT_SIZE)
             doc.setDefaultFont(font)
 
             # Set the width of the text = the width of the rect
@@ -155,9 +150,9 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             for index, perc in enumerate(nbr_peppers):
 
                 if percentage >= perc:
-                    path = "./images/pepper_full.png"
+                    path = os.path.join(self.parent.resource_dir, "images/pepper_full.png")
                 else:
-                    path = "./images/pepper_empty.png"
+                    path = os.path.join(self.parent.resource_dir, "images/pepper_empty.png")
 
                 # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
                 pixmap = QtGui.QPixmap(path)
@@ -171,9 +166,9 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # If the post is liked, display the like star.
             # Else, display the unlike star
             if liked == 1:
-                path = "./images/like.png"
+                path = os.path.join(self.parent.resource_dir, "images/like.png")
             else:
-                path = "./images/not_like.png"
+                path = os.path.join(self.parent.resource_dir, "images/not_like.png")
 
             pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
 
@@ -183,9 +178,9 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)
 
             if waited:
-                path = "./images/unwait.png"
+                path = os.path.join(self.parent.resource_dir, "images/unwait.png")
             else:
-                path = "./images/wait.png"
+                path = os.path.join(self.parent.resource_dir, "images/wait.png")
 
             pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
 
@@ -239,7 +234,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             else:
                 # The picture doesn't exist: display a "not available image"
-                pixmap = QtGui.QPixmap("./images/not_available.png")
+                pixmap = QtGui.QPixmap(os.path.join(self.parent.resource_dir, "images/not_available.png"))
 
                 wcase, hcase = option.rect.width(), option.rect.height()
                 wpix, hpix =  pixmap.width(), pixmap.height()

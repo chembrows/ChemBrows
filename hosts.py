@@ -2,6 +2,7 @@
 # coding: utf-8
 
 
+import os, sys
 import feedparser
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
@@ -21,8 +22,14 @@ def reject(entry_title):
     """Function called by a Worker object to filter crappy entries.
     It is meant to reject articles like corrigendum, erratum, etc"""
 
+    if getattr(sys, "frozen", False):
+        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    else:
+        resource_dir = '.'
+
+    # resource_dir = os.path.dirname(os.path.dirname(sys.executable))
     # Load the regex stored in a config file, as filters
-    with open('config/regex.txt', 'r') as filters_file:
+    with open(os.path.join(resource_dir, 'config/regex.txt'), 'r') as filters_file:
         filters = filters_file.read().splitlines()
 
     # Try to match the filters against the title entry
@@ -634,7 +641,12 @@ def getJournals(company):
     urls = []
     cares_image = []
 
-    with open('journals/{0}.ini'.format(company), 'r') as config:
+    if getattr(sys, "frozen", False):
+        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    else:
+        resource_dir = '.'
+
+    with open(os.path.join(resource_dir, 'journals/{0}.ini'.format(company)), 'r') as config:
         for line in config:
             names.append(line.split(" : ")[0])
             abb.append(line.split(" : ")[1].rstrip())

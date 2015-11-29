@@ -26,10 +26,26 @@ class Signing(QtGui.QDialog):
 
         self.parent = parent
 
+        # Attribute to check if the login was valid
+        self.validated = False
+
         self.setModal(True)
 
         self.initUI()
         self.defineSlots()
+
+
+    def closeEvent(self, event):
+
+        """Actions to perform when closing the window.
+        Exit ChemBrows if the user closes this window"""
+
+        super(Signing, self).closeEvent(event)
+
+        # Close the app if the user does not signin
+        if not self.validated:
+            self.parent.l.critical("The user did not sign in")
+            self.parent.closeEvent(event)
 
 
     def askQuestion(self):
@@ -89,18 +105,12 @@ class Signing(QtGui.QDialog):
         else:
             self.line_question.setStyleSheet(None)
 
-        # TODO: transformer statut en nombre
-
         if validate:
             payload = {
                        'status': self.combo_status.currentIndex(),
                        'email': self.line_email.text(),
                       }
 
-            # payload = {
-                       # 'status': 0,
-                       # 'email': 'jp@um2.fr',
-                      # }
             try:
                 r = requests.post("http://chembrows.com/cgi-bin/sign.py", params=payload)
             except requests.exceptions.ReadTimeout:
@@ -122,12 +132,10 @@ class Signing(QtGui.QDialog):
             if 'user_id' in response[-1]:
                 self.parent.options.setValue('user_id', response[-1].split(':')[-1])
                 self.accept()
-                del self
+                self.validated = True
             elif response[-1] == 'A user with this email already exists':
                 QtGui.QMessageBox.critical(self, "Signing up error", "A user with the same email already exists. Please use another email or contact us.",
                                            QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
-
-            # TODO: gérer le cas où le serveur réponde "Wrong data". Peu probable
 
 
     def initUI(self):
