@@ -70,6 +70,11 @@ class MyStyles():
                 background: white;
                 border-radius: {1}px;
             }}
+
+            QLineEdit > QToolButton
+            {{
+                margin-top: 5px;
+            }}
         """
 
         stylesheet = stylesheet.format(self.DIMENSION, self.DIMENSION / 2,

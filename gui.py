@@ -28,7 +28,7 @@ from tab import TabPerso
 import functions
 import hosts
 from updater import Updater
-from line_clear import ButtonLineEdit
+from line_icon import ButtonLineIcon
 from signing import Signing
 from tuto import Tuto
 from my_twit import MyTwit
@@ -1386,6 +1386,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.line_research.clear()
         self.line_research.returnPressed.emit()
+        self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
 
     def clearLayout(self, layout):
@@ -1639,9 +1640,14 @@ class Fenetre(QtGui.QMainWindow):
         deletes the unused pictures present in the
         graphical_abstracts folder"""
 
-        mes = "You are about to clean your database, and you might loose data.\n\n\
-If you do not know what you are doing, you should cancel now.\n\n\
-If you click OK, the cleaning process will start"
+        mes = """
+        You are about to clean your database, and you might loose data.
+        If you do not know what you are doing, you should cancel now.
+        If you click OK, the cleaning process will start
+        """
+
+        # Clean the tabs in the message (tabs are 4 spaces)
+        mes = mes.replace("    ", "")
 
         choice = QtGui.QMessageBox.critical(self, "Cleaning database", mes,
                                             QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Cancel)
@@ -2082,7 +2088,7 @@ If you click OK, the cleaning process will start"
         self.button_sort_by.setAccessibleName('toolbar_text_button')
 
         # Create a research bar and set its size
-        self.line_research = ButtonLineEdit(os.path.join(self.resource_dir, 'images/glyphicons_197_remove'), self)
+        self.line_research = ButtonLineIcon(os.path.join(self.resource_dir, 'images/remove'), self)
         self.line_research.setToolTip("Quick search")
         self.line_research.setPlaceholderText("Quick search")
         self.line_research.setFixedSize(self.line_research.sizeHint().width(), self.line_research.sizeHint().height() * 1.3)

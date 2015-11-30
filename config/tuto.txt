@@ -17,11 +17,18 @@ If you want to check out articles of interest later, simply put them in the ToRe
 --
 The very cool feature now: Chembrows includes machine learning ! 
 --
-Chembrows learns from your input and classifies the articles by "Hot Paperness"
+<p>
+Chembrows learns from your input and classifies the articles by "Hot Paperness":
+</p>
 
-    - Displaying AND Liking articles INCREASES the "Hot Paperness" of similar reasearch works
-
-    - Displaying WITHOUT Liking articles DECREASES the "Hot Paperness" of similar research works
+<p>
+<ul>
+<li style="margin-top: 20px">opening <b>AND</b> liking articles <b>INCREASES</b> the "Hot Paperness" of similar reasearch works</li>
+<li style="margin-top: 20px">opening <b>WITHOUT</b> liking articles <b>DECREASES</b> the "Hot Paperness" of similar research works</li>
+</ul>
+</p>
+<p>
+</p>
 !!!like.png
 --
 Don't forget: the more you feed ChemBrows, the more Chembrows feeds you back with relevant articles

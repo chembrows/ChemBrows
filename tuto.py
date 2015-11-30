@@ -20,6 +20,8 @@ class Tuto(QtGui.QDialog):
 
         if type(parent) is QtGui.QWidget:
             self.test = True
+            DATA_PATH = '.'
+            self.parent.resource_dir = DATA_PATH
         else:
             self.test = False
 
@@ -70,32 +72,28 @@ class Tuto(QtGui.QDialog):
         # buttons when it has to
         if self.index <= 0:
             text = self.parseSlide(self.list_slides[0])
-            self.text_diapo.setText(text)
-
             self.previous_button.setEnabled(False)
         elif self.index >= len(self.list_slides) - 1:
             text = self.parseSlide(self.list_slides[-1])
-            self.text_diapo.setText(text)
-
             self.next_button.setEnabled(False)
             self.quit_button.setText("Finish")
         else:
             text = self.parseSlide(self.list_slides[self.index])
-            self.text_diapo.setText(text)
-
             self.next_button.setEnabled(True)
             self.previous_button.setEnabled(True)
             self.quit_button.setText("Quit tuto")
+
+        self.text_diapo.setText(text)
 
 
     def parseSlide(self, text):
 
         try:
             path = './images/' + text.split('!!!')[1].rstrip()
-            self.label_image.show()
             image = QtGui.QPixmap(path)
             image = image.scaledToWidth(60, QtCore.Qt.SmoothTransformation)
             self.label_image.setPixmap(image)
+            self.label_image.show()
             return text.split('!!!')[0]
         except IndexError:
             self.label_image.hide()

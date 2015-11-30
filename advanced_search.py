@@ -3,10 +3,11 @@
 
 
 import sys
-# import os
+import os
 from PyQt4 import QtGui, QtCore
 from log import MyLog
 
+from line_icon import ButtonLineIcon
 import functions
 
 
@@ -26,6 +27,7 @@ class AdvancedSearch(QtGui.QDialog):
             self.logger = MyLog("activity.log")
             self.test = True
             DATA_PATH = '.'
+            self.parent.resource_dir = DATA_PATH
         else:
             DATA_PATH = self.parent.DATA_PATH
             self.logger = self.parent.l
@@ -226,6 +228,32 @@ class AdvancedSearch(QtGui.QDialog):
         self.options.sync()
 
 
+    def showInfo(self, field_type, operator):
+
+        if field_type == 1:
+            # Generic message fot the field tooltips
+            mes = """
+            Insert comma(s) bewtween keywords. Ex: heparin sulfate, \
+            heparinase = dextran sulfate {} heparin.\nWildcards (*) are \
+            accepted. Ex: heparin*.\nFilters are case insensitive.
+            """
+        elif field_type == 2:
+            # Generic message fot the authors tooltips
+            mes = """Insert comma(s) bewtween keywords. Ex: Jean-Patrick \
+            Francoia, Laurent Vial = Jean-Patrick Francoia {} Laurent Vial.
+            Wildcards (*) are accepted. Ex: J* Francoia. \nFilters are case \
+            insensitive.
+            """
+
+        # Clean the tabs in the message (tabs are 4 spaces)
+        mes = mes.replace("    ", "")
+
+        mes = mes.format(operator)
+
+        QtGui.QMessageBox.information(self, "Information", mes,
+                                      QtGui.QMessageBox.Ok)
+
+
     def createForm(self):
 
         # ------------------------ NEW SEARCH TAB -----------------------------
@@ -247,23 +275,23 @@ class AdvancedSearch(QtGui.QDialog):
         # Add the topic groupbox to the global vbox
         vbox_query.addWidget(group_topic)
 
-        # Generic message fot the field tooltips
-        message_fields = 'Insert comma(s) bewtween keywords. Ex: heparin sulfate, \
-heparinase = dextran sulfate {} heparin.\nWildcards (*) are accepted. Ex:\
-heparin*.\nFilters are case insensitive.'
-
         # Create 3 lines, with their label: AND, OR, NOT
         label_topic_and = QtGui.QLabel("AND:")
-        line_topic_and = QtGui.QLineEdit()
-        line_topic_and.setToolTip(message_fields.format('AND'))
+        line_topic_and = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+                                                     'images/info'))
+        line_topic_and.buttonClicked.connect(lambda: self.showInfo(1, 'AND'))
 
         label_topic_or = QtGui.QLabel("OR:")
         line_topic_or = QtGui.QLineEdit()
-        line_topic_or.setToolTip(message_fields.format('OR'))
+        line_topic_or = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+                                                    'images/info'))
+        line_topic_or.buttonClicked.connect(lambda: self.showInfo(1, 'OR'))
 
         label_topic_not = QtGui.QLabel("NOT:")
         line_topic_not = QtGui.QLineEdit()
-        line_topic_not.setToolTip(message_fields.format('NOT'))
+        line_topic_not = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+                                                     'images/info'))
+        line_topic_not.buttonClicked.connect(lambda: self.showInfo(1, 'NOT'))
 
         # Organize the lines and the lab within the grid
         grid_topic.addWidget(label_topic_and, 0, 0)
@@ -284,22 +312,24 @@ heparin*.\nFilters are case insensitive.'
         # Add the author groupbox to the global vbox
         vbox_query.addWidget(group_author)
 
-        # Generic message fot the authors tooltips
-        message_authors = 'Insert comma(s) bewtween keywords. Ex: Jean-Patrick \
-Francoia, Laurent Vial = Jean-Patrick Francoia {} Laurent Vial.\nWildcards (*)\
- are accepted. Ex: J* Francoia.\nFilters are case insensitive.'
 
         label_author_and = QtGui.QLabel("AND:")
         line_author_and = QtGui.QLineEdit()
-        line_author_and.setToolTip(message_authors.format('AND'))
+        line_author_and = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+                                                      'images/info'))
+        line_author_and.buttonClicked.connect(lambda: self.showInfo(2, 'AND'))
 
         label_author_or = QtGui.QLabel("OR:")
         line_author_or = QtGui.QLineEdit()
-        line_author_or.setToolTip(message_authors.format('OR'))
+        line_author_or = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+                                                     'images/info'))
+        line_author_or.buttonClicked.connect(lambda: self.showInfo(2, 'OR'))
 
         label_author_not = QtGui.QLabel("NOT:")
         line_author_not = QtGui.QLineEdit()
-        line_author_not.setToolTip(message_authors.format('NOT'))
+        line_author_not = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+                                                      'images/info'))
+        line_author_not.buttonClicked.connect(lambda: self.showInfo(2, 'NOT'))
 
         grid_author.addWidget(label_author_and, 0, 0)
         grid_author.addWidget(line_author_and, 0, 1, 1, 3)
