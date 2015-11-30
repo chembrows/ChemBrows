@@ -242,6 +242,9 @@ class Fenetre(QtGui.QMainWindow):
         if user_id is None:
             return
 
+        with open(os.path.join(self.resource_dir, 'config/version.txt'), 'r') as version_file:
+            version = version_file.read()
+
         count_query = QtSql.QSqlQuery(self.bdd)
 
         count_query.exec_("SELECT COUNT(id) FROM papers")
@@ -261,6 +264,7 @@ class Fenetre(QtGui.QMainWindow):
         payload = {'nbr_entries': nbr_entries,
                    'journals': self.getJournalsToCare(),
                    'user_id': user_id,
+                   'version': version,
                   }
 
         try:
@@ -1942,8 +1946,6 @@ If you click OK, the cleaning process will start"
                                               QtGui.QMessageBox.Ok)
                 app.processEvents()
 
-            self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
-
             del self.predictor
 
             if update:
@@ -1953,6 +1955,8 @@ If you click OK, the cleaning process will start"
                 mes = mes.format(self.counter)
                 QtGui.QMessageBox.information(self, "New articles", mes,
                                               QtGui.QMessageBox.Ok)
+
+                self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
             self.parsing = False
 
