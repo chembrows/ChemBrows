@@ -20,15 +20,15 @@ class Tuto(QtGui.QDialog):
 
         if type(parent) is QtGui.QWidget:
             self.test = True
-            DATA_PATH = '.'
-            self.parent.resource_dir = DATA_PATH
+            self.parent.resource_dir = '.'
         else:
             self.test = False
 
         self.setModal(True)
 
         # Get the text of the slides from config files
-        with open(os.path.join(self.parent.resource_dir, 'config/tuto.txt'), 'r') as f:
+        with open(os.path.join(self.parent.resource_dir, 'config/tuto.txt'),
+                  'r') as f:
             content = f.read()
             self.list_slides = content.split('--')
 
@@ -122,9 +122,8 @@ class Tuto(QtGui.QDialog):
         self.setWindowTitle('Tutorial')
 
         self.text_diapo = QtGui.QLabel()
-        # font = self.text_diapo.font()
-        # font.setPointSize(11)
-        # self.text_diapo.setFont(font)
+        # Clickable URLs
+        self.text_diapo.setOpenExternalLinks(True)
 
         self.label_image = QtGui.QLabel()
         self.label_image.setAlignment(QtCore.Qt.AlignHCenter)

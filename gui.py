@@ -308,10 +308,22 @@ class Fenetre(QtGui.QMainWindow):
 
         """Shows a dialogBox w/ the version number"""
 
-        with open(os.path.join(self.resource_dir, 'config/version.txt'), 'r') as version_file:
+        with open(os.path.join(self.resource_dir,
+                  'config/version.txt'), 'r') as version_file:
             version = version_file.read()
-        message = "You are using ChemBrows version {}\nwww.chembrows.com".format(version)
-        QtGui.QMessageBox.about(self, "About ChemBrows", message)
+
+        mes = """
+        You are using ChemBrows {}<br/><br/>
+        Visit our web site: <a href='http://www.chembrows.com'>
+        www.chembrows.com</a><br/><br/>
+        To contact us: <a href="mailto:contact@chembrows.com">contact@chembrows.com</a>
+        """.replace('    ', '').format(version)
+
+        # Use this complicated messageBox to get clickable URLs
+        box = QtGui.QMessageBox(QtGui.QMessageBox.Information, 'About ChemBrows', mes)
+        box.setTextFormat(QtCore.Qt.RichText)
+        box.setText(mes)
+        box.exec()
 
 
     def connectionBdd(self):
@@ -515,7 +527,7 @@ class Fenetre(QtGui.QMainWindow):
         appelée à la création de la classe"""
 
         # Action to quit
-        self.exitAction = QtGui.QAction(QtGui.QIcon(os.path.join(self.resource_dir, 'images/glyphicons_063_power')), '&Quit', self)
+        self.exitAction = QtGui.QAction('&Quit', self)
         self.exitAction.setShortcut('Ctrl+Q')
         self.exitAction.setStatusTip("Quit")
         self.exitAction.triggered.connect(self.closeEvent)
