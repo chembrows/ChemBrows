@@ -46,12 +46,14 @@ class Tuto(QtGui.QDialog):
         self.index += increment
 
         # Show or hide the combo_box
-        if self.index == 1:
+        if (self.index == 1 and
+                self.parent.options.value("tuto_run", None) is None):
             self.combo_choice.show()
         else:
             self.combo_choice.hide()
 
-        if self.index == 2:
+        if (self.index == 2 and
+                self.parent.options.value("tuto_run", None) is None):
             # Get the choice of field from the user
             choice = self.combo_choice.currentText()
 
@@ -63,6 +65,9 @@ class Tuto(QtGui.QDialog):
                     with open(os.path.join(self.parent.resource_dir, 'config/fields/{0}'.format(choice)), 'r') as config:
                         self.parent.options.setValue("journals_to_parse",
                                                       [line.rstrip() for line in config])
+
+                self.parent.options.setValue("tuto_run", True)
+
                 # Update the journals buttons on the left dock
                 self.parent.displayTags()
                 self.parent.resetView()

@@ -323,8 +323,6 @@ def getData(company, journal, entry, response=None):
 
             strainer = SoupStrainer("figure")
             soup = BeautifulSoup(response.text, parse_only=strainer)
-            # r = soup.find_all("img", attrs={"class": "fig"})
-            # r = soup.find_all("img", attrs={"class": "fig carousel-item"})
             r = soup.find_all("img")
             if r:
                 graphical_abstract = "http://www.nature.com" + r[0]["src"]
