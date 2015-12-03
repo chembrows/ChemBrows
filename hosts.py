@@ -715,6 +715,10 @@ if __name__ == "__main__":
 
         # if "cross reactive" not in title:
             # continue
+        title = entry.title
+
+        if "cross reactive" not in title:
+            continue
         # print(url)
         # print(title)
         # print(entry)

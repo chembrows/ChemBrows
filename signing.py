@@ -135,7 +135,6 @@ class Signing(QtGui.QDialog):
         else:
             self.combo_status.setStyleSheet(None)
 
-
         if validate:
             payload = {'status': self.combo_status.currentIndex(),
                        'email': self.line_email.text(),
