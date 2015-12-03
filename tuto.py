@@ -66,7 +66,6 @@ class Tuto(QtGui.QDialog):
                         self.parent.options.setValue("journals_to_parse",
                                                       [line.rstrip() for line in config])
 
-                self.parent.options.setValue("tuto_run", True)
 
                 # Update the journals buttons on the left dock
                 self.parent.displayTags()
@@ -89,6 +88,14 @@ class Tuto(QtGui.QDialog):
             self.quit_button.setText("Quit tuto")
 
         self.text_diapo.setText(text)
+
+
+    def finnishTuto(self):
+
+        """Slot called when the tuto is finnished or quitted"""
+
+        # Create a bool to check if the user has already run the tuto
+        self.parent.options.setValue("tuto_run", True)
 
 
     def parseSlide(self, text):
@@ -117,6 +124,8 @@ class Tuto(QtGui.QDialog):
         self.previous_button.clicked.connect(lambda: self.changeSlide(-1))
 
         # Quit the tuto at any moment
+        # Connect 2 slots to the quit button bc 'done' needs a return code
+        self.quit_button.clicked.connect(self.finnishTuto)
         self.quit_button.clicked.connect(self.done)
 
 
