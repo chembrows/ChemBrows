@@ -683,7 +683,8 @@ if __name__ == "__main__":
         # print(title)
         # print("\n")
 
-    urls_test = ["debug/CC.htm"]
+    # urls_test = ["debug/lett.xht"]
+    urls_test = ["http://rss.sciencedirect.com/publication/science/00404039"]
 
     session = FuturesSession(max_workers=20)
 
@@ -701,25 +702,26 @@ if __name__ == "__main__":
 
     print(journal)
 
-    for entry in feed.entries:
-        url = entry.link
+    for entry in feed.entries[5:]:
+        # url = entry.link
+        print(entry)
 
         # print(entry.title)
 
         # print(url)
 
         # url = entry.feedburner_origlink
-        title = entry.title
+        # title = entry.title
 
-        if "cross reactive" not in title:
-            continue
+        # if "cross reactive" not in title:
+            # continue
         # print(url)
         # print(title)
         # print(entry)
         # print(url)
         # getDoi(journal, entry)
 
-        future = session.get(url, headers=headers, timeout=20)
-        future.add_done_callback(functools.partial(print_result, journal, entry))
+        # future = session.get(url, headers=headers, timeout=20)
+        # future.add_done_callback(functools.partial(print_result, journal, entry))
 
         break

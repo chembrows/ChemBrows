@@ -73,15 +73,15 @@ class Signing(QtGui.QDialog):
 
     def getCaptcha(self):
 
-        r = requests.get("http://127.0.0.1:8000/cgi-bin/cap.py")
+        # r = requests.get("http://127.0.0.1:8000/cgi-bin/cap.py")
         # remove b'' of the str representation of the bytes
         # only for local server
-        self.captcha_id = r.text.split('\n')[0][2:][:-1]
-        text = r.text.split('\n')[1][2:][:-1]
+        # self.captcha_id = r.text.split('\n')[0][2:][:-1]
+        # text = r.text.split('\n')[1][2:][:-1]
 
-        # r = requests.get("http://chembrows.com/cgi-bin/cap.py")
-        # self.id_captcha = r.text.split('\n')[0]
-        # text = r.text.split('\n')[1]
+        r = requests.get("http://chembrows.com/cgi-bin/cap.py")
+        self.captcha_id = r.text.split('\n')[0]
+        text = r.text.split('\n')[1]
 
         io = BytesIO(base64.b64decode(text))
         Image.open(io).save("captcha.png", format='PNG')
@@ -145,10 +145,10 @@ class Signing(QtGui.QDialog):
                        }
 
             try:
-                # r = requests.post("http://chembrows.com/cgi-bin/sign.py",
-                                    # data=payload)
-                r = requests.post("http://127.0.0.1:8000/cgi-bin/sign.py",
+                r = requests.post("http://chembrows.com/cgi-bin/sign.py",
                                   data=payload)
+                # r = requests.post("http://127.0.0.1:8000/cgi-bin/sign.py",
+                                  # data=payload)
 
             except requests.exceptions.ReadTimeout:
 
@@ -192,11 +192,9 @@ class Signing(QtGui.QDialog):
                 self.parent.l.critical("{} while signing up {}".format(e))
                 return
 
-            print(r.text)
-
+            # Get the response from the server and log it
+            self.parent.l.debug(r.text)
             response = [part for part in r.text.split("\n") if part != '']
-
-
 
             # The server responded an user_id
             if 'user_id' in response[-1]:
