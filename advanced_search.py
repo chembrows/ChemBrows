@@ -234,7 +234,7 @@ class AdvancedSearch(QtGui.QDialog):
             # Generic message fot the field tooltips
             mes = """
             Insert comma(s) bewtween keywords. Ex: heparin sulfate, \
-            heparinase = dextran sulfate {} heparin.\nWildcards (*) are \
+            heparinase = heparin sulfate {} heparinase.\nWildcards (*) are \
             accepted. Ex: heparin*.\nFilters are case insensitive.
             """
         elif field_type == 2:
@@ -242,7 +242,8 @@ class AdvancedSearch(QtGui.QDialog):
             mes = """Insert comma(s) bewtween keywords. Ex: Jean-Patrick \
             Francoia, Laurent Vial = Jean-Patrick Francoia {} Laurent Vial.
             Wildcards (*) are accepted. Ex: J* Francoia. \nFilters are case \
-            insensitive.
+            insensitive. First name comes before last name. Ex: Linus Pauling \
+            or L* Pauling.
             """
 
         # Clean the tabs in the message (tabs are 4 spaces)
