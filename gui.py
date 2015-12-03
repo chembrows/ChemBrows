@@ -1915,23 +1915,18 @@ class Fenetre(QtGui.QMainWindow):
 
         # if sys.platform=='win32':
         if sys.platform in ['win32', 'cygwin', 'win64']:
+            body = urllib.parse.quote(body)
+            url = url.format(simple_title, body)
             webbrowser.open(url)
 
         elif sys.platform == 'darwin':
             url = url.format(simple_title, body)
             webbrowser.open(url)
-            # subprocess.Popen(['open', url])
-
         else:
             # Create an url to be opened with a mail client
             body = urllib.parse.quote(body)
             url = url.format(simple_title, body)
             webbrowser.open(url)
-            # try:
-                # subprocess.Popen(['xdg-email', url])
-            # except OSError:
-                # self.l.error("shareByEmail: OSError")
-
 
 
     def calculatePercentageMatch(self, update=False):
