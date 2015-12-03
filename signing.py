@@ -141,6 +141,7 @@ class Signing(QtGui.QDialog):
                        'email': self.line_email.text(),
                        'user_input': self.line_captcha.text(),
                        'captcha_id': self.captcha_id,
+                       'platform': sys.platform,
                        }
 
             try:

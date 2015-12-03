@@ -23,6 +23,9 @@ class WebViewPerso(QtWebKit.QWebView):
         # Get the default font and use it for the QWebView
         self.settings().setFontFamily(QtWebKit.QWebSettings.StandardFont, self.font().family())
 
+        # Disable following links
+        self.page().setLinkDelegationPolicy(QtWebKit.QWebPage.DelegateAllLinks)
+
 
     def darkAndLight(self):
 
