@@ -89,10 +89,6 @@ class Signing(QtGui.QDialog):
         image = QtGui.QPixmap("captcha.png")
         self.label_image.setPixmap(image)
 
-        # DEBUG
-        self.combo_status.setCurrentIndex(1)
-        self.line_email.setText('jp@um2.fr')
-
 
     def defineSlots(self):
 

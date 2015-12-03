@@ -10,6 +10,7 @@ import urllib
 import fnmatch
 import webbrowser
 import requests
+import platform
 
 # To package and distribute the program
 import esky
@@ -81,6 +82,8 @@ class Fenetre(QtGui.QMainWindow):
         # self.l.setLevel(20)
         self.l.info('Starting the program')
         self.l.info(QtGui.QApplication.libraryPaths())
+        self.l.info('Running {} {}'.format(platform.system(),
+                                           platform.release()))
 
         if self.debug_mod:
             self.l.info("You are running ChemBrows in debug mode")

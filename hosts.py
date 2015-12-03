@@ -306,6 +306,7 @@ def getData(company, journal, entry, response=None):
         except AttributeError:
             author = None
 
+
         if response.status_code is requests.codes.ok or response.status_code == 401:
 
             strainer = SoupStrainer("h1", attrs={"class": "article-heading"})
@@ -320,15 +321,16 @@ def getData(company, journal, entry, response=None):
             if r is not None:
                 abstract = r.renderContents().decode()
 
-            strainer = SoupStrainer("img")
+            strainer = SoupStrainer("figure")
             soup = BeautifulSoup(response.text, parse_only=strainer)
-            r = soup.find_all("img", attrs={"class": "fig"})
+            # r = soup.find_all("img", attrs={"class": "fig"})
+            # r = soup.find_all("img", attrs={"class": "fig carousel-item"})
+            r = soup.find_all("img")
             if r:
-                if "f1.jpg" in r[0]["src"]:
-                    graphical_abstract = "http://www.nature.com" + r[0]["src"]
+                graphical_abstract = "http://www.nature.com" + r[0]["src"]
 
-                    if "carousel" in graphical_abstract:
-                        graphical_abstract = graphical_abstract.replace("carousel", "images_article")
+                if "carousel" in graphical_abstract:
+                    graphical_abstract = graphical_abstract.replace("carousel", "images_article")
 
 
     elif company == 'science':
@@ -673,7 +675,7 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("rsc", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("npg", journal, entry, response)
         # print(abstract)
         # print("\n")
         print(graphical_abstract)
@@ -684,7 +686,7 @@ if __name__ == "__main__":
         # print("\n")
 
     # urls_test = ["debug/lett.xht"]
-    urls_test = ["http://rss.sciencedirect.com/publication/science/00404039"]
+    urls_test = ["http://feeds.nature.com/nmeth/rss/aop?format=xml"]
 
     session = FuturesSession(max_workers=20)
 
@@ -702,30 +704,30 @@ if __name__ == "__main__":
 
     print(journal)
 
-    for entry in feed.entries[5:]:
-        # url = entry.link
-        print(entry)
+    for entry in feed.entries:
+        url = entry.link
+        # print(entry)
 
         # print(entry.title)
 
-        # print(url)
+        print(url)
 
         # url = entry.feedburner_origlink
         # title = entry.title
 
         # if "cross reactive" not in title:
             # continue
-        title = entry.title
+        # title = entry.title
 
-        if "cross reactive" not in title:
-            continue
+        # if "cross reactive" not in title:
+            # continue
         # print(url)
         # print(title)
         # print(entry)
         # print(url)
         # getDoi(journal, entry)
 
-        # future = session.get(url, headers=headers, timeout=20)
-        # future.add_done_callback(functools.partial(print_result, journal, entry))
+        future = session.get(url, headers=headers, timeout=20)
+        future.add_done_callback(functools.partial(print_result, journal, entry))
 
         break
