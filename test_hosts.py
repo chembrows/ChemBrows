@@ -2,6 +2,15 @@
 # coding: utf-8
 
 
+"""
+Test module to be ran with pytest.
+Tests that hosts.py returns correct values
+
+Start the tests with something like this:
+py.test -xs test_hosts.py -k getData
+"""
+
+
 import os
 import feedparser
 import requests
@@ -10,13 +19,18 @@ import random
 import datetime
 from bs4 import BeautifulSoup
 import hashlib
+import arrow
 
 import hosts
 
-LENGTH_SAMPLE = 5
+LENGTH_SAMPLE = 1
 
 
 def test_getJournals():
+
+    """Function to get the informations about all the journals of
+    a company. Returns the names, the URLs, the abbreviations, and also
+    a boolean to set the download of the graphical abstracts"""
 
     print("\n")
     print("Starting test getJournals")
@@ -32,6 +46,7 @@ def test_getJournals():
     beil = hosts.getJournals("beilstein")
     npg2 = hosts.getJournals("npg2")
 
+    # TODO: tester le type de chaque variable ds le tuple
     assert type(rsc) == tuple
     assert type(acs) == tuple
     assert type(wiley) == tuple
@@ -53,7 +68,9 @@ def test_getJournals():
 @pytest.fixture()
 def journalsUrls():
 
-    """Returns a combined list. All the journals of all the companies"""
+    """Returns a combined list of urls.
+    All the journals of all the companies.
+    Specific to the tests, fixture"""
 
     rsc_urls = hosts.getJournals("rsc")[2]
     acs_urls = hosts.getJournals("acs")[2]
@@ -81,7 +98,7 @@ def test_getData(journalsUrls):
     print("Starting test getData")
 
     # Returns a list of the urls of the feed pages
-    list_sites = journalsUrls
+    list_urls_feed = journalsUrls
 
     # Get the names of the journals, per company
     rsc = hosts.getJournals("rsc")[0]
@@ -95,10 +112,14 @@ def test_getData(journalsUrls):
     beil = hosts.getJournals("beilstein")[0]
     npg2 = hosts.getJournals("npg2")[0]
 
-    # All the journals are tested
-    for site in list_sites:
+    # # Bypass all companies but one
+    # list_urls_feed = hosts.getJournals("rsc")[2]
 
-        print("Site {} of {}".format(list_sites.index(site) + 1, len(list_sites)))
+    # All the journals are tested
+    for site in list_urls_feed:
+
+        print("Site {} of {}".format(list_urls_feed.index(site) + 1,
+                                     len(list_urls_feed)))
 
         feed = feedparser.parse(site)
         journal = feed['feed']['title']
@@ -124,6 +145,7 @@ def test_getData(journalsUrls):
         elif journal in npg2:
             company = 'npg2'
 
+
         print("\n")
         print(journal)
 
@@ -140,17 +162,25 @@ def test_getData(journalsUrls):
             else:
                 url = getattr(entry, 'feedburner_origlink', entry.link)
 
-                response = requests.get(url, timeout=10)
-                title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry, response)
+                try:
+                    response = requests.get(url, timeout=10)
+                    title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry, response)
+                except requests.exceptions.ReadTimeout:
+                    print("A ReadTimeout occured, continue to next entry")
 
             print(title)
             print(url)
             print(graphical_abstract)
+            print(date)
             print("\n")
 
+            # TODO: faire des tests plus poussés sur ces variables
+            # tester par ex si graphical_abstract est une url valide
+            # tester si abstract n'est pas vide
             assert type(abstract) == str
             assert type(url) == str
             assert type(graphical_abstract) == str
+            assert type(arrow.get(date)) == arrow.arrow.Arrow
 
 
 def test_getDoi(journalsUrls):

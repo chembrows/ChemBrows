@@ -129,7 +129,6 @@ def updateData(company, journal, entry, care_image):
     return dl_page, dl_image, {'graphical_abstract': graphical_abstract}
 
 
-
 # @profile
 def getData(company, journal, entry, response=None):
 
@@ -250,7 +249,7 @@ def getData(company, journal, entry, response=None):
         """Feed only contains graphical abstract"""
 
         title = entry.title.rstrip()
-        date = arrow.get(entry.updated).format('YYYY-MM-DD')
+        date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
         abstract = None
 
         author = entry.author
@@ -673,7 +672,7 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("npg", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("acs", journal, entry, response)
         # print(abstract)
         # print("\n")
         print(graphical_abstract)
@@ -684,7 +683,7 @@ if __name__ == "__main__":
         # print("\n")
 
     # urls_test = ["debug/lett.xht"]
-    urls_test = ["http://feeds.nature.com/nmeth/rss/aop?format=xml"]
+    urls_test = ["http://feeds.feedburner.com/acs/ascefj"]
 
     session = FuturesSession(max_workers=20)
 
@@ -704,11 +703,11 @@ if __name__ == "__main__":
 
     for entry in feed.entries:
         url = entry.link
-        # print(entry)
+        print(entry)
 
         # print(entry.title)
 
-        print(url)
+        # print(url)
 
         # url = entry.feedburner_origlink
         # title = entry.title
