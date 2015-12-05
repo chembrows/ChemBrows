@@ -177,6 +177,7 @@ def test_getData(journalsUrls):
             # TODO: faire des tests plus poussés sur ces variables
             # tester par ex si graphical_abstract est une url valide
             # tester si abstract n'est pas vide
+            # tester si author n'est pas vide
             assert type(abstract) == str
             assert type(url) == str
             assert type(graphical_abstract) == str
