@@ -5,6 +5,7 @@
 import sys
 import esky
 from PyQt4 import QtCore
+import traceback
 
 
 # DEBUG
@@ -33,7 +34,7 @@ class Updater(QtCore.QThread):
         try:
             best_version = self.app.find_update()
         except Exception as e:
-            self.l.critical("ERROR UPDATING APP: {}".format(e))
+            self.l.critical("ERROR FINDING VERSION APP: {}".format(e))
             return None
 
         if best_version is None:
@@ -55,7 +56,10 @@ class Updater(QtCore.QThread):
 
         try:
             # Update ChemBrows
+            self.app.get_root()
             self.app.auto_update()
-            self.app.cleanup()
+            # self.app.cleanup()
+            # self.app.drop_root()
         except Exception as e:
             self.l.critical("ERROR UPDATING APP: {}".format(e))
+            self.l.error(traceback.format_exc())

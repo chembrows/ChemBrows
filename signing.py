@@ -27,6 +27,7 @@ class Signing(QtGui.QDialog):
 
         if type(parent) is QtGui.QWidget:
             self.test = True
+            self.parent.DATA_PATH = '.'
             self.parent.resource_dir = '.'
         else:
             self.test = False
@@ -84,9 +85,11 @@ class Signing(QtGui.QDialog):
         text = r.text.split('\n')[1]
 
         io = BytesIO(base64.b64decode(text))
-        Image.open(io).save("captcha.png", format='PNG')
+        Image.open(io).save(os.path.join(self.parent.DATA_PATH,
+                                         'captcha.png'), format='PNG')
 
-        image = QtGui.QPixmap("captcha.png")
+        image = QtGui.QPixmap(os.path.join(self.parent.DATA_PATH,
+                                           'captcha.png'))
         self.label_image.setPixmap(image)
 
 
@@ -199,7 +202,7 @@ class Signing(QtGui.QDialog):
                 self.validated = True
 
                 # Delete the captcha file
-                os.remove(self.parent.resource_dir + "/captcha.png")
+                os.remove(os.path.join(self.parent.DATA_PATH, "captcha.png"))
 
             # user_id already in db on the server
             elif response[-1] == 'A user with this email already exists':

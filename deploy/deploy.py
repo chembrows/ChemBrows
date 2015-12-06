@@ -39,7 +39,7 @@ else:
     python_exe = 'python'
 
 # Freeze !!!
-subprocess.call('{} setup.py bdist_esky_patch'.format(python_exe), shell=True)
+subprocess.call('{} setup.py bdist_esky'.format(python_exe), shell=True)
 print('done with esky')
 
 # Unzip file

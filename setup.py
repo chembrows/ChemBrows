@@ -177,7 +177,7 @@ if sys.platform in ['win32', 'cygwin', 'win64']:
     my_data_files.append(('sqldrivers', ['C:\Python34\Lib\site-packages\PyQt4\plugins\sqldrivers\qsqlite4.dll']))
 
     FREEZER = 'cx_Freeze'
-    FREEZER_OPTIONS = {"include_msvcr": True}
+    FREEZER_OPTIONS = dict()
 
 elif sys.platform == 'darwin':
     FREEZER = 'py2app'

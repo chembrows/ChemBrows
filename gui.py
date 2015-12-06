@@ -72,8 +72,8 @@ class Fenetre(QtGui.QMainWindow):
         # CAREFUL, there is a bug with the splash screen
         # https://bugreports.qt.io/browse/QTBUG-24910
         splash_pix = QtGui.QPixmap(os.path.join(self.resource_dir, 'images/splash.png'))
-        splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
-        splash.show()
+        self.splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+        self.splash.show()
         app.processEvents()
 
         # Create the logger
@@ -169,7 +169,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Show the window
         self.show()
-        splash.finish(self)
+        self.splash.finish(self)
         self.l.debug("splash.finish() took {}".
                      format(datetime.datetime.now() - diff_time))
 
@@ -191,17 +191,21 @@ class Fenetre(QtGui.QMainWindow):
         # Check if the running ChemBrows is a frozen app
         if not self.debug_mod:
 
-            update = Updater(self.l)
+            self.updater = Updater(self.l)
 
-            if update is None:
+            if self.updater is None:
                 return
 
             # If an update is available, ask the user if he wants to
             # update immediately
-            if update.update_available:
+            if self.updater.update_available:
 
-                message = "A new version of ChemBrows is available. Upgrade now ?"
-                choice = QtGui.QMessageBox.question(self, "Update of ChemBrows", message,
+                # Hide the splash screen if there is an update.
+                # On windows, the message box was hidden by the splash
+                self.splash.finish(self)
+
+                mes = "A new version of ChemBrows is available. Upgrade now ?"
+                choice = QtGui.QMessageBox.question(self, "Update of ChemBrows", mes,
                                                     QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok,
                                                     defaultButton=QtGui.QMessageBox.Ok)
 
@@ -217,10 +221,10 @@ class Fenetre(QtGui.QMainWindow):
                         self.progress.reset()
 
                         # Display a dialog box to tell the user to restart the program
-                        message = "ChemBrows is now up-to-date. Restart it to use the last version"
+                        message = "ChemBrows is now up-to-date. Restart it to use the latest version"
                         QtGui.QMessageBox.information(self, "ChemBrows update", message, QtGui.QMessageBox.Ok)
 
-                        del update
+                        del self.updater
 
                     # Display a QProgressBar while updating
                     app.processEvents()
@@ -229,8 +233,8 @@ class Fenetre(QtGui.QMainWindow):
                     self.progress.show()
                     app.processEvents()
 
-                    update.finished.connect(whenDone)
-                    update.start()
+                    self.updater.finished.connect(whenDone)
+                    self.updater.start()
 
 
     def logConnection(self):
