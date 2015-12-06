@@ -35,6 +35,7 @@ class Updater(QtCore.QThread):
             best_version = self.app.find_update()
         except Exception as e:
             self.l.critical("ERROR FINDING VERSION APP: {}".format(e))
+            self.l.critical(traceback.format_exc())
             return None
 
         if best_version is None:
@@ -62,4 +63,4 @@ class Updater(QtCore.QThread):
             # self.app.drop_root()
         except Exception as e:
             self.l.critical("ERROR UPDATING APP: {}".format(e))
-            self.l.error(traceback.format_exc())
+            self.l.critical(traceback.format_exc())

@@ -10,6 +10,7 @@ import requests
 from io import BytesIO
 import base64
 from PIL import Image
+import traceback
 
 from line_icon import ButtonLineIcon
 
@@ -177,7 +178,6 @@ class Signing(QtGui.QDialog):
                 return
 
             except Exception as e:
-
                 mes = """
                 An unknown error occured while contacting the server. Please \
                 check you are connected to the internet, or contact us. {}
@@ -188,6 +188,7 @@ class Signing(QtGui.QDialog):
                                            defaultButton=QtGui.QMessageBox.Ok)
 
                 self.parent.l.critical("{} while signing up {}".format(e))
+                self.parent.l.critical(traceback.format_exc())
                 return
 
             # Get the response from the server and log it

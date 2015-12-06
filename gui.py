@@ -11,6 +11,7 @@ import fnmatch
 import webbrowser
 import requests
 import platform
+import traceback
 
 # To package and distribute the program
 import esky
@@ -290,6 +291,7 @@ class Fenetre(QtGui.QMainWindow):
             return
         except Exception as e:
             self.l.critical("logConnection: cannot reach server. {}".format(e))
+            self.l.critical(traceback.format_exc())
             return
 
         if "user_id unregistered" in req.text:

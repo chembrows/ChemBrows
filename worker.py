@@ -10,6 +10,7 @@ import functools
 from requests_futures.sessions import FuturesSession
 import requests
 import socket
+import traceback
 
 from io import BytesIO
 from PIL import Image
@@ -383,6 +384,7 @@ class Worker(QtCore.QThread):
             return
         except Exception as e:
             self.l.error("Unknown exception {} for {}".format(e, journal))
+            self.l.error(traceback.format_exc())
             self.count_futures_images += 1
             return
 
@@ -397,6 +399,7 @@ class Worker(QtCore.QThread):
             return
         except Exception as e:
             self.l.error("Unknown exception completeData {}".format(e))
+            self.l.error(traceback.format_exc())
             self.count_futures_images += 1
             return
 
@@ -484,6 +487,7 @@ class Worker(QtCore.QThread):
                     self.l.debug("Image ok")
                 except Exception as e:
                     self.l.error("An error occured in pictureDownloaded: {}".format(e))
+                    self.l.error(traceback.format_exc())
                     params = ("Empty", doi)
                 else:
                     params = (functions.simpleChar(response.url), doi)
