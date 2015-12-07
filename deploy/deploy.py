@@ -69,8 +69,8 @@ elif sys.platform == 'darwin':
     # To fix issue #104 of Esky. Copy some files stored in deploy. It should be
     # temporary, and it's not optimized yet (not all the modules in python35.zip are
     # required)
-    copyfile('deploy/zlib.so', path_fixes + 'Resources/lib/python3.5/lib-dynload/zlib.so')
-    copyfile('deploy/python35.zip', path_fixes + 'Resources/lib/python35.zip')
+    copyfile('deploy/OSX_extras/zlib.so', path_fixes + 'Resources/lib/python3.5/lib-dynload/zlib.so')
+    copyfile('deploy/OSX_extras/python35.zip', path_fixes + 'Resources/lib/python35.zip')
 
     # # Modify CFBundleExecutable in the Info.plist of the bundle.app
     # with open(path_fixes + 'Info.plist', 'r+') as info_plist:
