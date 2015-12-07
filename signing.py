@@ -259,7 +259,7 @@ class Signing(QtGui.QDialog):
 
         self.form_sign = QtGui.QFormLayout()
 
-        self.form_sign.addRow("What are you? :", self.combo_status)
+        self.form_sign.addRow("Who are you? :", self.combo_status)
 
         # LineEdit for the email, with an icon opening an info box
         # info box about data privacy

@@ -79,10 +79,11 @@ class MyTwit(QtGui.QDialog):
 
             if not r:
                 raise Exception()
-        except:
+        except Exception as e:
             QtGui.QMessageBox.critical(self, "Authentication", "ChemBrows could not open a web page.\nVisit oauth_url to get the PIN code",
                                        QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
             self.l.error("Authentication URL not opened")
+            self.l.error("openAuthPage: {}".format(e))
             self.l.error(traceback.format_exc())
 
 
@@ -180,9 +181,10 @@ class MyTwit(QtGui.QDialog):
         else:
             try:
                 twitter.statuses.update(status=text, media_ids=id_img)
-            except:
+            except Exception as e:
                 QtGui.QMessageBox.critical(self, "Twitter error", "ChemBrows could not tweet that.\nYour tweet is probably too long: {} chara.".format(len(text)),
                                            QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+                self.l.error("postTweet: {}".format(e))
                 self.l.error(traceback.format_exc())
 
         self.close()
