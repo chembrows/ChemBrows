@@ -192,6 +192,10 @@ class Fenetre(QtGui.QMainWindow):
         # Check if the running ChemBrows is a frozen app
         if not self.debug_mod:
 
+            # IMPORTANT: for now, disable remote updates
+            # TODO: make the update process work
+            return
+
             self.updater = Updater(self.l)
 
             if self.updater is None:
