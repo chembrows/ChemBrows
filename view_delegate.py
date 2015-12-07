@@ -209,15 +209,15 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 path_photo = self.DATA_PATH + "/graphical_abstracts/" + index.data()
 
                 if os.path.exists(path_photo):
-                    # --- la photo existe: on l'affiche dans la case -------------
+                    # The photo exists, display it
 
-                    # on charge la photo dans un QPixmap
+                    # Load the picture in a QPixmap
                     pixmap = QtGui.QPixmap(path_photo)
 
                     wcase, hcase = option.rect.width(), option.rect.height()
-                    wpix, hpix =  pixmap.width(), pixmap.height()
+                    wpix, hpix = pixmap.width(), pixmap.height()
 
-                    # redim si nécessaire à la taille de la case sans déformation
+                    # Resize if necessary, and use a smooth transformation
                     if wpix != wcase or hpix != hcase:
                         pixmap = pixmap.scaled(wcase, hcase,
                                                  QtCore.Qt.KeepAspectRatio,
@@ -239,7 +239,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 wcase, hcase = option.rect.width(), option.rect.height()
                 wpix, hpix =  pixmap.width(), pixmap.height()
 
-                # redim si nécessaire à la taille de la case sans déformation
                 if wpix != wcase or hpix != hcase:
                     pixmap = pixmap.scaled(wcase, hcase,
                                              QtCore.Qt.KeepAspectRatio,

@@ -46,7 +46,7 @@ def test_getJournals():
     beil = hosts.getJournals("beilstein")
     npg2 = hosts.getJournals("npg2")
 
-    # TODO: tester le type de chaque variable ds le tuple
+    # TODO: test the type of each variable in the tuple
     assert type(rsc) == tuple
     assert type(acs) == tuple
     assert type(wiley) == tuple
@@ -175,9 +175,10 @@ def test_getData(journalsUrls):
             print("\n")
 
             # TODO: faire des tests plus poussés sur ces variables
-            # tester par ex si graphical_abstract est une url valide
-            # tester si abstract n'est pas vide
-            # tester si author n'est pas vide
+            # TODO: more advanced tests on these variables
+            # test if graphical_abstract is a valid url
+            # test if abstract isn't empty
+            # test if authors isn't empty
             assert type(abstract) == str
             assert type(url) == str
             assert type(graphical_abstract) == str

@@ -142,10 +142,6 @@ def buildSearch(topic_entries, author_entries):
             for word in words:
                 base += " AND topic_simple NOT LIKE '{0}'".format(word)
 
-# Alexander G. Tolstikov, Rimma G. Savchenko, Elena S. Lukina,
-# Denis V. Nedopekin, Regina M. Limantceva, Leonard M. Khalilov,
-# Ekaterina S. Mescheryakova, Victor N. Odinokov
-
     # AUTHOR, AND condition
     if author_entries[0]:
         # words = [word.lstrip().rstrip() for word in author_entries[0].split(",")]
@@ -238,6 +234,5 @@ if __name__ == "__main__":
 
     # match(['jean-patrick francoia', 'robert pascal', 'laurent vial'], "r* pascal")
 
-    # print(simpleChar("Hello docteur, j€ vous emmerdë$"))
     # unidecodePerso('test')
     pass

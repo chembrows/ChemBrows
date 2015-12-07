@@ -607,7 +607,7 @@ def getDoi(company, journal, entry):
         base = base.split("pnas;")[1]
         doi = "10.1073/pnas." + base
 
-    # FUCK !! for this publisher, the doi is not given
+    # For this publisher, the doi is not given
     # in the RSS flux. It's so replaced by the url
     elif company == 'elsevier':
         doi = entry.id

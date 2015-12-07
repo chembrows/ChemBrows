@@ -2076,8 +2076,8 @@ class Fenetre(QtGui.QMainWindow):
 
         # # ------------------------- TOOLBAR  -----------------------------------------------
 
-        # On ajoute une toolbar en la nommant pr l'indentifier,
-        # Puis on ajoute les widgets
+        # Add a toolbar and name it to identiy it
+        # Then add the widgets
         self.toolbar = self.addToolBar('toolbar')
         self.toolbar.setMovable(False)
 

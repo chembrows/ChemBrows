@@ -5,7 +5,7 @@ import sqlite3
 import functions
 
 
-# Fct de test uniquement
+# TEST FUNCTION ONLY. NOT USED IN THE CODE
 def checkData():
 
     """Fct de test uniquement"""
