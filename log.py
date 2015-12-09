@@ -31,8 +31,8 @@ class MyLog(logging.Logger):
             self.formatter = logging.Formatter('%(message)s')
 
         # Create a handler, redirects the output to a file in 'append' mode, w/
-        # a backup and a mx size of 1 Mo
-        self.file_handler = RotatingFileHandler(output_file, 'a', 1000000, 1)
+        # a backup and a mx size of 5 Mo
+        self.file_handler = RotatingFileHandler(output_file, 'a', 5000000, 1)
         self.file_handler.setLevel(logging.DEBUG)
         self.file_handler.setFormatter(self.formatter)
         self.addHandler(self.file_handler)
