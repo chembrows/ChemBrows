@@ -43,3 +43,5 @@
 ^Addendum:
 ^Retracted:
 ^Inside Back Cover:
+^Highlights from Faraday
+^Cover Picture
