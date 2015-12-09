@@ -8,6 +8,7 @@ from PyQt4 import QtGui
 import webbrowser
 import time
 import traceback
+from functions import removeHtml
 
 from twitter.api import Twitter
 from twitter.oauth import OAuth, write_token_file, read_token_file
@@ -30,7 +31,9 @@ class MyTwit(QtGui.QDialog):
 
         self.parent = parent
 
-        self.title = title
+        # Remove html tags from the title
+        self.title = removeHtml(title)
+
         self.link = link
         self.graphical = graphical
 
@@ -235,5 +238,6 @@ if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     parent = QtGui.QWidget()
     parent.DATA_PATH = '.'
-    obj = MyTwit(parent, "Bismuth(III) benzohydroxamates: powerful anti-bacterial activity against Helicobacter pylori and hydrolysis to a unique Bi34 oxido-cluster [Bi34O22(BHA)22(H-BHA)14(DMSO)6]", "http://rss.sciencedirect.com/action/redirectFile?&zone=main&currentActivity=feed&usageType=outward&url=http%3A%2F%2Fwww.sciencedirect.com%2Fscience%3F_ob%3DGatewayURL%26_origin%3DIRSSSEARCH%26_method%3DcitationSearch%26_piikey%3DS1570023215301690%26_version%3D1%26md5%3Df9384b4e2c6cb811dfe38691852b8429", "http www nature com srep 2015 150701 srep11739 images_article srep11739 f1 jpg")
+    # obj = MyTwit(parent, "Mesoporous Ni<small><sub>60</sub></small>Fe<small><sub>30</sub></small>Mn<small><sub>10</sub></small>-alloy based metal/metal oxide composite thick films as highly active and robust oxygen evolution catalysts", "http://pubs.rsc.org/en/Content/ArticleLanding/2016/EE/C5EE02509E", "http pubs rsc org services images rscpubs eplatform service freecontent imageservice svc imageservice image ga id c5ee02509e")
+    obj = MyTwit(parent, "<span class=\"hlFld-Title\">Molecular Rift: Virtual Reality for Drug Designers</span>", "http://dx.doi.org/10.1021/acs.jcim.5b00544", "http pubs acs org appl literatum publisher achs journals content jcisd8 0 jcisd8 ahead of print acs jcim 5b00544 20151111 images medium ci 2015 00544d_0015 gif")
     sys.exit(app.exec_())
