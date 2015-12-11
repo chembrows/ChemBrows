@@ -4,16 +4,17 @@
 
 from PyQt4 import QtSql, QtCore
 
-import sys, os
-import numpy as np
+import sys
+import os
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction import text
+from sklearn.svm import LinearSVC
+import traceback
+import datetime
 
 # DEBUG
-import datetime
 # from memory_profiler import profile
 
 # Personal
@@ -111,7 +112,7 @@ class Predictor(QtCore.QThread):
             ('vectorizer', CountVectorizer(
                             stop_words=self.stop_words)),
             ('tfidf', TfidfTransformer()),
-            ('clf', MultinomialNB())])
+            ('clf', LinearSVC())])
 
         try:
             self.classifier.fit(self.x_train, self.y_train)
@@ -119,14 +120,14 @@ class Predictor(QtCore.QThread):
             self.l.error("Not enough data yet to train the classifier")
             return
 
-        elsapsed_time = datetime.datetime.now() - start_time
-        self.l.debug("Initializing classifier in {0}".format(elsapsed_time))
+        elapsed_time = datetime.datetime.now() - start_time
+        self.l.debug("Initializing classifier in {0}".format(elapsed_time))
 
         return True
 
 
     # @profile
-    # def calculatePercentageMatch(self, test=False):
+    # def calculatePercentageMatch(self):
     def run(self):
 
         """Calculate the match percentage for each article,
@@ -150,12 +151,21 @@ class Predictor(QtCore.QThread):
 
         try:
             # Normalize the percentages: the highest is set to 100%
-            # Use operations on numpy array, faster than lists comprehensions
-            x_test = np.array([proba[0] for proba in self.classifier.predict_proba(x_test)])
+            # http://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
+            x_test = self.classifier.decision_function(x_test)
+            elapsed_time = datetime.datetime.now() - start_time
+            self.l.debug("Classifier predicted proba in {}".format(elapsed_time))
+            elapsed_time = datetime.datetime.now() - start_time
             maximum = max(x_test)
-            list_percentages = x_test * 100 / maximum
+            minimum = min(x_test)
+            list_percentages = 100 - (x_test - minimum) * 100 / (maximum - minimum)
+            self.l.debug("Classifier normalized proba in {}".format(elapsed_time))
         except AttributeError:
             self.l.error("Not enough data yet to predict probability")
+            return
+        except Exception as e:
+            self.l.error("predictor: {}".format(e))
+            self.l.error(traceback.format_exc())
             return
 
         self.bdd.transaction()
@@ -181,14 +191,14 @@ class Predictor(QtCore.QThread):
         if not self.bdd.commit():
             self.l.critical("Percentages match not correctly written in db")
         else:
-            elsapsed_time = datetime.datetime.now() - start_time
-            self.l.info("Done calculating match percentages in {0} s".format(elsapsed_time))
+            elapsed_time = datetime.datetime.now() - start_time
+            self.l.info("Done calculating match percentages in {0} s".format(elapsed_time))
 
         self.calculated_something = True
 
 
 if __name__ == "__main__":
-    logger = MyLog()
+    logger = MyLog("test.log")
     predictor = Predictor(logger)
     predictor.initializePipeline()
-    predictor.calculatePercentageMatch(True)
+    predictor.calculatePercentageMatch()
