@@ -987,6 +987,11 @@ class Fenetre(QtGui.QMainWindow):
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
+        # If the user specifically clicks on the to read icon,
+        # don't display infos, do nothing
+        if table.toread_icon:
+            return
+
         # Get the different infos for an article
         title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
         author = table.model().index(table.selectionModel().selection().indexes()[0].row(), 6).data()
