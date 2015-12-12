@@ -16,10 +16,8 @@ import feedparser
 import requests
 import pytest
 import random
-import datetime
-from bs4 import BeautifulSoup
-import hashlib
 import arrow
+import validators
 
 import hosts
 
@@ -35,34 +33,42 @@ def test_getJournals():
     print("\n")
     print("Starting test getJournals")
 
-    rsc = hosts.getJournals("rsc")
-    acs = hosts.getJournals("acs")
-    wiley = hosts.getJournals("wiley")
-    npg = hosts.getJournals("npg")
-    science = hosts.getJournals("science")
-    nas = hosts.getJournals("nas")
-    elsevier = hosts.getJournals("elsevier")
-    thieme = hosts.getJournals("thieme")
-    beil = hosts.getJournals("beilstein")
-    npg2 = hosts.getJournals("npg2")
+    # Create a dictionnary w/ all the data concerning the journals
+    # implemented in the program: names, abbreviations, urls
+    dict_journals = {}
+    for company in os.listdir('journals'):
+        company = company.split('.')[0]
+        dict_journals[company] = hosts.getJournals(company)
 
-    # TODO: test the type of each variable in the tuple
-    assert type(rsc) == tuple
-    assert type(acs) == tuple
-    assert type(wiley) == tuple
-    assert type(npg) == tuple
-    assert type(science) == tuple
-    assert type(nas) == tuple
-    assert type(elsevier) == tuple
-    assert type(thieme) == tuple
-    assert type(beil) == tuple
-    assert type(npg2) == tuple
+    print(dict_journals)
 
-    total = rsc + acs + wiley + npg + science + nas + elsevier + thieme + beil + npg2
+    for company, data in dict_journals.items():
 
-    for publisher in total:
-        for chain in publisher:
-            assert type(chain) == str
+        # data is a tuple: (list_journals_publisher,
+                          # list_abb_journals_publisher,
+                          # list_urls_publisher,
+                          # list_bool
+                         # )
+
+        assert type(data) == tuple
+
+        # Check that all the fields in the tuple are
+        # non empty lists
+        for list_info_journals in data[:-1]:
+            assert type(list_info_journals) == list and list_info_journals
+
+            # Check that all the elements in the list are
+            # non empty strings
+            for element in list_info_journals:
+                assert type(element) == str and element
+
+        # Check the urls of the RSS pages
+        for element in data[2]:
+            assert validators.url(element)
+
+        # Check the list of booleans
+        for element in data[3]:
+            assert type(element) == bool
 
 
 @pytest.fixture()
@@ -72,19 +78,10 @@ def journalsUrls():
     All the journals of all the companies.
     Specific to the tests, fixture"""
 
-    rsc_urls = hosts.getJournals("rsc")[2]
-    acs_urls = hosts.getJournals("acs")[2]
-    wiley_urls = hosts.getJournals("wiley")[2]
-    npg_urls = hosts.getJournals("npg")[2]
-    science_urls = hosts.getJournals("science")[2]
-    nas_urls = hosts.getJournals("nas")[2]
-    elsevier_urls = hosts.getJournals("elsevier")[2]
-    thieme_urls = hosts.getJournals("thieme")[2]
-    beil_urls = hosts.getJournals("beilstein")[2]
-    npg2_urls = hosts.getJournals("npg2")[2]
-
-    urls = rsc_urls + acs_urls + wiley_urls + npg_urls + science_urls + \
-           nas_urls + elsevier_urls + thieme_urls + beil_urls + npg2_urls
+    urls = []
+    for company in os.listdir('journals'):
+        company = company.split('.')[0]
+        urls += hosts.getJournals(company)[2]
 
     return urls
 
@@ -100,20 +97,15 @@ def test_getData(journalsUrls):
     # Returns a list of the urls of the feed pages
     list_urls_feed = journalsUrls
 
-    # Get the names of the journals, per company
-    rsc = hosts.getJournals("rsc")[0]
-    acs = hosts.getJournals("acs")[0]
-    wiley = hosts.getJournals("wiley")[0]
-    npg = hosts.getJournals("npg")[0]
-    science = hosts.getJournals("science")[0]
-    nas = hosts.getJournals("nas")[0]
-    elsevier = hosts.getJournals("elsevier")[0]
-    thieme = hosts.getJournals("thieme")[0]
-    beil = hosts.getJournals("beilstein")[0]
-    npg2 = hosts.getJournals("npg2")[0]
-
     # # Bypass all companies but one
-    # list_urls_feed = hosts.getJournals("rsc")[2]
+    # list_urls_feed = hosts.getJournals("elsevier")[2]
+
+    # Build a dic with key: company
+                     # value: journal name
+    dict_journals = {}
+    for company in os.listdir('journals'):
+        company = company.split('.')[0]
+        dict_journals[company] = hosts.getJournals(company)[0]
 
     # All the journals are tested
     for site in list_urls_feed:
@@ -124,27 +116,10 @@ def test_getData(journalsUrls):
         feed = feedparser.parse(site)
         journal = feed['feed']['title']
 
-        if journal in rsc:
-            company = 'rsc'
-        elif journal in acs:
-            company = 'acs'
-        elif journal in wiley:
-            company = 'wiley'
-        elif journal in npg:
-            company = 'npg'
-        elif journal in science:
-            company = 'science'
-        elif journal in nas:
-            company = 'nas'
-        elif journal in elsevier:
-            company = 'elsevier'
-        elif journal in thieme:
-            company = 'thieme'
-        elif journal in beil:
-            company = 'beilstein'
-        elif journal in npg2:
-            company = 'npg2'
-
+        # Get the company name
+        for publisher, data in dict_journals.items():
+            if journal in data:
+                company = publisher
 
         print("\n")
         print(journal)
@@ -157,7 +132,7 @@ def test_getData(journalsUrls):
         # Tests LENGTH_SAMPLE entries for a journal, not all of them
         for entry in samples:
 
-            if journal in science + elsevier + beil:
+            if company in ['science', 'elsevier', 'beilstein']:
                 title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry)
             else:
                 url = getattr(entry, 'feedburner_origlink', entry.link)
@@ -174,14 +149,17 @@ def test_getData(journalsUrls):
             print(date)
             print("\n")
 
-            # TODO: faire des tests plus poussés sur ces variables
-            # TODO: more advanced tests on these variables
-            # test if graphical_abstract is a valid url
-            # test if abstract isn't empty
-            # test if authors isn't empty
-            assert type(abstract) == str
-            assert type(url) == str
-            assert type(graphical_abstract) == str
+            assert type(abstract) == str and abstract
+
+            assert type(url) == str and url
+            if url != 'Empty':
+                # Test if url is valid
+                assert validators.url(url) == True
+
+            assert type(graphical_abstract) == str and graphical_abstract
+            if graphical_abstract != 'Empty':
+                assert validators.url(graphical_abstract) == True
+
             assert type(arrow.get(date)) == arrow.arrow.Arrow
 
 
@@ -192,43 +170,24 @@ def test_getDoi(journalsUrls):
     print("\n")
     print("Starting test getDoi")
 
-    rsc = hosts.getJournals("rsc")[0]
-    acs = hosts.getJournals("acs")[0]
-    wiley = hosts.getJournals("wiley")[0]
-    npg = hosts.getJournals("npg")[0]
-    science = hosts.getJournals("science")[0]
-    nas = hosts.getJournals("nas")[0]
-    elsevier = hosts.getJournals("elsevier")[0]
-    thieme = hosts.getJournals("thieme")[0]
-    beil = hosts.getJournals("beilstein")[0]
-    npg2 = hosts.getJournals("npg2")[0]
-
     list_sites = journalsUrls
+
+    # Build a dic with key: company
+                     # value: journal name
+    dict_journals = {}
+    for company in os.listdir('journals'):
+        company = company.split('.')[0]
+        dict_journals[company] = hosts.getJournals(company)[0]
+
 
     for site in list_sites:
         feed = feedparser.parse(site)
         journal = feed['feed']['title']
 
-        if journal in rsc:
-            company = 'rsc'
-        elif journal in acs:
-            company = 'acs'
-        elif journal in wiley:
-            company = 'wiley'
-        elif journal in npg:
-            company = 'npg'
-        elif journal in science:
-            company = 'science'
-        elif journal in nas:
-            company = 'nas'
-        elif journal in elsevier:
-            company = 'elsevier'
-        elif journal in thieme:
-            company = 'thieme'
-        elif journal in beil:
-            company = 'beilstein'
-        elif journal in npg2:
-            company = 'npg2'
+        # Get the company name
+        for publisher, data in dict_journals.items():
+            if journal in data:
+                company = publisher
 
         print("{}: {}".format(site, len(feed.entries)))
 
@@ -237,78 +196,10 @@ def test_getDoi(journalsUrls):
         else:
             samples = random.sample(feed.entries, LENGTH_SAMPLE)
 
-        # Tests 3 entries for a journal, not all of them
-        # for entry in random.sample(feed.entries, 3):
+        # Tests LENGTH_SAMPLE entries for a journal, not all of them
         for entry in samples:
 
             doi = hosts.getDoi(company, journal, entry)
             print(doi)
 
             assert type(doi) == str
-
-
-def test_dlRssPages(journalsUrls):
-
-    """Dl all the RSS pages  of the journals, and store them
-    in directories named after the journal. I'll run comparisons
-    on the pages to determine the refresh rate of each journal"""
-
-    print("\n")
-    print("Starting test dlRssPages")
-
-    # Returns a list of the urls of the feed pages
-    list_sites = journalsUrls
-
-    headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
-               'Connection': 'close'}
-
-    print(list_sites)
-
-    for url_feed in list_sites:
-
-        print("Site {} of {}".format(list_sites.index(url_feed) + 1, len(list_sites)))
-        feed = feedparser.parse(url_feed)
-
-        try:
-            journal = feed['feed']['title']
-        except KeyError:
-            print("Abort for {}".format(url_feed))
-
-        # Get the RSS page and store it. I'll run some comparisons on them
-        content = requests.get(url_feed, timeout=120, headers=headers, verify=False)
-        if content.status_code is requests.codes.ok:
-            soup = BeautifulSoup(content.text)
-
-            filename = "./debug_journals/" + str(journal) + "/" + str(datetime.datetime.today().date())
-            os.makedirs(os.path.dirname(filename), exist_ok=True)
-
-            with open(filename, 'w') as file:
-                for line in soup.prettify():
-                    file.write(line)
-        else:
-            print("Dl of {} not OK: {}".format(journal, content.status_code))
-
-
-def test_analyzeRssPages():
-
-    """Tests all the RSS pages stored in debug_journals.
-    For each journal, print the date when the RSS page changed"""
-
-    for directory in os.walk("./debug_journals/"):
-
-        print(directory[0])
-
-        list_dates = []
-        list_md5 = []
-
-        for fichier in directory[2]:
-
-            # Read each file and generate a md5 sum
-            with open(directory[0] + "/" + fichier, 'rb') as file:
-                m = hashlib.md5(file.read()).hexdigest()
-
-            if m not in list_md5:
-                list_md5.append(m)
-                list_dates.append(fichier)
-
-        print(sorted(list_dates))

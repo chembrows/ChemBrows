@@ -398,7 +398,7 @@ def getData(company, journal, entry, response=None):
     elif company == 'elsevier':
 
         title = entry.title
-        date = arrow.get(entry.updated).format('YYYY-MM-DD')
+        date = arrow.get(mktime(entry.updated_parsed)).format('YYYY-MM-DD')
 
         url = entry.id
 
