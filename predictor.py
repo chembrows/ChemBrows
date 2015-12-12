@@ -155,7 +155,7 @@ class Predictor(QtCore.QThread):
             x_test = self.classifier.decision_function(x_test)
             elapsed_time = datetime.datetime.now() - start_time
             self.l.debug("Classifier predicted proba in {}".format(elapsed_time))
-            elapsed_time = datetime.datetime.now() - start_time
+            elapsed_time = datetime.datetime.now() - elapsed_time
             maximum = max(x_test)
             minimum = min(x_test)
             list_percentages = 100 - (x_test - minimum) * 100 / (maximum - minimum)
