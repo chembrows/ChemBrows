@@ -88,7 +88,8 @@ class Predictor(QtCore.QThread):
         while query.next():
             record = query.record()
 
-            abstract = record.value('abstract')
+            # TEST
+            abstract = record.value('topic_simple')
 
             # Do not use 'Empty' abstracts
             if type(abstract) is not str or abstract == 'Empty':
