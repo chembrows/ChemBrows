@@ -50,7 +50,7 @@ def updateData(company, journal, entry, care_image):
     the Worker will try to dl the image, w/ the URL returned by this
     function. If dl_page is True, the Worker will dl the article's page,
     AND will try to dl the image anyway, trough the futures mechanism of
-    the worker"""
+    the worker. care_image is not used right now, but might be one day"""
 
     dl_image = True
     dl_page = True
@@ -117,6 +117,9 @@ def updateData(company, journal, entry, care_image):
 
 
     elif company == 'thieme':
+        dl_page = False
+
+    elif company == 'plos':
         dl_page = False
 
 
@@ -558,6 +561,27 @@ def getData(company, journal, entry, response=None):
                 if "f1.jpg" in r[0]["src"]:
                     graphical_abstract = "http://www.nature.com" + r[0]["src"]
 
+
+    elif company == 'plos':
+
+        title = entry.title
+
+        date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
+
+        abstract = BeautifulSoup(entry.summary.split("\n\n")[1])
+        _ = abstract("img", src="http://feeds.feedburner.com/~r/plosone/PLoSONE/~4/fTvlM5mVSDc")[0].extract()
+        abstract = abstract.renderContents().decode().strip()
+
+        url = entry.link
+
+        graphical_abstract = None
+
+        r = BeautifulSoup(entry.summary)("p")
+        if r:
+            author = r[0].text.replace('by ', '')
+        else:
+            author = None
+
     else:
         return None
 
@@ -618,6 +642,9 @@ def getDoi(company, journal, entry):
     elif company == 'beilstein':
         doi = entry.summary.split("doi:")[1].split("</p>")[0]
 
+    elif company == 'plos':
+        doi = entry.id.split(':')[1]
+
     try:
         doi = doi.replace(" ", "")
     except UnboundLocalError:
@@ -669,28 +696,32 @@ if __name__ == "__main__":
 
     from requests_futures.sessions import FuturesSession
     import functools
+    import q
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("acs", journal, entry, response)
-        # print(abstract)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("plos", journal, entry, response)
+        print(abstract)
+        print(date)
         # print("\n")
-        print(graphical_abstract)
         # print("\n")
-        # print(authors)
+        print(authors)
         # print("\n")
-        # print(title)
+        print(title)
         # print("\n")
 
-    # urls_test = ["debug/lett.xht"]
-    urls_test = ["http://feeds.feedburner.com/acs/ascefj"]
+    urls_test = ["debug/plos.xml"]
+    # urls_test = ["http://feeds.plos.org/plosone/PLoSONE"]
 
     session = FuturesSession(max_workers=20)
 
     list_urls = []
 
     feed = feedparser.parse(urls_test[0])
+    # print(feed.entries)
+    # print(feed)
     journal = feed['feed']['title']
+    print(journal)
 
     # headers = {'User-agent': 'Mozilla/5.0',
                # 'Connection': 'close'}
@@ -699,11 +730,16 @@ if __name__ == "__main__":
                'Connection': 'close'}
 
 
-    print(journal)
 
-    for entry in feed.entries:
+    for entry in feed.entries[1:]:
+
+        # print(entry)
+
         url = entry.link
-        print(entry)
+
+        doi = getDoi('plos', journal, entry)
+
+        # print(doi)
 
         # print(entry.title)
 
