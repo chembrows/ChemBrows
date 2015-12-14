@@ -154,13 +154,18 @@ class Predictor(QtCore.QThread):
             # Normalize the percentages: the highest is set to 100%
             # http://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
             x_test = self.classifier.decision_function(x_test)
+
             elapsed_time = datetime.datetime.now() - start_time
             self.l.debug("Classifier predicted proba in {}".format(elapsed_time))
-            elapsed_time = datetime.datetime.now() - elapsed_time
+            diff_time = datetime.datetime.now()
+
             maximum = max(x_test)
             minimum = min(x_test)
             list_percentages = 100 - (x_test - minimum) * 100 / (maximum - minimum)
-            self.l.debug("Classifier normalized proba in {}".format(elapsed_time))
+
+            self.l.debug("Classifier normalized proba in {}".
+                         format(datetime.datetime.now() - diff_time))
+
         except AttributeError:
             self.l.error("Not enough data yet to predict probability")
             return
