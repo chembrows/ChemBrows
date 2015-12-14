@@ -518,7 +518,6 @@ class Fenetre(QtGui.QMainWindow):
             # Update the view when a worker is finished
             self.searchByButton()
             self.updateCellSize()
-            self.parsing = False
 
             self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
@@ -1966,6 +1965,13 @@ class Fenetre(QtGui.QMainWindow):
             return
 
         def whenDone():
+
+            """Internal function called when the thread for percentages
+            calculations is finished"""
+
+            # Unlock the UI by setting this to False
+            self.parsing = False
+
             mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
             mes += "Feed it more !"
 
@@ -1989,7 +1995,6 @@ class Fenetre(QtGui.QMainWindow):
 
                 self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
-            self.parsing = False
 
         self.parsing = True
 
