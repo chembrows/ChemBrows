@@ -248,6 +248,8 @@ includes = [
             'scipy.integrate.lsoda',
             'scipy.sparse.csgraph._validation',
             'sklearn.utils.sparsetools._graph_validation',
+            'sklearn.utils.lgamma',
+            'sklearn.utils.weight_vector',
             'scipy.special._ufuncs_cxx',
            ]
 
