@@ -35,16 +35,15 @@ class Worker(QtCore.QThread):
     # https://wiki.python.org/moin/PyQt/Threading,_Signals_and_Slots
 
 
-    def __init__(self, logger, bdd, dict_journals, parent):
+    def __init__(self, logger, bdd, parent):
 
         QtCore.QThread.__init__(self)
 
         self.l = logger
 
         self.bdd = bdd
-        self.dict_journals = dict_journals
-
         self.parent = parent
+        self.dict_journals = parent.dict_journals
 
         # Define a path attribute to easily change it
         # for the tests
@@ -127,9 +126,7 @@ class Worker(QtCore.QThread):
 
         # Create a list for the journals which a dl of the article
         # page is not required. All the data are in the rss page
-        journals_no_dl = self.dict_journals['science'][0] + \
-                         self.dict_journals['elsevier'][0] + \
-                         self.dict_journals['beilstein'][0]
+        company_no_dl = ['science', 'elsevier', 'beilstein', 'plos']
 
         query = QtSql.QSqlQuery(self.bdd)
 
@@ -137,7 +134,7 @@ class Worker(QtCore.QThread):
 
         # The feeds of these journals are complete
         # if journal in wiley + science + elsevier:
-        if journal in journals_no_dl:
+        if company in company_no_dl:
 
             self.count_futures_urls += len(self.feed.entries)
 
@@ -486,13 +483,15 @@ class Worker(QtCore.QThread):
                                                        format='JPEG')
                     self.l.debug("Image ok")
                 except Exception as e:
-                    self.l.error("An error occured in pictureDownloaded: {}".format(e))
+                    self.l.error("An error occured in pictureDownloaded: {}".
+                                 format(e))
                     self.l.error(traceback.format_exc())
                     params = ("Empty", doi)
                 else:
                     params = (functions.simpleChar(response.url), doi)
             else:
-                self.l.debug("Bad return code: {}".format(response.status_code))
+                self.l.debug("Bad return code: {} DOI: {}".
+                             format(response.status_code, doi))
                 params = ("Empty", doi)
 
         finally:

@@ -463,7 +463,7 @@ class Fenetre(QtGui.QMainWindow):
         for i in range(max_nbr_threads):
             try:
                 url = self.urls[i]
-                worker = Worker(self.l, self.bdd, self.dict_journals, self)
+                worker = Worker(self.l, self.bdd, self)
                 worker.setUrl(url)
                 worker.finished.connect(self.checkThreads)
                 self.urls.remove(url)
@@ -524,7 +524,7 @@ class Fenetre(QtGui.QMainWindow):
         else:
             if self.urls:
                 self.l.debug("STARTING NEW THREAD")
-                worker = Worker(self.l, self.bdd, self.dict_journals, self)
+                worker = Worker(self.l, self.bdd, self)
                 worker.setUrl(self.urls[0])
                 worker.finished.connect(self.checkThreads)
                 self.urls.remove(worker.url_feed)

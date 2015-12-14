@@ -21,7 +21,7 @@ import validators
 
 import hosts
 
-LENGTH_SAMPLE = 1
+LENGTH_SAMPLE = 3
 
 
 def test_getJournals():
@@ -97,8 +97,8 @@ def test_getData(journalsUrls):
     # Returns a list of the urls of the feed pages
     list_urls_feed = journalsUrls
 
-    # # Bypass all companies but one
-    # list_urls_feed = hosts.getJournals("elsevier")[2]
+    # Bypass all companies but one
+    list_urls_feed = hosts.getJournals("plos")[2]
 
     # Build a dic with key: company
                      # value: journal name

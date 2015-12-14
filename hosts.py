@@ -122,6 +122,9 @@ def updateData(company, journal, entry, care_image):
     elif company == 'plos':
         dl_page = False
 
+        base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:{}.g001"
+        graphical_abstract = base.format(getDoi(company, journal, entry))
+
 
     else:
         pass
@@ -565,16 +568,31 @@ def getData(company, journal, entry, response=None):
     elif company == 'plos':
 
         title = entry.title
-
+        url = entry.link
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
 
-        abstract = BeautifulSoup(entry.summary.split("\n\n")[1])
-        _ = abstract("img", src="http://feeds.feedburner.com/~r/plosone/PLoSONE/~4/fTvlM5mVSDc")[0].extract()
+        r = BeautifulSoup(entry.summary)
+        author = r("p")[0].extract().text.replace('by ', '')
+
+        abstract = r
+        try:
+            _ = abstract("img")[0].extract()
+        except IndexError:
+            pass
         abstract = abstract.renderContents().decode().strip()
+        # GA
+        # http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:doi/10.1371/journal.pone.0144005.t001
+        # http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:doi/10.1371/journal.pone.0144005.t002
 
-        url = entry.link
+        # http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:doi/10.1371/journal.pone.0144085.g001
+        # http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:doi/10.1371/journal.pone.0144509.g002
+        # doi/10.1371/journal.pone.0144005
 
-        graphical_abstract = None
+
+        base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:{}.g001"
+        graphical_abstract = base.format(getDoi(company, journal, entry))
+
+        requests.head(url)
 
         r = BeautifulSoup(entry.summary)("p")
         if r:
@@ -694,73 +712,77 @@ def getJournals(company):
 
 if __name__ == "__main__":
 
-    from requests_futures.sessions import FuturesSession
-    import functools
-    import q
+    print(getJournals('science'))
 
-    def print_result(journal, entry, future):
-        response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("plos", journal, entry, response)
-        print(abstract)
-        print(date)
-        # print("\n")
-        # print("\n")
-        print(authors)
-        # print("\n")
-        print(title)
-        # print("\n")
+    # from requests_futures.sessions import FuturesSession
+    # import functools
+    # import q
 
-    urls_test = ["debug/plos.xml"]
-    # urls_test = ["http://feeds.plos.org/plosone/PLoSONE"]
+    # def print_result(journal, entry, future):
+        # response = future.result()
+        # title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("plos", journal, entry, response)
+        # # print(abstract)
+        # # print("\n")
+        # # print(date)
+        # # print("\n")
+        # # print(authors)
+        # # print("\n")
+        # # print(title)
+        # print(graphical_abstract)
+        # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
+        # # print("\n")
 
-    session = FuturesSession(max_workers=20)
+    # urls_test = ["debug/plos.xml"]
+    # # urls_test = ["http://feeds.plos.org/plosone/PLoSONE"]
 
-    list_urls = []
+    # session = FuturesSession(max_workers=20)
 
-    feed = feedparser.parse(urls_test[0])
-    # print(feed.entries)
-    # print(feed)
-    journal = feed['feed']['title']
-    print(journal)
+    # list_urls = []
 
-    # headers = {'User-agent': 'Mozilla/5.0',
+    # feed = feedparser.parse(urls_test[0])
+    # # print(feed.entries)
+    # # print(feed)
+    # journal = feed['feed']['title']
+    # print(journal)
+
+    # # headers = {'User-agent': 'Mozilla/5.0',
+               # # 'Connection': 'close'}
+
+    # headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                # 'Connection': 'close'}
 
-    headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
-               'Connection': 'close'}
 
 
+    # for entry in feed.entries:
 
-    for entry in feed.entries[1:]:
+        # # print(entry)
 
-        # print(entry)
+        # url = entry.link
 
-        url = entry.link
+        # doi = getDoi('plos', journal, entry)
 
-        doi = getDoi('plos', journal, entry)
+        # # print(doi)
 
-        # print(doi)
+        # # print(entry.title)
 
-        # print(entry.title)
+        # # print(url)
 
-        # print(url)
+        # # url = entry.feedburner_origlink
+        # # title = entry.title
 
-        # url = entry.feedburner_origlink
-        # title = entry.title
+        # # if "Tie2 Signaling" not in entry.title:
+            # # continue
+        # # title = entry.title
 
-        # if "cross reactive" not in title:
-            # continue
-        # title = entry.title
+        # # if "cross reactive" not in title:
+            # # continue
+        # # print(url)
+        # # print(title)
+        # # print(entry)
+        # # print(url)
+        # # getDoi(journal, entry)
 
-        # if "cross reactive" not in title:
-            # continue
-        # print(url)
-        # print(title)
-        # print(entry)
-        # print(url)
-        # getDoi(journal, entry)
+        # future = session.get(url, headers=headers, timeout=20)
+        # future.add_done_callback(functools.partial(print_result, journal, entry))
 
-        future = session.get(url, headers=headers, timeout=20)
-        future.add_done_callback(functools.partial(print_result, journal, entry))
-
-        break
+        # # break
