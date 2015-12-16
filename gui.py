@@ -651,6 +651,11 @@ class Fenetre(QtGui.QMainWindow):
         self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
 
+    def viewLikes(self):
+
+        pass
+
+
     def updateModel(self):
 
         """Debug function, allows to update a model
@@ -1268,9 +1273,10 @@ class Fenetre(QtGui.QMainWindow):
         # Else, do the contrary
         else:
             self.button_search_new.setText("View unread")
-            for proxy in self.list_proxies_in_tabs:
-                proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
-                proxy.setFilterKeyColumn(11)
+            proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
+            proxy.setFilterRegExp(QtCore.QRegExp("[0]"))
+            proxy.setFilterKeyColumn(11)
+            self.updateCellSize()
 
         self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
