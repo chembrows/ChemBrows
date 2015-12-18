@@ -199,9 +199,4 @@ class ViewPerso(QtGui.QTableView):
                 self.setCurrentIndex(current_index)
                 self.clicked.emit(current_index)
 
-        # if e.modifiers() == QtCore.Qt.ControlModifier:
-            # # On active le Ctrl+a
-            # if key == QtCore.Qt.Key_A:
-                # super(ViewPerso, self).keyPressEvent(e)
-
         e.ignore()

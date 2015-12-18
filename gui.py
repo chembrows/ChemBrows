@@ -612,6 +612,9 @@ class Fenetre(QtGui.QMainWindow):
         self.toggleWaitAction = QtGui.QAction('Add/remove to to-read list', self)
         self.toggleWaitAction.triggered.connect(self.toggleWait)
 
+        self.showLikesAction = QtGui.QAction('Show liked articles', self)
+        self.showLikesAction.triggered.connect(self.showLikes)
+
         # Action to serve use as a separator
         self.separatorAction = QtGui.QAction(self)
         self.separatorAction.setSeparator(True)
@@ -651,9 +654,33 @@ class Fenetre(QtGui.QMainWindow):
         self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
 
-    def viewLikes(self):
+    def showLikes(self):
 
-        pass
+        """Show liked articles"""
+
+        # Use the proxy to filter the column liked
+        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
+        proxy.setFilterRegExp(QtCore.QRegExp("[1]"))
+        proxy.setFilterKeyColumn(9)
+
+        # Get the maximum nbr of like articles
+        count_like_max = QtSql.QSqlQuery(self.bdd)
+        count_like_max.exec_("SELECT COUNT(id) FROM papers WHERE liked=1")
+        count_like_max.first()
+        nbr_likes = count_like_max.record().value(0)
+
+        # Load all the liked articles:
+        # Mandatory to avoid a bug: if there is no liked articles in the
+        # chunk of the loaded sql entries, can cause a scrolling bug
+        # We count the nbr_likes articles liked to try to optimize the
+        # query
+        while (proxy.canFetchMore(QtCore.QModelIndex()) and
+               proxy.rowCount() < nbr_likes):
+
+            proxy.fetchMore(QtCore.QModelIndex())
+
+        self.updateCellSize()
+        self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
 
 
     def updateModel(self):
@@ -1248,6 +1275,7 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
+        # print(requete)
         self.query.prepare(requete)
         self.query.exec_
 
@@ -1274,7 +1302,7 @@ class Fenetre(QtGui.QMainWindow):
         else:
             self.button_search_new.setText("View unread")
             proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
-            proxy.setFilterRegExp(QtCore.QRegExp("[0]"))
+            proxy.setFilterRegExp(QtCore.QRegExp("[01]"))
             proxy.setFilterKeyColumn(11)
             self.updateCellSize()
 
@@ -1392,11 +1420,14 @@ class Fenetre(QtGui.QMainWindow):
         # results of a particular tab
         if self.onglets.currentIndex() != 0:
             table = self.list_tables_in_tabs[self.onglets.currentIndex()]
-            requete = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
+            requete = self.refineBaseQuery(
+                table.base_query, table.topic_entries,
+                table.author_entries)
             requete = requete.replace("WHERE ", "WHERE (")
             requete += ") AND (topic_simple LIKE '%{}%') AND journal IN ("
         else:
-            requete = "SELECT * FROM papers WHERE (topic_simple LIKE '%{}%') AND journal IN ("
+            requete = "SELECT * FROM papers WHERE (topic_simple LIKE '%{}%') \
+                    AND journal IN ("
 
         results = functions.simpleChar(self.line_research.text())
 
@@ -2085,6 +2116,7 @@ class Fenetre(QtGui.QMainWindow):
         self.sortMenu.addAction(self.sortingDateAction)
         self.sortMenu.addAction(self.separatorAction)
         self.sortMenu.addAction(self.sortingReversedAction)
+        self.viewMenu.addAction(self.showLikesAction)
 
         self.helpMenu = self.menubar.addMenu("&Help")
         self.helpMenu.addAction(self.tutoAction)
