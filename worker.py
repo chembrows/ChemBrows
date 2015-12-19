@@ -11,6 +11,7 @@ from requests_futures.sessions import FuturesSession
 import requests
 import socket
 import traceback
+import concurrent
 
 from io import BytesIO
 from PIL import Image
@@ -58,6 +59,9 @@ class Worker(QtCore.QThread):
 
         # Count the entries added by a particular worker
         self.new_entries_worker = 0
+
+        # Store the futures in this list. Easier to kill them
+        self.list_futures = []
 
 
     def setUrl(self, url_feed):
@@ -192,6 +196,7 @@ class Worker(QtCore.QThread):
 
                             future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
+                            self.list_futures.append(future_image)
 
                     else:
                         self.count_futures_images += 1
@@ -245,6 +250,7 @@ class Worker(QtCore.QThread):
 
                         future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                         future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
+                        self.list_futures.append(future_image)
 
         else:
 
@@ -298,6 +304,7 @@ class Worker(QtCore.QThread):
 
                         future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers)
                         future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
+                        self.list_futures.append(future)
 
                         # Continue just to be sure. If dl_page is True, dl_image is likely True too
                         continue
@@ -317,6 +324,7 @@ class Worker(QtCore.QThread):
 
                             future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
                             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
+                            self.list_futures.append(future_image)
 
                     else:
                         self.count_futures_urls += 1
@@ -331,25 +339,30 @@ class Worker(QtCore.QThread):
 
                     future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers)
                     future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
+                    self.list_futures.append(future)
 
 
         # Check if the counters are full
-        while self.count_futures_images + self.count_futures_urls != len(self.feed.entries) * 2:
+        while ((self.count_futures_images + self.count_futures_urls) !=
+                len(self.feed.entries) * 2 and self.parent.parsing):
             self.sleep(1)
 
-        if not self.bdd.commit():
-            self.l.error(self.bdd.lastError().text())
-            self.l.debug("db insertions/modifications: {}".format(self.new_entries_worker))
-            self.l.error("Problem when comitting data for {}".format(journal))
+        if self.parent.parsing:
+            if not self.bdd.commit():
+                self.l.error(self.bdd.lastError().text())
+                self.l.debug("db insertions/modifications: {}".
+                             format(self.new_entries_worker))
+                self.l.error("Problem when comitting data for {}".
+                             format(journal))
 
         # Free the memory, and clean the remaining futures
         try:
             self.session_pages.executor.shutdown()
         except AttributeError:
-            pass
+            self.l.error("Error while shutting down pages session")
+            self.l.error(traceback.format_exc())
 
         self.session_images.executor.shutdown()
-
         self.l.debug("Exiting thread for {}".format(journal))
 
 
@@ -357,6 +370,9 @@ class Worker(QtCore.QThread):
 
         """Callback to handle the response of the futures trying to
         download the page of the articles"""
+
+        if not self.parent.parsing:
+            return
 
         self.l.debug("Page dled")
         self.count_futures_urls += 1
@@ -377,6 +393,10 @@ class Worker(QtCore.QThread):
             return
         except socket.timeout:
             self.l.error("socket.timeout for {}".format(journal))
+            self.count_futures_images += 1
+            return
+        except concurrent.futures._base.CancelledError:
+            self.l.error("future cancelled for {}".format(journal))
             self.count_futures_images += 1
             return
         except Exception as e:
@@ -448,12 +468,16 @@ class Worker(QtCore.QThread):
 
             future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
             future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
+            self.list_futures.append(future_image)
 
 
     def pictureDownloaded(self, doi, entry_url, future):
 
         """Callback to handle the response of the futures
         downloading a picture"""
+
+        if not self.parent.parsing:
+            return
 
         query = QtSql.QSqlQuery(self.bdd)
 
@@ -473,6 +497,9 @@ class Worker(QtCore.QThread):
         except socket.timeout:
             self.l.error("socket.timeout for {}".format(entry_url))
             params = ("Empty", doi)
+        except concurrent.futures._base.CancelledError:
+            self.l.error("future cancelled for {}".format(entry_url))
+            return
         else:
             # If the picture was dled correctly
             if response.status_code is requests.codes.ok:

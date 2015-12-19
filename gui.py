@@ -435,8 +435,9 @@ class Fenetre(QtGui.QMainWindow):
         self.start_time = datetime.datetime.now()
 
         # Display a progress dialog box
-        self.progress = QtGui.QProgressDialog("Collecting in progress", None, 0, 100, self)
+        self.progress = QtGui.QProgressDialog("Collecting in progress", "Cancel", 0, 100, self)
         self.progress.setWindowTitle("Collecting articles")
+        self.progress.canceled.connect(self.cancelRefresh)
         self.progress.show()
 
         self.urls_max = len(self.urls)
@@ -482,6 +483,9 @@ class Fenetre(QtGui.QMainWindow):
         This slot is called when a thread is finished, to start the
         next one"""
 
+        if not self.parsing:
+            return
+
         elapsed_time = datetime.datetime.now() - self.start_time
         self.l.info(elapsed_time)
 
@@ -522,7 +526,6 @@ class Fenetre(QtGui.QMainWindow):
             table = self.list_tables_in_tabs[self.onglets.currentIndex()]
             table.verticalScrollBar().setSliderPosition(0)
 
-
         else:
             if self.urls:
                 self.l.debug("STARTING NEW THREAD")
@@ -533,6 +536,37 @@ class Fenetre(QtGui.QMainWindow):
                 self.list_threads.append(worker)
                 worker.start()
                 app.processEvents()
+
+
+    def cancelRefresh(self):
+
+        """Slot to cancel the refresh process"""
+
+        # Set the parsing bool to false, block checkThreads
+        self.parsing = False
+
+        # Cancel all the futures of each worker
+        for worker in self.list_threads:
+            for future in worker.list_futures:
+                app.processEvents()
+                if type(future) is not bool:
+                    future.cancel()
+            self.l.debug("Killed all the futures for this worker")
+
+        # Display a smooth progress bar
+        self.progress = QtGui.QProgressDialog("Canceling...", None, 0, 0, self)
+        self.progress.setWindowTitle("Canceling refresh")
+        self.progress.show()
+
+        while False in [worker.isFinished() for worker in self.list_threads]:
+            app.processEvents()
+
+        self.parseAction.setEnabled(True)
+
+        self.loadNotifications()
+
+        self.updateCellSize()
+        self.progress.reset()
 
 
     def defineActions(self):
@@ -870,15 +904,22 @@ class Fenetre(QtGui.QMainWindow):
     def eventFilter(self, source, event):
 
         """Sublclassing of this method allows to hide/show
-        the journals filters on the left, through a mouse hover event"""
+        the journals filters on the left, through a mouse hover event.
+        It also blocks the user interactions with the UI while parsing"""
 
         # do not hide menubar when menu shown
         if QtGui.qApp.activePopupWidget() is None:
             # If parsing running, block some user inputs
             if self.parsing:
-                forbidden = [QtCore.QEvent.KeyPress, QtCore.QEvent.KeyRelease,
-                             QtCore.QEvent.MouseButtonPress, QtCore.QEvent.MouseButtonDblClick,
-                             QtCore.QEvent.MouseMove, QtCore.QEvent.Wheel]
+                if (type(source) == QtGui.QPushButton and
+                        source.text() == 'Cancel'):
+                    forbidden = []
+                else:
+                    forbidden = [QtCore.QEvent.KeyPress,
+                                 QtCore.QEvent.KeyRelease,
+                                 QtCore.QEvent.MouseButtonPress,
+                                 QtCore.QEvent.MouseButtonDblClick,
+                                 QtCore.QEvent.MouseMove, QtCore.QEvent.Wheel]
                 if event.type() == QtCore.QEvent.Close:
                     self.progress.reset()
                     return False
@@ -888,9 +929,12 @@ class Fenetre(QtGui.QMainWindow):
                 try:
                     if self.scroll_tags.isHidden():
                         try:
-                            # Calculate the top zone where resizing can't happen (menubar, toolbar, etc)
-                            table_y = self.toolbar.rect().height() + self.menubar.rect().height() + \
-                                    self.mapToGlobal(QtCore.QPoint(0, 0)).y() + self.hbox_central.getContentsMargins()[1]
+                            # Calculate the top zone where resizing can't
+                            # happen (menubar, toolbar, etc)
+                            table_y = self.toolbar.rect().height() + \
+                                self.menubar.rect().height() + \
+                                self.mapToGlobal(QtCore.QPoint(0, 0)).y() + \
+                                self.hbox_central.getContentsMargins()[1]
                         except AttributeError:
                             pass
                         rect = self.geometry()
@@ -2041,17 +2085,19 @@ class Fenetre(QtGui.QMainWindow):
 
         self.parsing = True
 
+        self.predictor.finished.connect(whenDone)
+        self.predictor.start()
+
         # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
         # If the range is set to 0, get a busy progress bar,
         # without percentage
-        app.processEvents()
         self.progress = QtGui.QProgressDialog("Calculating Hot Paperness...", None, 0, 0, self)
         self.progress.setWindowTitle("Hot Paperness calculation")
         self.progress.show()
-        app.processEvents()
 
-        self.predictor.finished.connect(whenDone)
-        self.predictor.start()
+        # While calculating, display a smooth progress bar
+        while not self.predictor.isFinished():
+            app.processEvents()
 
 
 
