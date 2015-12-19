@@ -862,8 +862,6 @@ class Fenetre(QtGui.QMainWindow):
 
         self.getJournalsToCare()
 
-        self.searchByButton()
-
         # Timer to get the dimensions of the window right.
         # If the window is displayed too fast, I can't get the dimensions right
         QtCore.QTimer.singleShot(50, self.updateCellSize)
@@ -1241,6 +1239,9 @@ class Fenetre(QtGui.QMainWindow):
     def searchByButton(self):
 
         """Slot to select articles by journal"""
+
+        import q
+        q("c'est moi")
 
         # When last button is uncheck, select all the journals
         if not self.tags_selected:
