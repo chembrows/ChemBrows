@@ -1240,9 +1240,6 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to select articles by journal"""
 
-        import q
-        q("c'est moi")
-
         # When last button is uncheck, select all the journals
         if not self.tags_selected:
             self.tags_selected = self.getJournalsToCare()
