@@ -97,6 +97,9 @@ class Fenetre(QtGui.QMainWindow):
         # Bool to check if the program is collecting data
         self.parsing = False
 
+        # Bool to check if the ui is locked for the user
+        self.blocking_ui = False
+
         QtGui.qApp.installEventFilter(self)
 
         # List to store the tags checked
@@ -397,6 +400,7 @@ class Fenetre(QtGui.QMainWindow):
         """Method to start the parsing of the data"""
 
         self.parsing = True
+        self.blocking_ui = True
 
         self.journals_to_parse = self.options.value("journals_to_parse", [])
 
@@ -567,6 +571,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.updateCellSize()
         self.progress.reset()
+
+        self.blocking_ui = False
 
 
     def defineActions(self):
@@ -910,7 +916,7 @@ class Fenetre(QtGui.QMainWindow):
         # do not hide menubar when menu shown
         if QtGui.qApp.activePopupWidget() is None:
             # If parsing running, block some user inputs
-            if self.parsing:
+            if self.blocking_ui:
                 if (type(source) == QtGui.QPushButton and
                         source.text() == 'Cancel'):
                     forbidden = []
@@ -2057,7 +2063,7 @@ class Fenetre(QtGui.QMainWindow):
             calculations is finished"""
 
             # Unlock the UI by setting this to False
-            self.parsing = False
+            self.blocking_ui = False
 
             mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
             mes += "Feed it more !"
@@ -2083,7 +2089,7 @@ class Fenetre(QtGui.QMainWindow):
             table = self.list_tables_in_tabs[self.onglets.currentIndex()]
             table.verticalScrollBar().setSliderPosition(0)
 
-        self.parsing = True
+        self.blocking_ui = True
 
         self.predictor.finished.connect(whenDone)
         self.predictor.start()
