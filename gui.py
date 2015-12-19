@@ -1281,7 +1281,6 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
-        # print(requete)
         self.query.prepare(requete)
         self.query.exec_
 
@@ -1325,7 +1324,9 @@ class Fenetre(QtGui.QMainWindow):
         author_entries = author_options
 
         # If no * in the SQL query, return
-        if author_entries is None or not any('*' in element for element in author_entries):
+        if (author_entries is None or
+                not any('*' in element for element in author_entries)):
+
             return base_query
 
         query = QtSql.QSqlQuery(self.bdd)
@@ -1371,9 +1372,6 @@ class Fenetre(QtGui.QMainWindow):
                             if matching:
                                 list_adding_or.append(True)
                                 break
-                            else:
-                                list_adding_or.append(False)
-
                         else:
                             # Tips for any()
                             # http://stackoverflow.com/questions/4843158/check-if-a-python-list-item-contains-a-string-inside-another-string
