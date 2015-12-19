@@ -519,7 +519,9 @@ class Fenetre(QtGui.QMainWindow):
             self.searchByButton()
             self.updateCellSize()
 
-            self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+            table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+            table.verticalScrollBar().setSliderPosition(0)
+
 
         else:
             if self.urls:
@@ -651,7 +653,9 @@ class Fenetre(QtGui.QMainWindow):
 
         self.searchByButton()
 
-        self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        table.verticalScrollBar().setSliderPosition(0)
+
 
 
     def showLikes(self):
@@ -680,7 +684,9 @@ class Fenetre(QtGui.QMainWindow):
             proxy.fetchMore(QtCore.QModelIndex())
 
         self.updateCellSize()
-        self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        table.verticalScrollBar().setSliderPosition(0)
 
 
     def updateModel(self):
@@ -1306,7 +1312,8 @@ class Fenetre(QtGui.QMainWindow):
             proxy.setFilterKeyColumn(11)
             self.updateCellSize()
 
-        self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        table.verticalScrollBar().setSliderPosition(0)
 
 
     def refineBaseQuery(self, base_query, topic_options, author_options):
@@ -1452,7 +1459,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.line_research.clear()
         self.line_research.returnPressed.emit()
-        self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        table.verticalScrollBar().setSliderPosition(0)
 
 
     def clearLayout(self, layout):
@@ -1505,7 +1513,9 @@ class Fenetre(QtGui.QMainWindow):
         self.button_share_mail.hide()
 
         # Put the vertical scroll bar at the top
-        self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        table.verticalScrollBar().setSliderPosition(0)
+
 
         # Delete last query
         try:
@@ -2030,8 +2040,8 @@ class Fenetre(QtGui.QMainWindow):
                 QtGui.QMessageBox.information(self, "New articles", mes,
                                               QtGui.QMessageBox.Ok)
 
-                self.list_tables_in_tabs[0].verticalScrollBar().setSliderPosition(0)
-
+            table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+            table.verticalScrollBar().setSliderPosition(0)
 
         self.parsing = True
 
