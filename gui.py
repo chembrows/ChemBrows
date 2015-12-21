@@ -529,6 +529,7 @@ class Fenetre(QtGui.QMainWindow):
 
             table = self.list_tables_in_tabs[self.onglets.currentIndex()]
             table.verticalScrollBar().setSliderPosition(0)
+            table.selectionModel().clearSelection()
 
         else:
             if self.urls:
@@ -695,7 +696,7 @@ class Fenetre(QtGui.QMainWindow):
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         table.verticalScrollBar().setSliderPosition(0)
-
+        table.selectionModel().clearSelection()
 
 
     def showLikes(self):
@@ -727,6 +728,7 @@ class Fenetre(QtGui.QMainWindow):
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         table.verticalScrollBar().setSliderPosition(0)
+        table.selectionModel().clearSelection()
 
 
     def updateModel(self):
@@ -1361,6 +1363,7 @@ class Fenetre(QtGui.QMainWindow):
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         table.verticalScrollBar().setSliderPosition(0)
+        table.selectionModel().clearSelection()
 
 
     def refineBaseQuery(self, base_query, topic_options, author_options):
@@ -1507,6 +1510,7 @@ class Fenetre(QtGui.QMainWindow):
         self.line_research.returnPressed.emit()
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         table.verticalScrollBar().setSliderPosition(0)
+        table.selectionModel().clearSelection()
 
 
     def clearLayout(self, layout):
@@ -1561,6 +1565,7 @@ class Fenetre(QtGui.QMainWindow):
         # Put the vertical scroll bar at the top
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         table.verticalScrollBar().setSliderPosition(0)
+        table.selectionModel().clearSelection()
 
 
         # Delete last query
@@ -2086,8 +2091,6 @@ class Fenetre(QtGui.QMainWindow):
                 QtGui.QMessageBox.information(self, "New articles", mes,
                                               QtGui.QMessageBox.Ok)
 
-            table = self.list_tables_in_tabs[self.onglets.currentIndex()]
-            table.verticalScrollBar().setSliderPosition(0)
 
         self.blocking_ui = True
 
