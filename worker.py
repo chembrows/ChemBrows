@@ -359,8 +359,7 @@ class Worker(QtCore.QThread):
         try:
             self.session_pages.executor.shutdown()
         except AttributeError:
-            self.l.error("Error while shutting down pages session")
-            self.l.error(traceback.format_exc())
+            self.l.error("No session_pages to shut down")
 
         self.session_images.executor.shutdown()
         self.l.debug("Exiting thread for {}".format(journal))
