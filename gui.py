@@ -36,6 +36,7 @@ from tuto import Tuto
 from my_twit import MyTwit
 import constants
 from styles import MyStyles
+from little_thread import LittleThread
 
 # To debug and profile. Comment for prod
 # from memory_profiler import profile
@@ -521,8 +522,6 @@ class Fenetre(QtGui.QMainWindow):
             self.parseAction.setEnabled(True)
             self.l.info("Parsing data finished. Enabling parseAction")
 
-            self.loadNotifications()
-
             # Update the view when a worker is finished
             self.searchByButton()
             self.updateCellSize()
@@ -566,13 +565,24 @@ class Fenetre(QtGui.QMainWindow):
         while False in [worker.isFinished() for worker in self.list_threads]:
             app.processEvents()
 
-        self.parseAction.setEnabled(True)
+        self.progress.setLabelText("Loading notifications...")
 
-        self.loadNotifications()
+        # TODO: checker s'il y a de nouveaux articles, sinon passer cette étape
+
+        # Start loadNotifications in a thread (CPU consumming),
+        # and display a smooth progressBar while in the function
+        # But only if some articles were collected
+        if self.counter > 0:
+            worker = LittleThread(self.loadNotifications)
+            worker.start()
+
+            while worker.isRunning():
+                app.processEvents()
 
         self.updateCellSize()
         self.progress.reset()
 
+        self.parseAction.setEnabled(True)
         self.blocking_ui = False
 
 
@@ -804,6 +814,10 @@ class Fenetre(QtGui.QMainWindow):
         a particular tab, when loadNotifications is called after an update
         from an AdvancedSearch window"""
 
+        self.l.debug("Starting loadNotifications")
+
+        start_time = datetime.datetime.now()
+
         count_query = QtSql.QSqlQuery(self.bdd)
         count_query.setForwardOnly(True)
 
@@ -825,8 +839,9 @@ class Fenetre(QtGui.QMainWindow):
             append_new = table.list_new_ids.append
             append_articles = table.list_id_articles.append
 
-            req_str = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
-
+            req_str = self.refineBaseQuery(table.base_query,
+                                           table.topic_entries,
+                                           table.author_entries)
             count_query.exec_(req_str)
 
             id_index = count_query.record().indexOf('id')
@@ -844,6 +859,9 @@ class Fenetre(QtGui.QMainWindow):
             for index in range(1, self.onglets.count()):
                 notifs = len(self.onglets.widget(index).list_new_ids)
                 self.onglets.setNotifications(index, notifs)
+
+        self.l.debug("Exiting loadNotifications. Time spent: {}".
+                     format(datetime.datetime.now() - start_time))
 
 
     def restoreSettings(self):
@@ -2067,6 +2085,17 @@ class Fenetre(QtGui.QMainWindow):
             """Internal function called when the thread for percentages
             calculations is finished"""
 
+            # If parsing, load the notifications
+            # load the notifications only if some articles were collected
+            if not update and self.counter > 0:
+                self.progress.setWindowTitle("Loading notifications")
+                self.progress.setLabelText("Loading notifications...")
+                worker = LittleThread(self.loadNotifications)
+                worker.start()
+
+                while worker.isRunning():
+                    app.processEvents()
+
             # Unlock the UI by setting this to False
             self.blocking_ui = False
 
@@ -2100,7 +2129,8 @@ class Fenetre(QtGui.QMainWindow):
         # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
         # If the range is set to 0, get a busy progress bar,
         # without percentage
-        self.progress = QtGui.QProgressDialog("Calculating Hot Paperness...", None, 0, 0, self)
+        self.progress = QtGui.QProgressDialog("Calculating Hot Paperness...",
+                                              None, 0, 0, self)
         self.progress.setWindowTitle("Hot Paperness calculation")
         self.progress.show()
 
@@ -2109,14 +2139,14 @@ class Fenetre(QtGui.QMainWindow):
             app.processEvents()
 
 
-
     def toggleLike(self):
 
         """Slot to mark a post liked"""
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
-        like = table.model().index(table.selectionModel().currentIndex().row(), 9).data()
+        like = table.model().index(
+            table.selectionModel().currentIndex().row(), 9).data()
         line = table.selectionModel().currentIndex().row()
 
         # Invert the value of new
