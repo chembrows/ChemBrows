@@ -242,28 +242,42 @@ class AdvancedSearch(QtGui.QDialog):
         self.options.sync()
 
 
-    def showInfo(self, field_type, operator):
+    def showInfo(self, field_type):
 
         if field_type == 1:
             # Generic message fot the field tooltips
             mes = """
             Insert comma(s) bewtween keywords. Ex: heparin sulfate, \
-            heparinase = heparin sulfate {} heparinase.\nWildcards (*) are \
+            heparinase. If 'Any' is checked, will match any keyword. If 'All' \
+            is checked, will match all the keywords.\nWildcards (*) are \
             accepted. Ex: heparin*.\nFilters are case insensitive.
             """
-        elif field_type == 2:
+        if field_type == 2:
+            # Generic message fot the field tooltips
+            mes = """
+            Insert comma(s) bewtween keywords. Ex: heparin sulfate, \
+            heparinase.\nWildcards (*) are accepted. Ex: heparin*.\nFilters \
+            are case insensitive.
+            """
+        elif field_type == 3:
             # Generic message fot the authors tooltips
             mes = """Insert comma(s) bewtween keywords. Ex: Jean-Patrick \
-            Francoia, Laurent Vial = Jean-Patrick Francoia {} Laurent Vial.
+            Francoia, Laurent Vial. If 'Any' is checked, will match any \
+            author. If 'All' is checked, will match all the authors. \
             Wildcards (*) are accepted. Ex: J* Francoia. \nFilters are case \
-            insensitive. First name comes before last name. Ex: Linus Pauling \
-            or L* Pauling.
+            insensitive.\nFirst name comes before last name. Ex: Linus \
+            Pauling or L* Pauling.
+            """
+        elif field_type == 4:
+            # Generic message fot the authors tooltips
+            mes = """Insert comma(s) bewtween keywords. Ex: Jean-Patrick \
+            Francoia, Laurent Vial. Wildcards (*) are accepted. \
+            Ex: J* Francoia. \nFilters are case insensitive.\nFirst name \
+            comes before last name. Ex: Linus Pauling or L* Pauling.
             """
 
         # Clean the tabs in the message (tabs are 4 spaces)
         mes = mes.replace("    ", "")
-
-        mes = mes.format(operator)
 
         QtGui.QMessageBox.information(self, "Information", mes,
                                       QtGui.QMessageBox.Ok)
@@ -294,7 +308,7 @@ class AdvancedSearch(QtGui.QDialog):
         label_topic_include = QtGui.QLabel("Include:")
         line_topic_include = ButtonLineIcon(os.path.join(self.parent.resource_dir,
                                                      'images/info'))
-        line_topic_include.buttonClicked.connect(lambda: self.showInfo(1, 'AND'))
+        line_topic_include.buttonClicked.connect(lambda: self.showInfo(1))
 
         group_radio_topic = QtGui.QButtonGroup()
         radio_topic_any = QtGui.QRadioButton("Any")
@@ -307,7 +321,7 @@ class AdvancedSearch(QtGui.QDialog):
         line_topic_exclude = QtGui.QLineEdit()
         line_topic_exclude = ButtonLineIcon(os.path.join(self.parent.resource_dir,
                                                      'images/info'))
-        line_topic_exclude.buttonClicked.connect(lambda: self.showInfo(1, 'NOT'))
+        line_topic_exclude.buttonClicked.connect(lambda: self.showInfo(2))
 
         # Organize the lines and the lab within the grid
         # addWidget (self, QWidget, int row, int column, int rowSpan, int columnSpan, Qt.Alignment alignment = 0)
@@ -333,7 +347,7 @@ class AdvancedSearch(QtGui.QDialog):
         line_author_include = QtGui.QLineEdit()
         line_author_include = ButtonLineIcon(os.path.join(self.parent.resource_dir,
                                                       'images/info'))
-        line_author_include.buttonClicked.connect(lambda: self.showInfo(2, 'AND'))
+        line_author_include.buttonClicked.connect(lambda: self.showInfo(3))
 
         group_radio_author = QtGui.QButtonGroup()
         radio_author_any = QtGui.QRadioButton("Any")
@@ -346,7 +360,7 @@ class AdvancedSearch(QtGui.QDialog):
         line_author_exclude = QtGui.QLineEdit()
         line_author_exclude = ButtonLineIcon(os.path.join(self.parent.resource_dir,
                                                       'images/info'))
-        line_author_exclude.buttonClicked.connect(lambda: self.showInfo(2, 'NOT'))
+        line_author_exclude.buttonClicked.connect(lambda: self.showInfo(4))
 
         grid_author.addWidget(label_author_include, 0, 0)
         grid_author.addWidget(line_author_include, 0, 1)
