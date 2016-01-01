@@ -841,7 +841,8 @@ class Fenetre(QtGui.QMainWindow):
 
             req_str = self.refineBaseQuery(table.base_query,
                                            table.topic_entries,
-                                           table.author_entries)
+                                           table.author_entries,
+                                           table.radio_states)
             count_query.exec_(req_str)
 
             id_index = count_query.record().indexOf('id')
@@ -879,9 +880,11 @@ class Fenetre(QtGui.QMainWindow):
             query = searches_saved.value("{0}/sql_query".format(search_name))
             topic_entries = searches_saved.value("{0}/topic_entries".format(search_name), None)
             author_entries = searches_saved.value("{0}/author_entries".format(search_name), None)
+            radio_states = searches_saved.value("{0}/radio_states".format(search_name), None)
             self.createSearchTab(search_name, query,
                                  topic_options=topic_entries,
-                                 author_options=author_entries)
+                                 author_options=author_entries,
+                                 radio_states=radio_states)
 
         # If windows settings are available, import and use them
         if "Window" in self.options.childGroups():
@@ -1199,7 +1202,8 @@ class Fenetre(QtGui.QMainWindow):
         self.onglets.addTab(tableau, "ToRead")
 
 
-    def createSearchTab(self, name_search, query, topic_options=None, author_options=None, update=False):
+    def createSearchTab(self, name_search, query, topic_options=None,
+                        author_options=None, radio_states=None, update=False):
 
         """Slot called from AdvancedSearch, when a new search is added,
         or a previous one updated"""
@@ -1213,6 +1217,7 @@ class Fenetre(QtGui.QMainWindow):
                     self.list_tables_in_tabs[index].base_query = query
                     self.list_tables_in_tabs[index].topic_entries = topic_options
                     self.list_tables_in_tabs[index].author_entries = author_options
+                    self.list_tables_in_tabs[index].radio_states = radio_states
                     self.loadNotifications(index)
                     break
 
@@ -1234,6 +1239,7 @@ class Fenetre(QtGui.QMainWindow):
         tableau.base_query = query
         tableau.topic_entries = topic_options
         tableau.author_entries = author_options
+        tableau.radio_states = radio_states
         tableau.setModel(proxy)
         tableau.setItemDelegate(ViewDelegate(self))
         tableau.setSelectionBehavior(tableau.SelectRows)
@@ -1333,7 +1339,10 @@ class Fenetre(QtGui.QMainWindow):
         # Becomes:
         # SELECT * FROM papers WHERE (topic_simple LIKE '% carboxyfluorescein %') AND journal IN ("ACS Catal."...
 
-        refined_query = self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries)
+        refined_query = self.refineBaseQuery(table.base_query,
+                                             table.topic_entries,
+                                             table.author_entries,
+                                             table.radio_states)
 
         if "WHERE" in refined_query:
             requete = refined_query.replace("WHERE ", "WHERE (")
@@ -1384,7 +1393,8 @@ class Fenetre(QtGui.QMainWindow):
         table.selectionModel().clearSelection()
 
 
-    def refineBaseQuery(self, base_query, topic_options, author_options):
+    def refineBaseQuery(self, base_query, topic_options, author_options,
+                        radio_states):
 
         """Method to refine the base_query of a view.
         A normal SQL query can't search a comma-separated list, so
@@ -1427,7 +1437,7 @@ class Fenetre(QtGui.QMainWindow):
                     person = person.strip().lower()
 
                     # AND condition
-                    if index == 0:
+                    if index == 0 and not radio_states[0]:
                         if '*' in person:
                             matching = fnmatch.filter(authors, person)
                             if not matching:
@@ -1435,35 +1445,39 @@ class Fenetre(QtGui.QMainWindow):
                                 break
 
                     # OR condition
-                    if index == 1:
+                    elif index == 0 and radio_states[0]:
                         if '*' in person:
                             matching = fnmatch.filter(authors, person)
                             if matching:
                                 list_adding_or.append(True)
-                                break
+                            else:
+                                list_adding_or.append(False)
                         else:
                             # Tips for any()
                             # http://stackoverflow.com/questions/4843158/check-if-a-python-list-item-contains-a-string-inside-another-string
-                            if any(person in element for element in authors):
+                            # if any(person in element for element in authors):
+                            if person in authors:
                                 list_adding_or.append(True)
                             else:
                                 list_adding_or.append(False)
 
                     # NOT condition
-                    if index == 2:
+                    if index == 1:
                         if '*' in person:
                             matching = fnmatch.filter(authors, person)
                             if matching:
                                 adding = False
                                 break
                         else:
-                            if any(person in element for element in authors):
+                            # if any(person in element for element in authors):
+                            if person in authors:
                                 adding = False
+                                break
 
-                if True not in list_adding_or and list_adding_or:
+                if list_adding_or and True not in list_adding_or:
                     adding = False
                 if not adding:
-                    continue
+                    break
 
             if adding:
                 list_ids.append(record.value('id'))

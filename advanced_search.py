@@ -111,12 +111,15 @@ class AdvancedSearch(QtGui.QDialog):
 
         # Get all the lineEdit from the current tab
         lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
+        radios = self.tabs.currentWidget().findChildren(QtGui.QRadioButton)
 
         # Clean the fields of tailing comma
-        topic_entries = [line.text()[:-1] if line.text() and line.text()[-1] == ',' else line.text() for line in lines[0:3]]
-        author_entries = [line.text()[:-1] if line.text() and line.text()[-1] == ',' else line.text() for line in lines[3:7]]
+        topic_entries = [line.text()[:-1] if line.text() and line.text()[-1] == ',' else line.text() for line in lines[0:2]]
+        author_entries = [line.text()[:-1] if line.text() and line.text()[-1] == ',' else line.text() for line in lines[2:4]]
+        radio_states = [radio.isChecked() for radio in radios]
 
-        base = functions.buildSearch(topic_entries, author_entries)
+        base = functions.buildSearch(topic_entries, author_entries,
+                                     radio_states)
 
         return base
 
@@ -132,8 +135,10 @@ class AdvancedSearch(QtGui.QDialog):
 
         # Get the lineEdit objects of the current search tab displayed
         lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
-        topic_entries = [line for line in lines[0:3]]
-        author_entries = [line for line in lines[3:7]]
+        topic_entries = [line for line in lines[0:2]]
+        author_entries = [line for line in lines[2:4]]
+
+        radios = self.tabs.currentWidget().findChildren(QtGui.QRadioButton)
 
         if index != 0:
 
@@ -148,6 +153,11 @@ class AdvancedSearch(QtGui.QDialog):
             if author_entries_options is not None:
                 author_entries = [line.setText(value) for line, value in zip(author_entries, author_entries_options)]
 
+            radio_states = self.options.value("{0}/radio_states".format(tab_title), None)
+            radio_states = [True if element == 'true' else False for element in radio_states]
+            if radio_states is not None:
+                [radio.setChecked(value) for radio, value in zip(radios, radio_states)]
+
         else:
             self.button_delete_search.hide()
 
@@ -157,13 +167,15 @@ class AdvancedSearch(QtGui.QDialog):
         """Slot to save a query"""
 
         lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
+        radios = self.tabs.currentWidget().findChildren(QtGui.QRadioButton)
 
         # Get the name of the current tab. Used to determine if the current
         # tab is the "new query" tab
         tab_title = self.tabs.tabText(self.tabs.currentIndex())
 
-        topic_entries = [line.text() for line in lines[0:3]]
-        author_entries = [line.text() for line in lines[3:7]]
+        topic_entries = [line.text() for line in lines[0:2]]
+        author_entries = [line.text() for line in lines[2:4]]
+        radio_states = [radio.isChecked() for radio in radios]
 
         # Build the query string
         base = self.buildSearch()
@@ -195,7 +207,8 @@ class AdvancedSearch(QtGui.QDialog):
                 if not self.test:
                     self.parent.createSearchTab(name_search, base,
                                                 topic_entries,
-                                                author_entries)
+                                                author_entries,
+                                                radio_states)
                     self.parent.loadNotifications()
 
                 # Clear the fields when perform search
@@ -208,7 +221,8 @@ class AdvancedSearch(QtGui.QDialog):
 
             if not self.test:
                 self.parent.createSearchTab(name_search, base, topic_entries,
-                                            author_entries, update=True)
+                                            author_entries, radio_states,
+                                            update=True)
 
         self.logger.debug("Saving the search")
 
@@ -216,13 +230,13 @@ class AdvancedSearch(QtGui.QDialog):
 
         # Re-initialize the keys
         self.options.remove("")
-        # self.options.setValue("name_search", name_search)
-        if topic_entries != [''] * 3:
+        if topic_entries != [''] * 2:
             self.options.setValue("topic_entries", topic_entries)
-        if author_entries != [''] * 3:
+        if author_entries != [''] * 2:
             self.options.setValue("author_entries", author_entries)
         if base:
             self.options.setValue("sql_query", base)
+        self.options.setValue("radio_states", radio_states)
         self.options.endGroup()
 
         self.options.sync()
@@ -277,30 +291,32 @@ class AdvancedSearch(QtGui.QDialog):
         vbox_query.addWidget(group_topic)
 
         # Create 3 lines, with their label: AND, OR, NOT
-        label_topic_and = QtGui.QLabel("AND:")
-        line_topic_and = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+        label_topic_include = QtGui.QLabel("Include:")
+        line_topic_include = ButtonLineIcon(os.path.join(self.parent.resource_dir,
                                                      'images/info'))
-        line_topic_and.buttonClicked.connect(lambda: self.showInfo(1, 'AND'))
+        line_topic_include.buttonClicked.connect(lambda: self.showInfo(1, 'AND'))
 
-        label_topic_or = QtGui.QLabel("OR:")
-        line_topic_or = QtGui.QLineEdit()
-        line_topic_or = ButtonLineIcon(os.path.join(self.parent.resource_dir,
-                                                    'images/info'))
-        line_topic_or.buttonClicked.connect(lambda: self.showInfo(1, 'OR'))
+        group_radio_topic = QtGui.QButtonGroup()
+        radio_topic_any = QtGui.QRadioButton("Any")
+        radio_topic_any.setChecked(True)
+        radio_topic_all = QtGui.QRadioButton("All")
+        group_radio_topic.addButton(radio_topic_any)
+        group_radio_topic.addButton(radio_topic_all)
 
-        label_topic_not = QtGui.QLabel("NOT:")
-        line_topic_not = QtGui.QLineEdit()
-        line_topic_not = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+        label_topic_exclude = QtGui.QLabel("Exclude:")
+        line_topic_exclude = QtGui.QLineEdit()
+        line_topic_exclude = ButtonLineIcon(os.path.join(self.parent.resource_dir,
                                                      'images/info'))
-        line_topic_not.buttonClicked.connect(lambda: self.showInfo(1, 'NOT'))
+        line_topic_exclude.buttonClicked.connect(lambda: self.showInfo(1, 'NOT'))
 
         # Organize the lines and the lab within the grid
-        grid_topic.addWidget(label_topic_and, 0, 0)
-        grid_topic.addWidget(line_topic_and, 0, 1, 1, 3)
-        grid_topic.addWidget(label_topic_or, 1, 0)
-        grid_topic.addWidget(line_topic_or, 1, 1, 1, 3)
-        grid_topic.addWidget(label_topic_not, 2, 0)
-        grid_topic.addWidget(line_topic_not, 2, 1, 1, 3)
+        # addWidget (self, QWidget, int row, int column, int rowSpan, int columnSpan, Qt.Alignment alignment = 0)
+        grid_topic.addWidget(label_topic_include, 0, 0)
+        grid_topic.addWidget(line_topic_include, 0, 1)
+        grid_topic.addWidget(radio_topic_any, 0, 2)
+        grid_topic.addWidget(radio_topic_all, 0, 3)
+        grid_topic.addWidget(label_topic_exclude, 1, 0)
+        grid_topic.addWidget(line_topic_exclude, 1, 1)
 
         vbox_query.addStretch(1)
 
@@ -313,40 +329,38 @@ class AdvancedSearch(QtGui.QDialog):
         # Add the author groupbox to the global vbox
         vbox_query.addWidget(group_author)
 
-
-        label_author_and = QtGui.QLabel("AND:")
-        line_author_and = QtGui.QLineEdit()
-        line_author_and = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+        label_author_include = QtGui.QLabel("Include:")
+        line_author_include = QtGui.QLineEdit()
+        line_author_include = ButtonLineIcon(os.path.join(self.parent.resource_dir,
                                                       'images/info'))
-        line_author_and.buttonClicked.connect(lambda: self.showInfo(2, 'AND'))
+        line_author_include.buttonClicked.connect(lambda: self.showInfo(2, 'AND'))
 
-        label_author_or = QtGui.QLabel("OR:")
-        line_author_or = QtGui.QLineEdit()
-        line_author_or = ButtonLineIcon(os.path.join(self.parent.resource_dir,
-                                                     'images/info'))
-        line_author_or.buttonClicked.connect(lambda: self.showInfo(2, 'OR'))
+        group_radio_author = QtGui.QButtonGroup()
+        radio_author_any = QtGui.QRadioButton("Any")
+        radio_author_any.setChecked(True)
+        radio_author_all = QtGui.QRadioButton("All")
+        group_radio_author.addButton(radio_author_any)
+        group_radio_author.addButton(radio_author_all)
 
-        label_author_not = QtGui.QLabel("NOT:")
-        line_author_not = QtGui.QLineEdit()
-        line_author_not = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+        label_author_not = QtGui.QLabel("Exclude:")
+        line_author_exclude = QtGui.QLineEdit()
+        line_author_exclude = ButtonLineIcon(os.path.join(self.parent.resource_dir,
                                                       'images/info'))
-        line_author_not.buttonClicked.connect(lambda: self.showInfo(2, 'NOT'))
+        line_author_exclude.buttonClicked.connect(lambda: self.showInfo(2, 'NOT'))
 
-        grid_author.addWidget(label_author_and, 0, 0)
-        grid_author.addWidget(line_author_and, 0, 1, 1, 3)
-        grid_author.addWidget(label_author_or, 1, 0)
-        grid_author.addWidget(line_author_or, 1, 1, 1, 3)
-        grid_author.addWidget(label_author_not, 2, 0)
-        grid_author.addWidget(line_author_not, 2, 1, 1, 3)
+        grid_author.addWidget(label_author_include, 0, 0)
+        grid_author.addWidget(line_author_include, 0, 1)
+        grid_author.addWidget(radio_author_any, 0, 2)
+        grid_author.addWidget(radio_author_all, 0, 3)
+        grid_author.addWidget(label_author_not, 1, 0)
+        grid_author.addWidget(line_author_exclude, 1, 1)
 
         vbox_query.addStretch(1)
 
-        line_topic_and.returnPressed.connect(self.search)
-        line_topic_or.returnPressed.connect(self.search)
-        line_topic_not.returnPressed.connect(self.search)
-        line_author_and.returnPressed.connect(self.search)
-        line_author_or.returnPressed.connect(self.search)
-        line_author_not.returnPressed.connect(self.search)
+        line_topic_include.returnPressed.connect(self.search)
+        line_topic_exclude.returnPressed.connect(self.search)
+        line_author_include.returnPressed.connect(self.search)
+        line_author_exclude.returnPressed.connect(self.search)
 
         return widget_query
 

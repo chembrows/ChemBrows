@@ -25,6 +25,7 @@ class ViewPerso(QtGui.QTableView):
         self.base_query = None
         self.topic_entries = None
         self.author_entries = None
+        self.radio_states = None
         self.list_new_ids = []
         self.list_id_articles = []
 

@@ -88,125 +88,84 @@ def queryString(word):
     return res
 
 
-def buildSearch(topic_entries, author_entries):
+def buildSearch(topic_entries, author_entries, radio_states):
 
     """Build the query"""
 
     base = "SELECT * FROM papers WHERE "
 
-    first = True
+    # first = True
 
-    # TOPIC, AND condition
+    str_topic = ['', '']
+    str_author = ['', '']
+
+    # Include line for topic, radio "Any" is not checked
+    # -> AND query
     if topic_entries[0]:
-        first = False
 
-        # words = [word.lstrip().rstrip() for word in topic_entries[0].split(",")]
         words = [word.strip() for word in topic_entries[0].split(",")]
+        words = [queryString(word) for word in words]
+
+        if radio_states[0]:
+            operator = 'OR'
+        else:
+            operator = 'AND'
+
+        for word in words:
+            if word == words[0]:
+                str_topic[0] = "topic_simple LIKE '{}'".format(word)
+            else:
+                str_topic[0] += " {} topic_simple LIKE '{}'".format(operator, word)
+
+    # TOPIC, NOT condition
+    if topic_entries[1]:
+        words = [word.strip() for word in topic_entries[1].split(",")]
         words = [queryString(word) for word in words]
 
         for word in words:
             if word == words[0]:
-                base += "topic_simple LIKE '{0}'".format(word)
+                str_topic[1] = "topic_simple NOT LIKE '{}'".format(word)
             else:
-                base += " AND topic_simple LIKE '{0}'".format(word)
+                str_topic[1] += " AND topic_simple NOT LIKE '{}'".format(operator, word)
 
-    # TOPIC, OR condition
-    if topic_entries[1]:
-        # words = [word.lstrip().rstrip() for word in topic_entries[1].split(",")]
-        words = [word.strip() for word in topic_entries[1].split(",")]
-        words = [queryString(word) for word in words]
 
-        if first:
-            first = False
-            base += "topic_simple LIKE '{0}'".format(words[0])
-
-            for word in words[1:]:
-                base += " OR topic_simple LIKE '{0}'".format(word)
-        else:
-            for word in words:
-                base += " OR topic_simple LIKE '{0}'".format(word)
-
-    # TOPIC, NOT condition
-    if topic_entries[2]:
-        # words = [word.lstrip().rstrip() for word in topic_entries[2].split(",")]
-        words = [word.strip() for word in topic_entries[2].split(",")]
-        words = [queryString(word) for word in words]
-
-        if first:
-            first = False
-            base += "topic_simple NOT LIKE '{0}'".format(words[0])
-
-            for word in words[1:]:
-                base += " AND topic_simple NOT LIKE '{0}'".format(word)
-        else:
-            for word in words:
-                base += " AND topic_simple NOT LIKE '{0}'".format(word)
-
-    # AUTHOR, AND condition
+    # AUTHOR, AND/OR condition
     if author_entries[0]:
-        # words = [word.lstrip().rstrip() for word in author_entries[0].split(",")]
+
         words = [word.strip() for word in author_entries[0].split(",")]
         words = [queryString(word) for word in words]
 
-        if first:
-            first = False
-            # base += "', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(words[0])
-            base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(words[0])
-            # base += "authors_simple LIKE '{0}'".format(words[0])
-
-            for word in words[1:]:
-                # base += " AND ', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(word)
-                base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                # base += " AND authors_simple LIKE '{0}'".format(word)
+        if radio_states[2]:
+            operator = 'OR'
         else:
-            for word in words:
-                # base += " AND ', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(word)
-                base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                # base += " AND authors_simple LIKE '{0}'".format(word)
+            operator = 'AND'
 
-    # AUTHOR, OR condition
+        for word in words:
+            if word == words[0]:
+                str_author[0] = "' ' || replace(authors, ',', ' ') || ' ' LIKE '{}'".format(word)
+            else:
+                str_author[0] += " {} ' ' || replace(authors, ',', ' ') || ' ' LIKE '{}'".format(operator, word)
+
+    # AUTHOR, NOT condition
     if author_entries[1]:
-        # words = [word.lstrip().rstrip() for word in author_entries[1].split(",")]
+
         words = [word.strip() for word in author_entries[1].split(",")]
         words = [queryString(word) for word in words]
 
-        if first:
-            first = False
-            # base += "', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(words[0])
-            base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(words[0])
-            # base += "authors_simple LIKE '{0}'".format(words[0])
+        for word in words:
+            if word == words[0]:
+                str_author[1] = "' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{}'".format(word)
+            else:
+                str_author[1] += " {} ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{}'".format(operator, word)
 
-            for word in words[1:]:
-                # base += " OR ', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(word)
-                base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                # base += " OR authors_simple LIKE '{0}'".format(word)
+
+    # Build the query from the parts. Concatenate them with AND
+    concatenate = [element for element in str_topic + str_author if element]
+    for element in concatenate:
+        if element is concatenate[0]:
+            base += "(" + element + ")"
         else:
-            for word in words:
-                # base += " OR ', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(word)
-                base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                # base += " OR authors_simple LIKE '{0}'".format(word)
-
-    # AUTHOR, NOT condition
-    if author_entries[2]:
-        # words = [word.lstrip().rstrip() for word in author_entries[2].split(",")]
-        words = [word.strip() for word in author_entries[2].split(",")]
-        words = [queryString(word) for word in words]
-
-        if first:
-            first = False
-            # base += "', ' || replace(authors, ',', ' ,') || ' ,' NOT LIKE ',{0},'".format(words[0])
-            base += "', ' || replace(authors, ',', ' ') || ' ,' NOT LIKE '{0}'".format(words[0])
-            # base += "authors_simple NOT LIKE '{0}'".format(words[0])
-
-            for word in words[1:]:
-                # base += " AND ', ' || replace(authors, ',', ' ,') || ' ,' NOT LIKE ',{0},'".format(word)
-                base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(word)
-                # base += " AND authors_simple NOT LIKE '{0}'".format(word)
-        else:
-            for word in words:
-                # base += " AND ', ' || replace(authors, ',', ' ,') || ' ,' NOT LIKE ',{0},'".format(word)
-                base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(word)
-                # base += " AND authors_simple NOT LIKE '{0}'".format(word)
+            base += " AND (" + element + ")"
 
     return base
 
