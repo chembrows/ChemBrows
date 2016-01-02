@@ -1510,7 +1510,7 @@ class Fenetre(QtGui.QMainWindow):
             table = self.list_tables_in_tabs[self.onglets.currentIndex()]
             requete = self.refineBaseQuery(
                 table.base_query, table.topic_entries,
-                table.author_entries)
+                table.author_entries, table.radio_states)
             requete = requete.replace("WHERE ", "WHERE (")
             requete += ") AND (topic_simple LIKE '%{}%') AND journal IN ("
         else:
@@ -1752,7 +1752,10 @@ class Fenetre(QtGui.QMainWindow):
             table.setModel(proxy)
         except AttributeError:
             self.l.debug("updateView, AttributeError")
-            self.model.setQuery(self.refineBaseQuery(table.base_query, table.topic_entries, table.author_entries))
+            self.model.setQuery(self.refineBaseQuery(table.base_query,
+                                                     table.topic_entries,
+                                                     table.author_entries,
+                                                     table.radio_states))
             proxy.setSourceModel(self.model)
             table.setModel(proxy)
 
