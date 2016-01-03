@@ -73,12 +73,10 @@ class Worker(QtCore.QThread):
 
         """Method to destroy the thread properly"""
 
+        self.wait()
         self.l.debug("Deleting thread")
 
-        self.exit()
 
-
-    # @profile
     def run(self):
 
         """Main function. Starts the real business"""

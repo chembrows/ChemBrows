@@ -52,8 +52,8 @@ class Predictor(QtCore.QThread):
 
         """Method to destroy the thread properly"""
 
+        self.wait()
         self.l.debug("Deleting thread")
-        self.exit()
 
 
     def getStopWords(self):

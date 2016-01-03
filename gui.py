@@ -2137,7 +2137,6 @@ class Fenetre(QtGui.QMainWindow):
                 QtGui.QMessageBox.information(self, "New articles", mes,
                                               QtGui.QMessageBox.Ok)
 
-
         self.blocking_ui = True
 
         self.predictor.finished.connect(whenDone)
@@ -2152,8 +2151,12 @@ class Fenetre(QtGui.QMainWindow):
         self.progress.show()
 
         # While calculating, display a smooth progress bar
-        while not self.predictor.isFinished():
-            app.processEvents()
+        try:
+            while not self.predictor.isFinished():
+                app.processEvents()
+        except AttributeError:
+            self.l.debug("Predictor deleted while processEvents ?")
+            pass
 
 
     def toggleLike(self):
