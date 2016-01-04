@@ -537,14 +537,14 @@
 					<key>IFInstallationScriptsPostflight</key>
 					<dict>
 						<key>Path</key>
-						<string></string>
+						<string>/Users/chembrows/Desktop/ChemBrows/deploy/OSX_extras/post_install.sh</string>
 						<key>Status</key>
-						<false/>
+						<true/>
 					</dict>
 					<key>IFInstallationScriptsPostinstall</key>
 					<dict>
 						<key>Path</key>
-						<string>/Users/chembrows/Desktop/ChemBrows/deploy/OSX_extras/icon_dock.sh</string>
+						<string>/Users/chembrows/Desktop/ChemBrows/deploy/OSX_extras/post_install.sh</string>
 						<key>Status</key>
 						<true/>
 					</dict>

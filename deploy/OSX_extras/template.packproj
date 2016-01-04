@@ -537,16 +537,16 @@
 					<key>IFInstallationScriptsPostflight</key>
 					<dict>
 						<key>Path</key>
-						<string></string>
+						<string>POST_INSTALL_PATH</string>
 						<key>Status</key>
-						<false/>
+						<true/>
 					</dict>
 					<key>IFInstallationScriptsPostinstall</key>
 					<dict>
 						<key>Path</key>
-						<string>POST_INSTALL_PATH</string>
+						<string></string>
 						<key>Status</key>
-						<true/>
+						<false/>
 					</dict>
 					<key>IFInstallationScriptsPostupgrade</key>
 					<dict>
