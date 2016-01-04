@@ -608,7 +608,7 @@ def getData(company, journal, entry, response=None):
 
         topic_simple = " " + \
                        functions.simpleChar(BeautifulSoup(abstract).text) + \
-                       functions.simpleChar(title) + " "
+                       " " + functions.simpleChar(title) + " "
     else:
         topic_simple = " " + functions.simpleChar(title) + " "
 

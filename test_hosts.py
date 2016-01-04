@@ -97,8 +97,8 @@ def test_getData(journalsUrls):
     # Returns a list of the urls of the feed pages
     list_urls_feed = journalsUrls
 
-    # Bypass all companies but one
-    list_urls_feed = hosts.getJournals("plos")[2]
+    # # Bypass all companies but one
+    # list_urls_feed = hosts.getJournals("plos")[2]
 
     # Build a dic with key: company
                      # value: journal name
@@ -133,13 +133,13 @@ def test_getData(journalsUrls):
         for entry in samples:
 
             if company in ['science', 'elsevier', 'beilstein']:
-                title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry)
+                title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry)
             else:
                 url = getattr(entry, 'feedburner_origlink', entry.link)
 
                 try:
                     response = requests.get(url, timeout=10)
-                    title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry, response)
+                    title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry, response)
                 except requests.exceptions.ReadTimeout:
                     print("A ReadTimeout occured, continue to next entry")
 
@@ -161,6 +161,13 @@ def test_getData(journalsUrls):
                 assert validators.url(graphical_abstract) == True
 
             assert type(arrow.get(date)) == arrow.arrow.Arrow
+
+            assert topic_simple.startswith(' ') == True
+            assert topic_simple.endswith(' ') == True
+
+            if author_simple is not None:
+                assert author_simple.startswith(' ') == True
+                assert author_simple.endswith(' ') == True
 
 
 def test_getDoi(journalsUrls):
