@@ -16,7 +16,7 @@ from zipfile import ZipFile
 from shutil import copyfile
 
 app_name = 'ChemBrows'
-create_installer = False
+create_installer = True
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
@@ -124,7 +124,7 @@ if create_installer and sys.platform in ['win32', 'cygwin', 'win64']:
           "/dVersion={}" \
           "/dArchitecture={}" \
           "/dOutputBaseFilename={}" \
-          deploy/WIN_extras/inno_installer.iss'.format(innoSetupLoc,
+          deploy/inno_installer.iss'.format(innoSetupLoc,
                                      app_name,
                                      version,
                                      architecture,
