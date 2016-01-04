@@ -105,7 +105,7 @@
 							<key>GID</key>
 							<integer>80</integer>
 							<key>Path</key>
-							<string>Applications</string>
+                            <string>Applications</string>
 							<key>Path Type</key>
 							<integer>1</integer>
 							<key>Privileges</key>

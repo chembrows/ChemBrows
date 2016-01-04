@@ -57,10 +57,8 @@ class Updater(QtCore.QThread):
 
         try:
             # Update ChemBrows
-            self.app.get_root()
             self.app.auto_update()
-            # self.app.cleanup()
-            # self.app.drop_root()
+            self.app.cleanup()
         except Exception as e:
             self.l.critical("ERROR UPDATING APP: {}".format(e))
             self.l.critical(traceback.format_exc())

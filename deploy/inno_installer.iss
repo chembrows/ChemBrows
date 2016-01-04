@@ -17,7 +17,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\{#AppName}
+DefaultDirName={localappdata}\{#AppName}
 DefaultGroupName={#AppName}
 OutputDir=C:\Users\djipey\Desktop
 OutputBaseFilename={#OutputBaseFilename}
@@ -43,8 +43,8 @@ Source: "C:\Users\djipey\Desktop\ChemBrows_freeze\dist\{#AppName}-{#Version}.{#A
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppName}-{#Version}.{#Architecture}\{#MyAppExeName}"; IconFilename: "{app}\{#AppName}-{#Version}.{#Architecture}\images\icon.ico"
-Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppName}-{#Version}.{#Architecture}\{#MyAppExeName}"; IconFilename: "{app}\{#AppName}-{#Version}.{#Architecture}\images\icon.ico"; Tasks: desktopicon
+Name: "{group}\{#AppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\{#AppName}-{#Version}.{#Architecture}\images\icon.ico"
+Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\{#AppName}-{#Version}.{#Architecture}\images\icon.ico"; Tasks: desktopicon
 Name: "{group}\{cm:ProgramOnTheWeb,{#AppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 
