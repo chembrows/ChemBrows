@@ -16,7 +16,7 @@ from zipfile import ZipFile
 from shutil import copyfile
 
 app_name = 'ChemBrows'
-create_installer = True
+create_installer = False
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
@@ -39,8 +39,8 @@ else:
     python_exe = 'python'
 
 # Freeze !!!
-# subprocess.call('{} setup.py bdist_esky'.format(python_exe), shell=True)
-subprocess.call('{} setup.py bdist_esky_patch'.format(python_exe), shell=True)
+subprocess.call('{} setup.py bdist_esky'.format(python_exe), shell=True)
+# subprocess.call('{} setup.py bdist_esky_patch'.format(python_exe), shell=True)
 print('done with esky')
 
 # Unzip file
