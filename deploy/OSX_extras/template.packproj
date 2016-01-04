@@ -544,9 +544,9 @@
 					<key>IFInstallationScriptsPostinstall</key>
 					<dict>
 						<key>Path</key>
-						<string></string>
+						<string>POST_INSTALL_PATH</string>
 						<key>Status</key>
-						<false/>
+						<true/>
 					</dict>
 					<key>IFInstallationScriptsPostupgrade</key>
 					<dict>

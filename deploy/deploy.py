@@ -124,7 +124,7 @@ if create_installer and sys.platform in ['win32', 'cygwin', 'win64']:
           "/dVersion={}" \
           "/dArchitecture={}" \
           "/dOutputBaseFilename={}" \
-          deploy/inno_installer.iss'.format(innoSetupLoc,
+          deploy/WIN_extras/inno_installer.iss'.format(innoSetupLoc,
                                      app_name,
                                      version,
                                      architecture,
@@ -135,7 +135,7 @@ elif create_installer and sys.platform == 'darwin':
 
     print('Creating a .pkg for Mac OS...')
 
-    with open('deploy/template.packproj', 'r') as template:
+    with open('deploy/OSX_extras/template.packproj', 'r') as template:
         text = template.read()
 
         simplified_version = version.split('.')[:-1]
@@ -148,10 +148,10 @@ elif create_installer and sys.platform == 'darwin':
         text = text.replace('MAJOR_VERSION', version.split('.')[0])
         text = text.replace('MINOR_VERSION', version.split('.')[1])
         text = text.replace('APP_PATH', os.path.abspath('dist/{}/{}.app'.format(filename, app_name)))
+        text = text.replace('POST_INSTALL_PATH', os.path.abspath('deploy/OSX_extras/post_install.sh'))
 
         with open('dist/chembrows.packproj', 'w') as packproj:
             packproj.write(text)
 
     subprocess.call('freeze dist/chembrows.packproj -d dist/', shell=True)
     print('Done creating a .pkg for Mac OS...')
-
