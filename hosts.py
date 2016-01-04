@@ -605,7 +605,10 @@ def getData(company, journal, entry, response=None):
 
 
     if abstract is not None:
-        topic_simple = " " + functions.simpleChar(BeautifulSoup(abstract).text) + functions.simpleChar(title) + " "
+
+        topic_simple = " " + \
+                       functions.simpleChar(BeautifulSoup(abstract).text) + \
+                       functions.simpleChar(title) + " "
     else:
         topic_simple = " " + functions.simpleChar(title) + " "
 
@@ -613,11 +616,14 @@ def getData(company, journal, entry, response=None):
         abstract = "Empty"
     if graphical_abstract is None:
         graphical_abstract = "Empty"
+
     if author is None or author == '':
         author = "Empty"
+        author_simple = None
+    else:
+        author_simple = " " + functions.simpleChar(author) + " "
 
-
-    return title, date, author, abstract, graphical_abstract, url, topic_simple
+    return title, date, author, abstract, graphical_abstract, url, topic_simple, author_simple
 
 
 def getDoi(company, journal, entry):

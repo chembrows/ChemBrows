@@ -155,9 +155,11 @@ class Worker(QtCore.QThread):
                     # Insert the crappy articles in a rescue database
                     if self.parent.debug_mod and doi not in self.dico_doi:
                         url = getattr(entry, 'feedburner_origlink', entry.link)
-                        query.prepare("INSERT INTO debug (doi, title, journal, url) VALUES(?, ?, ?, ?)")
+                        query.prepare("INSERT INTO debug (doi, title, \
+                                      journal, url) VALUES(?, ?, ?, ?)")
                         params = (doi, title, journal_abb, url)
-                        self.l.debug("Inserting {0} in table debug".format(doi))
+                        self.l.debug("Inserting {0} in table debug".
+                                     format(doi))
                         for value in params:
                             query.addBindValue(value)
                         query.exec_()
@@ -174,26 +176,35 @@ class Worker(QtCore.QThread):
                 elif doi in self.dico_doi and not self.dico_doi[doi]:
 
                     # How to update the entry
-                    dl_page, dl_image, data = hosts.updateData(company, journal, entry, care_image)
+                    dl_page, dl_image, data = hosts.updateData(company,
+                                                               journal,
+                                                               entry,
+                                                               care_image)
 
-                    # For these journals, all the infos are in the RSS. Only care
-                    # about the image
+                    # For these journals, all the infos are in the RSS.
+                    # Only care about the image
                     if dl_image:
                         self.parent.counter_updates += 1
 
                         graphical_abstract = data['graphical_abstract']
 
-                        if os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
+                        if os.path.exists(self.DATA_PATH +
+                                          functions.simpleChar(
+                                              graphical_abstract)):
                             self.count_futures_images += 1
                         else:
-                            url = getattr(entry, 'feedburner_origlink', entry.link)
+                            url = getattr(entry, 'feedburner_origlink',
+                                          entry.link)
 
                             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                                        'Connection': 'close',
                                        'Referer': url}
 
-                            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
-                            future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
+                            future_image = self.session_images.get(
+                                graphical_abstract, headers=headers,
+                                timeout=self.TIMEOUT)
+                            future_image.add_done_callback(functools.partial(
+                                self.pictureDownloaded, doi, url))
                             self.list_futures.append(future_image)
 
                     else:
@@ -202,9 +213,10 @@ class Worker(QtCore.QThread):
 
                 else:
                     try:
-                        title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry)
+                        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry)
                     except TypeError:
-                        self.l.error("getData returned None for {}".format(journal))
+                        self.l.error("getData returned None for {}".
+                                     format(journal))
                         self.count_futures_images += 1
                         return
 
@@ -212,10 +224,13 @@ class Worker(QtCore.QThread):
                     if authors == "Empty":
                         self.count_futures_images += 1
                         self.parent.counter_rejected += 1
-                        self.l.debug("Rejecting article {}, no author".format(title))
+                        self.l.debug("Rejecting article {}, no author".
+                                     format(title))
                         continue
 
-                    query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, graphical_abstract, url, new, topic_simple)\
+                    query.prepare("INSERT INTO papers (doi, title, date, \
+                                  journal, authors, abstract, \
+                                  graphical_abstract, url, new, topic_simple) \
                                    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
                     # Set new to 1 and not to true
@@ -230,14 +245,25 @@ class Worker(QtCore.QThread):
                         query.addBindValue(value)
                     query.exec_()
 
-                    if graphical_abstract == "Empty" or os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
+                    if graphical_abstract == "Empty" or os.path.exists(
+                            self.DATA_PATH +
+                            functions.simpleChar(graphical_abstract)):
+
                         self.count_futures_images += 1
 
-                        # This block is executed when you delete the db, but not the images.
-                        # Allows to update the graphical_abstract in db accordingly
-                        if os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
-                            query.prepare("UPDATE papers SET graphical_abstract=? WHERE doi=?")
-                            params = (functions.simpleChar(graphical_abstract), doi)
+                        # This block is executed when you delete the db, but
+                        # not the images. Allows to update the
+                        # graphical_abstract in db accordingly
+                        if os.path.exists(self.DATA_PATH +
+                                          functions.simpleChar(
+                                              graphical_abstract)):
+
+                            query.prepare("UPDATE papers SET \
+                                          graphical_abstract=? WHERE doi=?")
+
+                            params = (functions.simpleChar(graphical_abstract),
+                                      doi)
+
                             for value in params:
                                 query.addBindValue(value)
                             query.exec_()
@@ -246,8 +272,12 @@ class Worker(QtCore.QThread):
                                    'Connection': 'close',
                                    'Referer': url}
 
-                        future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
-                        future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
+                        future_image = self.session_images.get(
+                            graphical_abstract, headers=headers,
+                            timeout=self.TIMEOUT)
+                        future_image.add_done_callback(
+                            functools.partial(self.pictureDownloaded,
+                                              doi, url))
                         self.list_futures.append(future_image)
 
         else:
@@ -271,14 +301,16 @@ class Worker(QtCore.QThread):
 
                     if self.parent.debug_mod and doi not in self.dico_doi:
                         url = getattr(entry, 'feedburner_origlink', entry.link)
-                        query.prepare("INSERT INTO debug (doi, title, journal, url) VALUES(?, ?, ?, ?)")
+                        query.prepare("INSERT INTO debug (doi, title, \
+                                      journal, url) VALUES(?, ?, ?, ?)")
                         params = (doi, title, journal_abb, url)
 
                         for value in params:
                             query.addBindValue(value)
                         query.exec_()
 
-                        self.l.debug("Inserting {0} in table debug".format(doi))
+                        self.l.debug("Inserting {0} in table debug".
+                                     format(doi))
                     continue
 
 
@@ -295,16 +327,24 @@ class Worker(QtCore.QThread):
 
                     url = getattr(entry, 'feedburner_origlink', entry.link)
 
-                    dl_page, dl_image, data = hosts.updateData(company, journal, entry, care_image)
+                    dl_page, dl_image, data = hosts.updateData(company,
+                                                               journal,
+                                                               entry,
+                                                               care_image)
 
                     if dl_page:
                         self.parent.counter_updates += 1
 
-                        future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers)
-                        future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
+                        future = self.session_pages.get(url,
+                                                        timeout=self.TIMEOUT,
+                                                        headers=headers)
+                        future.add_done_callback(functools.partial(
+                            self.completeData, doi, company, journal,
+                            journal_abb, entry))
                         self.list_futures.append(future)
 
-                        # Continue just to be sure. If dl_page is True, dl_image is likely True too
+                        # Continue just to be sure. If dl_page is True,
+                        # dl_image is likely True too
                         continue
 
                     elif dl_image:
@@ -313,15 +353,20 @@ class Worker(QtCore.QThread):
 
                         graphical_abstract = data['graphical_abstract']
 
-                        if os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
+                        if os.path.exists(self.DATA_PATH +
+                                          functions.simpleChar(
+                                              graphical_abstract)):
                             self.count_futures_images += 1
                         else:
                             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                                        'Connection': 'close',
                                        'Referer': url}
 
-                            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
-                            future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
+                            future_image = self.session_images.get(
+                                graphical_abstract, headers=headers,
+                                timeout=self.TIMEOUT)
+                            future_image.add_done_callback(functools.partial(
+                                self.pictureDownloaded, doi, url))
                             self.list_futures.append(future_image)
 
                     else:
@@ -335,8 +380,11 @@ class Worker(QtCore.QThread):
 
                     url = getattr(entry, 'feedburner_origlink', entry.link)
 
-                    future = self.session_pages.get(url, timeout=self.TIMEOUT, headers=headers)
-                    future.add_done_callback(functools.partial(self.completeData, doi, company, journal, journal_abb, entry))
+                    future = self.session_pages.get(url, timeout=self.TIMEOUT,
+                                                    headers=headers)
+                    future.add_done_callback(functools.partial(
+                        self.completeData, doi, company, journal, journal_abb,
+                        entry))
                     self.list_futures.append(future)
 
 
@@ -405,7 +453,7 @@ class Worker(QtCore.QThread):
         query = QtSql.QSqlQuery(self.bdd)
 
         try:
-            title, date, authors, abstract, graphical_abstract, url, topic_simple = hosts.getData(company, journal, entry, response)
+            title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry, response)
             # self.l.debug("ck 1.7")
         except TypeError:
             self.l.error("getData returned None for {}".format(journal))
@@ -428,8 +476,9 @@ class Worker(QtCore.QThread):
         # updateData will tell the worker to dl the page before downloading
         # the picture
         if doi not in self.dico_doi:
-            query.prepare("INSERT INTO papers (doi, title, date, journal, authors, abstract, graphical_abstract, url, new, topic_simple)\
-                           VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            query.prepare("INSERT INTO papers (doi, title, date, journal, \
+                          authors, abstract, graphical_abstract, url, new, \
+                          topic_simple) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
             params = (doi, title, date, journal_abb, authors, abstract,
                       graphical_abstract, url, 1, topic_simple)
@@ -444,15 +493,20 @@ class Worker(QtCore.QThread):
 
         self.new_entries_worker += 1
 
-        # Don't try to dl the image if its url is 'Empty', or if the image already exists
-        if graphical_abstract == "Empty" or os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
+        # Don't try to dl the image if its url is 'Empty', or if the image
+        # already exists
+        if (graphical_abstract == "Empty" or
+                os.path.exists(self.DATA_PATH +
+                               functions.simpleChar(graphical_abstract))):
             self.count_futures_images += 1
             self.l.debug("Image already dled")
 
-            # This block is executed when you delete the db, but not the images.
-            # Allows to update the graphical_abstract in db accordingly
-            if os.path.exists(self.DATA_PATH + functions.simpleChar(graphical_abstract)):
-                query.prepare("UPDATE papers SET graphical_abstract=? WHERE doi=?")
+            # This block is executed when you delete the db, but not the
+            # images. Allows to update the graphical_abstract in db accordingly
+            if os.path.exists(self.DATA_PATH +
+                              functions.simpleChar(graphical_abstract)):
+                query.prepare("UPDATE papers SET graphical_abstract=? WHERE \
+                              doi=?")
                 params = (functions.simpleChar(graphical_abstract), doi)
                 for value in params:
                     query.addBindValue(value)
@@ -463,8 +517,11 @@ class Worker(QtCore.QThread):
                        'Connection': 'close',
                        'Referer': url}
 
-            future_image = self.session_images.get(graphical_abstract, headers=headers, timeout=self.TIMEOUT)
-            future_image.add_done_callback(functools.partial(self.pictureDownloaded, doi, url))
+            future_image = self.session_images.get(graphical_abstract,
+                                                   headers=headers,
+                                                   timeout=self.TIMEOUT)
+            future_image.add_done_callback(functools.partial(
+                self.pictureDownloaded, doi, url))
             self.list_futures.append(future_image)
 
 
@@ -503,8 +560,9 @@ class Worker(QtCore.QThread):
                 try:
                     # Save the page
                     io = BytesIO(response.content)
-                    Image.open(io).convert('RGB').save(self.DATA_PATH + functions.simpleChar(response.url),
-                                                       format='JPEG')
+                    Image.open(io).convert('RGB').save(
+                        self.DATA_PATH + functions.simpleChar(response.url),
+                        format='JPEG')
                     self.l.debug("Image ok")
                 except Exception as e:
                     self.l.error("An error occured in pictureDownloaded: {}".

@@ -87,8 +87,6 @@ class Predictor(QtCore.QThread):
 
         while query.next():
             record = query.record()
-
-            # TEST
             abstract = record.value('topic_simple')
 
             # Do not use 'Empty' abstracts
@@ -139,14 +137,14 @@ class Predictor(QtCore.QThread):
 
         query = QtSql.QSqlQuery(self.bdd)
 
-        query.exec_("SELECT id, abstract FROM papers")
+        query.exec_("SELECT id, topic_simple FROM papers")
 
         list_id = []
         x_test = []
 
         while query.next():
             record = query.record()
-            abstract = record.value('abstract')
+            abstract = record.value('topic_simple')
             x_test.append(abstract)
             list_id.append(record.value('id'))
 

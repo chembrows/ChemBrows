@@ -333,7 +333,9 @@ class Fenetre(QtGui.QMainWindow):
         You are using ChemBrows {}<br/><br/>
         Visit our web site: <a href='http://www.chembrows.com'>
         www.chembrows.com</a><br/><br/>
-        To contact us: <a href="mailto:contact@chembrows.com">contact@chembrows.com</a>
+        To contact us: <a href="mailto:contact@chembrows.com">
+        contact@chembrows.com</a><br/><br/>
+        ChemBrows is released under the GNU GPL License.
         """.replace('    ', '').format(version)
 
         # Use this complicated messageBox to get clickable URLs
@@ -357,7 +359,7 @@ class Fenetre(QtGui.QMainWindow):
         query = QtSql.QSqlQuery(self.bdd)
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
                      doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
-                     liked INTEGER, url TEXT, new INTEGER, topic_simple TEXT)")
+                     liked INTEGER, url TEXT, new INTEGER, topic_simple TEXT, author_simple TEXT)")
 
         if self.debug_mod:
             query.exec_("CREATE TABLE IF NOT EXISTS debug \
@@ -1512,10 +1514,11 @@ class Fenetre(QtGui.QMainWindow):
                 table.base_query, table.topic_entries,
                 table.author_entries, table.radio_states)
             requete = requete.replace("WHERE ", "WHERE (")
-            requete += ") AND (topic_simple LIKE '%{}%') AND journal IN ("
+            requete += ") AND (topic_simple LIKE '%{}%' OR author_simple LIKE \
+                       '%{}%') AND journal IN ("
         else:
-            requete = "SELECT * FROM papers WHERE (topic_simple LIKE '%{}%') \
-                    AND journal IN ("
+            requete = "SELECT * FROM papers WHERE (topic_simple LIKE '%{}%' \
+                      OR author_simple LIKE '%{}%') AND journal IN ("
 
         results = functions.simpleChar(self.line_research.text())
 
@@ -1528,7 +1531,8 @@ class Fenetre(QtGui.QMainWindow):
             else:
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
-        self.query.prepare(requete.format(results))
+
+        self.query.prepare(requete.format(results, results))
         self.query.exec_()
 
         self.updateView()
@@ -1715,8 +1719,8 @@ class Fenetre(QtGui.QMainWindow):
             self.waiting_list.hideColumn(10)  # Hide urls
             self.waiting_list.hideColumn(11)  # Hide new
             self.waiting_list.hideColumn(12)  # Hide topic_simple
+            self.waiting_list.hideColumn(13)  # Hide author_simple
             self.waiting_list.horizontalHeader().moveSection(8, 0)
-
 
 
     def emptyWait(self):
@@ -1849,7 +1853,6 @@ class Fenetre(QtGui.QMainWindow):
         progress.setValue(20)
         app.processEvents()
 
-
         query.exec_("DELETE FROM papers WHERE abstract=''")
 
         if not self.bdd.commit():
@@ -1866,8 +1869,6 @@ class Fenetre(QtGui.QMainWindow):
         images_path = []
         while query.next():
             images_path.append(query.record().value('graphical_abstract'))
-
-        # images_path = [path for path in images_path if path != 'Empty']
 
         # Delete all the images which are not in the database (so not
         # corresponding to any article)
@@ -2268,7 +2269,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Create a research bar and set its size
         self.line_research = ButtonLineIcon(os.path.join(self.resource_dir, 'images/remove'), self)
-        self.line_research.setToolTip("Quick search")
+        self.line_research.setToolTip("Quick search: topic or author")
         self.line_research.setPlaceholderText("Quick search")
         self.line_research.setFixedSize(self.line_research.sizeHint().width(), self.line_research.sizeHint().height() * 1.3)
 
