@@ -15,42 +15,34 @@ def checkData():
     bdd.row_factory = sqlite3.Row
     c = bdd.cursor()
 
-    # c.execute("CREATE TABLE results AS SELECT * FROM papers WHERE journal='J. Chromatogr. A'")
     c.execute("SELECT * FROM papers")
 
     results = c.fetchall()
 
-    # i = 0
+    i = 0
     for line in results:
         id_bdd = line['id']
         # graphical = line['graphical_abstract']
-        # topic_simple = line['topic_simple']
-        authors = line['authors']
+        topic_simple = line['topic_simple']
+        # authors = line['authors']
 
+        if topic_simple.startswith(' empty '):
+            topic_simple = topic_simple.replace(' empty ', ' ')
+            i += 1
+            print(i)
+        elif topic_simple.startswith(' empty'):
+            topic_simple = topic_simple.replace(' empty', ' ')
+            i += 1
+            print(i)
 
-        # if "  " in topic_simple:
-            # print(id_bdd)
-            # i += 1
-        if authors is None:
-            # print(id_bdd)
-            # c.execute("DELETE FROM papers WHERE id = ?", (id_bdd,))
-            continue
-
-        author_simple = " " + functions.simpleChar(authors) + " "
-
-        # topic_simple = topic_simple + "   " + functions.simpleChar(authors) + " "
-
-        # print(graphical)
-
-        # if graphical is None:
-            # graphical = 'Empty'
-        c.execute("UPDATE papers SET author_simple = ? WHERE id = ?", (author_simple, id_bdd))
+        c.execute("UPDATE papers SET topic_simple = ? WHERE id = ?", (topic_simple, id_bdd))
 
     # print(i)
 
     bdd.commit()
     c.close()
     bdd.close()
+
 
 def testAuthors(input):
 
