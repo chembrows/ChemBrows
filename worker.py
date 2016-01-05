@@ -537,23 +537,13 @@ class Worker(QtCore.QThread):
 
         try:
             response = future.result()
-        except requests.exceptions.ReadTimeout:
-            self.l.error("ReadTimeout for image: {}".format(entry_url))
-            params = ("Empty", doi)
-        except requests.exceptions.ConnectionError:
-            self.l.error("ConnectionError for image: {}".format(entry_url))
-            params = ("Empty", doi)
-        except requests.exceptions.MissingSchema:
-            self.l.error("MissingSchema for image: {}".format(entry_url))
-        except ConnectionResetError:
-            self.l.error("ConnectionResetError for {}".format(entry_url))
-            params = ("Empty", doi)
-        except socket.timeout:
-            self.l.error("socket.timeout for {}".format(entry_url))
-            params = ("Empty", doi)
         except concurrent.futures._base.CancelledError:
             self.l.error("future cancelled for {}".format(entry_url))
             return
+        except Exception as e:
+            self.l.error("Exception raised in pictureDownloaded{}".format(e))
+            self.l.error(traceback.format_exc())
+            params = ("Empty", doi)
         else:
             # If the picture was dled correctly
             if response.status_code is requests.codes.ok:
