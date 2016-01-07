@@ -1318,6 +1318,8 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to select articles by journal"""
 
+        self.model.submitAll()
+
         # When last button is uncheck, select all the journals
         if not self.tags_selected:
             self.tags_selected = self.getJournalsToCare()
@@ -1687,7 +1689,7 @@ class Fenetre(QtGui.QMainWindow):
             if table is self.waiting_list:
 
                 # Submit changes to the model, the viewport is about to change
-                self.model.submitAll()
+                # self.model.submitAll()
                 self.searchByButton()
 
                 # Update the cells bc the scroll bar can disappear when
