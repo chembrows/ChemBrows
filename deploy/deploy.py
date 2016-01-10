@@ -153,5 +153,8 @@ elif create_installer and sys.platform == 'darwin':
         with open('dist/chembrows.packproj', 'w') as packproj:
             packproj.write(text)
 
+    # Make the post-install script (called postflight by Iceberg) executable
+    os.chmod('dist/build/ChemBrows.pkg/Contents/Resources/postflight', 0o777)
+
     subprocess.call('freeze dist/chembrows.packproj -d dist/', shell=True)
     print('Done creating a .pkg for Mac OS...')
