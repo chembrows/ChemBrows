@@ -2086,7 +2086,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.model.submitAll()
 
-        self.predictor = Predictor(self.l, self.bdd)
+        self.predictor = Predictor(self.l, self.waiting_list.list_id_articles,
+                                   self.bdd)
 
         mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
         mes += "Feed it more !"

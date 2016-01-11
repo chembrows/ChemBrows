@@ -26,9 +26,11 @@ class Predictor(QtCore.QThread):
     """Object to predict the percentage match of an article,
     based on its abstract"""
 
-    def __init__(self, logger, bdd=None):
+    def __init__(self, logger, to_read_list, bdd=None):
 
         QtCore.QThread.__init__(self)
+
+        self.to_read_list = to_read_list
 
         self.x_train = []
         self.y_train = []
@@ -88,6 +90,7 @@ class Predictor(QtCore.QThread):
         while query.next():
             record = query.record()
             abstract = record.value('topic_simple')
+            id_bdd = record.value('id')
 
             # Do not use 'Empty' abstracts
             if type(abstract) is not str or abstract == 'Empty':
@@ -97,19 +100,24 @@ class Predictor(QtCore.QThread):
             if type(liked) is int and liked == 1:
                 category = 0
             else:
-                category = 1
+                # Do not count the read and not liked articles if the articles
+                # are in the waiting list
+                if id_bdd not in self.to_read_list:
+                    category = 1
+                else:
+                    continue
 
             self.x_train.append(abstract)
             self.y_train.append(category)
 
         # To count for RuntimeWarning: divide by zero encountered in log
-        if not self.x_train or 0 not in self.y_train or not 1 in self.y_train:
+        if (not self.x_train or 0 not in self.y_train or
+                1 not in self.y_train):
             self.l.error("Not enough data yet to feed the classifier")
             return
 
         self.classifier = Pipeline([
-            ('vectorizer', CountVectorizer(
-                            stop_words=self.stop_words)),
+            ('vectorizer', CountVectorizer(stop_words=self.stop_words)),
             ('tfidf', TfidfTransformer()),
             ('clf', LinearSVC())])
 
