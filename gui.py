@@ -520,7 +520,7 @@ class Fenetre(QtGui.QMainWindow):
             self.l.info("{} entries rejected".format(self.counter_rejected))
             self.l.info("{} attempts to update entries".format(self.counter_updates))
 
-            self.calculatePercentageMatch(update=False)
+            self.calculatePercentageMatch()
             self.parseAction.setEnabled(True)
             self.l.info("Parsing data finished. Enabling parseAction")
 
@@ -1058,7 +1058,7 @@ class Fenetre(QtGui.QMainWindow):
         self.button_refresh.clicked.connect(self.parse)
 
         # Button in the toolbar: calculate paperness
-        self.button_calculate_percentage.clicked.connect(lambda: self.calculatePercentageMatch(True))
+        self.button_calculate_percentage.clicked.connect(self.calculatePercentageMatch)
 
         # Button in the toolbar: advanced search
         self.button_advanced_search.clicked.connect(lambda: AdvancedSearch(self))
@@ -2079,7 +2079,7 @@ class Fenetre(QtGui.QMainWindow):
             webbrowser.open(url)
 
 
-    def calculatePercentageMatch(self, update=False):
+    def calculatePercentageMatch(self):
 
         """Slot to calculate the match percentage.
         If update= False, does not update the view"""
@@ -2093,7 +2093,8 @@ class Fenetre(QtGui.QMainWindow):
         mes += "Feed it more !"
 
         # Display a message if the classifier is not trained yet
-        if self.predictor.initializePipeline() is None and update:
+        if self.predictor.initializePipeline() is None:
+            self.blocking_ui = False
             QtGui.QMessageBox.information(self, "Feed ChemBrows", mes,
                                           QtGui.QMessageBox.Ok)
 
@@ -2106,16 +2107,21 @@ class Fenetre(QtGui.QMainWindow):
             """Internal function called when the thread for percentages
             calculations is finished"""
 
+            self.searchByButton()
+
             # If parsing, load the notifications
             # load the notifications only if some articles were collected
-            if not update and self.counter > 0:
-                self.progress.setWindowTitle("Loading notifications")
-                self.progress.setLabelText("Loading notifications...")
-                worker = LittleThread(self.loadNotifications)
-                worker.start()
+            try:
+                if self.counter > 0:
+                    self.progress.setWindowTitle("Loading notifications")
+                    self.progress.setLabelText("Loading notifications...")
+                    worker = LittleThread(self.loadNotifications)
+                    worker.start()
 
-                while worker.isRunning():
-                    app.processEvents()
+                    while worker.isRunning():
+                        app.processEvents()
+            except AttributeError:
+                self.l.debug("No entries added, skipping loadNotifications")
 
             # Unlock the UI by setting this to False
             self.blocking_ui = False
@@ -2131,15 +2137,13 @@ class Fenetre(QtGui.QMainWindow):
                                               QtGui.QMessageBox.Ok)
                 app.processEvents()
 
-            del self.predictor
+            # Display the number of articles added
+            mes = "{} new articles were added to your database !"
+            mes = mes.format(self.counter)
+            QtGui.QMessageBox.information(self, "New articles", mes,
+                                          QtGui.QMessageBox.Ok)
 
-            if update:
-                self.searchByButton()
-            else:
-                mes = "{} new articles were added to your database !"
-                mes = mes.format(self.counter)
-                QtGui.QMessageBox.information(self, "New articles", mes,
-                                              QtGui.QMessageBox.Ok)
+            del self.predictor
 
         self.blocking_ui = True
 

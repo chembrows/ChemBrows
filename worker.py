@@ -416,11 +416,11 @@ class Worker(QtCore.QThread):
         """Callback to handle the response of the futures trying to
         download the page of the articles"""
 
-        if not self.parent.parsing:
-            return
-
         self.l.debug("Page dled")
         self.count_futures_urls += 1
+
+        if not self.parent.parsing:
+            return
 
         try:
             response = future.result()
