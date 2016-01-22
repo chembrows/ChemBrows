@@ -569,8 +569,6 @@ class Fenetre(QtGui.QMainWindow):
 
         self.progress.setLabelText("Loading notifications...")
 
-        # TODO: checker s'il y a de nouveaux articles, sinon passer cette étape
-
         # Start loadNotifications in a thread (CPU consumming),
         # and display a smooth progressBar while in the function
         # But only if some articles were collected
@@ -609,7 +607,7 @@ class Fenetre(QtGui.QMainWindow):
         self.calculatePercentageMatchAction = QtGui.QAction('&Percentages', self)
         self.calculatePercentageMatchAction.setShortcut('F6')
         self.calculatePercentageMatchAction.setToolTip("Re-calculate Hot Paperness")
-        self.calculatePercentageMatchAction.triggered.connect(lambda: self.calculatePercentageMatch(update=True))
+        self.calculatePercentageMatchAction.triggered.connect(lambda: self.calculatePercentageMatch(True))
 
         # Action to like a post
         self.toggleLikeAction = QtGui.QAction('Toggle like', self)
@@ -863,7 +861,7 @@ class Fenetre(QtGui.QMainWindow):
                 notifs = len(self.onglets.widget(index).list_new_ids)
                 self.onglets.setNotifications(index, notifs)
 
-        self.l.debug("Exiting loadNotifications. Time spent: {}".
+        self.l.debug("loadNotifications took {}".
                      format(datetime.datetime.now() - start_time))
 
 
@@ -1058,7 +1056,7 @@ class Fenetre(QtGui.QMainWindow):
         self.button_refresh.clicked.connect(self.parse)
 
         # Button in the toolbar: calculate paperness
-        self.button_calculate_percentage.clicked.connect(self.calculatePercentageMatch)
+        self.button_calculate_percentage.clicked.connect(lambda: self.calculatePercentageMatch(True))
 
         # Button in the toolbar: advanced search
         self.button_advanced_search.clicked.connect(lambda: AdvancedSearch(self))
@@ -2079,10 +2077,10 @@ class Fenetre(QtGui.QMainWindow):
             webbrowser.open(url)
 
 
-    def calculatePercentageMatch(self):
+    def calculatePercentageMatch(self, alone=False):
 
         """Slot to calculate the match percentage.
-        If update= False, does not update the view"""
+        alone=True means the user started the calculations only"""
 
         self.model.submitAll()
 
@@ -2137,11 +2135,12 @@ class Fenetre(QtGui.QMainWindow):
                                               QtGui.QMessageBox.Ok)
                 app.processEvents()
 
-            # Display the number of articles added
-            mes = "{} new articles were added to your database !"
-            mes = mes.format(self.counter)
-            QtGui.QMessageBox.information(self, "New articles", mes,
-                                          QtGui.QMessageBox.Ok)
+            if not alone:
+                # Display the number of articles added
+                mes = "{} new articles were added to your database !"
+                mes = mes.format(self.counter)
+                QtGui.QMessageBox.information(self, "New articles", mes,
+                                              QtGui.QMessageBox.Ok)
 
             del self.predictor
 
