@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 mkdir $HOME/Applications
 mv /Applications/ChemBrows.app $HOME/Applications
