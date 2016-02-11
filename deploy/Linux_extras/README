@@ -1,0 +1,21 @@
+INSTALL (Ubuntu)
+================
+
+You will first need to install the following package:
+
+libatlas-base-dev
+
+Then make ChemBrows executable, if it is not already. To do so, run in a terminal:
+
+cd ChemBrows_a_version_number/
+sudo chmod +x gui
+sudo chmod ChemBrows_a_version_number/gui
+
+Where a_version_number is the version number of the archive you downloaded. 
+
+To start ChemBrows, run in a terminal:
+
+./gui
+
+
+Enjoy !

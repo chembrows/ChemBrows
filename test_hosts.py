@@ -154,20 +154,20 @@ def test_getData(journalsUrls):
             assert type(url) == str and url
             if url != 'Empty':
                 # Test if url is valid
-                assert validators.url(url) == True
+                assert validators.url(url) is True
 
             assert type(graphical_abstract) == str and graphical_abstract
             if graphical_abstract != 'Empty':
-                assert validators.url(graphical_abstract) == True
+                assert validators.url(graphical_abstract) is True
 
             assert type(arrow.get(date)) == arrow.arrow.Arrow
 
-            assert topic_simple.startswith(' ') == True
-            assert topic_simple.endswith(' ') == True
+            assert topic_simple.startswith(' ') is True
+            assert topic_simple.endswith(' ') is True
 
             if author_simple is not None:
-                assert author_simple.startswith(' ') == True
-                assert author_simple.endswith(' ') == True
+                assert author_simple.startswith(' ') is True
+                assert author_simple.endswith(' ') is True
 
 
 def test_getDoi(journalsUrls):

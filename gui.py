@@ -1643,7 +1643,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # update_new: to check if the user is currently clicking
         # on the read icon. If so, don't mark the article as read
-        if new == 0 or table.toread_icon == True:
+        if new == 0 or table.toread_icon is True:
             return
         else:
 
