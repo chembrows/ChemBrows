@@ -107,7 +107,7 @@ elif sys.platform == 'darwin':
 
 
 else:
-    copyfile('deploy/Linux_extras/README', 'dist/{}/'.format(filename))
+    copyfile('deploy/Linux_extras/README', 'dist/{}/README'.format(filename))
     os.chmod('./dist/{}/gui'.format(filename), 0o777)
     os.chmod('./dist/{}/{}/gui'.format(filename, filename), 0o777)
 
