@@ -237,7 +237,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 pixmap = QtGui.QPixmap(os.path.join(self.parent.resource_dir, "images/not_available.png"))
 
                 wcase, hcase = option.rect.width(), option.rect.height()
-                wpix, hpix =  pixmap.width(), pixmap.height()
+                wpix, hpix = pixmap.width(), pixmap.height()
 
                 if wpix != wcase or hpix != hcase:
                     pixmap = pixmap.scaled(wcase, hcase,

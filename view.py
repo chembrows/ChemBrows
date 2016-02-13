@@ -171,10 +171,16 @@ class ViewPerso(QtGui.QTableView):
 
     def keyPressEvent(self, e):
 
-        """Reaimplementation to propagate the event to the parent
+        """Reimplementation to propagate the event to the parent
         widget. Also, defines some special behaviors"""
 
         key = e.key()
+
+        # To avoid a bug: the user scrolls the articles w/ the keyboard,
+        # put an article in the toread list, and then continues scrolling.
+        # The posts are not marked as read anymore
+        if key == QtCore.Qt.Key_Down or key == QtCore.Qt.Key_Up:
+            self.toread_icon = False
 
         # Browsing with up and down keys. Verifications made for
         # when the selection is completely at the top or the bottom
