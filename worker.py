@@ -230,12 +230,13 @@ class Worker(QtCore.QThread):
 
                     query.prepare("INSERT INTO papers (doi, title, date, \
                                   journal, authors, abstract, \
-                                  graphical_abstract, url, new, topic_simple) \
-                                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                                  graphical_abstract, url, new, topic_simple, \
+                                  author_simple) \
+                                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
                     # Set new to 1 and not to true
                     params = (doi, title, date, journal_abb, authors, abstract,
-                              graphical_abstract, url, 1, topic_simple)
+                              graphical_abstract, url, 1, topic_simple, author_simple)
 
                     self.l.debug("Adding {0} to the database".format(doi))
                     self.parent.counter += 1
@@ -478,10 +479,11 @@ class Worker(QtCore.QThread):
         if doi not in self.dico_doi:
             query.prepare("INSERT INTO papers (doi, title, date, journal, \
                           authors, abstract, graphical_abstract, url, new, \
-                          topic_simple) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                          topic_simple, author_simple) VALUES(?, ?, ?, ?, ?, \
+                          ?, ?, ?, ?, ?, ?)")
 
             params = (doi, title, date, journal_abb, authors, abstract,
-                      graphical_abstract, url, 1, topic_simple)
+                      graphical_abstract, url, 1, topic_simple, author_simple)
 
             self.l.debug("Adding {0} to the database".format(doi))
             self.parent.counter += 1

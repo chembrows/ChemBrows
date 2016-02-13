@@ -1821,7 +1821,45 @@ class Fenetre(QtGui.QMainWindow):
         if choice == QtGui.QMessageBox.Cancel:
             return
 
-        progress = QtGui.QProgressDialog("Deleting articles from unfollowed journals", None, 0, 100, self)
+        progress = QtGui.QProgressDialog("Cleaning author field (could be long)", None, 0, 100, self)
+        progress.setWindowTitle("Cleaning author field")
+        progress.show()
+        app.processEvents()
+
+        # Add the column author_simple to the bdd if it does not exist.
+        # If it exists, the function returns nothing, no error.
+        # Could be dangerous
+        self.l.info("Adding a column author_simple to the db if not present")
+        query = QtSql.QSqlQuery(self.bdd)
+        query.exec_("ALTER TABLE papers ADD COLUMN author_simple TEXT")
+
+        query.exec_("SELECT * FROM papers")
+
+        self.bdd.transaction()
+        query_temp = QtSql.QSqlQuery(self.bdd)
+        query_temp.prepare("UPDATE papers SET author_simple = ? WHERE id = ?")
+
+        self.l.info("Starting updating the author_simple field")
+        while query.next():
+            record = query.record()
+            id_bdd = record.value('id')
+            authors = record.value('authors')
+
+            if type(authors) is QtCore.QPyNullVariant:
+                continue
+
+            author_simple = " " + functions.simpleChar(authors) + " "
+
+            query_temp.addBindValue(author_simple)
+            query_temp.addBindValue(id_bdd)
+            query_temp.exec_()
+
+        if not self.bdd.commit():
+            self.l.critical("Cleaning author_simple did not work")
+
+        self.l.info("Updating author_simple field done")
+
+        progress.setLabelText("Deleting articles from unfollowed journals")
         progress.setWindowTitle("Cleaning database")
         progress.show()
         app.processEvents()
@@ -1921,41 +1959,37 @@ class Fenetre(QtGui.QMainWindow):
 
         self.l.info("Rejected entries deleted from the database")
 
-        # If the program is not in debug mod, exit the method
-        if not self.debug_mod:
-            progress.setValue(100)
+        app.processEvents()
+
+        if self.debug_mod:
+            progress.setLabelText("Building list of filtered articles")
+            progress.setValue(85)
             app.processEvents()
-            progress.reset()
-            return
 
-        progress.setLabelText("Building list of filtered articles")
-        progress.setValue(85)
-        app.processEvents()
+            # Build a list of DOIs to avoid duplicate in debug table
+            list_doi = []
+            query.exec_("SELECT doi FROM debug")
+            while query.next():
+                list_doi.append(query.record().value('doi'))
 
-        # Build a list of DOIs to avoid duplicate in debug table
-        list_doi = []
-        query.exec_("SELECT doi FROM debug")
-        while query.next():
-            list_doi.append(query.record().value('doi'))
+            progress.setLabelText("Inserting filtered articles in debug db")
+            progress.setValue(90)
+            app.processEvents()
 
-        progress.setLabelText("Inserting filtered articles in debug db")
-        progress.setValue(90)
-        app.processEvents()
+            # Insert all the rejected articles in the debug table
+            self.bdd.transaction()
+            query.prepare("INSERT INTO debug (doi, title, journal, url) VALUES(?, ?, ?, ?)")
 
-        # Insert all the rejected articles in the debug table
-        self.bdd.transaction()
-        query.prepare("INSERT INTO debug (doi, title, journal, url) VALUES(?, ?, ?, ?)")
+            for article in articles_to_reject:
+                if article[1] not in list_doi:
+                    for value in article[1:]:
+                        query.addBindValue(value)
+                    query.exec_()
 
-        for article in articles_to_reject:
-            if article[1] not in list_doi:
-                for value in article[1:]:
-                    query.addBindValue(value)
-                query.exec_()
-
-        if not self.bdd.commit():
-            self.l.critical("Problem while inserting rejected articles, cleanDb")
-        else:
-            self.l.info("Inserting rejected articles into the database")
+            if not self.bdd.commit():
+                self.l.critical("Problem while inserting rejected articles, cleanDb")
+            else:
+                self.l.info("Inserting rejected articles into the database")
 
         self.bdd.close()
         self.bdd.open()
@@ -1969,6 +2003,10 @@ class Fenetre(QtGui.QMainWindow):
         progress.setValue(100)
         app.processEvents()
         progress.reset()
+
+        self.loadNotifications()
+        self.searchByButton()
+        self.updateCellSize()
 
 
     def openInBrowser(self):

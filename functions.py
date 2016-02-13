@@ -8,31 +8,6 @@ import arrow
 import re
 
 
-def unidecodePerso(string):
-
-    if getattr(sys, "frozen", False):
-        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    else:
-        resource_dir = '.'
-
-    with open(os.path.join(resource_dir, 'config/data.bin'), 'rb') as f:
-        _replaces = f.read().decode('utf8').split('\x00')
-
-    chars = []
-    for ch in string:
-        codepoint = ord(ch)
-
-        if not codepoint:
-            chars.append('\x00')
-            continue
-
-        try:
-            chars.append(_replaces[codepoint - 1])
-        except IndexError:
-            pass
-    return "".join(chars)
-
-
 def prettyDate(date):
 
     """Prettify a date. Ex: 3 days ago"""
@@ -46,15 +21,44 @@ def prettyDate(date):
         return date.humanize(now.naive)
 
 
-def simpleChar(string):
+def simpleChar(string, wildcards=True):
 
-    """Sluggify the string"""
+    """Sluggify the string.
+    If wildcards is False, don't sluggify them"""
     # http://www.siteduzero.com/forum-83-810635-p1-sqlite-recherche-avec-like-insensible-a-la-casse.html#r7767300
 
     # http://stackoverflow.com/questions/5574042/string-slugification-in-python
-    string = unidecodePerso(string).lower()
+    # string = unidecodePerso(string).lower()
 
-    return re.sub(r'\W+', ' ', string)
+    if getattr(sys, "frozen", False):
+        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    else:
+        resource_dir = '.'
+
+    with open(os.path.join(resource_dir, 'config/data.bin'), 'rb') as f:
+        _replaces = f.read().decode('utf8').split('\x00')
+
+    chars = []
+    for ch in string:
+        if ch == '*' and not wildcards:
+            chars.append('*')
+            continue
+
+        codepoint = ord(ch)
+
+        if not codepoint:
+            chars.append('\x00')
+            continue
+
+        try:
+            chars.append(_replaces[codepoint - 1])
+        except IndexError:
+            pass
+
+    string = "".join(chars)
+
+    # http://stackoverflow.com/questions/35382793/regex-match-all-special-characters-but-not
+    return re.sub(r'_|[^\w\s*]+', ' ', string)
 
 
 def queryString(word):
@@ -94,8 +98,6 @@ def buildSearch(topic_entries, author_entries, radio_states):
 
     base = "SELECT * FROM papers WHERE "
 
-    # first = True
-
     str_topic = ['', '']
     str_author = ['', '']
 
@@ -103,7 +105,9 @@ def buildSearch(topic_entries, author_entries, radio_states):
     # -> AND query
     if topic_entries[0]:
 
-        words = [word.strip() for word in topic_entries[0].split(",")]
+        words = [simpleChar(word.strip(), False) for word
+                 in topic_entries[0].split(",")]
+
         words = [queryString(word) for word in words]
 
         if radio_states[0]:
@@ -119,20 +123,25 @@ def buildSearch(topic_entries, author_entries, radio_states):
 
     # TOPIC, NOT condition
     if topic_entries[1]:
-        words = [word.strip() for word in topic_entries[1].split(",")]
+
+        words = [simpleChar(word.strip(), False) for word
+                 in topic_entries[1].split(",")]
+
         words = [queryString(word) for word in words]
 
         for word in words:
             if word == words[0]:
                 str_topic[1] = "topic_simple NOT LIKE '{}'".format(word)
             else:
-                str_topic[1] += " AND topic_simple NOT LIKE '{}'".format(operator, word)
+                str_topic[1] += " AND topic_simple NOT LIKE '{}'".format(word)
 
 
     # AUTHOR, AND/OR condition
     if author_entries[0]:
 
-        words = [word.strip() for word in author_entries[0].split(",")]
+        words = [simpleChar(word.strip(), False) for word
+                 in author_entries[0].split(",")]
+
         words = [queryString(word) for word in words]
 
         if radio_states[2]:
@@ -142,21 +151,23 @@ def buildSearch(topic_entries, author_entries, radio_states):
 
         for word in words:
             if word == words[0]:
-                str_author[0] = "' ' || replace(authors, ',', ' ') || ' ' LIKE '{}'".format(word)
+                str_author[0] = " author_simple LIKE '{}'".format(word)
             else:
-                str_author[0] += " {} ' ' || replace(authors, ',', ' ') || ' ' LIKE '{}'".format(operator, word)
+                str_author[0] += " {} author_simple LIKE '{}'".format(operator, word)
 
     # AUTHOR, NOT condition
     if author_entries[1]:
 
-        words = [word.strip() for word in author_entries[1].split(",")]
+        words = [simpleChar(word.strip(), False) for word
+                 in author_entries[1].split(",")]
+
         words = [queryString(word) for word in words]
 
         for word in words:
             if word == words[0]:
-                str_author[1] = "' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{}'".format(word)
+                str_author[1] = " author_simple NOT LIKE '{}'".format(word)
             else:
-                str_author[1] += " {} ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{}'".format(operator, word)
+                str_author[1] += " AND author_simple NOT LIKE '{}'".format(word)
 
 
     # Build the query from the parts. Concatenate them with AND
@@ -194,4 +205,7 @@ if __name__ == "__main__":
     # match(['jean-patrick francoia', 'robert pascal', 'laurent vial'], "r* pascal")
 
     # unidecodePerso('test')
+    print(simpleChar("Her_%%%v*é Cottet", False))
+    # queryString("Hervé Cottet")
+    # simpleChar("C* N. hunter", False)
     pass
