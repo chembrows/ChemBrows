@@ -159,6 +159,7 @@ class Settings(QtGui.QDialog):
             self.options.remove("journals_to_parse")
 
         self.parent.model.submitAll()
+        self.parent.loadNotifications()
         self.parent.displayTags()
         self.parent.resetView()
 
