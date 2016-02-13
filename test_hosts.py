@@ -98,7 +98,7 @@ def test_getData(journalsUrls):
     list_urls_feed = journalsUrls
 
     # # Bypass all companies but one
-    # list_urls_feed = hosts.getJournals("plos")[2]
+    # list_urls_feed = hosts.getJournals("springer")[2]
 
     # Build a dic with key: company
                      # value: journal name

@@ -499,7 +499,7 @@ class Worker(QtCore.QThread):
                 os.path.exists(self.DATA_PATH +
                                functions.simpleChar(graphical_abstract))):
             self.count_futures_images += 1
-            self.l.debug("Image already dled")
+            self.l.debug("Image already dled or Empty")
 
             # This block is executed when you delete the db, but not the
             # images. Allows to update the graphical_abstract in db accordingly

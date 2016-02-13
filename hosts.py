@@ -59,6 +59,11 @@ def updateData(company, journal, entry, care_image):
     # NOTE:
     # company = 'npg' is not mentionned, but dl_image & dl_page are True
 
+    # NOTE
+    # springer: dl_page is set to False, bc very little articles have a
+    # graphical_abstract. But the graphical_abstract's URL is only on the
+    # web page of the article
+
     # TODO: npg2
 
     if company == 'rsc':
@@ -125,6 +130,8 @@ def updateData(company, journal, entry, care_image):
         base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:{}.g001"
         graphical_abstract = base.format(getDoi(company, journal, entry))
 
+    elif company == 'springer':
+        dl_page = False
 
     else:
         pass
@@ -580,25 +587,59 @@ def getData(company, journal, entry, response=None):
         except IndexError:
             pass
         abstract = abstract.renderContents().decode().strip()
-        # GA
-        # http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:doi/10.1371/journal.pone.0144005.t001
-        # http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:doi/10.1371/journal.pone.0144005.t002
-
-        # http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:doi/10.1371/journal.pone.0144085.g001
-        # http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:doi/10.1371/journal.pone.0144509.g002
-        # doi/10.1371/journal.pone.0144005
-
 
         base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:{}.g001"
         graphical_abstract = base.format(getDoi(company, journal, entry))
-
-        requests.head(url)
 
         r = BeautifulSoup(entry.summary)("p")
         if r:
             author = r[0].text.replace('by ', '')
         else:
             author = None
+
+
+    elif company == 'springer':
+
+        title = entry.title
+        url = entry.link
+        date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
+        graphical_abstract = None
+        author = None
+
+        abstract = BeautifulSoup(entry.summary)
+
+        try:
+            _ = abstract("h3")[0].extract()
+            # Remove the graphical abstract part from the abstract
+            _ = abstract("span", attrs={"class": "a-plus-plus figure category-standard float-no id-figa"})[0].extract()
+        except IndexError:
+            pass
+
+        abstract = abstract.renderContents().decode().strip()
+
+        if response.status_code is requests.codes.ok:
+
+            strainer = SoupStrainer("div", attrs={"class": "MediaObject"})
+            soup = BeautifulSoup(response.text, parse_only=strainer)
+
+            # For now, it's one shot: if the dl fails for the GA, there
+            # won't be a retry. That's bc too little articles have GA
+            r = soup.find_all("img")
+            if r:
+                graphical_abstract = r[0]['src']
+
+            strainer = SoupStrainer("ul", attrs={"class": "AuthorNames"})
+            soup = BeautifulSoup(response.text, parse_only=strainer)
+            r = soup.find_all("span", attrs={"class": "AuthorName"})
+            if r:
+                author = [tag.text for tag in r]
+                author = ", ".join(author)
+
+            strainer = SoupStrainer("h1", attrs={"class": "ArticleTitle"})
+            soup = BeautifulSoup(response.text, parse_only=strainer)
+            r = soup.h1
+            if r is not None:
+                title = r.renderContents().decode()
 
     else:
         return None
@@ -669,6 +710,9 @@ def getDoi(company, journal, entry):
     elif company == 'plos':
         doi = entry.id.split(':')[1]
 
+    elif company == 'springer':
+        doi = "10.1007/" + entry.id.split('/')[-1]
+
     try:
         doi = doi.replace(" ", "")
     except UnboundLocalError:
@@ -718,77 +762,79 @@ def getJournals(company):
 
 if __name__ == "__main__":
 
-    print(getJournals('science'))
+    # print(getJournals('science'))
 
-    # from requests_futures.sessions import FuturesSession
-    # import functools
-    # import q
+    from requests_futures.sessions import FuturesSession
+    import functools
+    from pprint import pprint
 
-    # def print_result(journal, entry, future):
-        # response = future.result()
-        # title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("plos", journal, entry, response)
-        # # print(abstract)
-        # # print("\n")
-        # # print(date)
-        # # print("\n")
-        # # print(authors)
-        # # print("\n")
-        # # print(title)
+    def print_result(journal, entry, future):
+        response = future.result()
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("springer", journal, entry, response)
+        # print(abstract)
+        # print("\n")
+        # print(date)
+        # print("\n")
+        # print(authors)
+        # print("\n")
+        # print(title)
         # print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
-        # # print("\n")
+        # print("\n")
 
-    # urls_test = ["debug/plos.xml"]
-    # # urls_test = ["http://feeds.plos.org/plosone/PLoSONE"]
+    # urls_test = ["http://link.springer.com/search.rss?facet-content-type=Article&facet-journal-id=11084&channel-name=Origins+of+Life+and+Evolution+of+Biospheres.xml"]
+    urls_test = ["debug/springer.xml"]
+    # urls_test = ["http://feeds.plos.org/plosone/PLoSONE"]
 
-    # session = FuturesSession(max_workers=20)
+    session = FuturesSession(max_workers=20)
 
-    # list_urls = []
+    list_urls = []
 
-    # feed = feedparser.parse(urls_test[0])
-    # # print(feed.entries)
-    # # print(feed)
-    # journal = feed['feed']['title']
-    # print(journal)
+    feed = feedparser.parse(urls_test[0])
+    # print(feed.entries)
+    # print(feed)
+    journal = feed['feed']['title']
+    print(journal)
 
-    # # headers = {'User-agent': 'Mozilla/5.0',
-               # # 'Connection': 'close'}
-
-    # headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
+    # headers = {'User-agent': 'Mozilla/5.0',
                # 'Connection': 'close'}
 
+    headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
+               'Connection': 'close'}
 
+    for entry in feed.entries:
 
-    # for entry in feed.entries:
+        # pprint(entry)
 
-        # # print(entry)
+        url = entry.link
+        # print(entry.id)
 
-        # url = entry.link
+        # doi = getDoi('springer', journal, entry)
+        # print(doi)
 
-        # doi = getDoi('plos', journal, entry)
+        # print(doi)
 
-        # # print(doi)
+        # print(entry.title)
 
-        # # print(entry.title)
+        # print(url)
 
-        # # print(url)
+        # url = entry.feedburner_origlink
+        title = entry.title
 
-        # # url = entry.feedburner_origlink
-        # # title = entry.title
+        if "Density Functional" not in entry.title:
+            continue
 
-        # # if "Tie2 Signaling" not in entry.title:
-            # # continue
-        # # title = entry.title
+        # print(entry)
 
-        # # if "cross reactive" not in title:
-            # # continue
-        # # print(url)
-        # # print(title)
-        # # print(entry)
-        # # print(url)
-        # # getDoi(journal, entry)
+        # if "cross reactive" not in title:
+            # continue
+        # print(url)
+        # print(title)
+        # print(entry)
+        # print(url)
+        # getDoi(journal, entry)
 
-        # future = session.get(url, headers=headers, timeout=20)
-        # future.add_done_callback(functools.partial(print_result, journal, entry))
+        future = session.get(url, headers=headers, timeout=20)
+        future.add_done_callback(functools.partial(print_result, journal, entry))
 
-        # # break
+        break
