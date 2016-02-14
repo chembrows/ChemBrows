@@ -196,9 +196,9 @@ class Predictor(QtCore.QThread):
 
             query.exec_()
 
-        # Set the percentage_match to 0 if the abstact is 'Empty' or empty
-        query.prepare("UPDATE papers SET percentage_match = 0 WHERE abstract = 'Empty' OR abstract = ''")
-        query.exec_()
+        # # Set the percentage_match to 0 if the abstact is 'Empty' or empty
+        # query.prepare("UPDATE papers SET percentage_match = 0 WHERE abstract = 'Empty' OR abstract = ''")
+        # query.exec_()
 
         if not self.bdd.commit():
             self.l.critical("Percentages match not correctly written in db")

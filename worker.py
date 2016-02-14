@@ -455,7 +455,6 @@ class Worker(QtCore.QThread):
 
         try:
             title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry, response)
-            # self.l.debug("ck 1.7")
         except TypeError:
             self.l.error("getData returned None for {}".format(journal))
             self.count_futures_images += 1

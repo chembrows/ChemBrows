@@ -1844,6 +1844,7 @@ class Fenetre(QtGui.QMainWindow):
             record = query.record()
             id_bdd = record.value('id')
             authors = record.value('authors')
+            self.l.debug("Cleaning author_simple field: {}".format(id_bdd))
 
             if type(authors) is QtCore.QPyNullVariant:
                 continue
@@ -2027,17 +2028,6 @@ class Fenetre(QtGui.QMainWindow):
         else:
             webbrowser.open(url, new=0, autoraise=True)
             self.l.info("Opening {0} in browser".format(url))
-
-            # if sys.platform=='win32':
-            # if sys.platform in ['win32','cygwin','win64']:
-                # os.startfile(url)
-            # elif sys.platform=='darwin':
-                # subprocess.Popen(['open', url])
-            # else:
-                # try:
-                    # subprocess.Popen(['xdg-open', url])
-                # except OSError:
-                    # self.l.error("openInBrowser: Error. Please open a browser on {}".format(url))
 
 
     def shareOnTwitter(self):
