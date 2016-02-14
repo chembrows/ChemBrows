@@ -189,6 +189,10 @@ elif sys.platform == 'darwin':
     FREEZER_OPTIONS = dict()
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
+
+    # Add the ssl lib file from ubuntu 15.10, w/out SSLV2 enabled
+    my_data_files.append(('.', ['./deploy/Linux_extras/_ssl.cpython-35m-x86_64-linux-gnu.so']))
+
     FREEZER = 'cx_Freeze'
     FREEZER_OPTIONS = dict()
 

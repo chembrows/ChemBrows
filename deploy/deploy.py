@@ -2,8 +2,6 @@
 This script freezes the app using Esky with cx_Freeze and produces a Windows
 Installer with Inno Setup.
 
-TODO: extend for Mac and Linux
-
 https://github.com/peterbrook/assetjet/blob/master/deploy/deploy.py
 https://github.com/peterbrook/assetjet/blob/master/deploy/build_inno_setup.py
 """
