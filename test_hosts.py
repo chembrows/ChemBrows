@@ -97,8 +97,8 @@ def test_getData(journalsUrls):
     # Returns a list of the urls of the feed pages
     list_urls_feed = journalsUrls
 
-    # # Bypass all companies but one
-    # list_urls_feed = hosts.getJournals("springer")[2]
+    # Bypass all companies but one
+    list_urls_feed = hosts.getJournals("acs")[2]
 
     # Build a dic with key: company
                      # value: journal name
@@ -135,7 +135,11 @@ def test_getData(journalsUrls):
             if company in ['science', 'elsevier', 'beilstein']:
                 title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry)
             else:
-                url = getattr(entry, 'feedburner_origlink', entry.link)
+                if company == 'acs':
+                    url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
+                    url = "http://pubs.acs.org/doi/abs/10.1021/" + url
+                else:
+                    url = getattr(entry, 'feedburner_origlink', entry.link)
 
                 try:
                     response = requests.get(url, timeout=10)

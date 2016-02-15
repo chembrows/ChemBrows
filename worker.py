@@ -326,7 +326,13 @@ class Worker(QtCore.QThread):
                 # Article not complete, try to complete it
                 elif doi in self.dico_doi and not self.dico_doi[doi]:
 
-                    url = getattr(entry, 'feedburner_origlink', entry.link)
+                    if company == 'acs':
+                        url = getattr(entry, 'feedburner_origlink',
+                                      entry.link).split('/')[-1]
+
+                        url = "http://pubs.acs.org/doi/abs/10.1021/" + url
+                    else:
+                        url = getattr(entry, 'feedburner_origlink', entry.link)
 
                     dl_page, dl_image, data = hosts.updateData(company,
                                                                journal,

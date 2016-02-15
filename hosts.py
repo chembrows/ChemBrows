@@ -272,7 +272,12 @@ def getData(company, journal, entry, response=None):
         else:
             author = author[0]
 
-        url = getattr(entry, 'feedburner_origlink', entry.link)
+        url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
+        url = "http://pubs.acs.org/doi/abs/10.1021/" + url
+
+        # http://pubs.acs.org/doi/10.1021/jacs.5b12084
+        # http://pubs.acs.org/doi/abs/10.1021/jacs.5b12084
+        # http://feedproxy.google.com/~r/acs/jacsat/~3/BN3xe-S45vY/jacs.5b12084
 
         graphical_abstract = None
 
@@ -767,6 +772,7 @@ if __name__ == "__main__":
     from requests_futures.sessions import FuturesSession
     import functools
     from pprint import pprint
+    import webbrowser
 
     def print_result(journal, entry, future):
         response = future.result()
@@ -782,8 +788,8 @@ if __name__ == "__main__":
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
-    # urls_test = ["http://link.springer.com/search.rss?facet-content-type=Article&facet-journal-id=11084&channel-name=Origins+of+Life+and+Evolution+of+Biospheres.xml"]
-    urls_test = ["debug/springer.xml"]
+    urls_test = ["http://feeds.feedburner.com/acs/ascefj"]
+    # urls_test = ["debug/springer.xml"]
     # urls_test = ["http://feeds.plos.org/plosone/PLoSONE"]
 
     session = FuturesSession(max_workers=20)
@@ -808,6 +814,15 @@ if __name__ == "__main__":
 
         url = entry.link
         # print(entry.id)
+        url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
+        url = "http://pubs.acs.org/doi/abs/10.1021/" + url
+
+        print(url)
+
+        webbrowser.open(url, new=0, autoraise=True)
+
+        # http://pubs.acs.org/doi/10.1021/jacs.5b12084
+        # http://feedproxy.google.com/~r/acs/jacsat/~3/BN3xe-S45vY/jacs.5b12084
 
         # doi = getDoi('springer', journal, entry)
         # print(doi)
@@ -821,8 +836,8 @@ if __name__ == "__main__":
         # url = entry.feedburner_origlink
         title = entry.title
 
-        if "Density Functional" not in entry.title:
-            continue
+        # if "Density Functional" not in entry.title:
+            # continue
 
         # print(entry)
 
@@ -834,7 +849,7 @@ if __name__ == "__main__":
         # print(url)
         # getDoi(journal, entry)
 
-        future = session.get(url, headers=headers, timeout=20)
-        future.add_done_callback(functools.partial(print_result, journal, entry))
+        # future = session.get(url, headers=headers, timeout=20)
+        # future.add_done_callback(functools.partial(print_result, journal, entry))
 
-        break
+        # break
