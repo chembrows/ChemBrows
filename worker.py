@@ -144,6 +144,7 @@ class Worker(QtCore.QThread):
 
                 # Get the DOI, a unique number for a publication
                 doi = hosts.getDoi(company, journal, entry)
+                url = getattr(entry, 'feedburner_origlink', entry.link)
 
                 # Reject crappy entries: corrigendum, erratum, etc
                 if hosts.reject(entry.title):
@@ -154,7 +155,6 @@ class Worker(QtCore.QThread):
 
                     # Insert the crappy articles in a rescue database
                     if self.parent.debug_mod and doi not in self.dico_doi:
-                        url = getattr(entry, 'feedburner_origlink', entry.link)
                         query.prepare("INSERT INTO debug (doi, title, \
                                       journal, url) VALUES(?, ?, ?, ?)")
                         params = (doi, title, journal_abb, url)
@@ -193,9 +193,6 @@ class Worker(QtCore.QThread):
                                               graphical_abstract)):
                             self.count_futures_images += 1
                         else:
-                            url = getattr(entry, 'feedburner_origlink',
-                                          entry.link)
-
                             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                                        'Connection': 'close',
                                        'Referer': url}
@@ -292,6 +289,18 @@ class Worker(QtCore.QThread):
 
                 doi = hosts.getDoi(company, journal, entry)
 
+                if company == 'acs':
+                    url = getattr(entry, 'feedburner_origlink',
+                                  entry.link).split('/')[-1]
+                    url = "http://pubs.acs.org/doi/abs/10.1021/" + url
+
+                elif company == 'npg':
+                    url = getattr(entry, 'feedburner_origlink',
+                                  entry.link).split('/')[-1]
+                    url = "http://www.nature.com/nature/journal/vaop/ncurrent/abs/" + url + ".html"
+                else:
+                    url = getattr(entry, 'feedburner_origlink', entry.link)
+
                 # Reject crappy entries: corrigendum, erratum, etc
                 if hosts.reject(entry.title):
                     title = entry.title
@@ -301,7 +310,6 @@ class Worker(QtCore.QThread):
                     self.l.debug("Rejecting {0}".format(doi))
 
                     if self.parent.debug_mod and doi not in self.dico_doi:
-                        url = getattr(entry, 'feedburner_origlink', entry.link)
                         query.prepare("INSERT INTO debug (doi, title, \
                                       journal, url) VALUES(?, ?, ?, ?)")
                         params = (doi, title, journal_abb, url)
@@ -326,13 +334,6 @@ class Worker(QtCore.QThread):
                 # Article not complete, try to complete it
                 elif doi in self.dico_doi and not self.dico_doi[doi]:
 
-                    if company == 'acs':
-                        url = getattr(entry, 'feedburner_origlink',
-                                      entry.link).split('/')[-1]
-
-                        url = "http://pubs.acs.org/doi/abs/10.1021/" + url
-                    else:
-                        url = getattr(entry, 'feedburner_origlink', entry.link)
 
                     dl_page, dl_image, data = hosts.updateData(company,
                                                                journal,
@@ -384,8 +385,6 @@ class Worker(QtCore.QThread):
                 else:
 
                     self.l.debug("Starting adding new entry")
-
-                    url = getattr(entry, 'feedburner_origlink', entry.link)
 
                     future = self.session_pages.get(url, timeout=self.TIMEOUT,
                                                     headers=headers)

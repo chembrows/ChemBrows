@@ -275,10 +275,6 @@ def getData(company, journal, entry, response=None):
         url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
         url = "http://pubs.acs.org/doi/abs/10.1021/" + url
 
-        # http://pubs.acs.org/doi/10.1021/jacs.5b12084
-        # http://pubs.acs.org/doi/abs/10.1021/jacs.5b12084
-        # http://feedproxy.google.com/~r/acs/jacsat/~3/BN3xe-S45vY/jacs.5b12084
-
         graphical_abstract = None
 
         soup = BeautifulSoup(entry.summary)
@@ -309,7 +305,8 @@ def getData(company, journal, entry, response=None):
         abstract = entry.summary
         graphical_abstract = None
 
-        url = entry.links[0]['href']
+        url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
+        url = "http://www.nature.com/nature/journal/vaop/ncurrent/abs/" + url + ".html"
 
         try:
             author = [dic['name'] for dic in entry.authors]
@@ -788,7 +785,7 @@ if __name__ == "__main__":
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
-    urls_test = ["http://feeds.feedburner.com/acs/ascefj"]
+    urls_test = ["http://feeds.nature.com/nature/rss/aop"]
     # urls_test = ["debug/springer.xml"]
     # urls_test = ["http://feeds.plos.org/plosone/PLoSONE"]
 
@@ -808,14 +805,16 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries:
+    for entry in feed.entries[:15]:
 
         # pprint(entry)
 
-        url = entry.link
+        # url = entry.link
         # print(entry.id)
+        # url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
+        # url = "http://pubs.acs.org/doi/abs/10.1021/" + url
         url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
-        url = "http://pubs.acs.org/doi/abs/10.1021/" + url
+        url = "http://www.nature.com/nature/journal/vaop/ncurrent/abs/" + url + ".html"
 
         print(url)
 
@@ -853,3 +852,5 @@ if __name__ == "__main__":
         # future.add_done_callback(functools.partial(print_result, journal, entry))
 
         # break
+
+    print(len(feed.entries))
