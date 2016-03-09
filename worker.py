@@ -547,7 +547,8 @@ class Worker(QtCore.QThread):
             self.l.error("future cancelled for {}".format(entry_url))
             return
         except Exception as e:
-            self.l.error("Exception raised in pictureDownloaded{}".format(e))
+            self.l.error("Exception raised in pictureDownloaded:\n{}".
+                         format(e))
             self.l.error(traceback.format_exc())
             params = ("Empty", doi)
         else:
@@ -561,7 +562,7 @@ class Worker(QtCore.QThread):
                         format='JPEG')
                     self.l.debug("Image ok")
                 except Exception as e:
-                    self.l.error("An error occured in pictureDownloaded: {}".
+                    self.l.error("An error occured in pictureDownloaded:\n{}".
                                  format(e))
                     self.l.error(traceback.format_exc())
                     params = ("Empty", doi)

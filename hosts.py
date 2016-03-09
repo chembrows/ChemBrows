@@ -581,23 +581,25 @@ def getData(company, journal, entry, response=None):
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
 
         r = BeautifulSoup(entry.summary)
-        author = r("p")[0].extract().text.replace('by ', '')
+
+        if entry.authors:
+            author = []
+            for element in entry.authors:
+                author.append(element['name'])
+            author = ", ".join(author)
+        else:
+            author = None
 
         abstract = r
+
         try:
             _ = abstract("img")[0].extract()
         except IndexError:
             pass
         abstract = abstract.renderContents().decode().strip()
 
-        base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:{}.g001"
+        base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:doi/{}.g001"
         graphical_abstract = base.format(getDoi(company, journal, entry))
-
-        r = BeautifulSoup(entry.summary)("p")
-        if r:
-            author = r[0].text.replace('by ', '')
-        else:
-            author = None
 
 
     elif company == 'springer':
@@ -710,7 +712,7 @@ def getDoi(company, journal, entry):
         doi = entry.summary.split("doi:")[1].split("</p>")[0]
 
     elif company == 'plos':
-        doi = entry.id.split(':')[1]
+        doi = "10.1371/" + entry.id.split('/')[-1]
 
     elif company == 'springer':
         doi = "10.1007/" + entry.id.split('/')[-1]
@@ -773,7 +775,7 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("springer", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("plos", journal, entry, response)
         # print(abstract)
         # print("\n")
         # print(date)
@@ -785,9 +787,9 @@ if __name__ == "__main__":
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
-    urls_test = ["http://feeds.nature.com/nature/rss/aop"]
+    # urls_test = ["http://feeds.nature.com/nature/rss/aop"]
     # urls_test = ["debug/springer.xml"]
-    # urls_test = ["http://feeds.plos.org/plosone/PLoSONE"]
+    urls_test = ["http://feeds.plos.org/plosone/PLoSONE"]
 
     session = FuturesSession(max_workers=20)
 
@@ -805,32 +807,15 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries[:15]:
+    for entry in feed.entries[5:]:
 
         # pprint(entry)
 
-        # url = entry.link
-        # print(entry.id)
-        # url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
-        # url = "http://pubs.acs.org/doi/abs/10.1021/" + url
-        url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
-        url = "http://www.nature.com/nature/journal/vaop/ncurrent/abs/" + url + ".html"
+        url = entry.link
 
         print(url)
 
-        webbrowser.open(url, new=0, autoraise=True)
-
-        # http://pubs.acs.org/doi/10.1021/jacs.5b12084
-        # http://feedproxy.google.com/~r/acs/jacsat/~3/BN3xe-S45vY/jacs.5b12084
-
-        # doi = getDoi('springer', journal, entry)
-        # print(doi)
-
-        # print(doi)
-
-        # print(entry.title)
-
-        # print(url)
+        # webbrowser.open(url, new=0, autoraise=True)
 
         # url = entry.feedburner_origlink
         title = entry.title
@@ -848,9 +833,7 @@ if __name__ == "__main__":
         # print(url)
         # getDoi(journal, entry)
 
-        # future = session.get(url, headers=headers, timeout=20)
-        # future.add_done_callback(functools.partial(print_result, journal, entry))
+        future = session.get(url, headers=headers, timeout=20)
+        future.add_done_callback(functools.partial(print_result, journal, entry))
 
-        # break
-
-    print(len(feed.entries))
+        break
