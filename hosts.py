@@ -580,7 +580,9 @@ def getData(company, journal, entry, response=None):
         url = entry.link
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
 
-        r = BeautifulSoup(entry.summary)
+        # print(title)
+        # print(date)
+
 
         if entry.authors:
             author = []
@@ -590,12 +592,18 @@ def getData(company, journal, entry, response=None):
         else:
             author = None
 
-        abstract = r
+        abstract = BeautifulSoup(entry.summary)
+
+        # Clean the authors' names from the abstract
+        r = abstract.find_all("p")
+        if r and str(r[0]).startswith("<p>by "):
+            abstract("p")[0].extract()
 
         try:
-            _ = abstract("img")[0].extract()
+            abstract("img")[0].extract()
         except IndexError:
             pass
+
         abstract = abstract.renderContents().decode().strip()
 
         base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:doi/{}.g001"
