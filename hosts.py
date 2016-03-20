@@ -580,10 +580,6 @@ def getData(company, journal, entry, response=None):
         url = entry.link
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
 
-        # print(title)
-        # print(date)
-
-
         if entry.authors:
             author = []
             for element in entry.authors:
