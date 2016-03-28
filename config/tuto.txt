@@ -34,9 +34,14 @@ Chembrows learns from your input and classifies the articles by "Hot Paperness":
 Don't forget: the more you feed ChemBrows, the more Chembrows feeds you back with relevant articles
 !!!stats.png
 --
-You are now ready to download articles! 
-
+You are now ready to download articles ! 
 (it may take some time at the first execution, be patient...)
+
+DISCLAIMER: depending on the nature of the contracts
+between the professional institutions and the publishers,
+some users may not be allowed to automatically collect
+articles' metadata via their institution's Internet networks.
+
 !!!refresh.png
 --
 Enjoy Chembrows and please feel free to send us your feedback at <a href="http://www.chembrows.com">www.chembrows.com</a> or <a href="mailto:contact@chembrows.com">contact@chembrows.com</a>

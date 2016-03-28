@@ -336,7 +336,11 @@ class Fenetre(QtGui.QMainWindow):
         www.chembrows.com</a><br/><br/>
         To contact us: <a href="mailto:contact@chembrows.com">
         contact@chembrows.com</a><br/><br/>
-        ChemBrows is released under the GNU GPL License.
+        ChemBrows is released under the GNU GPL License.<br/><br/>
+        DISCLAIMER: depending on the nature of the contracts between the
+        professional institutions and the publishers, some users may not be
+        allowed to automatically collect articles' metadata via their
+        institution's Internet networks.
         """.replace('    ', '').format(version)
 
         # Use this complicated messageBox to get clickable URLs
