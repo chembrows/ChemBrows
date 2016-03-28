@@ -340,7 +340,8 @@ class Fenetre(QtGui.QMainWindow):
         DISCLAIMER: depending on the nature of the contracts between the
         professional institutions and the publishers, some users may not be
         allowed to automatically collect articles' metadata via their
-        institution's Internet networks.
+        institution's Internet networks. ChemBrows' authors assume no liability
+        for users' failures to comply with these contracts.
         """.replace('    ', '').format(version)
 
         # Use this complicated messageBox to get clickable URLs
