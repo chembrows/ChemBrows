@@ -12,6 +12,7 @@ import webbrowser
 import requests
 import platform
 import traceback
+import validators
 
 # To package and distribute the program
 import esky
@@ -1103,8 +1104,10 @@ class Fenetre(QtGui.QMainWindow):
         # Get the different infos for an article
         title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
         author = table.model().index(table.selectionModel().selection().indexes()[0].row(), 6).data()
-        date = table.model().index(table.selectionModel().selection().indexes()[0].row(), 4).data()
         journal = table.model().index(table.selectionModel().selection().indexes()[0].row(), 5).data()
+        date = table.model().index(table.selectionModel().selection().indexes()[0].row(), 4).data()
+
+        doi = table.model().index(table.selectionModel().selection().indexes()[0].row(), 2).data()
 
         abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
 
@@ -1139,6 +1142,14 @@ class Fenetre(QtGui.QMainWindow):
             self.label_author.setText(author)
         else:
             self.label_author.setText("")
+
+        # Some articles have an URL instead of a DOI (the publisher
+        # does not provide the DOI in the abstract), so check and display
+        # only the DOI
+        if not validators.url(doi):
+            self.label_doi.setText(doi)
+        else:
+            self.label_doi.setText("DOI unavailable")
 
 
     def tabChanged(self):
@@ -1576,6 +1587,7 @@ class Fenetre(QtGui.QMainWindow):
         self.label_title.setText("")
         self.label_journal.setText("")
         self.label_date.setText("")
+        self.label_doi.setText("")
         self.text_abstract.setHtml("")
 
         # Uncheck the journals buttons on the left
@@ -2342,7 +2354,8 @@ class Fenetre(QtGui.QMainWindow):
         self.scroll_tags = QtGui.QScrollArea()
 
         # Always disable the horizontal scroll bar of the left dock
-        self.scroll_tags.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll_tags.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAlwaysOff)
 
         # Create scrolling zone
         # http://www.mattmurrayanimation.com/archives/tag/how-do-i-use-a-qscrollarea-in-pyqt
@@ -2362,48 +2375,72 @@ class Fenetre(QtGui.QMainWindow):
         self.area_right_top.setLayout(self.grid_area_right_top)
 
         # Here I set a prelabel: a label w/ just "Title: " to label the title.
-        # I set the sizePolicy of this prelabel to the minimum. It will stretch to
-        # the minimum. Makes the display better with the grid
+        # I set the sizePolicy of this prelabel to the minimum. It will stretch
+        # to the minimum. Makes the display better with the grid
         prelabel_title = QtGui.QLabel("Title: ")
-        prelabel_title.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
+        prelabel_title.setSizePolicy(QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
         self.label_title = QtGui.QLabel()
-        self.label_title.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.label_title.setTextInteractionFlags(
+            QtCore.Qt.TextSelectableByMouse)
         self.label_title.setWordWrap(True)
-        self.label_title.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_title.setSizePolicy(QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
         prelabel_author = QtGui.QLabel("Author(s): ")
-        prelabel_author.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
+        prelabel_author.setSizePolicy(QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
         self.label_author = QtGui.QLabel()
-        self.label_author.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.label_author.setTextInteractionFlags(
+            QtCore.Qt.TextSelectableByMouse)
         self.label_author.setWordWrap(True)
-        self.label_author.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_author.setSizePolicy(QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
         prelabel_journal = QtGui.QLabel("Journal: ")
-        prelabel_journal.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
+        prelabel_journal.setSizePolicy(QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
         self.label_journal = QtGui.QLabel()
-        self.label_journal.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.label_journal.setTextInteractionFlags(
+            QtCore.Qt.TextSelectableByMouse)
         self.label_journal.setWordWrap(True)
-        self.label_journal.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_journal.setSizePolicy(QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
         prelabel_date = QtGui.QLabel("Date: ")
-        prelabel_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
+        prelabel_date.setSizePolicy(QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
         self.label_date = QtGui.QLabel()
-        self.label_date.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.label_date.setTextInteractionFlags(
+            QtCore.Qt.TextSelectableByMouse)
         self.label_date.setWordWrap(True)
-        self.label_date.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_date.setSizePolicy(QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+
+        prelabel_doi = QtGui.QLabel("DOI: ")
+        prelabel_doi.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum,
+                                   QtGui.QSizePolicy.Minimum))
+        self.label_doi = QtGui.QLabel()
+        self.label_doi.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.label_doi.setWordWrap(True)
+        self.label_doi.setSizePolicy(QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
 
         # Buttons for the display of the article: zoom & dark background
         self.button_zoom_less = QtGui.QPushButton()
+        self.button_zoom_less.setToolTip("Zoom out")
         self.button_zoom_less.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/zoom_out.png')))
         self.button_zoom_less.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_zoom_less.setAccessibleName('round_button_article')
         self.button_zoom_less.hide()
         self.button_zoom_more = QtGui.QPushButton()
+        self.button_zoom_more.setToolTip("Zoom in")
         self.button_zoom_more.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/zoom_in.png')))
         self.button_zoom_more.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_zoom_more.setAccessibleName('round_button_article')
         self.button_zoom_more.hide()
         self.button_color_read = QtGui.QPushButton()
+        self.button_color_read.setToolTip("Change background color")
         self.button_color_read.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/black_text.png')))
         self.button_color_read.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_color_read.setAccessibleName('round_button_article')
@@ -2411,6 +2448,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Button to share on twitter
         self.button_twitter = QtGui.QPushButton()
+        self.button_twitter.setToolTip("Tweet this article")
         self.button_twitter.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/twitter.png')))
         self.button_twitter.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_twitter.setAccessibleName('round_button_article')
@@ -2418,6 +2456,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Button to share by email
         self.button_share_mail = QtGui.QPushButton()
+        self.button_share_mail.setToolTip("Share by mail")
         self.button_share_mail.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/email.png')))
         self.button_share_mail.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_share_mail.setAccessibleName('round_button_article')
@@ -2435,6 +2474,8 @@ class Fenetre(QtGui.QMainWindow):
         self.grid_area_right_top.addWidget(self.label_journal, 2, 1, 1, 4)
         self.grid_area_right_top.addWidget(prelabel_date, 3, 0)
         self.grid_area_right_top.addWidget(self.label_date, 3, 1, 1, 4)
+        self.grid_area_right_top.addWidget(prelabel_doi, 4, 0)
+        self.grid_area_right_top.addWidget(self.label_doi, 4, 1, 1, 4)
 
         # An empty widget, acts as spacer
         self.empty_widget = QtGui.QWidget()
@@ -2449,11 +2490,11 @@ class Fenetre(QtGui.QMainWindow):
         self.hbox_toolbar_article.addWidget(self.button_twitter, alignment=QtCore.Qt.AlignRight)
         self.hbox_toolbar_article.addWidget(self.button_share_mail, alignment=QtCore.Qt.AlignRight)
 
-        self.grid_area_right_top.addLayout(self.hbox_toolbar_article, 4, 0, 1, 4)
-        self.grid_area_right_top.addWidget(self.text_abstract, 5, 0, 1, 4)
+        self.grid_area_right_top.addLayout(self.hbox_toolbar_article, 5, 0, 1, 4)
+        self.grid_area_right_top.addWidget(self.text_abstract, 6, 0, 1, 4)
 
         # USEFULL: set the size of the grid and its widgets to the minimum
-        self.grid_area_right_top.setRowStretch(5, 1)
+        self.grid_area_right_top.setRowStretch(6, 1)
 
         # ------------------------- ASSEMBLING THE AREAS ----------------------
 

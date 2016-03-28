@@ -779,7 +779,7 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("plos", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("elsevier", journal, entry, response)
         # print(abstract)
         # print("\n")
         # print(date)
@@ -793,7 +793,7 @@ if __name__ == "__main__":
 
     # urls_test = ["http://feeds.nature.com/nature/rss/aop"]
     # urls_test = ["debug/springer.xml"]
-    urls_test = ["http://feeds.plos.org/plosone/PLoSONE"]
+    urls_test = ["http://rss.sciencedirect.com/publication/science/00404020"]
 
     session = FuturesSession(max_workers=20)
 
@@ -817,7 +817,7 @@ if __name__ == "__main__":
 
         url = entry.link
 
-        print(url)
+        # print(url)
 
         # webbrowser.open(url, new=0, autoraise=True)
 
@@ -837,7 +837,7 @@ if __name__ == "__main__":
         # print(url)
         # getDoi(journal, entry)
 
-        future = session.get(url, headers=headers, timeout=20)
-        future.add_done_callback(functools.partial(print_result, journal, entry))
+        # future = session.get(url, headers=headers, timeout=20)
+        # future.add_done_callback(functools.partial(print_result, journal, entry))
 
         break
