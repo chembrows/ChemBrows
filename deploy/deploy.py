@@ -155,5 +155,7 @@ elif create_installer and sys.platform == 'darwin':
     subprocess.call('freeze dist/chembrows.packproj -d dist/', shell=True)
 
     # Make the post-install script (called postflight by Iceberg) executable
+    # !!!!!!!! For now, I have to do it manually on Linux, and also compress
+    # the pkg on Linux
     os.chmod('dist/build/ChemBrows.pkg/Contents/Resources/postflight', 0o777)
     print('Done creating a .pkg for Mac OS...')
