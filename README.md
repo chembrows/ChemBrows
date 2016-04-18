@@ -23,7 +23,7 @@ With advanced features such as powerful searching tools and machine learning, yo
 # Is it free?
 
 Yes it is, and it will always be. Chembrows is an open tool that is dedicated to the scientific community and ChemBrows has non-commercial purpose.
-The source code will be freely available and contributions are welcome.
+The source code is freely available and contributions are welcome.
 
  
 # Does ChemBrows collect personnal informations?
