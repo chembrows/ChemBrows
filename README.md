@@ -1,4 +1,4 @@
-[screenshot](http://i.imgur.com/6yE72c5.jpg?1)
+![screenshot](http://i.imgur.com/6yE72c5.jpg?1)
 
 
 ChemBrows: keeps you up-to-date with scientific literature
