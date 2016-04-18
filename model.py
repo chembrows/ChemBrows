@@ -4,10 +4,10 @@
 
 from PyQt4 import QtSql
 
+
 class ModelPerso(QtSql.QSqlTableModel):
 
-    """Subclassing the model to load all the data at once.
-    Can cause performance issues"""
+    """Subclassing the model to sort the data at will"""
 
     def __init__(self, parent):
         super(ModelPerso, self).__init__(parent)
@@ -33,7 +33,6 @@ class ModelPerso(QtSql.QSqlTableModel):
         # Sorting method wanted by the user
         if self.parent.sorting_method == 1:
             sorting = "date"
-
             str_sorting = " ORDER BY {} {}".format(sorting, reverse)
         else:
             sorting = "percentage_match"
@@ -48,20 +47,4 @@ class ModelPerso(QtSql.QSqlTableModel):
 
         results = QtSql.QSqlTableModel.setQuery(self, self.query)
 
-        # while self.canFetchMore():
-            # self.fetchMore()
         return results
-
-
-    # def select(self):
-
-        # """Reimplementation. Allows to load all the data at once.
-        # Can cause performance issues"""
-        # # http://www.developpez.net/forums/d1243418/autres-langages/
-        # # python-zope/gui/pyside-pyqt/reglage-ascenseur-vertical-qtableview/
-
-        # results = QtSql.QSqlTableModel.select(self)
-
-        # # while self.canFetchMore():
-            # # self.fetchMore()
-        # return results

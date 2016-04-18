@@ -4,7 +4,9 @@
 
 class MyStyles():
 
-    """Class to handle the styling of the program"""
+    """Class to handle the styling of the program.
+    We do it here and not in css files because some css
+    is programatically generated, to handle different resolutions"""
 
     # Double { for placeholders
     # http://stackoverflow.com/questions/9623134/python-format-throws-keyerror

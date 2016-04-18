@@ -2,8 +2,6 @@
 This script freezes the app using Esky with cx_Freeze and produces a Windows
 Installer with Inno Setup.
 
-TODO: extend for Mac and Linux
-
 https://github.com/peterbrook/assetjet/blob/master/deploy/deploy.py
 https://github.com/peterbrook/assetjet/blob/master/deploy/build_inno_setup.py
 """
@@ -40,6 +38,7 @@ else:
 
 # Freeze !!!
 subprocess.call('{} setup.py bdist_esky'.format(python_exe), shell=True)
+# subprocess.call('{} setup.py bdist_esky_patch'.format(python_exe), shell=True)
 print('done with esky')
 
 # Unzip file
@@ -106,7 +105,8 @@ elif sys.platform == 'darwin':
 
 
 else:
-    os.chmod('./dist/{}/gui'.format(filename, filename), 0o777)
+    copyfile('deploy/Linux_extras/README', 'dist/{}/README'.format(filename))
+    os.chmod('./dist/{}/gui'.format(filename), 0o777)
     os.chmod('./dist/{}/{}/gui'.format(filename, filename), 0o777)
 
 
@@ -134,7 +134,7 @@ elif create_installer and sys.platform == 'darwin':
 
     print('Creating a .pkg for Mac OS...')
 
-    with open('deploy/template.packproj', 'r') as template:
+    with open('deploy/OSX_extras/template.packproj', 'r') as template:
         text = template.read()
 
         simplified_version = version.split('.')[:-1]
@@ -147,10 +147,15 @@ elif create_installer and sys.platform == 'darwin':
         text = text.replace('MAJOR_VERSION', version.split('.')[0])
         text = text.replace('MINOR_VERSION', version.split('.')[1])
         text = text.replace('APP_PATH', os.path.abspath('dist/{}/{}.app'.format(filename, app_name)))
+        text = text.replace('POST_INSTALL_PATH', os.path.abspath('deploy/OSX_extras/post_install.sh'))
 
         with open('dist/chembrows.packproj', 'w') as packproj:
             packproj.write(text)
 
     subprocess.call('freeze dist/chembrows.packproj -d dist/', shell=True)
-    print('Done creating a .pkg for Mac OS...')
 
+    # Make the post-install script (called postflight by Iceberg) executable
+    # !!!!!!!! For now, I have to do it manually on Linux, and also compress
+    # the pkg on Linux
+    os.chmod('dist/build/ChemBrows.pkg/Contents/Resources/postflight', 0o777)
+    print('Done creating a .pkg for Mac OS...')

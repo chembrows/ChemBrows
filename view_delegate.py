@@ -146,7 +146,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # Draw peppers. A full pepper if the match percentage
             # of an article is superior to the element of the list.
             # Else, an empty pepper
-            nbr_peppers = [15, 30, 45, 70]
+            nbr_peppers = [20, 40, 60, 80]
             for index, perc in enumerate(nbr_peppers):
 
                 if percentage >= perc:
@@ -237,7 +237,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 pixmap = QtGui.QPixmap(os.path.join(self.parent.resource_dir, "images/not_available.png"))
 
                 wcase, hcase = option.rect.width(), option.rect.height()
-                wpix, hpix =  pixmap.width(), pixmap.height()
+                wpix, hpix = pixmap.width(), pixmap.height()
 
                 if wpix != wcase or hpix != hcase:
                     pixmap = pixmap.scaled(wcase, hcase,

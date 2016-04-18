@@ -29,6 +29,7 @@ class Updater(QtCore.QThread):
         self.update_available = False
 
         self.app = esky.Esky(sys.executable, "http://chembrows.com/downloads/updates/")
+        # self.app = esky.Esky(sys.executable, "http://127.0.0.1:8000")
 
         # Get the number of the latest version
         try:
@@ -57,10 +58,8 @@ class Updater(QtCore.QThread):
 
         try:
             # Update ChemBrows
-            self.app.get_root()
             self.app.auto_update()
-            # self.app.cleanup()
-            # self.app.drop_root()
+            self.app.cleanup()
         except Exception as e:
             self.l.critical("ERROR UPDATING APP: {}".format(e))
             self.l.critical(traceback.format_exc())

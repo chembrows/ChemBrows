@@ -8,31 +8,6 @@ import arrow
 import re
 
 
-def unidecodePerso(string):
-
-    if getattr(sys, "frozen", False):
-        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    else:
-        resource_dir = '.'
-
-    with open(os.path.join(resource_dir, 'config/data.bin'), 'rb') as f:
-        _replaces = f.read().decode('utf8').split('\x00')
-
-    chars = []
-    for ch in string:
-        codepoint = ord(ch)
-
-        if not codepoint:
-            chars.append('\x00')
-            continue
-
-        try:
-            chars.append(_replaces[codepoint - 1])
-        except IndexError:
-            pass
-    return "".join(chars)
-
-
 def prettyDate(date):
 
     """Prettify a date. Ex: 3 days ago"""
@@ -46,15 +21,44 @@ def prettyDate(date):
         return date.humanize(now.naive)
 
 
-def simpleChar(string):
+def simpleChar(string, wildcards=True):
 
-    """Sluggify the string"""
+    """Sluggify the string.
+    If wildcards is False, don't sluggify them"""
     # http://www.siteduzero.com/forum-83-810635-p1-sqlite-recherche-avec-like-insensible-a-la-casse.html#r7767300
 
     # http://stackoverflow.com/questions/5574042/string-slugification-in-python
-    string = unidecodePerso(string).lower()
+    # string = unidecodePerso(string).lower()
 
-    return re.sub(r'\W+', ' ', string)
+    if getattr(sys, "frozen", False):
+        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    else:
+        resource_dir = '.'
+
+    with open(os.path.join(resource_dir, 'config/data.bin'), 'rb') as f:
+        _replaces = f.read().decode('utf8').split('\x00')
+
+    chars = []
+    for ch in string:
+        if ch == '*' and not wildcards:
+            chars.append('*')
+            continue
+
+        codepoint = ord(ch)
+
+        if not codepoint:
+            chars.append('\x00')
+            continue
+
+        try:
+            chars.append(_replaces[codepoint - 1])
+        except IndexError:
+            pass
+
+    string = "".join(chars)
+
+    # http://stackoverflow.com/questions/35382793/regex-match-all-special-characters-but-not
+    return re.sub(r'_|[^\w\s*]+', ' ', string)
 
 
 def queryString(word):
@@ -88,125 +92,91 @@ def queryString(word):
     return res
 
 
-def buildSearch(topic_entries, author_entries):
+def buildSearch(topic_entries, author_entries, radio_states):
 
     """Build the query"""
 
     base = "SELECT * FROM papers WHERE "
 
-    first = True
+    str_topic = ['', '']
+    str_author = ['', '']
 
-    # TOPIC, AND condition
+    # Include line for topic, radio "Any" is not checked
+    # -> AND query
     if topic_entries[0]:
-        first = False
 
-        # words = [word.lstrip().rstrip() for word in topic_entries[0].split(",")]
-        words = [word.strip() for word in topic_entries[0].split(",")]
+        words = [simpleChar(word.strip(), False) for word
+                 in topic_entries[0].split(",")]
+
+        words = [queryString(word) for word in words]
+
+        if radio_states[0]:
+            operator = 'OR'
+        else:
+            operator = 'AND'
+
+        for word in words:
+            if word == words[0]:
+                str_topic[0] = "topic_simple LIKE '{}'".format(word)
+            else:
+                str_topic[0] += " {} topic_simple LIKE '{}'".format(operator, word)
+
+    # TOPIC, NOT condition
+    if topic_entries[1]:
+
+        words = [simpleChar(word.strip(), False) for word
+                 in topic_entries[1].split(",")]
+
         words = [queryString(word) for word in words]
 
         for word in words:
             if word == words[0]:
-                base += "topic_simple LIKE '{0}'".format(word)
+                str_topic[1] = "topic_simple NOT LIKE '{}'".format(word)
             else:
-                base += " AND topic_simple LIKE '{0}'".format(word)
+                str_topic[1] += " AND topic_simple NOT LIKE '{}'".format(word)
 
-    # TOPIC, OR condition
-    if topic_entries[1]:
-        # words = [word.lstrip().rstrip() for word in topic_entries[1].split(",")]
-        words = [word.strip() for word in topic_entries[1].split(",")]
-        words = [queryString(word) for word in words]
 
-        if first:
-            first = False
-            base += "topic_simple LIKE '{0}'".format(words[0])
-
-            for word in words[1:]:
-                base += " OR topic_simple LIKE '{0}'".format(word)
-        else:
-            for word in words:
-                base += " OR topic_simple LIKE '{0}'".format(word)
-
-    # TOPIC, NOT condition
-    if topic_entries[2]:
-        # words = [word.lstrip().rstrip() for word in topic_entries[2].split(",")]
-        words = [word.strip() for word in topic_entries[2].split(",")]
-        words = [queryString(word) for word in words]
-
-        if first:
-            first = False
-            base += "topic_simple NOT LIKE '{0}'".format(words[0])
-
-            for word in words[1:]:
-                base += " AND topic_simple NOT LIKE '{0}'".format(word)
-        else:
-            for word in words:
-                base += " AND topic_simple NOT LIKE '{0}'".format(word)
-
-    # AUTHOR, AND condition
+    # AUTHOR, AND/OR condition
     if author_entries[0]:
-        # words = [word.lstrip().rstrip() for word in author_entries[0].split(",")]
-        words = [word.strip() for word in author_entries[0].split(",")]
+
+        words = [simpleChar(word.strip(), False) for word
+                 in author_entries[0].split(",")]
+
         words = [queryString(word) for word in words]
 
-        if first:
-            first = False
-            # base += "', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(words[0])
-            base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(words[0])
-            # base += "authors_simple LIKE '{0}'".format(words[0])
-
-            for word in words[1:]:
-                # base += " AND ', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(word)
-                base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                # base += " AND authors_simple LIKE '{0}'".format(word)
+        if radio_states[2]:
+            operator = 'OR'
         else:
-            for word in words:
-                # base += " AND ', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(word)
-                base += " AND ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                # base += " AND authors_simple LIKE '{0}'".format(word)
+            operator = 'AND'
 
-    # AUTHOR, OR condition
-    if author_entries[1]:
-        # words = [word.lstrip().rstrip() for word in author_entries[1].split(",")]
-        words = [word.strip() for word in author_entries[1].split(",")]
-        words = [queryString(word) for word in words]
-
-        if first:
-            first = False
-            # base += "', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(words[0])
-            base += "' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(words[0])
-            # base += "authors_simple LIKE '{0}'".format(words[0])
-
-            for word in words[1:]:
-                # base += " OR ', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(word)
-                base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                # base += " OR authors_simple LIKE '{0}'".format(word)
-        else:
-            for word in words:
-                # base += " OR ', ' || replace(authors, ',', ' ,') || ' ,' LIKE ',{0},'".format(word)
-                base += " OR ' ' || replace(authors, ',', ' ') || ' ' LIKE '{0}'".format(word)
-                # base += " OR authors_simple LIKE '{0}'".format(word)
+        for word in words:
+            if word == words[0]:
+                str_author[0] = " author_simple LIKE '{}'".format(word)
+            else:
+                str_author[0] += " {} author_simple LIKE '{}'".format(operator, word)
 
     # AUTHOR, NOT condition
-    if author_entries[2]:
-        # words = [word.lstrip().rstrip() for word in author_entries[2].split(",")]
-        words = [word.strip() for word in author_entries[2].split(",")]
+    if author_entries[1]:
+
+        words = [simpleChar(word.strip(), False) for word
+                 in author_entries[1].split(",")]
+
         words = [queryString(word) for word in words]
 
-        if first:
-            first = False
-            # base += "', ' || replace(authors, ',', ' ,') || ' ,' NOT LIKE ',{0},'".format(words[0])
-            base += "', ' || replace(authors, ',', ' ') || ' ,' NOT LIKE '{0}'".format(words[0])
-            # base += "authors_simple NOT LIKE '{0}'".format(words[0])
+        for word in words:
+            if word == words[0]:
+                str_author[1] = " author_simple NOT LIKE '{}'".format(word)
+            else:
+                str_author[1] += " AND author_simple NOT LIKE '{}'".format(word)
 
-            for word in words[1:]:
-                # base += " AND ', ' || replace(authors, ',', ' ,') || ' ,' NOT LIKE ',{0},'".format(word)
-                base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(word)
-                # base += " AND authors_simple NOT LIKE '{0}'".format(word)
+
+    # Build the query from the parts. Concatenate them with AND
+    concatenate = [element for element in str_topic + str_author if element]
+    for element in concatenate:
+        if element is concatenate[0]:
+            base += "(" + element + ")"
         else:
-            for word in words:
-                # base += " AND ', ' || replace(authors, ',', ' ,') || ' ,' NOT LIKE ',{0},'".format(word)
-                base += " AND ' ' || replace(authors, ',', ' ') || ' ' NOT LIKE '{0}'".format(word)
-                # base += " AND authors_simple NOT LIKE '{0}'".format(word)
+            base += " AND (" + element + ")"
 
     return base
 
@@ -235,4 +205,7 @@ if __name__ == "__main__":
     # match(['jean-patrick francoia', 'robert pascal', 'laurent vial'], "r* pascal")
 
     # unidecodePerso('test')
+    print(simpleChar("Her_%%%v*é Cottet", False))
+    # queryString("Hervé Cottet")
+    # simpleChar("C* N. hunter", False)
     pass

@@ -50,7 +50,7 @@ def updateData(company, journal, entry, care_image):
     the Worker will try to dl the image, w/ the URL returned by this
     function. If dl_page is True, the Worker will dl the article's page,
     AND will try to dl the image anyway, trough the futures mechanism of
-    the worker"""
+    the worker. care_image is not used right now, but might be one day"""
 
     dl_image = True
     dl_page = True
@@ -58,6 +58,11 @@ def updateData(company, journal, entry, care_image):
 
     # NOTE:
     # company = 'npg' is not mentionned, but dl_image & dl_page are True
+
+    # NOTE
+    # springer: dl_page is set to False, bc very little articles have a
+    # graphical_abstract. But the graphical_abstract's URL is only on the
+    # web page of the article
 
     # TODO: npg2
 
@@ -119,6 +124,14 @@ def updateData(company, journal, entry, care_image):
     elif company == 'thieme':
         dl_page = False
 
+    elif company == 'plos':
+        dl_page = False
+
+        base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:{}.g001"
+        graphical_abstract = base.format(getDoi(company, journal, entry))
+
+    elif company == 'springer':
+        dl_page = False
 
     else:
         pass
@@ -259,7 +272,8 @@ def getData(company, journal, entry, response=None):
         else:
             author = author[0]
 
-        url = getattr(entry, 'feedburner_origlink', entry.link)
+        url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
+        url = "http://pubs.acs.org/doi/abs/10.1021/" + url
 
         graphical_abstract = None
 
@@ -291,7 +305,8 @@ def getData(company, journal, entry, response=None):
         abstract = entry.summary
         graphical_abstract = None
 
-        url = entry.links[0]['href']
+        url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
+        url = "http://www.nature.com/nature/journal/vaop/ncurrent/abs/" + url + ".html"
 
         try:
             author = [dic['name'] for dic in entry.authors]
@@ -398,7 +413,7 @@ def getData(company, journal, entry, response=None):
     elif company == 'elsevier':
 
         title = entry.title
-        date = arrow.get(entry.updated).format('YYYY-MM-DD')
+        date = arrow.get(mktime(entry.updated_parsed)).format('YYYY-MM-DD')
 
         url = entry.id
 
@@ -558,12 +573,91 @@ def getData(company, journal, entry, response=None):
                 if "f1.jpg" in r[0]["src"]:
                     graphical_abstract = "http://www.nature.com" + r[0]["src"]
 
+
+    elif company == 'plos':
+
+        title = entry.title
+        url = entry.link
+        date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
+
+        if entry.authors:
+            author = []
+            for element in entry.authors:
+                author.append(element['name'])
+            author = ", ".join(author)
+        else:
+            author = None
+
+        abstract = BeautifulSoup(entry.summary)
+
+        # Clean the authors' names from the abstract
+        r = abstract.find_all("p")
+        if r and str(r[0]).startswith("<p>by "):
+            abstract("p")[0].extract()
+
+        try:
+            abstract("img")[0].extract()
+        except IndexError:
+            pass
+
+        abstract = abstract.renderContents().decode().strip()
+
+        base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:doi/{}.g001"
+        graphical_abstract = base.format(getDoi(company, journal, entry))
+
+
+    elif company == 'springer':
+
+        title = entry.title
+        url = entry.link
+        date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
+        graphical_abstract = None
+        author = None
+
+        abstract = BeautifulSoup(entry.summary)
+
+        try:
+            _ = abstract("h3")[0].extract()
+            # Remove the graphical abstract part from the abstract
+            _ = abstract("span", attrs={"class": "a-plus-plus figure category-standard float-no id-figa"})[0].extract()
+        except IndexError:
+            pass
+
+        abstract = abstract.renderContents().decode().strip()
+
+        if response.status_code is requests.codes.ok:
+
+            strainer = SoupStrainer("div", attrs={"class": "MediaObject"})
+            soup = BeautifulSoup(response.text, parse_only=strainer)
+
+            # For now, it's one shot: if the dl fails for the GA, there
+            # won't be a retry. That's bc too little articles have GA
+            r = soup.find_all("img")
+            if r:
+                graphical_abstract = r[0]['src']
+
+            strainer = SoupStrainer("ul", attrs={"class": "AuthorNames"})
+            soup = BeautifulSoup(response.text, parse_only=strainer)
+            r = soup.find_all("span", attrs={"class": "AuthorName"})
+            if r:
+                author = [tag.text for tag in r]
+                author = ", ".join(author)
+
+            strainer = SoupStrainer("h1", attrs={"class": "ArticleTitle"})
+            soup = BeautifulSoup(response.text, parse_only=strainer)
+            r = soup.h1
+            if r is not None:
+                title = r.renderContents().decode()
+
     else:
         return None
 
 
     if abstract is not None:
-        topic_simple = " " + functions.simpleChar(BeautifulSoup(abstract).text) + functions.simpleChar(title) + " "
+
+        topic_simple = " " + \
+                       functions.simpleChar(BeautifulSoup(abstract).text) + \
+                       " " + functions.simpleChar(title) + " "
     else:
         topic_simple = " " + functions.simpleChar(title) + " "
 
@@ -571,11 +665,14 @@ def getData(company, journal, entry, response=None):
         abstract = "Empty"
     if graphical_abstract is None:
         graphical_abstract = "Empty"
+
     if author is None or author == '':
         author = "Empty"
+        author_simple = None
+    else:
+        author_simple = " " + functions.simpleChar(author) + " "
 
-
-    return title, date, author, abstract, graphical_abstract, url, topic_simple
+    return title, date, author, abstract, graphical_abstract, url, topic_simple, author_simple
 
 
 def getDoi(company, journal, entry):
@@ -617,6 +714,12 @@ def getDoi(company, journal, entry):
 
     elif company == 'beilstein':
         doi = entry.summary.split("doi:")[1].split("</p>")[0]
+
+    elif company == 'plos':
+        doi = "10.1371/" + entry.id.split('/')[-1]
+
+    elif company == 'springer':
+        doi = "10.1007/" + entry.id.split('/')[-1]
 
     try:
         doi = doi.replace(" ", "")
@@ -667,30 +770,40 @@ def getJournals(company):
 
 if __name__ == "__main__":
 
+    # print(getJournals('science'))
+
     from requests_futures.sessions import FuturesSession
     import functools
+    from pprint import pprint
+    import webbrowser
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple = getData("acs", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("elsevier", journal, entry, response)
         # print(abstract)
         # print("\n")
-        print(graphical_abstract)
+        # print(date)
         # print("\n")
         # print(authors)
         # print("\n")
         # print(title)
+        # print(graphical_abstract)
+        # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
-    # urls_test = ["debug/lett.xht"]
-    urls_test = ["http://feeds.feedburner.com/acs/ascefj"]
+    # urls_test = ["http://feeds.nature.com/nature/rss/aop"]
+    # urls_test = ["debug/springer.xml"]
+    urls_test = ["http://rss.sciencedirect.com/publication/science/00404020"]
 
     session = FuturesSession(max_workers=20)
 
     list_urls = []
 
     feed = feedparser.parse(urls_test[0])
+    # print(feed.entries)
+    # print(feed)
     journal = feed['feed']['title']
+    print(journal)
 
     # headers = {'User-agent': 'Mozilla/5.0',
                # 'Connection': 'close'}
@@ -698,23 +811,23 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
+    for entry in feed.entries[5:]:
 
-    print(journal)
+        # pprint(entry)
 
-    for entry in feed.entries:
         url = entry.link
-        print(entry)
-
-        # print(entry.title)
 
         # print(url)
 
-        # url = entry.feedburner_origlink
-        # title = entry.title
+        # webbrowser.open(url, new=0, autoraise=True)
 
-        # if "cross reactive" not in title:
+        # url = entry.feedburner_origlink
+        title = entry.title
+
+        # if "Density Functional" not in entry.title:
             # continue
-        # title = entry.title
+
+        # print(entry)
 
         # if "cross reactive" not in title:
             # continue
@@ -724,7 +837,7 @@ if __name__ == "__main__":
         # print(url)
         # getDoi(journal, entry)
 
-        future = session.get(url, headers=headers, timeout=20)
-        future.add_done_callback(functools.partial(print_result, journal, entry))
+        # future = session.get(url, headers=headers, timeout=20)
+        # future.add_done_callback(functools.partial(print_result, journal, entry))
 
         break

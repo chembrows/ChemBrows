@@ -25,6 +25,7 @@ class ViewPerso(QtGui.QTableView):
         self.base_query = None
         self.topic_entries = None
         self.author_entries = None
+        self.radio_states = None
         self.list_new_ids = []
         self.list_id_articles = []
 
@@ -149,6 +150,7 @@ class ViewPerso(QtGui.QTableView):
         self.hideColumn(10)  # Hide urls
         self.hideColumn(11)  # Hide new
         self.hideColumn(12)  # Hide topic_simple
+        self.hideColumn(13)  # Hide author_simple
 
         # Move the graphical abstract to first
         self.horizontalHeader().moveSection(8, 0)
@@ -169,10 +171,16 @@ class ViewPerso(QtGui.QTableView):
 
     def keyPressEvent(self, e):
 
-        """Reaimplementation to propagate the event to the parent
+        """Reimplementation to propagate the event to the parent
         widget. Also, defines some special behaviors"""
 
         key = e.key()
+
+        # To avoid a bug: the user scrolls the articles w/ the keyboard,
+        # put an article in the toread list, and then continues scrolling.
+        # The posts are not marked as read anymore
+        if key == QtCore.Qt.Key_Down or key == QtCore.Qt.Key_Up:
+            self.toread_icon = False
 
         # Browsing with up and down keys. Verifications made for
         # when the selection is completely at the top or the bottom
@@ -198,10 +206,5 @@ class ViewPerso(QtGui.QTableView):
                 current_index = new_index
                 self.setCurrentIndex(current_index)
                 self.clicked.emit(current_index)
-
-        # if e.modifiers() == QtCore.Qt.ControlModifier:
-            # # On active le Ctrl+a
-            # if key == QtCore.Qt.Key_A:
-                # super(ViewPerso, self).keyPressEvent(e)
 
         e.ignore()

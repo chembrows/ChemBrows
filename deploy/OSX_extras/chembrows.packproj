@@ -28,7 +28,7 @@
 						<key>Mode</key>
 						<integer>1</integer>
 						<key>Path</key>
-						<string>LICENSE_PATH</string>
+						<string>/Users/chembrows/Desktop/ChemBrows/LICENSE.txt</string>
 						<key>Path Type</key>
 						<integer>1</integer>
 					</dict>
@@ -75,7 +75,7 @@
 									<key>GID</key>
 									<integer>20</integer>
 									<key>Path</key>
-									<string>APP_PATH</string>
+									<string>/Users/chembrows/Desktop/ChemBrows/dist/ChemBrows-0.9.4.macosx-10_6-intel/ChemBrows.app</string>
 									<key>Path Type</key>
 									<integer>1</integer>
 									<key>Privileges</key>
@@ -537,16 +537,16 @@
 					<key>IFInstallationScriptsPostflight</key>
 					<dict>
 						<key>Path</key>
-						<string></string>
+						<string>/Users/chembrows/Desktop/ChemBrows/deploy/OSX_extras/post_install.sh</string>
 						<key>Status</key>
-						<false/>
+						<true/>
 					</dict>
 					<key>IFInstallationScriptsPostinstall</key>
 					<dict>
 						<key>Path</key>
-						<string></string>
+						<string>/Users/chembrows/Desktop/ChemBrows/deploy/OSX_extras/post_install.sh</string>
 						<key>Status</key>
-						<false/>
+						<true/>
 					</dict>
 					<key>IFInstallationScriptsPostupgrade</key>
 					<dict>
@@ -593,15 +593,15 @@
 						<key>IFPkgDescriptionTitle</key>
 						<string>ChemBrows</string>
 						<key>IFPkgDescriptionVersion</key>
-						<string>VERSION_DESCRIPTION</string>
+						<string>0.9</string>
 					</dict>
 				</dict>
 				<key>Display Information</key>
 				<dict>
 					<key>CFBundleGetInfoString</key>
-					<string>INFO_STRING</string>
+					<string>ChemBrows 0.9 Copyrights © 2015 ChemBrows</string>
 					<key>CFBundleIconFile</key>
-					<string>ICON_FILE</string>
+					<string>/Users/chembrows/Desktop/ChemBrows/images/icon.icns</string>
 					<key>CFBundleIconFile Path Type</key>
 					<integer>1</integer>
 					<key>CFBundleIdentifier</key>
@@ -609,7 +609,7 @@
 					<key>CFBundleName</key>
 					<string>ChemBrows</string>
 					<key>CFBundleShortVersionString</key>
-					<string>VERSION_SIMPLE</string>
+					<string>0.9</string>
 				</dict>
 				<key>Options</key>
 				<dict>
@@ -635,9 +635,9 @@
 				<key>Version</key>
 				<dict>
 					<key>IFMajorVersion</key>
-					<integer>MAJOR_VERSION</integer>
+					<integer>0</integer>
 					<key>IFMinorVersion</key>
-					<integer>MINOR_VERSION</integer>
+					<integer>9</integer>
 				</dict>
 			</dict>
 		</dict>
