@@ -14,16 +14,16 @@ ChemBrows is available for Mac OS X, Linux and Windows.
 * Website : http://www.chembrows.com
 * Twitter : [@ChemBrows](https://twitter.com/ChemBrows)
 
-**Reference** : Francoia, J.-P.; Vial, L. *J. Chem. Educ.* **2016**, 93, in press.
+**Reference** : Francoia, J.-P.; Vial, L. *J. Chem. Educ.* **2016**, 93, submitted.
 
 # Who is ChemBrows for?
 
 Chembrows is for scientists in both academia and industry, who want to stay up-to-date with the latest published research in chemistry.
 
 
-# Why is ChemBrows usefull to me?
+# Why is ChemBrows useful to me?
 
-ChemBrows helps you to tame with the flood of litterature (+ 230k articles were published in 2014).
+ChemBrows helps you to tame the flood of litterature (+ 230k articles were published in 2014).
 With advanced features such as powerful searching tools and machine learning, you easily follow your favorites journals/topics/authors.
 
  
