@@ -1,3 +1,6 @@
+[screenshot](http://i.imgur.com/6yE72c5.jpg?1)
+
+
 ChemBrows: keeps you up-to-date with scientific literature
 ==========================================================
 
@@ -8,6 +11,10 @@ Working as an enhanced RSS reader filled with powerful features that include mac
 
 ChemBrows is available for Mac OS X, Linux and Windows.
 
+* Website : http://www.chembrows.com
+* Twitter : @ChemBrows
+
+**Reference** : Francoia, J.-P.; Vial, L. *J. Chem. Educ.* **2016**, 93, in press.
 
 # Who is ChemBrows for?
 
