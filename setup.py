@@ -190,8 +190,10 @@ elif sys.platform == 'darwin':
 else:
     my_data_files.append(('sqldrivers', ['/usr/lib/qt4/plugins/sqldrivers/libqsqlite.so']))
 
-    # Add the ssl lib file from ubuntu 15.10, w/out SSLV2 enabled
-    my_data_files.append(('.', ['./deploy/Linux_extras/_ssl.cpython-35m-x86_64-linux-gnu.so']))
+    # Add the SSL file from the current OS, and the libstdc file. Avoids problems on Ubuntu
+    my_data_files.append(('.', ['/usr/lib/python3.5/lib-dynload/_ssl.cpython-35m-x86_64-linux-gnu.so']))
+    my_data_files.append(('.', ['/usr/lib/libstdc++.so.6.0.21']))
+    my_data_files.append(('.', ['/usr/lib/libstdc++.so.6']))
 
     FREEZER = 'cx_Freeze'
     FREEZER_OPTIONS = dict()

@@ -162,7 +162,8 @@ class Predictor(QtCore.QThread):
             x_test = self.classifier.decision_function(x_test)
 
             elapsed_time = datetime.datetime.now() - start_time
-            self.l.debug("Classifier predicted proba in {}".format(elapsed_time))
+            self.l.debug("Classifier predicted proba in {}".
+                         format(elapsed_time))
             diff_time = datetime.datetime.now()
 
             maximum = max(x_test)
@@ -204,7 +205,8 @@ class Predictor(QtCore.QThread):
             self.l.critical("Percentages match not correctly written in db")
         else:
             elapsed_time = datetime.datetime.now() - start_time
-            self.l.info("Done calculating match percentages in {0} s".format(elapsed_time))
+            self.l.info("Done calculating match percentages in {0} s".
+                        format(elapsed_time))
 
         self.calculated_something = True
 

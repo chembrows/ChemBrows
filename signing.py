@@ -18,7 +18,7 @@ from line_icon import ButtonLineIcon
 class Signing(QtGui.QDialog):
 
     """Module to log the user and assign to him a user_id
-    the first he starts the programm"""
+    the first time he starts the programm"""
 
     def __init__(self, parent):
 
