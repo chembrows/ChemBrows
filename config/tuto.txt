@@ -35,6 +35,7 @@ Don't forget: the more you feed ChemBrows, the more Chembrows feeds you back wit
 !!!stats.png
 --
 You are now ready to download articles ! 
+Press the sync button to start the refresh process.
 (it may take some time at the first execution, be patient...)
 
 DISCLAIMER: depending on the nature of the contracts
