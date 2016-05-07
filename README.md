@@ -14,7 +14,7 @@ ChemBrows is available for Mac OS X, Linux and Windows.
 * Website : http://www.chembrows.com
 * Twitter : [@ChemBrows](https://twitter.com/ChemBrows)
 
-**Reference** : Francoia, J.-P.; Vial, L. *J. Chem. Educ.* **2016**, 93, accepted.
+**Reference** : [Francoia, J.-P.; Vial, L. *J. Chem. Educ.* 2016, **DOI**: 10.1021/acs.jchemed.6b00024](http://pubs.acs.org/doi/abs/10.1021/acs.jchemed.6b00024)
 
 # Who is ChemBrows for?
 
