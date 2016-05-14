@@ -247,7 +247,7 @@ class AdvancedSearch(QtGui.QDialog):
         if field_type == 1:
             # Generic message fot the field tooltips
             mes = """
-            Insert comma(s) bewtween keywords. Ex: heparin sulfate, \
+            Insert comma(s) between keywords. Ex: heparin sulfate, \
             heparinase. If 'Any' is checked, will match any keyword. If 'All' \
             is checked, will match all the keywords.\nWildcards (*) are \
             accepted. Ex: heparin*.\nFilters are case insensitive.
@@ -255,13 +255,13 @@ class AdvancedSearch(QtGui.QDialog):
         if field_type == 2:
             # Generic message fot the field tooltips
             mes = """
-            Insert comma(s) bewtween keywords. Ex: heparin sulfate, \
+            Insert comma(s) between keywords. Ex: heparin sulfate, \
             heparinase.\nWildcards (*) are accepted. Ex: heparin*.\nFilters \
             are case insensitive.
             """
         elif field_type == 3:
             # Generic message fot the authors tooltips
-            mes = """Insert comma(s) bewtween keywords. Ex: Jean-Patrick \
+            mes = """Insert comma(s) between keywords. Ex: Jean-Patrick \
             Francoia, Laurent Vial. If 'Any' is checked, will match any \
             author. If 'All' is checked, will match all the authors. \
             Wildcards (*) are accepted. Ex: J* Francoia. \nFilters are case \
@@ -270,7 +270,7 @@ class AdvancedSearch(QtGui.QDialog):
             """
         elif field_type == 4:
             # Generic message fot the authors tooltips
-            mes = """Insert comma(s) bewtween keywords. Ex: Jean-Patrick \
+            mes = """Insert comma(s) between keywords. Ex: Jean-Patrick \
             Francoia, Laurent Vial. Wildcards (*) are accepted. \
             Ex: J* Francoia. \nFilters are case insensitive.\nFirst name \
             comes before last name. Ex: Linus Pauling or L* Pauling.
