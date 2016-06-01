@@ -17,7 +17,7 @@ class MyLog(logging.Logger):
     Use: logger.(info|warn|debug|error|critical)
     http://sametmax.com/ecrire-des-logs-en-python/"""
 
-    def __init__(self, output_file, total=True):
+    def __init__(self, output_file, mode='a', total=True, size=5000000):
 
         super(MyLog, self).__init__(self)
 
@@ -32,7 +32,7 @@ class MyLog(logging.Logger):
 
         # Create a handler, redirects the output to a file in 'append' mode, w/
         # a backup and a mx size of 5 Mo
-        self.file_handler = RotatingFileHandler(output_file, 'a', 5000000, 1)
+        self.file_handler = RotatingFileHandler(output_file, mode, size, 1)
         self.file_handler.setLevel(logging.DEBUG)
         self.file_handler.setFormatter(self.formatter)
         self.addHandler(self.file_handler)

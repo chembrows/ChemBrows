@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # coding: utf-8
 
-import os
 from appdirs import AppDirs
 
 
@@ -13,8 +12,8 @@ DATA_PATH = dirs.user_config_dir
 # user_data_dir(appname, appauthor)
 
 # Data dir for Max, Windows and Linux
-# '/Users/trentm/Library/Application Support/SuperApp'
-# 'C:\\Users\\trentm\\AppData\\Local\\Acme\\SuperApp'
+# '/Users/trentm/Library/Application Support/ChemBrows'
+# 'C:\\Users\\trentm\\AppData\\Local\\Acme\\ChemBrows'
 # '/home/trentm/.config/superapp
 
 # Tweets are 140 characters long

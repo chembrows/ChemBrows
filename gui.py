@@ -62,11 +62,28 @@ class Fenetre(QtGui.QMainWindow):
 
             # Create the user directory if it doesn't exist
             os.makedirs(self.DATA_PATH, exist_ok=True)
+
+            # Create the logger w/ the appropriate size
+            self.l = MyLog(self.DATA_PATH + "/activity.log")
+            self.l.info("This version of ChemBrows is frozen")
+            self.l.info("You are NOT in debug mode")
         else:
             # The program is in debug mod if it's not frozen
             self.debug_mod = True
             self.DATA_PATH = "."
             self.resource_dir = self.DATA_PATH
+
+            # Create the logger w/ the appropriate size
+            self.l = MyLog(self.DATA_PATH + "/activity.log", size=100000000)
+            self.l.info("This version of ChemBrows is NOT frozen")
+            self.l.info("You are in debug mod")
+
+        self.l.debug('Resources dir: {}'.format(self.resource_dir))
+        # self.l.setLevel(20)
+        self.l.info(QtGui.QApplication.libraryPaths())
+        self.l.info('Running {} {}'.format(platform.system(),
+                                           platform.release()))
+        self.l.info('Starting the program')
 
         app.setWindowIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/icon_main.png')))
 
@@ -79,20 +96,6 @@ class Fenetre(QtGui.QMainWindow):
         self.splash.show()
         app.processEvents()
 
-        # Create the logger
-        self.l = MyLog(self.DATA_PATH + "/activity.log")
-        self.l.debug('Resources dir: {}'.format(self.resource_dir))
-        # self.l.setLevel(20)
-        self.l.info('Starting the program')
-        self.l.info(QtGui.QApplication.libraryPaths())
-        self.l.info('Running {} {}'.format(platform.system(),
-                                           platform.release()))
-
-        if self.debug_mod:
-            self.l.info("You are running ChemBrows in debug mode")
-            self.l.info("This version of ChemBrows is NOT a frozen version")
-        else:
-            self.l.info("This version of ChemBrows is a frozen version")
 
         self.styles = MyStyles(app)
 
@@ -124,7 +127,8 @@ class Fenetre(QtGui.QMainWindow):
         diff_time = datetime.datetime.now()
 
         # Object to store options and preferences
-        self.options = QtCore.QSettings(self.DATA_PATH + "/config/options.ini", QtCore.QSettings.IniFormat)
+        self.options = QtCore.QSettings(self.DATA_PATH + "/config/options.ini",
+                                        QtCore.QSettings.IniFormat)
 
         app.processEvents()
 
@@ -282,25 +286,21 @@ class Fenetre(QtGui.QMainWindow):
                    'journals': self.getJournalsToCare(),
                    'user_id': user_id,
                    'version': version,
-                  }
+                   }
 
         try:
             if self.debug_mod:
-                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=1)
+                req = requests.post('http://chembrows.com/cgi-bin/log.py',
+                                    params=payload, timeout=1)
             else:
-                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=5)
+                req = requests.post('http://chembrows.com/cgi-bin/log.py',
+                                    params=payload, timeout=5)
 
             self.l.info('Server response: {}'.format(req.text))
 
-        except requests.exceptions.ReadTimeout:
-            self.l.error("logConnection. ReadTimeout while contacting the server")
-            return
-        except requests.exceptions.ConnectTimeout:
-            self.l.error("logConnection. ConnectionTimeout while contacting the server")
-            return
         except Exception as e:
-            self.l.critical("logConnection: cannot reach server. {}".format(e))
-            self.l.critical(traceback.format_exc())
+            self.l.error("logConnection: {}".format(e))
+            self.l.error(traceback.format_exc())
             return
 
         if "user_id unregistered" in req.text:
@@ -345,7 +345,8 @@ class Fenetre(QtGui.QMainWindow):
         """.replace('    ', '').format(version)
 
         # Use this complicated messageBox to get clickable URLs
-        box = QtGui.QMessageBox(QtGui.QMessageBox.Information, 'About ChemBrows', mes)
+        box = QtGui.QMessageBox(QtGui.QMessageBox.Information,
+                                'About ChemBrows', mes)
         box.setTextFormat(QtCore.Qt.RichText)
         box.setText(mes)
         box.exec()
@@ -522,9 +523,23 @@ class Fenetre(QtGui.QMainWindow):
 
         if self.count_threads == self.urls_max:
 
-            self.l.info("{} new entries added to the database".format(self.counter))
-            self.l.info("{} entries rejected".format(self.counter_rejected))
-            self.l.info("{} attempts to update entries".format(self.counter_updates))
+            self.l.info("{} new entries added to the database".
+                        format(self.counter))
+            self.l.info("{} entries rejected".
+                        format(self.counter_rejected))
+            self.l.info("{} attempts to update entries".
+                        format(self.counter_updates))
+
+            total_time = datetime.datetime.now() - self.start_time
+            self.l.debug("Total refresh time: {}".
+                         format(total_time))
+
+            # # TODO: checker cette instruction, should crash
+            if self.counter > 0:
+                self.l.debug("Time per paper: {} seconds".
+                             format(total_time.seconds / (self.counter + self.counter_updates)))
+            else:
+                self.l.debug("Time per paper: irrelevant, 0 paper added")
 
             self.calculatePercentageMatch()
             self.parseAction.setEnabled(True)

@@ -192,7 +192,7 @@ class Signing(QtGui.QDialog):
                 return
 
             # Get the response from the server and log it
-            self.parent.l.debug(r.text)
+            self.parent.l.debug("Response from the server: {}".format(r.text))
             response = [part for part in r.text.split("\n") if part != '']
 
             # The server responded an user_id
