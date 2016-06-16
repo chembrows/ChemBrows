@@ -127,7 +127,7 @@ def test_getData(journalsUrls):
 
     # TODO: comment or uncomment
     # Bypass all companies but one
-    # list_urls_feed = hosts.getJournals("npg")[2]
+    # list_urls_feed = hosts.getJournals("wiley")[2]
 
     # Build a dic with key: company
                      # value: journal name
@@ -135,6 +135,8 @@ def test_getData(journalsUrls):
     for company in os.listdir('journals'):
         company = company.split('.')[0]
         dict_journals[company] = hosts.getJournals(company)[0]
+
+    s = requests.session()
 
     # All the journals are tested
     for site in list_urls_feed:
@@ -163,20 +165,10 @@ def test_getData(journalsUrls):
             if company in ['science', 'elsevier', 'beilstein']:
                 title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry)
             else:
-                if company == 'acs':
-                    url = getattr(entry, 'feedburner_origlink',
-                                  entry.link).split('/')[-1]
-                    url = "http://pubs.acs.org/doi/abs/10.1021/" + url
-                elif company == 'npg':
-                    url = getattr(entry, 'feedburner_origlink',
-                                  entry.link).split('/')[-1]
-                    url = "http://www.nature.com/nature/journal/vaop/ncurrent/abs/" + url + ".html"
-                else:
-                    url = getattr(entry, 'feedburner_origlink', entry.link)
-
+                url = hosts.refineUrl(company, journal, entry)
 
                 try:
-                    response = requests.get(url, timeout=10)
+                    response = s.get(url, timeout=10)
                     title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry, response)
                 except Exception as e:
                     l.error("A problem occured: {}, continue to next entry".

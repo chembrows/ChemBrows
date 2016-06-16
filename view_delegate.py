@@ -37,7 +37,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
         DIMENSION = self.parent.styles.ICON_SIZE_SMALL
 
         # Check if the post is in the to-read list
-        waited = index.sibling(index.row(), 0).data() in self.parent.waiting_list.list_id_articles
+        waited = index.sibling(index.row(), 0).data() in self.parent.waiting_list.articles
 
         # Get the read/unread state of an article. Colors the cell
         # if the article is unread

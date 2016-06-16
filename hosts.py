@@ -42,6 +42,27 @@ def reject(entry_title):
         return False
 
 
+def refineUrl(company, journal, entry):
+
+    """Refine an URL to avoid redirections"""
+
+    url = getattr(entry, 'feedburner_origlink', entry.link)
+
+    if company == 'acs':
+        url = url.split('/')[-1]
+        url = "http://pubs.acs.org/doi/abs/10.1021/" + url
+    elif company == 'npg':
+        url = url.split('/')[-1]
+        url = "http://www.nature.com/nature/journal/vaop/ncurrent/abs/{}.html".format(url)
+    # elif company == 'wiley':
+        # # Optimization for Wiley
+        # url = url.split('%2')[-1]
+        # url = "http://onlinelibrary.wiley.com/doi/10.1002/{}/abstract".format(url)
+
+    return url
+
+
+
 def updateData(company, journal, entry, care_image):
 
     """Function called by a Worker object when an RSS entry is

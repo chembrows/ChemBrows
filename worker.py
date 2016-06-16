@@ -36,13 +36,13 @@ class Worker(QtCore.QThread):
     # https://wiki.python.org/moin/PyQt/Threading,_Signals_and_Slots
 
 
-    def __init__(self, logger, bdd, parent):
+    def __init__(self, parent):
 
         QtCore.QThread.__init__(self)
 
-        self.l = logger
+        self.l = parent.l
 
-        self.bdd = bdd
+        self.bdd = parent.bdd
         self.parent = parent
         self.dict_journals = parent.dict_journals
 
@@ -104,7 +104,8 @@ class Worker(QtCore.QThread):
 
         # Lists to check if the post is in the db, and if
         # it has all the infos
-        self.session_images = FuturesSession(max_workers=20)
+        self.session_images = FuturesSession(max_workers=20,
+            session=self.parent.browsing_session)
 
         # Get the company and the journal_abb by scrolling the dictionnary
         # containing all the data regarding the journals implemented in the
@@ -283,23 +284,12 @@ class Worker(QtCore.QThread):
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                        'Connection': 'close'}
 
-            self.session_pages = FuturesSession(max_workers=20)
+            self.session_pages = FuturesSession(max_workers=20,
+                session=self.parent.browsing_session)
 
             for entry in self.feed.entries:
 
                 doi = hosts.getDoi(company, journal, entry)
-
-                if company == 'acs':
-                    url = getattr(entry, 'feedburner_origlink',
-                                  entry.link).split('/')[-1]
-                    url = "http://pubs.acs.org/doi/abs/10.1021/" + url
-
-                elif company == 'npg':
-                    url = getattr(entry, 'feedburner_origlink',
-                                  entry.link).split('/')[-1]
-                    url = "http://www.nature.com/nature/journal/vaop/ncurrent/abs/" + url + ".html"
-                else:
-                    url = getattr(entry, 'feedburner_origlink', entry.link)
 
                 # Reject crappy entries: corrigendum, erratum, etc
                 if hosts.reject(entry.title):
@@ -334,6 +324,7 @@ class Worker(QtCore.QThread):
                 # Article not complete, try to complete it
                 elif doi in self.dico_doi and not self.dico_doi[doi]:
 
+                    url = hosts.refineUrl(company, journal, entry)
 
                     dl_page, dl_image, data = hosts.updateData(company,
                                                                journal,
@@ -383,6 +374,8 @@ class Worker(QtCore.QThread):
                         continue
 
                 else:
+
+                    url = hosts.refineUrl(company, journal, entry)
 
                     self.l.debug("Starting adding new entry")
 

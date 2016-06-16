@@ -13,6 +13,7 @@ import requests
 import platform
 import traceback
 import validators
+import collections as collec
 
 # To package and distribute the program
 import esky
@@ -462,14 +463,12 @@ class Fenetre(QtGui.QMainWindow):
         self.l.debug("IdealThreadCount: {}".format(max_nbr_threads))
         # max_nbr_threads = 1
 
-        # # Start a sql transaction here. Will commit all the bdd
-        # # changes when the parsing is finished
-        # self.bdd.transaction()
-
         # Counter to count the new entries in the database
         self.counter = 0
         self.counter_updates = 0
         self.counter_rejected = 0
+
+        self.browsing_session = requests.session()
 
         # # List to store the threads.
         # # The list is cleared when the method is started
@@ -478,7 +477,7 @@ class Fenetre(QtGui.QMainWindow):
         for i in range(max_nbr_threads):
             try:
                 url = self.urls[i]
-                worker = Worker(self.l, self.bdd, self)
+                worker = Worker(self)
                 worker.setUrl(url)
                 worker.finished.connect(self.checkThreads)
                 self.urls.remove(url)
@@ -556,7 +555,7 @@ class Fenetre(QtGui.QMainWindow):
         else:
             if self.urls:
                 self.l.debug("STARTING NEW THREAD")
-                worker = Worker(self.l, self.bdd, self)
+                worker = Worker(self)
                 worker.setUrl(self.urls[0])
                 worker.finished.connect(self.checkThreads)
                 self.urls.remove(worker.url_feed)
@@ -781,8 +780,9 @@ class Fenetre(QtGui.QMainWindow):
         # pyside-pyqt-detect-if-user-trying-to-close-window
 
         # Save the to-read list
-        if self.waiting_list.list_id_articles:
-            self.options.setValue("ids_waited", self.waiting_list.list_id_articles)
+        if self.waiting_list.articles:
+            self.options.setValue("ids_waited",
+                                  list(self.waiting_list.articles.keys()))
         else:
             self.options.remove("ids_waited")
 
@@ -837,8 +837,6 @@ class Fenetre(QtGui.QMainWindow):
 
         self.l.debug("Starting loadNotifications")
 
-        start_time = datetime.datetime.now()
-
         count_query = QtSql.QSqlQuery(self.bdd)
         count_query.setForwardOnly(True)
 
@@ -850,40 +848,29 @@ class Fenetre(QtGui.QMainWindow):
             if tab_number is not None and self.list_tables_in_tabs.index(table) != tab_number:
                 continue
 
-            # Empty these lists, because when loadNotifications is called
-            # several times during the use, the nbr of unread articles is
-            # added to the nbr of notifications
-            table.list_new_ids = []
-            table.list_id_articles = []
-
-            # Try to speed things up
-            append_new = table.list_new_ids.append
-            append_articles = table.list_id_articles.append
-
             req_str = self.refineBaseQuery(table.base_query,
                                            table.topic_entries,
                                            table.author_entries,
                                            table.radio_states)
             count_query.exec_(req_str)
 
-            id_index = count_query.record().indexOf('id')
-            new_index = count_query.record().indexOf('new')
+            id_bdd = count_query.record().indexOf('id')
+            new = count_query.record().indexOf('new')
+
+            start_time = datetime.datetime.now()
 
             while count_query.next():
                 record = count_query.record()
-                id_value = record.value(id_index)
-                append_articles(id_value)
+                table.articles[record.value(id_bdd)] = record.value(new)
 
-                if record.value(new_index) == 1:
-                    append_new(id_value)
+            self.l.debug("loadNot {}".
+                         format(datetime.datetime.now() - start_time))
 
-            # Set the notifications for each tab
-            for index in range(1, self.onglets.count()):
-                notifs = len(self.onglets.widget(index).list_new_ids)
-                self.onglets.setNotifications(index, notifs)
-
-        self.l.debug("loadNotifications took {}".
-                     format(datetime.datetime.now() - start_time))
+        # # Set the notifications for each tab
+        for index in range(1, self.onglets.count()):
+            table = self.onglets.widget(index)
+            notifs = collec.Counter(table.articles.values())[1]
+            self.onglets.setNotifications(index, notifs)
 
 
     def restoreSettings(self):
@@ -1358,8 +1345,9 @@ class Fenetre(QtGui.QMainWindow):
         # Update the base query of the to-read list
         if table is self.waiting_list:
             requete = "SELECT * FROM papers WHERE id IN("
-            for each_id in table.list_id_articles:
-                if each_id != table.list_id_articles[-1]:
+            keys = list(table.articles.keys())
+            for each_id in keys:
+                if each_id != keys[-1]:
                     requete = requete + str(each_id) + ", "
                 else:
                     requete = requete + str(each_id) + ")"
@@ -1432,6 +1420,8 @@ class Fenetre(QtGui.QMainWindow):
         """Method to refine the base_query of a view.
         A normal SQL query can't search a comma-separated list, so
         the results of the SQL query are filtered afterwords"""
+
+        start_time = datetime.datetime.now()
 
         author_entries = author_options
 
@@ -1517,6 +1507,8 @@ class Fenetre(QtGui.QMainWindow):
 
         if not list_ids:
             requete = "SELECT * FROM papers WHERE id IN ()"
+
+            print("refineBaseQuery: {}".format(datetime.datetime.now() - start_time))
             return requete
         else:
             requete = "SELECT * FROM papers WHERE id IN ("
@@ -1529,6 +1521,7 @@ class Fenetre(QtGui.QMainWindow):
                 else:
                     requete = requete + str(each_id) + ")"
 
+            print("refineBaseQuery: {}".format(datetime.datetime.now() - start_time))
             return requete
 
 
@@ -1654,14 +1647,15 @@ class Fenetre(QtGui.QMainWindow):
         for index in range(1, self.onglets.count()):
 
             # remove the id of the list of the new articles
-            if id_bdd in self.onglets.widget(index).list_new_ids and remove:
-                self.onglets.widget(index).list_new_ids.remove(id_bdd)
+            if id_bdd in self.onglets.widget(index).articles and remove:
+                del self.onglets.widget(index).articles[id_bdd]
 
             # Add the id to the list of new articles
-            elif id_bdd in self.onglets.widget(index).list_id_articles and not remove:
-                self.onglets.widget(index).list_new_ids.append(id_bdd)
+            elif id_bdd in self.onglets.widget(index).articles and not remove:
+                self.onglets.widget(index).articles[id_bdd] = 1
 
-            notifs = len(self.onglets.widget(index).list_new_ids)
+            table = self.onglets.widget(index)
+            notifs = collec.Counter(table.articles.values())[1]
             self.onglets.setNotifications(index, notifs)
 
 
@@ -1702,17 +1696,13 @@ class Fenetre(QtGui.QMainWindow):
         line = table.selectionModel().currentIndex().row()
         id_bdd = table.model().index(line, 0).data()
         new = table.model().index(line, 11).data()
-        waited = id_bdd in self.waiting_list.list_id_articles
+        waited = id_bdd in self.waiting_list.articles
 
         # Check if the to read list is empty
-        empty = self.waiting_list.list_id_articles == []
+        empty = self.waiting_list.articles == []
 
         if waited:
-            self.waiting_list.list_id_articles.remove(id_bdd)
-
-            # The post is not a new post in the to read list anymore
-            if id_bdd in self.waiting_list.list_new_ids:
-                self.waiting_list.list_new_ids.remove(id_bdd)
+            del self.waiting_list.articles[id_bdd]
 
             # Immediately visually remove the post from the to read list
             # if the to read list is displayed
@@ -1728,18 +1718,18 @@ class Fenetre(QtGui.QMainWindow):
 
             self.updateNotifications(id_bdd)
         else:
-            self.waiting_list.list_id_articles.append(id_bdd)
-
-            if new == 1:
-                self.waiting_list.list_new_ids.append(id_bdd)
+            if new:
+                self.waiting_list.articles[id_bdd] = 1
+            else:
+                self.waiting_list.articles[id_bdd] = 0
 
         # Update the notifications of the to-read list
-        index = self.list_tables_in_tabs.index(self.waiting_list)
-        self.onglets.setNotifications(index, len(self.waiting_list.list_new_ids))
+        notifs = collec.Counter(self.waiting_list.articles.values())[1]
+        self.onglets.setNotifications(1, notifs)
 
         # If the to read list was empty and is not anymore, fix the
         # header of the to read list
-        if empty and len(self.waiting_list.list_id_articles) == 1:
+        if empty and len(self.waiting_list.articles) == 1:
             self.waiting_list.hideColumn(0)  # Hide id
             self.waiting_list.hideColumn(1)  # Hide percentage match
             self.waiting_list.hideColumn(2)  # Hide doi
@@ -1761,8 +1751,7 @@ class Fenetre(QtGui.QMainWindow):
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
-        self.waiting_list.list_id_articles = []
-        self.waiting_list.list_new_ids = []
+        self.waiting_list.articles = {}
 
         # Update the notifications of the to-read list
         index = self.list_tables_in_tabs.index(self.waiting_list)
@@ -2144,7 +2133,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.model.submitAll()
 
-        self.predictor = Predictor(self.l, self.waiting_list.list_id_articles,
+        self.predictor = Predictor(self.l,
+                                   list(self.waiting_list.articles.keys()),
                                    self.bdd)
 
         mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
