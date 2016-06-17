@@ -2,7 +2,8 @@
 # coding: utf-8
 
 
-import os, sys
+import os
+import sys
 import feedparser
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
@@ -44,20 +45,33 @@ def reject(entry_title):
 
 def refineUrl(company, journal, entry):
 
-    """Refine an URL to avoid redirections"""
+    """Refine an URL to avoid redirections (speeds things up)"""
 
     url = getattr(entry, 'feedburner_origlink', entry.link)
 
     if company == 'acs':
-        url = url.split('/')[-1]
+        id_paper = url.split('/')[-1]
         url = "http://pubs.acs.org/doi/abs/10.1021/" + url
+
     elif company == 'npg':
-        url = url.split('/')[-1]
-        url = "http://www.nature.com/nature/journal/vaop/ncurrent/abs/{}.html".format(url)
-    # elif company == 'wiley':
-        # # Optimization for Wiley
-        # url = url.split('%2')[-1]
-        # url = "http://onlinelibrary.wiley.com/doi/10.1002/{}/abstract".format(url)
+        id_paper = url.split('/')[-1]
+
+        # Necesserary. Sometimes the id has a point, sometimes not
+        p = re.compile(r'[0-9.]')
+        prefix = p.sub('', id_paper)
+
+        url = "http://www.nature.com/{}/journal/vaop/ncurrent/abs/{}.html"
+        url = url.format(prefix, id_paper)
+
+    elif company == 'npg2':
+        id_paper = url.split('/')[-1].split('.')[0]
+        url = "http://www.nature.com/articles/{}".format(id_paper)
+
+    elif company == 'wiley':
+        # Optimization for Wiley
+        doi = url.split('%2')[-1]
+        url = "http://onlinelibrary.wiley.com/doi/10.1002/{}/abstract"
+        url = url.format(doi)
 
     return url
 

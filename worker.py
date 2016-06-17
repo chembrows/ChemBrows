@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # coding: utf-8
 
-
-
 import os
 from PyQt4 import QtSql, QtCore
 import feedparser
@@ -145,7 +143,7 @@ class Worker(QtCore.QThread):
 
                 # Get the DOI, a unique number for a publication
                 doi = hosts.getDoi(company, journal, entry)
-                url = getattr(entry, 'feedburner_origlink', entry.link)
+                url = hosts.refineUrl(company, journal, entry)
 
                 # Reject crappy entries: corrigendum, erratum, etc
                 if hosts.reject(entry.title):
@@ -212,9 +210,10 @@ class Worker(QtCore.QThread):
                 else:
                     try:
                         title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry)
-                    except TypeError:
-                        self.l.error("getData returned None for {}".
+                    except Exception as e:
+                        self.l.error("Problem with getData: {}".
                                      format(journal))
+                        self.l.error(traceback.format_exc())
                         self.count_futures_images += 1
                         return
 
@@ -234,7 +233,8 @@ class Worker(QtCore.QThread):
 
                     # Set new to 1 and not to true
                     params = (doi, title, date, journal_abb, authors, abstract,
-                              graphical_abstract, url, 1, topic_simple, author_simple)
+                              graphical_abstract, url, 1, topic_simple,
+                              author_simple)
 
                     self.l.debug("Adding {0} to the database".format(doi))
                     self.parent.counter += 1
@@ -290,6 +290,7 @@ class Worker(QtCore.QThread):
             for entry in self.feed.entries:
 
                 doi = hosts.getDoi(company, journal, entry)
+                url = hosts.refineUrl(company, journal, entry)
 
                 # Reject crappy entries: corrigendum, erratum, etc
                 if hosts.reject(entry.title):

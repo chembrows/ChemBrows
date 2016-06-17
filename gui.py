@@ -1842,46 +1842,8 @@ class Fenetre(QtGui.QMainWindow):
         if choice == QtGui.QMessageBox.Cancel:
             return
 
-        progress = QtGui.QProgressDialog("Cleaning author field (could be long)", None, 0, 100, self)
-        progress.setWindowTitle("Cleaning author field")
-        progress.show()
-        app.processEvents()
-
-        # Add the column author_simple to the bdd if it does not exist.
-        # If it exists, the function returns nothing, no error.
-        # Could be dangerous
-        self.l.info("Adding a column author_simple to the db if not present")
-        query = QtSql.QSqlQuery(self.bdd)
-        query.exec_("ALTER TABLE papers ADD COLUMN author_simple TEXT")
-
-        query.exec_("SELECT * FROM papers")
-
-        self.bdd.transaction()
-        query_temp = QtSql.QSqlQuery(self.bdd)
-        query_temp.prepare("UPDATE papers SET author_simple = ? WHERE id = ?")
-
-        self.l.info("Starting updating the author_simple field")
-        while query.next():
-            record = query.record()
-            id_bdd = record.value('id')
-            authors = record.value('authors')
-            self.l.debug("Cleaning author_simple field: {}".format(id_bdd))
-
-            if type(authors) is QtCore.QPyNullVariant:
-                continue
-
-            author_simple = " " + functions.simpleChar(authors) + " "
-
-            query_temp.addBindValue(author_simple)
-            query_temp.addBindValue(id_bdd)
-            query_temp.exec_()
-
-        if not self.bdd.commit():
-            self.l.critical("Cleaning author_simple did not work")
-
-        self.l.info("Updating author_simple field done")
-
-        progress.setLabelText("Deleting articles from unfollowed journals")
+        progress = QtGui.QProgressDialog("Deleting articles from unfollowed journals", None, 0, 100, self)
+        # progress.setLabelText("Deleting articles from unfollowed journals")
         progress.setWindowTitle("Cleaning database")
         progress.show()
         app.processEvents()
@@ -1930,12 +1892,25 @@ class Fenetre(QtGui.QMainWindow):
         while query.next():
             images_path.append(query.record().value('graphical_abstract'))
 
+        list_pics = os.listdir(self.DATA_PATH + "/graphical_abstracts/")
+
+        pics_to_remove = list(set(list_pics) - set(images_path))
+
+        self.l.debug("{} images to remove".format(len(pics_to_remove)))
+
+        for pic in pics_to_remove:
+            os.remove(os.path.abspath(self.DATA_PATH +
+                "/graphical_abstracts/{0}".format(pic)))
+            self.l.debug("removing {}".format(pic))
+
         # Delete all the images which are not in the database (so not
         # corresponding to any article)
-        for directory in os.walk(self.DATA_PATH + "/graphical_abstracts/"):
-            for fichier in directory[2]:
-                if fichier not in images_path:
-                    os.remove(os.path.abspath(self.DATA_PATH + "/graphical_abstracts/{0}".format(fichier)))
+        # for directory in os.walk(self.DATA_PATH + "/graphical_abstracts/"):
+            # for pic in directory[2]:
+                # if pic not in images_path:
+                    # os.remove(os.path.abspath(self.DATA_PATH +
+                        # "/graphical_abstracts/{0}".format(pic)))
+                    # self.l.debug("removing {}".format(pic))
 
         self.l.debug("Deleted all the useless images")
 
