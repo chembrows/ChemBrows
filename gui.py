@@ -11,7 +11,6 @@ import fnmatch
 import webbrowser
 import requests
 import platform
-import traceback
 import validators
 import collections as collec
 
@@ -293,8 +292,7 @@ class Fenetre(QtGui.QMainWindow):
             self.l.info('Server response: {}'.format(req.text))
 
         except Exception as e:
-            self.l.error("logConnection: {}".format(e))
-            self.l.error(traceback.format_exc())
+            self.l.error("logConnection: {}".format(e), exc_info=True)
             return
 
         if "user_id unregistered" in req.text:

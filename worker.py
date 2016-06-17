@@ -422,24 +422,11 @@ class Worker(QtCore.QThread):
 
         try:
             response = future.result()
-        except requests.exceptions.ReadTimeout:
-            self.l.error("ReadTimeout for {}".format(journal))
-            self.count_futures_images += 1
-            return
-        except requests.exceptions.ConnectionError:
-            self.l.error("ConnectionError for {}".format(journal))
-            self.count_futures_images += 1
-            return
-        except ConnectionResetError:
-            self.l.error("ConnectionResetError for {}".format(journal))
-            self.count_futures_images += 1
-            return
-        except socket.timeout:
-            self.l.error("socket.timeout for {}".format(journal))
-            self.count_futures_images += 1
-            return
-        except concurrent.futures._base.CancelledError:
-            self.l.error("future cancelled for {}".format(journal))
+        except (requests.exceptions.ReadTimeout,
+                requests.exceptions.ConnectionError, ConnectionResetError,
+                socket.timeout, concurrent.futures._base.CancelledError) as e:
+
+            self.l.error("{} raised for {}. Handled".format(journal, e))
             self.count_futures_images += 1
             return
         except Exception as e:
@@ -540,8 +527,7 @@ class Worker(QtCore.QThread):
             self.l.error("future cancelled for {}".format(entry_url))
             return
         except Exception as e:
-            self.l.error("Exception raised in pictureDownloaded:\n{}".
-                         format(e), exc_info=True)
+            self.l.error("pictureDownloaded: {}".format(e), exc_info=True)
             params = ("Empty", doi)
         else:
             # If the picture was dled correctly

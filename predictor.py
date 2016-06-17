@@ -11,7 +11,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction import text
 from sklearn.svm import LinearSVC
-import traceback
 import datetime
 
 # DEBUG
@@ -177,8 +176,7 @@ class Predictor(QtCore.QThread):
             self.l.error("Not enough data yet to predict probability")
             return
         except Exception as e:
-            self.l.error("predictor: {}".format(e))
-            self.l.error(traceback.format_exc())
+            self.l.error("predictor: {}".format(e), exc_info=True)
             return
 
         self.bdd.transaction()

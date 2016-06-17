@@ -5,7 +5,6 @@
 import sys
 import esky
 from PyQt4 import QtCore
-import traceback
 
 
 # DEBUG
@@ -35,8 +34,8 @@ class Updater(QtCore.QThread):
         try:
             best_version = self.app.find_update()
         except Exception as e:
-            self.l.critical("ERROR FINDING VERSION APP: {}".format(e))
-            self.l.critical(traceback.format_exc())
+            self.l.critical("ERROR FINDING VERSION APP: {}".format(e),
+                            exc_info=True)
             return None
 
         if best_version is None:
@@ -61,5 +60,4 @@ class Updater(QtCore.QThread):
             self.app.auto_update()
             self.app.cleanup()
         except Exception as e:
-            self.l.critical("ERROR UPDATING APP: {}".format(e))
-            self.l.critical(traceback.format_exc())
+            self.l.critical("ERROR UPDATING APP: {}".format(e), exc_info=True)

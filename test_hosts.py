@@ -18,7 +18,6 @@ import pytest
 import random
 import arrow
 import validators
-import traceback
 import datetime
 
 import hosts
@@ -172,8 +171,7 @@ def test_getData(journalsUrls):
                     title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry, response)
                 except Exception as e:
                     l.error("A problem occured: {}, continue to next entry".
-                            format(e))
-                    l.error(traceback.format_exc())
+                            format(e), exc_info=True)
 
             l.info(title)
             l.info(url)

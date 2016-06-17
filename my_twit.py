@@ -7,7 +7,6 @@ import os
 from PyQt4 import QtGui
 import webbrowser
 import time
-import traceback
 from functions import removeHtml
 
 from twitter.api import Twitter
@@ -86,8 +85,7 @@ class MyTwit(QtGui.QDialog):
             QtGui.QMessageBox.critical(self, "Authentication", "ChemBrows could not open a web page.\nVisit oauth_url to get the PIN code",
                                        QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
             self.l.error("Authentication URL not opened")
-            self.l.error("openAuthPage: {}".format(e))
-            self.l.error(traceback.format_exc())
+            self.l.error("openAuthPage: {}".format(e), exc_info=True)
 
 
         pin = QtGui.QInputDialog.getText(self, "PIN verification", "Enter the PIN to authenticate yourself")
@@ -177,18 +175,17 @@ class MyTwit(QtGui.QDialog):
         if id_img is None:
             try:
                 twitter.statuses.update(status=text)
-            except:
+            except Exception as e:
                 QtGui.QMessageBox.critical(self, "Twitter error", "ChemBrows could not tweet that.\nYour tweet is probably too long: {} chara.".format(len(text)),
                                            QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
-                self.l.error(traceback.format_exc())
+                self.l.error('postTweet: {}'.format(e), exc_info=True)
         else:
             try:
                 twitter.statuses.update(status=text, media_ids=id_img)
             except Exception as e:
                 QtGui.QMessageBox.critical(self, "Twitter error", "ChemBrows could not tweet that.\nYour tweet is probably too long: {} chara.".format(len(text)),
                                            QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
-                self.l.error("postTweet: {}".format(e))
-                self.l.error(traceback.format_exc())
+                self.l.error("postTweet: {}".format(e), exc_info=True)
 
         self.close()
 

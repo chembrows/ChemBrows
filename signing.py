@@ -10,7 +10,6 @@ import requests
 from io import BytesIO
 import base64
 from PIL import Image
-import traceback
 
 from line_icon import ButtonLineIcon
 
@@ -187,8 +186,8 @@ class Signing(QtGui.QDialog):
                                            QtGui.QMessageBox.Ok,
                                            defaultButton=QtGui.QMessageBox.Ok)
 
-                self.parent.l.critical("{} while signing up {}".format(e))
-                self.parent.l.critical(traceback.format_exc())
+                self.parent.l.critical("validateForm: {}".format(e),
+                                       exc_info=True)
                 return
 
             # Get the response from the server and log it
