@@ -8,7 +8,6 @@ import functools
 from requests_futures.sessions import FuturesSession
 import requests
 import socket
-import traceback
 import concurrent
 
 from io import BytesIO
@@ -212,8 +211,7 @@ class Worker(QtCore.QThread):
                         title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry)
                     except Exception as e:
                         self.l.error("Problem with getData: {}".
-                                     format(journal))
-                        self.l.error(traceback.format_exc())
+                                     format(journal), exc_info=True)
                         self.count_futures_images += 1
                         return
 
@@ -445,8 +443,8 @@ class Worker(QtCore.QThread):
             self.count_futures_images += 1
             return
         except Exception as e:
-            self.l.error("Unknown exception {} for {}".format(e, journal))
-            self.l.error(traceback.format_exc())
+            self.l.error("Unknown exception {} for {}".format(e, journal),
+                         exc_info=True)
             self.count_futures_images += 1
             return
 
@@ -459,10 +457,11 @@ class Worker(QtCore.QThread):
             self.count_futures_images += 1
             return
         except Exception as e:
-            self.l.error("Unknown exception completeData {}".format(e))
-            self.l.error(traceback.format_exc())
+            self.l.error("Unknown exception completeData {}".format(e),
+                         exc_info=True)
             self.count_futures_images += 1
             return
+
 
         # Rejecting the article if no authors
         if authors == "Empty":
@@ -542,8 +541,7 @@ class Worker(QtCore.QThread):
             return
         except Exception as e:
             self.l.error("Exception raised in pictureDownloaded:\n{}".
-                         format(e))
-            self.l.error(traceback.format_exc())
+                         format(e), exc_info=True)
             params = ("Empty", doi)
         else:
             # If the picture was dled correctly
@@ -557,8 +555,7 @@ class Worker(QtCore.QThread):
                     self.l.debug("Image ok")
                 except Exception as e:
                     self.l.error("An error occured in pictureDownloaded:\n{}".
-                                 format(e))
-                    self.l.error(traceback.format_exc())
+                                 format(e), exc_info=True)
                     params = ("Empty", doi)
                 else:
                     params = (functions.simpleChar(response.url), doi)

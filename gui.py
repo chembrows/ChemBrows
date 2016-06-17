@@ -169,13 +169,6 @@ class Fenetre(QtGui.QMainWindow):
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
-        # Load the notifications
-        app.processEvents()
-        self.loadNotifications()
-        self.l.debug("loadNotifications took {}".
-                     format(datetime.datetime.now() - diff_time))
-        diff_time = datetime.datetime.now()
-
         app.processEvents()
 
         # Show the window
@@ -779,6 +772,7 @@ class Fenetre(QtGui.QMainWindow):
         # http://stackoverflow.com/questions/9249500/
         # pyside-pyqt-detect-if-user-trying-to-close-window
 
+
         # Save the to-read list
         if self.waiting_list.articles:
             self.options.setValue("ids_waited",
@@ -796,8 +790,17 @@ class Fenetre(QtGui.QMainWindow):
         self.options.setValue("window_geometry", self.saveGeometry())
         self.options.setValue("window_state", self.saveState())
 
+        searches_saved = QtCore.QSettings(self.DATA_PATH + "/config/searches.ini", QtCore.QSettings.IniFormat)
+
         for index, each_table in enumerate(self.list_tables_in_tabs):
             self.options.setValue("header_state{0}".format(index), each_table.horizontalHeader().saveState())
+
+            tab_title = self.onglets.tabText(index)
+
+            if tab_title != 'ToRead' and tab_title != 'All articles':
+                searches_saved.setValue("{}/articles".format(tab_title),
+                                        each_table.articles)
+
 
         # Save the state of the window's splitter
         self.options.setValue("final_splitter", self.splitter2.saveState())
@@ -857,14 +860,9 @@ class Fenetre(QtGui.QMainWindow):
             id_bdd = count_query.record().indexOf('id')
             new = count_query.record().indexOf('new')
 
-            start_time = datetime.datetime.now()
-
             while count_query.next():
                 record = count_query.record()
                 table.articles[record.value(id_bdd)] = record.value(new)
-
-            self.l.debug("loadNot {}".
-                         format(datetime.datetime.now() - start_time))
 
         # # Set the notifications for each tab
         for index in range(1, self.onglets.count()):
@@ -889,10 +887,16 @@ class Fenetre(QtGui.QMainWindow):
             topic_entries = searches_saved.value("{0}/topic_entries".format(search_name), None)
             author_entries = searches_saved.value("{0}/author_entries".format(search_name), None)
             radio_states = searches_saved.value("{0}/radio_states".format(search_name), None)
-            self.createSearchTab(search_name, query,
-                                 topic_options=topic_entries,
-                                 author_options=author_entries,
-                                 radio_states=radio_states)
+            table = self.createSearchTab(search_name, query,
+                                         topic_options=topic_entries,
+                                         author_options=author_entries,
+                                         radio_states=radio_states)
+            table.articles = searches_saved.value("{0}/articles".format(search_name), {})
+
+            tab_index = self.list_tables_in_tabs.index(table)
+
+            notifs = collec.Counter(table.articles.values())[1]
+            self.onglets.setNotifications(tab_index, notifs)
 
         # If windows settings are available, import and use them
         if "Window" in self.options.childGroups():
@@ -1268,6 +1272,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.onglets.addTab(tableau, name_search)
 
+        return tableau
+
 
     def displayTags(self):
 
@@ -1421,8 +1427,6 @@ class Fenetre(QtGui.QMainWindow):
         A normal SQL query can't search a comma-separated list, so
         the results of the SQL query are filtered afterwords"""
 
-        start_time = datetime.datetime.now()
-
         author_entries = author_options
 
         # If no * in the SQL query, return
@@ -1441,7 +1445,7 @@ class Fenetre(QtGui.QMainWindow):
         while query.next():
             record = query.record()
 
-            # Normalize the authors string of the item
+            # Normalize the authors string of the items
             authors = record.value('authors').split(', ')
             authors = [element.lower() for element in authors]
 
@@ -1473,6 +1477,7 @@ class Fenetre(QtGui.QMainWindow):
                             matching = fnmatch.filter(authors, person)
                             if matching:
                                 list_adding_or.append(True)
+                                continue
                             else:
                                 list_adding_or.append(False)
                         else:
@@ -1481,6 +1486,7 @@ class Fenetre(QtGui.QMainWindow):
                             # if any(person in element for element in authors):
                             if person in authors:
                                 list_adding_or.append(True)
+                                continue
                             else:
                                 list_adding_or.append(False)
 
@@ -1508,7 +1514,6 @@ class Fenetre(QtGui.QMainWindow):
         if not list_ids:
             requete = "SELECT * FROM papers WHERE id IN ()"
 
-            print("refineBaseQuery: {}".format(datetime.datetime.now() - start_time))
             return requete
         else:
             requete = "SELECT * FROM papers WHERE id IN ("
@@ -1521,7 +1526,6 @@ class Fenetre(QtGui.QMainWindow):
                 else:
                     requete = requete + str(each_id) + ")"
 
-            print("refineBaseQuery: {}".format(datetime.datetime.now() - start_time))
             return requete
 
 

@@ -38,6 +38,8 @@ def simpleChar(string, wildcards=True):
     with open(os.path.join(resource_dir, 'config/data.bin'), 'rb') as f:
         _replaces = f.read().decode('utf8').split('\x00')
 
+    string = string.lower()
+
     chars = []
     for ch in string:
         if ch == '*' and not wildcards:
