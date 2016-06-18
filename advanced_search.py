@@ -25,9 +25,9 @@ class AdvancedSearch(QtGui.QDialog):
         # module started in standalone
         if type(parent) is QtGui.QWidget:
             self.logger = MyLog("activity.log")
-            self.test = True
             DATA_PATH = '.'
             self.parent.resource_dir = DATA_PATH
+            self.test = True
         else:
             DATA_PATH = self.parent.DATA_PATH
             self.logger = self.parent.l

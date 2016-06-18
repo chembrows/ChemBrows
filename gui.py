@@ -589,6 +589,7 @@ class Fenetre(QtGui.QMainWindow):
 
             while worker.isRunning():
                 app.processEvents()
+                worker.sleep(0.5)
 
         self.updateCellSize()
         self.progress.reset()
@@ -1822,6 +1823,65 @@ class Fenetre(QtGui.QMainWindow):
         table.selectRow(line)
 
 
+    def eraseDb(self):
+
+        """Method to completely erase the database. Will also vacuum it."""
+
+        mes = """
+        You are about to erase your database. All the data regarding articles
+         will be lost. If you click OK, the process will start.
+        """
+
+        # Clean the tabs in the message (tabs are 4 spaces)
+        mes = mes.replace("    ", "")
+        mes = mes.replace("\n", "")
+
+        choice = QtGui.QMessageBox.critical(self, "Erasing database", mes,
+                                            QtGui.QMessageBox.Cancel |
+                                            QtGui.QMessageBox.Ok,
+                                            defaultButton=QtGui.QMessageBox.Cancel)
+
+        if choice == QtGui.QMessageBox.Cancel:
+            return
+
+        progress = QtGui.QProgressDialog("Erasing database...",
+                                         None, 0, 0, self)
+        progress.setWindowTitle("Erasing database")
+        progress.show()
+        app.processEvents()
+
+        def internalErase():
+
+            """Internal function, will be executed in a thread"""
+
+            query = QtSql.QSqlQuery(self.bdd)
+            query.exec_("DELETE FROM papers")
+            self.l.info("All articles deleted")
+
+            self.bdd.close()
+            self.bdd.open()
+            query = QtSql.QSqlQuery(self.bdd)
+
+            # Vacuum the db. Removes free space from db
+            query.prepare("VACUUM papers")
+            query.exec_()
+            self.l.info("Data base vacuumed")
+
+            self.loadNotifications()
+            self.searchByButton()
+            self.updateCellSize()
+
+        worker = LittleThread(internalErase)
+        worker.start()
+
+        while worker.isRunning():
+            app.processEvents()
+            worker.sleep(0.5)
+
+        progress.reset()
+        self.l.info("eraseDb completed")
+
+
     def cleanDb(self):
 
         """Slot to clean the database. Called from
@@ -1839,13 +1899,14 @@ class Fenetre(QtGui.QMainWindow):
         mes = mes.replace("    ", "")
 
         choice = QtGui.QMessageBox.critical(self, "Cleaning database", mes,
-                                            QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Cancel)
+                                            QtGui.QMessageBox.Cancel |
+                                            QtGui.QMessageBox.Ok,
+                                            defaultButton=QtGui.QMessageBox.Cancel)
 
         if choice == QtGui.QMessageBox.Cancel:
             return
 
         progress = QtGui.QProgressDialog("Deleting articles from unfollowed journals", None, 0, 100, self)
-        # progress.setLabelText("Deleting articles from unfollowed journals")
         progress.setWindowTitle("Cleaning database")
         progress.show()
         app.processEvents()
@@ -1905,15 +1966,6 @@ class Fenetre(QtGui.QMainWindow):
                 "/graphical_abstracts/{0}".format(pic)))
             self.l.debug("removing {}".format(pic))
 
-        # Delete all the images which are not in the database (so not
-        # corresponding to any article)
-        # for directory in os.walk(self.DATA_PATH + "/graphical_abstracts/"):
-            # for pic in directory[2]:
-                # if pic not in images_path:
-                    # os.remove(os.path.abspath(self.DATA_PATH +
-                        # "/graphical_abstracts/{0}".format(pic)))
-                    # self.l.debug("removing {}".format(pic))
-
         self.l.debug("Deleted all the useless images")
 
         progress.setLabelText("Building list of filtered articles")
@@ -1938,7 +1990,8 @@ class Fenetre(QtGui.QMainWindow):
                 # Tuple representing an article
                 articles_to_reject.append((id, doi, title, journal, url))
 
-        self.l.info("{} entries rejected will be deleted".format(len(articles_to_reject)))
+        self.l.info("{} entries rejected will be deleted".
+                    format(len(articles_to_reject)))
 
         progress.setLabelText("Deleting filtered articles")
         progress.setValue(80)
@@ -2145,6 +2198,8 @@ class Fenetre(QtGui.QMainWindow):
 
                     while worker.isRunning():
                         app.processEvents()
+                        worker.sleep(0.5)
+
             except AttributeError:
                 self.l.debug("No entries added, skipping loadNotifications")
 

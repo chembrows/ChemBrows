@@ -6,6 +6,8 @@ import sys
 import os
 from PyQt4 import QtGui, QtCore
 
+from log import MyLog
+
 
 class Settings(QtGui.QDialog):
 
@@ -18,13 +20,20 @@ class Settings(QtGui.QDialog):
 
         self.parent = parent
 
-        # TEST
-        try:
+        if type(parent) is QtGui.QWidget:
+            self.l = MyLog("activity.log")
+
+            # Dummy file for saving if testing
+            self.options = QtCore.QSettings("debug/options.ini", QtCore.QSettings.IniFormat)
+
+            DATA_PATH = '.'
+            self.parent.resource_dir = DATA_PATH
+            self.test = True
+        else:
+            DATA_PATH = self.parent.DATA_PATH
+            self.l = self.parent.l
             self.options = self.parent.options
             self.test = False
-        except AttributeError:
-            self.options = QtCore.QSettings("debug/options.ini", QtCore.QSettings.IniFormat)
-            self.test = True
 
         self.check_journals = []
 
@@ -65,6 +74,7 @@ class Settings(QtGui.QDialog):
         # TO COMMENT to run the module standalone
         if not self.test:
             self.button_clean_db.clicked.connect(self.parent.cleanDb)
+            self.button_erase_db.clicked.connect(self.parent.eraseDb)
 
 
     def selectUnselectAll(self, state):
@@ -125,9 +135,13 @@ class Settings(QtGui.QDialog):
         self.vbox_database = QtGui.QVBoxLayout()
 
         self.button_clean_db = QtGui.QPushButton("Clean database")
+        self.button_erase_db = QtGui.QPushButton("Erase database")
 
         self.vbox_database.addWidget(self.button_clean_db)
+        self.vbox_database.addWidget(self.button_erase_db)
+
         self.widget_database.setLayout(self.vbox_database)
+
         self.tabs.addTab(self.widget_database, "Database")
 
 # ------------------------ ASSEMBLING ------------------------------------------------
