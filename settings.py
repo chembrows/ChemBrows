@@ -75,6 +75,7 @@ class Settings(QtGui.QDialog):
         # TO COMMENT to run the module standalone
         if not self.test:
             self.button_clean_db.clicked.connect(self.parent.cleanDb)
+            self.button_reset_db.clicked.connect(self.parent.resetDb)
             self.button_erase_db.clicked.connect(self.parent.eraseDb)
 
 
@@ -135,11 +136,33 @@ class Settings(QtGui.QDialog):
         self.widget_database = QtGui.QWidget()
         self.vbox_database = QtGui.QVBoxLayout()
 
+        mes = """
+        Click on the buttons to display help.
+        Confirmation will be asked before anything
+        is done to your date: no worries.
+        """
+        mes = mes.replace("    ", "")
+        self.label_explain = QtGui.QLabel(mes)
+
         self.button_clean_db = QtGui.QPushButton("Clean database")
+        self.button_reset_db = QtGui.QPushButton("Reset database")
         self.button_erase_db = QtGui.QPushButton("Erase database")
 
+        # Create an empty widget to act as a spacer
+        empty_widget = QtGui.QWidget()
+        empty_widget.setSizePolicy(QtGui.QSizePolicy.Preferred,
+                                   QtGui.QSizePolicy.Expanding)
+
+        # Add the spacer between each button
+        self.vbox_database.addWidget(self.label_explain,
+                                     alignment=QtCore.Qt.AlignTop)
+        self.vbox_database.addWidget(empty_widget)
         self.vbox_database.addWidget(self.button_clean_db)
+        self.vbox_database.addWidget(empty_widget)
+        self.vbox_database.addWidget(self.button_reset_db)
+        self.vbox_database.addWidget(empty_widget)
         self.vbox_database.addWidget(self.button_erase_db)
+        self.vbox_database.addWidget(empty_widget)
 
         self.widget_database.setLayout(self.vbox_database)
 

@@ -1825,6 +1825,59 @@ class Fenetre(QtGui.QMainWindow):
         table.selectRow(line)
 
 
+    def resetDb(self):
+
+        """Method to reset the db. Will set the 'new' field of every entry
+        to 1, and the liked field to 0"""
+
+        mes = """
+        You are about to reset your database. All the articles will be marked
+         as new, and all liked articles will be unliked. If you click OK, the
+         process will start.
+        """
+
+        # Clean the tabs in the message (tabs are 4 spaces)
+        mes = mes.replace("    ", "")
+        mes = mes.replace("\n", "")
+
+        choice = QtGui.QMessageBox.critical(self, "resetting database", mes,
+                                            QtGui.QMessageBox.Cancel |
+                                            QtGui.QMessageBox.Ok,
+                                            defaultButton=QtGui.QMessageBox.Cancel)
+
+        if choice == QtGui.QMessageBox.Cancel:
+            return
+
+        progress = QtGui.QProgressDialog("resetting database...",
+                                         None, 0, 0, self)
+        progress.setWindowTitle("resetting database")
+        progress.show()
+        app.processEvents()
+
+        # Perform the db modifications in a thread
+        def internalReset():
+
+            """Internal function, will be executed in a thread"""
+
+            query = QtSql.QSqlQuery(self.bdd)
+            query.exec_("UPDATE papers SET liked=0, new=1, percentage_match=0")
+            self.l.info("Reset db")
+
+            self.loadNotifications()
+            self.searchByButton()
+            self.updateCellSize()
+
+        worker = LittleThread(internalReset)
+        worker.start()
+
+        while worker.isRunning():
+            app.processEvents()
+            worker.sleep(0.5)
+
+        progress.reset()
+        self.l.info("resetDb completed")
+
+
     def eraseDb(self):
 
         """Method to completely erase the database. Will also vacuum it."""
@@ -1869,7 +1922,12 @@ class Fenetre(QtGui.QMainWindow):
             query.exec_()
             self.l.info("Data base vacuumed")
 
-            self.loadNotifications()
+            # Set the tabs notifications to 0
+            for index in range(1, self.onglets.count()):
+                table = self.onglets.widget(index)
+                table.articles = {}
+                self.onglets.setNotifications(index, 0)
+
             self.searchByButton()
             self.updateCellSize()
 
@@ -1879,12 +1937,6 @@ class Fenetre(QtGui.QMainWindow):
         while worker.isRunning():
             app.processEvents()
             worker.sleep(0.5)
-
-        # Set the tabs notifications to 0
-        for index in range(1, self.onglets.count()):
-            table = self.onglets.widget(index)
-            table.articles = {}
-            self.onglets.setNotifications(index, 0)
 
         progress.reset()
         self.l.info("eraseDb completed")
@@ -2285,8 +2337,6 @@ class Fenetre(QtGui.QMainWindow):
 
         """Build the program's interface"""
 
-        # self.setGeometry(0, 25, 1900 , 1020)
-        # self.showMaximized()
         self.setWindowTitle('ChemBrows')
 
         font = QtGui.QFont()
@@ -2306,8 +2356,6 @@ class Fenetre(QtGui.QMainWindow):
         self.fileMenu.addAction(self.settingsAction)
         self.fileMenu.addAction(self.exitAction)
 
-        # Building edition menu
-        # self.editMenu = self.menubar.addMenu("&Edition")
         # Building tools menu
         self.toolMenu = self.menubar.addMenu("&Tools")
         self.toolMenu.addAction(self.parseAction)
@@ -2384,7 +2432,8 @@ class Fenetre(QtGui.QMainWindow):
 
         # Empty widget acting like a spacer
         self.empty_widget = QtGui.QWidget()
-        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred);
+        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding,
+                                        QtGui.QSizePolicy.Preferred)
 
         self.toolbar.addWidget(self.button_refresh)
         self.toolbar.addWidget(self.button_calculate_percentage)
