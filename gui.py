@@ -878,7 +878,9 @@ class Fenetre(QtGui.QMainWindow):
         ids_waited = self.options.value("ids_waited", [])
         self.createToRead(ids_waited)
 
-        searches_saved = QtCore.QSettings(self.DATA_PATH + "/config/searches.ini", QtCore.QSettings.IniFormat)
+        searches_saved = QtCore.QSettings(self.DATA_PATH +
+                                          "/config/searches.ini",
+                                          QtCore.QSettings.IniFormat)
 
         # Restore the saved searches
         for search_name in searches_saved.childGroups():
@@ -1877,6 +1879,12 @@ class Fenetre(QtGui.QMainWindow):
         while worker.isRunning():
             app.processEvents()
             worker.sleep(0.5)
+
+        # Set the tabs notifications to 0
+        for index in range(1, self.onglets.count()):
+            table = self.onglets.widget(index)
+            table.articles = {}
+            self.onglets.setNotifications(index, 0)
 
         progress.reset()
         self.l.info("eraseDb completed")

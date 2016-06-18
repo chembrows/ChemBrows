@@ -24,7 +24,8 @@ class Settings(QtGui.QDialog):
             self.l = MyLog("activity.log")
 
             # Dummy file for saving if testing
-            self.options = QtCore.QSettings("debug/options.ini", QtCore.QSettings.IniFormat)
+            self.options = QtCore.QSettings("debug/options.ini",
+                                            QtCore.QSettings.IniFormat)
 
             DATA_PATH = '.'
             self.parent.resource_dir = DATA_PATH
