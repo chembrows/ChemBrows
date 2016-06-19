@@ -13,7 +13,7 @@ from sklearn.feature_extraction import text
 from sklearn.svm import LinearSVC
 import datetime
 
-# DEBUG
+# # DEBUG
 # from memory_profiler import profile
 
 # Personal
@@ -211,6 +211,6 @@ class Predictor(QtCore.QThread):
 
 if __name__ == "__main__":
     logger = MyLog("test.log")
-    predictor = Predictor(logger)
+    predictor = Predictor(logger, [])
     predictor.initializePipeline()
     predictor.calculatePercentageMatch()

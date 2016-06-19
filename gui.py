@@ -2303,6 +2303,7 @@ class Fenetre(QtGui.QMainWindow):
         try:
             while not self.predictor.isFinished():
                 app.processEvents()
+                self.predictor.sleep(0.5)
         except AttributeError:
             self.l.debug("Predictor deleted while processEvents ?")
             pass
