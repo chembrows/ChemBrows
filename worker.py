@@ -43,6 +43,8 @@ class Worker(QtCore.QThread):
         self.parent = parent
         self.dict_journals = parent.dict_journals
 
+        self.url_feed = ""
+
         # Define a path attribute to easily change it
         # for the tests
         self.DATA_PATH = self.parent.DATA_PATH + "/graphical_abstracts/"
@@ -61,19 +63,6 @@ class Worker(QtCore.QThread):
         self.list_futures = []
 
 
-    def setUrl(self, url_feed):
-
-        self.url_feed = url_feed
-
-
-    def __del__(self):
-
-        """Method to destroy the thread properly"""
-
-        self.wait()
-        self.l.debug("Deleting thread")
-
-
     def run(self):
 
         """Main function. Starts the real business"""
@@ -85,8 +74,8 @@ class Worker(QtCore.QThread):
         try:
             self.feed = feedparser.parse(self.url_feed)
             self.l.debug("RSS page successfully dled")
-        except OSError:
-            self.l.error("Too many files open, could not start the thread !")
+        except Exception as e:
+            self.l.error("RSS page could not be downloaded", exc_info=True)
             return
 
         # Get the journal name

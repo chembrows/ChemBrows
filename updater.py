@@ -45,14 +45,6 @@ class Updater(QtCore.QThread):
             self.update_available = True
 
 
-    def __del__(self):
-
-        """Method to destroy the thread properly"""
-
-        self.l.debug("Deleting thread")
-        self.exit()
-
-
     def run(self):
 
         try:

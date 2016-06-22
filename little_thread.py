@@ -21,13 +21,6 @@ class LittleThread(QtCore.QThread):
         self.kwargs = kwargs
 
 
-    def __del__(self):
-
-        """Method to destroy the thread properly"""
-
-        self.wait()
-
-
     def run(self):
 
         self.function(*self.args, **self.kwargs)

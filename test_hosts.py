@@ -205,7 +205,7 @@ def test_getData(journalsUrls):
                           "URL is a string but is not a URL {}".format(url))
 
             # For ACS and Nature, check if the URL is the abstract page's URL
-            if company in ['acs', 'npg']:
+            if company in ['ACS', 'Nature']:
                 logAssert('abs' in url,
                           "company is {}, but URL doesn't contain 'abs' {}".
                           format(company, url))

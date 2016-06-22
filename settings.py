@@ -7,6 +7,7 @@ import os
 from PyQt4 import QtGui, QtCore
 
 from log import MyLog
+from wizard_journal import WizardJournal
 
 
 class Settings(QtGui.QDialog):
@@ -17,6 +18,8 @@ class Settings(QtGui.QDialog):
     def __init__(self, parent):
 
         super(Settings, self).__init__(parent)
+
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.parent = parent
 
@@ -70,6 +73,8 @@ class Settings(QtGui.QDialog):
         # Checkbox to select/unselect all the journals
         self.box_select_all.stateChanged.connect(self.selectUnselectAll)
 
+        self.button_wizard_journal.clicked.connect(lambda: WizardJournal(self.parent))
+
         # Button "clean database" (erase the unintersting journals from the db)
         # connected to the method of the main window class
         # TO COMMENT to run the module standalone
@@ -91,20 +96,22 @@ class Settings(QtGui.QDialog):
 
         """Handles the display"""
 
-        self.parent.fen_settings = QtGui.QWidget()
-        self.parent.fen_settings.setWindowTitle('Settings')
+        self.setWindowTitle('Settings')
 
         self.ok_button = QtGui.QPushButton("OK", self)
 
         self.tabs = QtGui.QTabWidget()
 
-# ------------------------ GENERAL TAB ------------------------------------------------
+# ------------------------ JOURNALS TAB ---------------------------------------
 
         # Scroll area for the journals to check
         self.scroll_check_journals = QtGui.QScrollArea()
         self.scrolling_check_journals = QtGui.QWidget()
         self.vbox_check_journals = QtGui.QVBoxLayout()
         self.scrolling_check_journals.setLayout(self.vbox_check_journals)
+
+        self.button_wizard_journal = QtGui.QPushButton("Add a journal")
+        self.vbox_check_journals.addWidget(self.button_wizard_journal)
 
         labels_checkboxes = []
 
@@ -131,7 +138,7 @@ class Settings(QtGui.QDialog):
 
         self.tabs.addTab(self.scroll_check_journals, "Journals")
 
-# ------------------------ DATABASE TAB ------------------------------------------------
+# ------------------------ DATABASE TAB ---------------------------------------
 
         self.widget_database = QtGui.QWidget()
         self.vbox_database = QtGui.QVBoxLayout()
@@ -175,8 +182,8 @@ class Settings(QtGui.QDialog):
 
         self.vbox_global.addWidget(self.ok_button)
 
-        self.parent.fen_settings.setLayout(self.vbox_global)
-        self.parent.fen_settings.show()
+        self.setLayout(self.vbox_global)
+        self.show()
 
 
     def saveSettings(self):
@@ -201,8 +208,7 @@ class Settings(QtGui.QDialog):
         self.parent.resetView()
 
         # Close the settings window and free the memory
-        self.parent.fen_settings.close()
-        del self.parent.fen_settings
+        self.close()
 
 
 if __name__ == '__main__':

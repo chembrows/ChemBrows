@@ -469,7 +469,7 @@ class Fenetre(QtGui.QMainWindow):
             try:
                 url = self.urls[i]
                 worker = Worker(self)
-                worker.setUrl(url)
+                worker.url_feed = url
                 worker.finished.connect(self.checkThreads)
                 self.urls.remove(url)
                 self.list_threads.append(worker)
@@ -547,7 +547,7 @@ class Fenetre(QtGui.QMainWindow):
             if self.urls:
                 self.l.debug("STARTING NEW THREAD")
                 worker = Worker(self)
-                worker.setUrl(self.urls[0])
+                worker.url_feed = self.urls[0]
                 worker.finished.connect(self.checkThreads)
                 self.urls.remove(worker.url_feed)
                 self.list_threads.append(worker)

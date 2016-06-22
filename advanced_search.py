@@ -19,6 +19,8 @@ class AdvancedSearch(QtGui.QDialog):
 
         super(AdvancedSearch, self).__init__(parent)
 
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
         self.parent = parent
 
         # Condition to use a specific logger if

@@ -49,11 +49,11 @@ def refineUrl(company, journal, entry):
 
     url = getattr(entry, 'feedburner_origlink', entry.link)
 
-    if company == 'acs':
+    if company == 'ACS':
         id_paper = url.split('/')[-1]
         url = "http://pubs.acs.org/doi/abs/10.1021/" + url
 
-    elif company == 'npg':
+    elif company == 'Nature':
         id_paper = url.split('/')[-1]
 
         # Necesserary. Sometimes the id has a point, sometimes not
@@ -63,11 +63,11 @@ def refineUrl(company, journal, entry):
         url = "http://www.nature.com/{}/journal/vaop/ncurrent/abs/{}.html"
         url = url.format(prefix, id_paper)
 
-    elif company == 'npg2':
+    elif company == 'Nature2':
         id_paper = url.split('/')[-1].split('.')[0]
         url = "http://www.nature.com/articles/{}".format(id_paper)
 
-    elif company == 'wiley':
+    elif company == 'Wiley':
         # Optimization for Wiley
         doi = url.split('%2')[-1]
         url = "http://onlinelibrary.wiley.com/doi/10.1002/{}/abstract"
@@ -92,16 +92,16 @@ def updateData(company, journal, entry, care_image):
     graphical_abstract = None
 
     # NOTE:
-    # company = 'npg' is not mentionned, but dl_image & dl_page are True
+    # company = 'Nature' is not mentionned, but dl_image & dl_page are True
 
     # NOTE
-    # springer: dl_page is set to False, bc very little articles have a
+    # Springer: dl_page is set to False, bc very little articles have a
     # graphical_abstract. But the graphical_abstract's URL is only on the
     # web page of the article
 
-    # TODO: npg2
+    # TODO: Nature2
 
-    if company == 'rsc':
+    if company == 'RSC':
         dl_page = False
 
         soup = BeautifulSoup(entry.summary)
@@ -110,7 +110,7 @@ def updateData(company, journal, entry, care_image):
             graphical_abstract = r[0]['src']
 
 
-    elif company == 'wiley':
+    elif company == 'Wiley':
         dl_page = False
 
         soup = BeautifulSoup(entry.summary)
@@ -120,7 +120,7 @@ def updateData(company, journal, entry, care_image):
             graphical_abstract = graphical_abstract['href']
 
 
-    elif company == 'acs':
+    elif company == 'ACS':
         dl_page = False
 
         soup = BeautifulSoup(entry.summary)
@@ -129,15 +129,15 @@ def updateData(company, journal, entry, care_image):
             graphical_abstract = r[0]['src']
 
 
-    elif company == 'nas':
+    elif company == 'PNAS':
         dl_page = False
 
 
-    elif company == 'science':
+    elif company == 'Science':
         dl_page = False
 
 
-    elif company == 'elsevier':
+    elif company == 'Elsevier':
         dl_page = False
 
         if entry.summary != "":
@@ -147,7 +147,7 @@ def updateData(company, journal, entry, care_image):
                 graphical_abstract = r[0]['src']
 
 
-    elif company == 'beilstein':
+    elif company == 'Beilstein':
         dl_page = False
 
         soup = BeautifulSoup(entry.summary)
@@ -156,16 +156,16 @@ def updateData(company, journal, entry, care_image):
             graphical_abstract = r[0]['src']
 
 
-    elif company == 'thieme':
+    elif company == 'Thieme':
         dl_page = False
 
-    elif company == 'plos':
+    elif company == 'PLOS':
         dl_page = False
 
         base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:{}.g001"
         graphical_abstract = base.format(getDoi(company, journal, entry))
 
-    elif company == 'springer':
+    elif company == 'Springer':
         dl_page = False
 
     else:
@@ -185,7 +185,7 @@ def getData(company, journal, entry, response=None):
     graphical abstract"""
 
     # If the journal is edited by the RSC
-    if company == 'rsc':
+    if company == 'RSC':
 
         """Graphical abstract present in RSS. Abstract incomplete
         and w/out html. Title w/out html"""
@@ -238,7 +238,7 @@ def getData(company, journal, entry, response=None):
                 author = ", ".join(author)
 
 
-    elif company == 'wiley':
+    elif company == 'Wiley':
 
         """Feed compltete. Abstract w/ html. Title w/out html"""
 
@@ -292,7 +292,7 @@ def getData(company, journal, entry, response=None):
                     title = r.renderContents().decode().strip()
 
 
-    elif company == 'acs':
+    elif company == 'ACS':
 
         """Feed only contains graphical abstract"""
 
@@ -333,7 +333,7 @@ def getData(company, journal, entry, response=None):
                 title = r.renderContents().decode()
 
 
-    elif company == 'npg':
+    elif company == 'Nature':
 
         title = entry.title
         date = entry.date
@@ -380,7 +380,7 @@ def getData(company, journal, entry, response=None):
                     graphical_abstract = graphical_abstract.replace("carousel", "images_article")
 
 
-    elif company == 'science':
+    elif company == 'Science':
 
         title = entry.title
         date = entry.date
@@ -407,7 +407,7 @@ def getData(company, journal, entry, response=None):
                 author = ", ".join(author)  # To comment if formatName
 
 
-    elif company == 'nas':
+    elif company == 'PNAS':
 
         title = entry.title
         date = entry.prism_publicationdate
@@ -445,7 +445,7 @@ def getData(company, journal, entry, response=None):
                 abstract = entry.summary
 
 
-    elif company == 'elsevier':
+    elif company == 'Elsevier':
 
         title = entry.title
         date = arrow.get(mktime(entry.updated_parsed)).format('YYYY-MM-DD')
@@ -493,7 +493,7 @@ def getData(company, journal, entry, response=None):
                 # title = r[0].renderContents().decode()
 
 
-    elif company == 'thieme':
+    elif company == 'Thieme':
 
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
@@ -535,7 +535,7 @@ def getData(company, journal, entry, response=None):
                 author = author.replace("*", "")
 
 
-    elif company == 'beilstein':
+    elif company == 'Beilstein':
 
         title = entry.title
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
@@ -566,7 +566,7 @@ def getData(company, journal, entry, response=None):
                 graphical_abstract = r[0]['src'] + '&background=FFFFFF'
 
 
-    elif company == 'npg2':
+    elif company == 'Nature2':
 
         title = entry.title
         date = entry.date
@@ -609,7 +609,7 @@ def getData(company, journal, entry, response=None):
                     graphical_abstract = "http://www.nature.com" + r[0]["src"]
 
 
-    elif company == 'plos':
+    elif company == 'PLOS':
 
         title = entry.title
         url = entry.link
@@ -641,7 +641,7 @@ def getData(company, journal, entry, response=None):
         graphical_abstract = base.format(getDoi(company, journal, entry))
 
 
-    elif company == 'springer':
+    elif company == 'Springer':
 
         title = entry.title
         url = entry.link
@@ -714,7 +714,7 @@ def getDoi(company, journal, entry):
 
     """Get the DOI id of a post, to save time"""
 
-    if company == 'rsc':
+    if company == 'RSC':
         soup = BeautifulSoup(entry.summary)
         r = soup("div")
         try:
@@ -722,38 +722,38 @@ def getDoi(company, journal, entry):
         except IndexError:
             doi = r[1].text.split("DOI:")[1].split(",")[0]
 
-    elif company == 'acs':
+    elif company == 'ACS':
         doi = entry.id.split("dx.doi.org/")[1]
 
-    elif company == 'wiley':
+    elif company == 'Wiley':
         doi = entry.prism_doi
 
-    elif company == 'npg' or company == 'npg2':
+    elif company == 'Nature' or company == 'Nature2':
         doi = entry.prism_doi
 
-    elif company == 'science':
+    elif company == 'Science':
         doi = entry.dc_identifier
 
-    elif company == 'nas':
+    elif company == 'PNAS':
         base = entry.dc_identifier
         base = base.split("pnas;")[1]
         doi = "10.1073/pnas." + base
 
     # For this publisher, the doi is not given
     # in the RSS flux. It's so replaced by the url
-    elif company == 'elsevier':
+    elif company == 'Elsevier':
         doi = entry.id
 
-    elif company == 'thieme':
+    elif company == 'Thieme':
         doi = entry.prism_doi
 
-    elif company == 'beilstein':
+    elif company == 'Beilstein':
         doi = entry.summary.split("doi:")[1].split("</p>")[0]
 
-    elif company == 'plos':
+    elif company == 'PLOS':
         doi = "10.1371/" + entry.id.split('/')[-1]
 
-    elif company == 'springer':
+    elif company == 'Springer':
         doi = "10.1007/" + entry.id.split('/')[-1]
 
     try:
@@ -805,7 +805,7 @@ def getJournals(company):
 
 if __name__ == "__main__":
 
-    # print(getJournals('science'))
+    # print(getJournals('Science'))
 
     from requests_futures.sessions import FuturesSession
     import functools
@@ -814,7 +814,7 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("elsevier", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry, response)
         # print(abstract)
         # print("\n")
         # print(date)

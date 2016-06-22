@@ -49,14 +49,6 @@ class Predictor(QtCore.QThread):
         self.calculated_something = False
 
 
-    def __del__(self):
-
-        """Method to destroy the thread properly"""
-
-        self.wait()
-        self.l.debug("Deleting thread")
-
-
     def getStopWords(self):
 
         """Method to get english stop words

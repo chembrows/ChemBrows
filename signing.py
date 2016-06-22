@@ -23,6 +23,8 @@ class Signing(QtGui.QDialog):
 
         super(Signing, self).__init__(parent)
 
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
         self.parent = parent
 
         if type(parent) is QtGui.QWidget:

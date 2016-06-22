@@ -16,6 +16,8 @@ class Tuto(QtGui.QDialog):
 
         super(Tuto, self).__init__(parent)
 
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
         self.parent = parent
 
         if type(parent) is QtGui.QWidget:

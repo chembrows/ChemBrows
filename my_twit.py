@@ -4,7 +4,7 @@
 
 import sys
 import os
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 import webbrowser
 import time
 from functions import removeHtml
@@ -27,6 +27,8 @@ class MyTwit(QtGui.QDialog):
     def __init__(self, parent, title, link, graphical=None):
 
         super(MyTwit, self).__init__(parent)
+
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.parent = parent
 
