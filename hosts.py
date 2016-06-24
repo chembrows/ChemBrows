@@ -778,7 +778,8 @@ def getJournals(company):
 
     resource_dir, DATA_PATH = getRightDirs()
 
-    with open(os.path.join(resource_dir, 'journals/{0}.ini'.format(company)), 'r') as config:
+    with open(os.path.join(resource_dir, 'journals/{0}.ini'.
+              format(company)), 'r') as config:
         for line in config:
             names.append(line.split(" : ")[0])
             abb.append(line.split(" : ")[1].rstrip())
@@ -793,6 +794,28 @@ def getJournals(company):
                     cares_image.append(True)
             except IndexError:
                 cares_image.append(True)
+
+
+    with open(os.path.join(DATA_PATH, 'journals/{0}.ini'.
+              format(company)), 'r') as config:
+
+        for line in config:
+            url = line.split(" : ")[2].rstrip()
+
+            if url not in urls:
+                names.append(line.split(" : ")[0])
+                abb.append(line.split(" : ")[1].rstrip())
+                urls.append(url)
+
+                # Get a bool: care about the image when refreshing
+                try:
+                    care = line.split(" : ")[3].rstrip()
+                    if care == "False":
+                        cares_image.append(False)
+                    else:
+                        cares_image.append(True)
+                except IndexError:
+                    cares_image.append(True)
 
     return names, abb, urls, cares_image
 
@@ -830,7 +853,8 @@ def getCompanies():
     # List companies on the user side
     for company in os.listdir(os.path.join(DATA_PATH, 'journals')):
         company = company.split('.')[0]
-        list_companies.append(company)
+        if company not in list_companies:
+            list_companies.append(company)
 
     return list_companies
 

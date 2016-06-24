@@ -146,6 +146,8 @@ class WizardJournal(QtGui.QDialog):
                   format(publisher)), 'a') as out:
             out.write("{} : {} : {}".format(title, abb, url))
 
+        self.close()
+
 
 if __name__ == '__main__':
 

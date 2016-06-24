@@ -82,6 +82,7 @@ class Settings(QtGui.QDialog):
             self.button_clean_db.clicked.connect(self.parent.cleanDb)
             self.button_reset_db.clicked.connect(self.parent.resetDb)
             self.button_erase_db.clicked.connect(self.parent.eraseDb)
+            self.button_wizard_journal.clicked.connect(self.close)
 
 
     def selectUnselectAll(self, state):
