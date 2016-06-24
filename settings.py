@@ -8,6 +8,7 @@ from PyQt4 import QtGui, QtCore
 
 from log import MyLog
 from wizard_journal import WizardJournal
+import hosts
 
 
 class Settings(QtGui.QDialog):
@@ -23,6 +24,8 @@ class Settings(QtGui.QDialog):
 
         self.parent = parent
 
+        self.resource_dir, self.DATA_PATH = hosts.getRightDirs()
+
         if type(parent) is QtGui.QWidget:
             self.l = MyLog("activity.log")
 
@@ -30,11 +33,8 @@ class Settings(QtGui.QDialog):
             self.options = QtCore.QSettings("debug/options.ini",
                                             QtCore.QSettings.IniFormat)
 
-            DATA_PATH = '.'
-            self.parent.resource_dir = DATA_PATH
             self.test = True
         else:
-            DATA_PATH = self.parent.DATA_PATH
             self.l = self.parent.l
             self.options = self.parent.options
             self.test = False
@@ -116,9 +116,8 @@ class Settings(QtGui.QDialog):
         labels_checkboxes = []
 
         # Get labels of the future check boxes of the journals to be parsed
-        for company in os.listdir(os.path.join(self.parent.resource_dir, "journals")):
-            with open(os.path.join(self.parent.resource_dir, 'journals/{0}'.format(company)), 'r') as config:
-                labels_checkboxes += [line.split(" : ")[1] for line in config]
+        for company in hosts.getCompanies():
+            labels_checkboxes += hosts.getJournals(company)[1]
 
         labels_checkboxes.sort()
 

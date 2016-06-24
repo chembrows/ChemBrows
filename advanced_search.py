@@ -9,6 +9,7 @@ from log import MyLog
 
 from line_icon import ButtonLineIcon
 import functions
+import hosts
 
 
 class AdvancedSearch(QtGui.QDialog):
@@ -23,15 +24,14 @@ class AdvancedSearch(QtGui.QDialog):
 
         self.parent = parent
 
+        self.resource_dir, DATA_PATH = hosts.getRightDirs()
+
         # Condition to use a specific logger if
         # module started in standalone
         if type(parent) is QtGui.QWidget:
             self.logger = MyLog("activity.log")
-            DATA_PATH = '.'
-            self.parent.resource_dir = DATA_PATH
             self.test = True
         else:
-            DATA_PATH = self.parent.DATA_PATH
             self.logger = self.parent.l
             self.test = False
 
@@ -308,7 +308,7 @@ class AdvancedSearch(QtGui.QDialog):
 
         # Create 3 lines, with their label: AND, OR, NOT
         label_topic_include = QtGui.QLabel("Include:")
-        line_topic_include = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+        line_topic_include = ButtonLineIcon(os.path.join(self.resource_dir,
                                                      'images/info'))
         line_topic_include.buttonClicked.connect(lambda: self.showInfo(1))
 
@@ -321,7 +321,7 @@ class AdvancedSearch(QtGui.QDialog):
 
         label_topic_exclude = QtGui.QLabel("Exclude:")
         line_topic_exclude = QtGui.QLineEdit()
-        line_topic_exclude = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+        line_topic_exclude = ButtonLineIcon(os.path.join(self.resource_dir,
                                                      'images/info'))
         line_topic_exclude.buttonClicked.connect(lambda: self.showInfo(2))
 
@@ -347,7 +347,7 @@ class AdvancedSearch(QtGui.QDialog):
 
         label_author_include = QtGui.QLabel("Include:")
         line_author_include = QtGui.QLineEdit()
-        line_author_include = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+        line_author_include = ButtonLineIcon(os.path.join(self.resource_dir,
                                                       'images/info'))
         line_author_include.buttonClicked.connect(lambda: self.showInfo(3))
 
@@ -360,7 +360,7 @@ class AdvancedSearch(QtGui.QDialog):
 
         label_author_not = QtGui.QLabel("Exclude:")
         line_author_exclude = QtGui.QLineEdit()
-        line_author_exclude = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+        line_author_exclude = ButtonLineIcon(os.path.join(self.resource_dir,
                                                       'images/info'))
         line_author_exclude.buttonClicked.connect(lambda: self.showInfo(4))
 

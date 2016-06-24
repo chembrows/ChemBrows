@@ -276,7 +276,7 @@ class Fenetre(QtGui.QMainWindow):
         self.l.info("Max id for new: {}".format(self.max_id_for_new))
 
         payload = {'nbr_entries': nbr_entries,
-                   'journals': self.getJournalsToCare(),
+                   'journals': self.getJournalsToParse(),
                    'user_id': user_id,
                    'version': version,
                    }
@@ -376,69 +376,51 @@ class Fenetre(QtGui.QMainWindow):
         self.model.select()
 
 
-    def getJournalsToCare(self):
+    def getJournalsToParse(self):
 
         """Get the journals checked in the settings window"""
 
-        # Create a list to store the journals checked in the settings window
-        journals = self.options.value("journals_to_parse", [])
-
-        # If no journals to care in the settings,
-        # take them all. So build a journals_to_care list
+        # If no journals to parse in the settings,
+        # parse them all. So build a journals_to_parse list
         # with all the journals
+        journals = self.options.value("journals_to_parse", [])
         if not journals:
-            # self.journals_to_care = []
-            for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
-                with open(os.path.join(self.resource_dir, 'journals/{0}'.format(company)), 'r') as config:
-                    for line in config:
-                        # Take the abbreviation
-                        journals.append(line.split(" : ")[1])
+            journals = []
+            for company in hosts.getCompanies():
+                journals += hosts.getJournals(company)[1]
+
+            self.options.remove("journals_to_parse")
+            self.options.setValue("journals_to_parse", journals)
 
         return journals
 
 
     def parse(self):
 
-        """Method to start the parsing of the data"""
+        """Method to start parsing the data"""
+
+        self.start_time = datetime.datetime.now()
 
         self.parsing = True
         self.blocking_ui = True
 
-        self.journals_to_parse = self.options.value("journals_to_parse", [])
-
-        # If no journals to parse in the settings,
-        # parse them all. So build a journals_to_parse list
-        # with all the journals
-        if not self.journals_to_parse:
-            self.journals_to_parse = []
-            for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
-                with open(os.path.join(self.resource_dir, 'journals/{0}'.format(company)), 'r') as config:
-                    for line in config:
-                        self.journals_to_parse.append(line.split(" : ")[1])
-
-            self.options.remove("journals_to_parse")
-            self.options.setValue("journals_to_parse", self.journals_to_parse)
-
-        self.urls = []
-        for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
-            with open(os.path.join(self.resource_dir, 'journals/{0}'.format(company)), 'r') as config:
-                for line in config:
-                    if line.split(" : ")[1] in self.journals_to_parse:
-                        line = line.split(" : ")[2]
-                        line = line.strip()
-                        self.urls.append(line)
-
-        # Create a dictionnary w/ all the data concerning the journals
-        # implemented in the program: names, abbreviations, urls
-        self.dict_journals = {}
-        for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
-            company = company.split('.')[0]
-            self.dict_journals[company] = hosts.getJournals(company)
-
-        # Disabling the parse action to avoid double start
+        # Disables the parse action to avoid double start
         self.parseAction.setEnabled(False)
 
-        self.start_time = datetime.datetime.now()
+        journals_to_parse = self.getJournalsToParse()
+
+        # Create a dictionnary w/ all the data concerning the journals
+        # implemented in the program: names, abbreviations, urls.
+        # Create a list of urls to parse data
+        self.urls = []
+        self.dict_journals = {}
+        for company in hosts.getCompanies():
+            data_company = hosts.getJournals(company)
+            self.dict_journals[company] = data_company
+
+            for abb, url in zip(data_company[1], data_company[2]):
+                if abb in journals_to_parse:
+                    self.urls.append(url)
 
         # Display a progress dialog box
         self.progress = QtGui.QProgressDialog("Collecting in progress", "Cancel", 0, 100, self)
@@ -869,6 +851,8 @@ class Fenetre(QtGui.QMainWindow):
             notifs = collec.Counter(table.articles.values())[1]
             self.onglets.setNotifications(index, notifs)
 
+        self.l.debug("loadNotifications termiated")
+
 
     def restoreSettings(self):
 
@@ -922,7 +906,7 @@ class Fenetre(QtGui.QMainWindow):
 
             # Restore the journals selected (buttons pushed)
             self.tags_selected = self.options.value("Window/tags_selected", [])
-            if self.tags_selected == self.getJournalsToCare():
+            if self.tags_selected == self.getJournalsToParse():
                 self.tags_selected = []
             if self.tags_selected:
                 for button in self.list_buttons_tags:
@@ -936,7 +920,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.changeSortingMethod(self.sorting_method, self.sorting_reversed)
 
-        self.getJournalsToCare()
+        self.getJournalsToParse()
 
         # Timer to get the dimensions of the window right.
         # If the window is displayed too fast, I can't get the dimensions right
@@ -1290,7 +1274,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.list_buttons_tags = []
 
-        journals_to_care = self.getJournalsToCare()
+        journals_to_care = self.getJournalsToParse()
 
         if not journals_to_care:
             return
@@ -1321,7 +1305,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to check the journals push buttons"""
 
-        if self.tags_selected == self.getJournalsToCare():
+        if self.tags_selected == self.getJournalsToParse():
             self.tags_selected = []
 
         # Get the button pressed
@@ -1345,7 +1329,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # When last button is uncheck, select all the journals
         if not self.tags_selected:
-            self.tags_selected = self.getJournalsToCare()
+            self.tags_selected = self.getJournalsToParse()
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
@@ -1616,7 +1600,7 @@ class Fenetre(QtGui.QMainWindow):
             proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
             proxy.setFilterKeyColumn(11)
 
-        self.tags_selected = self.getJournalsToCare()
+        self.tags_selected = self.getJournalsToParse()
         self.searchByButton()
 
         # Clear the search bar
@@ -1977,10 +1961,10 @@ class Fenetre(QtGui.QMainWindow):
 
         requete = "DELETE FROM papers WHERE journal NOT IN ("
 
-        journals_to_care = self.getJournalsToCare()
+        journals_to_care = self.getJournalsToParse()
 
         # Building the query
-        for each_journal in self.getJournalsToCare():
+        for each_journal in self.getJournalsToParse():
             if each_journal != journals_to_care[-1]:
                 requete = requete + "\"" + str(each_journal) + "\"" + ", "
             # Close the query if last

@@ -10,6 +10,7 @@ import requests
 import arrow
 from time import mktime
 import re
+import constants
 
 # DEBUG
 # from memory_profiler import profile
@@ -23,10 +24,7 @@ def reject(entry_title):
     """Function called by a Worker object to filter crappy entries.
     It is meant to reject articles like corrigendum, erratum, etc"""
 
-    if getattr(sys, "frozen", False):
-        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    else:
-        resource_dir = '.'
+    resource_dir, DATA_PATH = getRightDirs()
 
     # resource_dir = os.path.dirname(os.path.dirname(sys.executable))
     # Load the regex stored in a config file, as filters
@@ -778,10 +776,7 @@ def getJournals(company):
     urls = []
     cares_image = []
 
-    if getattr(sys, "frozen", False):
-        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    else:
-        resource_dir = '.'
+    resource_dir, DATA_PATH = getRightDirs()
 
     with open(os.path.join(resource_dir, 'journals/{0}.ini'.format(company)), 'r') as config:
         for line in config:
@@ -800,6 +795,44 @@ def getJournals(company):
                 cares_image.append(True)
 
     return names, abb, urls, cares_image
+
+
+def getRightDirs():
+
+    """Get the DATA_PATH and the resource_dir pathes.
+    DATA_PATH is on the user side if CB is frozen"""
+
+    if getattr(sys, "frozen", False):
+        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+        DATA_PATH = constants.DATA_PATH
+    else:
+        resource_dir = '.'
+        DATA_PATH = '.'
+
+
+    return resource_dir, DATA_PATH
+
+
+def getCompanies():
+
+    """Get a list of all the companies. Will return a list of
+    publishers, without .ini at the end"""
+
+    resource_dir, DATA_PATH = getRightDirs()
+
+    list_companies = []
+
+    # List companies on the program side
+    for company in os.listdir(os.path.join(resource_dir, 'journals')):
+        company = company.split('.')[0]
+        list_companies.append(company)
+
+    # List companies on the user side
+    for company in os.listdir(os.path.join(DATA_PATH, 'journals')):
+        company = company.split('.')[0]
+        list_companies.append(company)
+
+    return list_companies
 
 
 

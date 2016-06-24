@@ -12,6 +12,7 @@ import base64
 from PIL import Image
 
 from line_icon import ButtonLineIcon
+import hosts
 
 
 class Signing(QtGui.QDialog):
@@ -27,10 +28,11 @@ class Signing(QtGui.QDialog):
 
         self.parent = parent
 
+        self.resource_dir, self.DATA_PATH = hosts.getRightDirs()
+
+
         if type(parent) is QtGui.QWidget:
             self.test = True
-            self.parent.DATA_PATH = '.'
-            self.parent.resource_dir = '.'
         else:
             self.test = False
 
@@ -87,10 +89,10 @@ class Signing(QtGui.QDialog):
         text = r.text.split('\n')[1]
 
         io = BytesIO(base64.b64decode(text))
-        Image.open(io).save(os.path.join(self.parent.DATA_PATH,
+        Image.open(io).save(os.path.join(self.DATA_PATH,
                                          'captcha.png'), format='PNG')
 
-        image = QtGui.QPixmap(os.path.join(self.parent.DATA_PATH,
+        image = QtGui.QPixmap(os.path.join(self.DATA_PATH,
                                            'captcha.png'))
         self.label_image.setPixmap(image)
 
@@ -204,7 +206,7 @@ class Signing(QtGui.QDialog):
                 self.validated = True
 
                 # Delete the captcha file
-                os.remove(os.path.join(self.parent.DATA_PATH, "captcha.png"))
+                os.remove(os.path.join(self.DATA_PATH, "captcha.png"))
 
             # user_id already in db on the server
             elif response[-1] == 'A user with this email already exists':
@@ -264,7 +266,7 @@ class Signing(QtGui.QDialog):
 
         # LineEdit for the email, with an icon opening an info box
         # info box about data privacy
-        self.line_email = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+        self.line_email = ButtonLineIcon(os.path.join(self.resource_dir,
                                                       'images/info'))
         self.line_email.buttonClicked.connect(self.showInfo)
 

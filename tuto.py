@@ -19,17 +19,17 @@ class Tuto(QtGui.QDialog):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.parent = parent
+        self.resource_dir, self.DATA_PATH = hosts.getRightDirs()
 
         if type(parent) is QtGui.QWidget:
             self.test = True
-            self.parent.resource_dir = '.'
         else:
             self.test = False
 
         self.setModal(True)
 
         # Get the text of the slides from config files
-        with open(os.path.join(self.parent.resource_dir, 'config/tuto.txt'),
+        with open(os.path.join(self.resource_dir, 'config/tuto.txt'),
                   'r') as f:
             content = f.read()
             self.list_slides = content.split('--')
@@ -64,7 +64,7 @@ class Tuto(QtGui.QDialog):
                     self.parent.options.remove("journals_to_parse")
                 else:
                     # Set the journals to parse options of the parent
-                    with open(os.path.join(self.parent.resource_dir, 'config/fields/{0}'.format(choice)), 'r') as config:
+                    with open(os.path.join(self.resource_dir, 'config/fields/{0}'.format(choice)), 'r') as config:
                         self.parent.options.setValue("journals_to_parse",
                                                       [line.rstrip() for line in config])
 
@@ -149,7 +149,7 @@ class Tuto(QtGui.QDialog):
         text = self.parseSlide(self.list_slides[0])
         self.text_diapo.setText(text)
 
-        choices = ['All'] + sorted(os.listdir(os.path.join(self.parent.resource_dir, 'config/fields/')))
+        choices = ['All'] + sorted(os.listdir(os.path.join(self.resource_dir, 'config/fields/')))
         self.combo_choice = QtGui.QComboBox()
         self.combo_choice.addItems(choices)
         self.combo_choice.hide()
