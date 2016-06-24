@@ -124,11 +124,6 @@ class WizardJournal(QtGui.QDialog):
         self.show()
 
 
-        # TEST
-        self.line_abbreviation.setText("Chem. Commun.")
-        self.line_url_journal.setText("http://feeds.rsc.org/rss/cc")
-
-
     def saveJournal(self, title, abb, url, publisher):
 
         """Will save the new journal, in file publisher.ini located in
