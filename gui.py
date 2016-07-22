@@ -1637,7 +1637,7 @@ class Fenetre(QtGui.QMainWindow):
 
             # remove the id of the list of the new articles
             if id_bdd in self.onglets.widget(index).articles and remove:
-                del self.onglets.widget(index).articles[id_bdd]
+                self.onglets.widget(index).articles[id_bdd] = 0
 
             # Add the id to the list of new articles
             elif id_bdd in self.onglets.widget(index).articles and not remove:
