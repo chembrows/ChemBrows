@@ -832,6 +832,9 @@ class Fenetre(QtGui.QMainWindow):
             if tab_number is not None and self.list_tables_in_tabs.index(table) != tab_number:
                 continue
 
+            # Reset the articles dictionary, in any case
+            table.articles = {}
+
             req_str = self.refineBaseQuery(table.base_query,
                                            table.topic_entries,
                                            table.author_entries,
@@ -851,7 +854,7 @@ class Fenetre(QtGui.QMainWindow):
             notifs = collec.Counter(table.articles.values())[1]
             self.onglets.setNotifications(index, notifs)
 
-        self.l.debug("loadNotifications termiated")
+        self.l.debug("loadNotifications terminated")
 
 
     def restoreSettings(self):

@@ -75,7 +75,7 @@ class AdvancedSearch(QtGui.QDialog):
 
         """Establish the slots"""
 
-        self.button_search_and_save.clicked.connect(self.search)
+        self.button_search_and_save.clicked.connect(self.saveSearch)
 
         self.tabs.currentChanged.connect(self.tabChanged)
 
@@ -164,7 +164,7 @@ class AdvancedSearch(QtGui.QDialog):
             self.button_delete_search.hide()
 
 
-    def search(self):
+    def saveSearch(self):
 
         """Slot to save a query"""
 
@@ -373,10 +373,10 @@ class AdvancedSearch(QtGui.QDialog):
 
         vbox_query.addStretch(1)
 
-        line_topic_include.returnPressed.connect(self.search)
-        line_topic_exclude.returnPressed.connect(self.search)
-        line_author_include.returnPressed.connect(self.search)
-        line_author_exclude.returnPressed.connect(self.search)
+        line_topic_include.returnPressed.connect(self.saveSearch)
+        line_topic_exclude.returnPressed.connect(self.saveSearch)
+        line_author_include.returnPressed.connect(self.saveSearch)
+        line_author_exclude.returnPressed.connect(self.saveSearch)
 
         return widget_query
 
