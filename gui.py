@@ -662,6 +662,9 @@ class Fenetre(QtGui.QMainWindow):
         self.showLikesAction = QtGui.QAction('Show liked articles', self)
         self.showLikesAction.triggered.connect(self.showLikes)
 
+        self.showReadAction = QtGui.QAction('Show read articles', self)
+        self.showReadAction.triggered.connect(self.showRead)
+
         # Action to serve use as a separator
         self.separatorAction = QtGui.QAction(self)
         self.separatorAction.setSeparator(True)
@@ -735,6 +738,37 @@ class Fenetre(QtGui.QMainWindow):
         table.selectionModel().clearSelection()
 
 
+    def showRead(self):
+
+        """
+        Show read (new) articles
+        new=1, which means unread
+        This method works exactly like showLikes()
+        """
+
+        # Use the proxy to filter the column 'new'
+        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
+        proxy.setFilterRegExp(QtCore.QRegExp("[0]"))
+        proxy.setFilterKeyColumn(11)
+
+        # Get the maximum nbr of unread articles
+        count_read_max = QtSql.QSqlQuery(self.bdd)
+        count_read_max.exec_("SELECT COUNT(id) FROM papers WHERE new=0")
+        count_read_max.first()
+        nbr_read = count_read_max.record().value(0)
+
+        while (proxy.canFetchMore(QtCore.QModelIndex()) and
+               proxy.rowCount() < nbr_read):
+
+            proxy.fetchMore(QtCore.QModelIndex())
+
+        self.updateCellSize()
+
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        table.verticalScrollBar().setSliderPosition(0)
+        table.selectionModel().clearSelection()
+
+
     def updateModel(self):
 
         """Debug function, allows to update a model
@@ -778,7 +812,11 @@ class Fenetre(QtGui.QMainWindow):
 
             tab_title = self.onglets.tabText(index)
 
-            if tab_title != 'ToRead' and tab_title != 'All articles':
+            # if tab_title != 'ToRead' and tab_title != 'All articles':
+                # searches_saved.setValue("{}/articles".format(tab_title),
+                                        # each_table.articles)
+
+            if tab_title != 'All articles':
                 searches_saved.setValue("{}/articles".format(tab_title),
                                         each_table.articles)
 
@@ -861,16 +899,20 @@ class Fenetre(QtGui.QMainWindow):
 
         """Restore the prefs of the window"""
 
-        # Restore the to-read list
-        ids_waited = self.options.value("ids_waited", [])
-        self.createToRead(ids_waited)
-
         searches_saved = QtCore.QSettings(self.DATA_PATH +
                                           "/config/searches.ini",
                                           QtCore.QSettings.IniFormat)
 
+        # # Restore the to-read list
+        self.createToRead(searches_saved)
+
         # Restore the saved searches
         for search_name in searches_saved.childGroups():
+
+            # By pass the to-read list, already restored
+            if search_name == "ToRead":
+                continue
+
             query = searches_saved.value("{0}/sql_query".format(search_name))
             topic_entries = searches_saved.value("{0}/topic_entries".format(search_name), None)
             author_entries = searches_saved.value("{0}/author_entries".format(search_name), None)
@@ -1176,7 +1218,10 @@ class Fenetre(QtGui.QMainWindow):
         self.updateCellSize()
 
 
-    def createToRead(self, list_ids):
+    def createToRead(self, searches_saved):
+
+        """Method to restore the ToRead list.
+        Might be useless, I think it could be done in restoreSettings()"""
 
         proxy = QtGui.QSortFilterProxyModel()
 
@@ -1187,7 +1232,11 @@ class Fenetre(QtGui.QMainWindow):
         tableau = ViewPerso(self)
         tableau.name_search = "ToRead"
 
-        requete = "SELECT * FROM papers WHERE id IN("
+        tableau.articles = searches_saved.value("ToRead/articles", {})
+
+        requete = "SELECT * FROM papers WHERE id IN ("
+
+        list_ids = list(tableau.articles.keys())
 
         # Building the query
         for each_id in list_ids:
@@ -1206,10 +1255,13 @@ class Fenetre(QtGui.QMainWindow):
 
         self.list_tables_in_tabs.append(tableau)
 
+        notifs = collec.Counter(tableau.articles.values())[1]
+
         # Define an attribute for the to read list
         self.waiting_list = tableau
 
         self.onglets.addTab(tableau, "ToRead")
+        self.onglets.setNotifications(1, notifs)
 
 
     def createSearchTab(self, name_search, query, topic_options=None,
@@ -1338,7 +1390,7 @@ class Fenetre(QtGui.QMainWindow):
 
         # Update the base query of the to-read list
         if table is self.waiting_list:
-            requete = "SELECT * FROM papers WHERE id IN("
+            requete = "SELECT * FROM papers WHERE id IN ("
             keys = list(table.articles.keys())
             for each_id in keys:
                 if each_id != keys[-1]:
@@ -1682,7 +1734,7 @@ class Fenetre(QtGui.QMainWindow):
 
     def toggleWait(self):
 
-        """Method to put/unput an article in the To-read list"""
+        """Method to add/remove an article in the To-read list"""
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         line = table.selectionModel().currentIndex().row()
@@ -1691,7 +1743,7 @@ class Fenetre(QtGui.QMainWindow):
         waited = id_bdd in self.waiting_list.articles
 
         # Check if the to read list is empty
-        empty = self.waiting_list.articles == []
+        empty = self.waiting_list.articles == {}
 
         if waited:
             del self.waiting_list.articles[id_bdd]
@@ -2225,7 +2277,6 @@ class Fenetre(QtGui.QMainWindow):
 
             # Re-sort otherwise the display looks messy
             self.searchByButton()
-            return
 
         def whenDone():
 
@@ -2361,6 +2412,7 @@ class Fenetre(QtGui.QMainWindow):
         self.sortMenu.addAction(self.separatorAction)
         self.sortMenu.addAction(self.sortingReversedAction)
         self.viewMenu.addAction(self.showLikesAction)
+        self.viewMenu.addAction(self.showReadAction)
 
         self.helpMenu = self.menubar.addMenu("&Help")
         self.helpMenu.addAction(self.tutoAction)
