@@ -13,6 +13,7 @@ from PIL import Image
 
 from line_icon import ButtonLineIcon
 import hosts
+from log import MyLog
 
 
 class Signing(QtGui.QDialog):
@@ -32,8 +33,10 @@ class Signing(QtGui.QDialog):
 
 
         if type(parent) is QtGui.QWidget:
+            self.logger = MyLog("activity.log")
             self.test = True
         else:
+            self.logger = self.parent.l
             self.test = False
 
         # Attribute to check if the login was valid
@@ -55,7 +58,7 @@ class Signing(QtGui.QDialog):
 
         # Close the app if the user does not signin
         if not self.validated and not self.test:
-            self.parent.l.critical("The user did not sign in")
+            self.logger.critical("The user did not sign in")
             self.parent.closeEvent(event)
 
 
@@ -148,11 +151,12 @@ class Signing(QtGui.QDialog):
 
             try:
                 r = requests.post("http://chembrows.com/cgi-bin/sign.py",
-                                  data=payload)
+                                  data=payload, timeout=20)
                 # r = requests.post("http://127.0.0.1:8000/cgi-bin/sign.py",
                                   # data=payload)
 
-            except requests.exceptions.ReadTimeout:
+            except (requests.exceptions.ReadTimeout,
+                    requests.exceptions.Timeout):
 
                 mes = """
                 A time out error occured while contacting the server. \
@@ -163,7 +167,7 @@ class Signing(QtGui.QDialog):
                                            QtGui.QMessageBox.Ok,
                                            defaultButton=QtGui.QMessageBox.Ok)
 
-                self.parent.l.critical("ReadTimeout while signing up")
+                self.logger.critical("ReadTimeout while signing up")
                 return
 
             except requests.exceptions.ConnectionError:
@@ -177,7 +181,7 @@ class Signing(QtGui.QDialog):
                                            QtGui.QMessageBox.Ok,
                                            defaultButton=QtGui.QMessageBox.Ok)
 
-                self.parent.l.critical("ConnectionError while signing up")
+                self.logger.critical("ConnectionError while signing up")
                 return
 
             except Exception as e:
@@ -190,18 +194,19 @@ class Signing(QtGui.QDialog):
                                            QtGui.QMessageBox.Ok,
                                            defaultButton=QtGui.QMessageBox.Ok)
 
-                self.parent.l.critical("validateForm: {}".format(e),
+                self.logger.critical("validateForm: {}".format(e),
                                        exc_info=True)
                 return
 
             # Get the response from the server and log it
-            self.parent.l.debug("Response from the server: {}".format(r.text))
+            self.logger.debug("Response from the server: {}".format(r.text))
             response = [part for part in r.text.split("\n") if part != '']
 
             # The server responded an user_id
             if 'user_id' in response[-1]:
-                self.parent.options.setValue('user_id',
-                                             response[-1].split(':')[-1])
+                if not self.test:
+                    self.parent.options.setValue('user_id',
+                                                 response[-1].split(':')[-1])
                 self.accept()
                 self.validated = True
 
