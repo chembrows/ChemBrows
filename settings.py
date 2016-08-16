@@ -146,7 +146,7 @@ class Settings(QtGui.QDialog):
         mes = """
         Click on the buttons to display help.
         Confirmation will be asked before anything
-        is done to your date: no worries.
+        is done to your data: no worries.
         """
         mes = mes.replace("    ", "")
         self.label_explain = QtGui.QLabel(mes)

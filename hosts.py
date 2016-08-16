@@ -178,9 +178,8 @@ def updateData(company, journal, entry, care_image):
 # @profile
 def getData(company, journal, entry, response=None):
 
-    """Get the data. Starts from the data contained in the RSS flux, and if
-    necessary, parse the website for supplementary infos. Download the
-    graphical abstract"""
+    """Get the data. Starts from the data contained in the RSS page and, if
+    necessary, parses the website for additional information"""
 
     # If the journal is edited by the RSC
     if company == 'RSC':
@@ -698,6 +697,10 @@ def getData(company, journal, entry, response=None):
         abstract = "Empty"
     if graphical_abstract is None:
         graphical_abstract = "Empty"
+
+    # Clean author field
+    author = author.replace('  ', ' ')
+    author = author.replace(' ,', ',')
 
     if author is None or author == '':
         author = "Empty"

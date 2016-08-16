@@ -1871,15 +1871,16 @@ class Fenetre(QtGui.QMainWindow):
 
         mes = """
         You are about to reset your database. All the articles will be marked
-         as new, and all liked articles will be unliked. If you click OK, the
-         process will start.
+         as new, and all liked articles will be unliked. Use this feature if
+         you want to start fresh without loosing collected articles. If you
+         click OK, the process will start.
         """
 
         # Clean the tabs in the message (tabs are 4 spaces)
         mes = mes.replace("    ", "")
         mes = mes.replace("\n", "")
 
-        choice = QtGui.QMessageBox.critical(self, "resetting database", mes,
+        choice = QtGui.QMessageBox.critical(self, "Resetting database", mes,
                                             QtGui.QMessageBox.Cancel |
                                             QtGui.QMessageBox.Ok,
                                             defaultButton=QtGui.QMessageBox.Cancel)
@@ -1887,7 +1888,7 @@ class Fenetre(QtGui.QMainWindow):
         if choice == QtGui.QMessageBox.Cancel:
             return
 
-        progress = QtGui.QProgressDialog("resetting database...",
+        progress = QtGui.QProgressDialog("Resetting database...",
                                          None, 0, 0, self)
         progress.setWindowTitle("resetting database")
         progress.show()
@@ -1922,8 +1923,8 @@ class Fenetre(QtGui.QMainWindow):
         """Method to completely erase the database. Will also vacuum it."""
 
         mes = """
-        You are about to erase your database. All the data regarding articles
-         will be lost. If you click OK, the process will start.
+        You are about to completely erase your database. ALL the data regarding
+         articles will be lost. If you click OK, the process will start.
         """
 
         # Clean the tabs in the message (tabs are 4 spaces)
@@ -1961,11 +1962,7 @@ class Fenetre(QtGui.QMainWindow):
             query.exec_()
             self.l.info("Data base vacuumed")
 
-            # Set the tabs notifications to 0
-            for index in range(1, self.onglets.count()):
-                table = self.onglets.widget(index)
-                table.articles = {}
-                self.onglets.setNotifications(index, 0)
+            self.loadNotifications()
 
             self.searchByButton()
             self.updateCellSize()
@@ -1983,14 +1980,20 @@ class Fenetre(QtGui.QMainWindow):
 
     def cleanDb(self):
 
-        """Slot to clean the database. Called from
-        the window settings, but better to be here. Also
-        deletes the unused pictures present in the
-        graphical_abstracts folder"""
+        """
+        Slot to clean the database. Called from the window settings, but
+        better to be here. Deletes the orphan pictures in the
+        graphical_abstracts folder. Clean misformatted fields. Deletes
+        incomplete articles.
+        """
 
         mes = """
         You are about to clean your database, and you might loose data.
-        If you do not know what you are doing, you should cancel now.
+        The process will erase articles from unselected journals.
+        The process will erase orphan graphical abstracts.
+        The process will erase incomplete articles.
+        The process will clean misformatted fields in your database.
+        It might be a good idea to use this feature after an update.
         If you click OK, the cleaning process will start
         """
 
@@ -2005,14 +2008,23 @@ class Fenetre(QtGui.QMainWindow):
         if choice == QtGui.QMessageBox.Cancel:
             return
 
+        # Display a progress bar
         progress = QtGui.QProgressDialog("Deleting articles from unfollowed journals", None, 0, 100, self)
         progress.setWindowTitle("Cleaning database")
         progress.show()
         app.processEvents()
 
+        # Create a query and start a transaction, more efficient
         query = QtSql.QSqlQuery(self.bdd)
-
         self.bdd.transaction()
+
+        # Clean authors field for misformatting
+        query.exec_("UPDATE papers SET authors=replace(authors, '  ', ' ' ) WHERE \
+                     authors LIKE '%  %'")
+        query.exec_("UPDATE papers SET authors=replace(authors, ' ,', ',' ) WHERE \
+                     authors LIKE '%  %'")
+        query.exec_("UPDATE papers SET author_simple=replace(author_simple, '  ', \
+                     ' ' ) WHERE author_simple LIKE '%  %'")
 
         requete = "DELETE FROM papers WHERE journal NOT IN ("
 
@@ -2151,11 +2163,16 @@ class Fenetre(QtGui.QMainWindow):
         query.exec_()
         self.l.info("Data base vacuumed")
 
+        progress.setLabelText("Loading notifications")
+        progress.setValue(95)
+        app.processEvents()
+
+        self.loadNotifications()
+
         progress.setValue(100)
         app.processEvents()
         progress.reset()
 
-        self.loadNotifications()
         self.searchByButton()
         self.updateCellSize()
 
