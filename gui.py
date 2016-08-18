@@ -787,14 +787,6 @@ class Fenetre(QtGui.QMainWindow):
         # http://stackoverflow.com/questions/9249500/
         # pyside-pyqt-detect-if-user-trying-to-close-window
 
-
-        # Save the to-read list
-        if self.waiting_list.articles:
-            self.options.setValue("ids_waited",
-                                  list(self.waiting_list.articles.keys()))
-        else:
-            self.options.remove("ids_waited")
-
         # Record the window state and appearance
         self.options.beginGroup("Window")
 
@@ -804,22 +796,6 @@ class Fenetre(QtGui.QMainWindow):
         self.l.debug("Saving windows state")
         self.options.setValue("window_geometry", self.saveGeometry())
         self.options.setValue("window_state", self.saveState())
-
-        searches_saved = QtCore.QSettings(self.DATA_PATH + "/config/searches.ini", QtCore.QSettings.IniFormat)
-
-        for index, each_table in enumerate(self.list_tables_in_tabs):
-            self.options.setValue("header_state{0}".format(index), each_table.horizontalHeader().saveState())
-
-            tab_title = self.onglets.tabText(index)
-
-            # if tab_title != 'ToRead' and tab_title != 'All articles':
-                # searches_saved.setValue("{}/articles".format(tab_title),
-                                        # each_table.articles)
-
-            if tab_title != 'All articles':
-                searches_saved.setValue("{}/articles".format(tab_title),
-                                        each_table.articles)
-
 
         # Save the state of the window's splitter
         self.options.setValue("final_splitter", self.splitter2.saveState())
@@ -832,9 +808,30 @@ class Fenetre(QtGui.QMainWindow):
 
         self.options.endGroup()
 
-        # Be sure self.options finished its tasks.
+        searches_saved = QtCore.QSettings(self.DATA_PATH + "/config/searches.ini", QtCore.QSettings.IniFormat)
+
+        # Save the to-read list
+        if self.waiting_list.articles:
+            searches_saved.setValue("ids_waited",
+                                    list(self.waiting_list.articles.keys()))
+        else:
+            searches_saved.remove("ids_waited")
+
+        for index, each_table in enumerate(self.list_tables_in_tabs):
+            self.options.setValue("header_state{0}".format(index), each_table.horizontalHeader().saveState())
+
+            tab_title = self.onglets.tabText(index)
+
+            if tab_title != 'All articles':
+                searches_saved.setValue("{}/articles".format(tab_title),
+                                        each_table.articles)
+
+
+
+        # Be sure ini files finished their tasks
         # Correct a bug
         self.options.sync()
+        searches_saved.sync()
 
         self.model.submitAll()
 

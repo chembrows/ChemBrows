@@ -121,6 +121,10 @@ def test_getData(journalsUrls):
     l.debug("Starting test getData \n")
     start_time = datetime.datetime.now()
 
+    # Count Empty results
+    count_abs_empty = 0
+    count_image_empty = 0
+
     # Returns a list of the urls of the feed pages
     list_urls_feed = journalsUrls
 
@@ -173,10 +177,17 @@ def test_getData(journalsUrls):
                     l.error("A problem occured: {}, continue to next entry".
                             format(e), exc_info=True)
 
-            l.info(title)
-            l.info(url)
-            l.info(graphical_abstract)
-            l.info(date)
+            l.info("Title: {}".format(title))
+            l.info("URL: {}".format(url))
+            l.info("Image: {}".format(graphical_abstract))
+            l.info("Date: {}".format(date))
+
+            # Count and try do detect suspiciously high numbers of
+            # empty results
+            if abstract == "Empty":
+                count_abs_empty += 1
+            if graphical_abstract == "Empty":
+                count_image_empty += 1
 
             if response.history:
                 l.debug("Request was redirected")
@@ -235,6 +246,12 @@ def test_getData(journalsUrls):
                 logAssert(author_simple.endswith(' ') is True,
                           "author_simple doesn't end with space {}".
                           format(author_simple))
+
+    l.debug("Number of Empty abstracts: {}".
+            format(count_abs_empty))
+
+    l.debug("Number of Empty graphical_abstracts: {}".
+            format(count_image_empty))
 
     l.debug("Time spent in test_getData: {}".
             format(datetime.datetime.now() - start_time))
