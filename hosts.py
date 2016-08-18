@@ -49,7 +49,7 @@ def refineUrl(company, journal, entry):
 
     if company == 'ACS':
         id_paper = url.split('/')[-1]
-        url = "http://pubs.acs.org/doi/abs/10.1021/" + url
+        url = "http://pubs.acs.org/doi/abs/10.1021/" + id_paper
 
     elif company == 'Nature':
         id_paper = url.split('/')[-1]
@@ -698,14 +698,14 @@ def getData(company, journal, entry, response=None):
     if graphical_abstract is None:
         graphical_abstract = "Empty"
 
-    # Clean author field
-    author = author.replace('  ', ' ')
-    author = author.replace(' ,', ',')
 
     if author is None or author == '':
         author = "Empty"
         author_simple = None
     else:
+        # Clean author field
+        author = author.replace('  ', ' ')
+        author = author.replace(' ,', ',')
         author_simple = " " + functions.simpleChar(author) + " "
 
     return title, date, author, abstract, graphical_abstract, url, topic_simple, author_simple
@@ -874,21 +874,22 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry, response)
-        # print(abstract)
-        # print("\n")
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("ACS", journal, entry, response)
+        print(abstract)
+        print("\n")
         # print(date)
         # print("\n")
         # print(authors)
         # print("\n")
-        # print(title)
+        print(title)
+        print("\n")
         # print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
     # urls_test = ["http://feeds.nature.com/nature/rss/aop"]
     # urls_test = ["debug/springer.xml"]
-    urls_test = ["http://rss.sciencedirect.com/publication/science/00404020"]
+    urls_test = ["http://feeds.feedburner.com/acs/jacsat"]
 
     session = FuturesSession(max_workers=20)
 
@@ -906,18 +907,20 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries[5:]:
+    for entry in feed.entries:
 
         # pprint(entry)
 
-        url = entry.link
+        url = refineUrl("ACS", journal, entry)
 
-        # print(url)
+        print(url)
 
         # webbrowser.open(url, new=0, autoraise=True)
 
         # url = entry.feedburner_origlink
         title = entry.title
+
+        # print(title)
 
         # if "Density Functional" not in entry.title:
             # continue
@@ -932,7 +935,7 @@ if __name__ == "__main__":
         # print(url)
         # getDoi(journal, entry)
 
-        # future = session.get(url, headers=headers, timeout=20)
-        # future.add_done_callback(functools.partial(print_result, journal, entry))
+        future = session.get(url, headers=headers, timeout=20)
+        future.add_done_callback(functools.partial(print_result, journal, entry))
 
         break
