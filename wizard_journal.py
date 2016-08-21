@@ -86,7 +86,7 @@ class WizardJournal(QtGui.QDialog):
 
         except KeyError:
             self.l.critical("No title for the journal ! Aborting")
-            self.l.critical(self.url_feed)
+            self.l.critical(url)
             return
 
 

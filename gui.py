@@ -443,8 +443,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.browsing_session = requests.session()
 
-        # # List to store the threads.
-        # # The list is cleared when the method is started
+        # List to store the threads.
+        # The list is cleared when the method is started
         self.list_threads = []
         self.count_threads = 0
         for i in range(max_nbr_threads):
