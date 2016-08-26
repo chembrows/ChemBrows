@@ -95,6 +95,9 @@ class WizardJournal(QtGui.QDialog):
 
     def showHelp(self):
 
+        """Help displayed in a dialog box to help the user when adding
+        a new journal"""
+
         mes = """Define the abbreviation of the journal you want to add.\n\n\
         Find the URL of the RSS page of the journal you want to add.\n\n\
         Publisher: to which publisher does the new journal belong ? This\

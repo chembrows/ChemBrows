@@ -184,8 +184,7 @@ def test_getData(journalsUrls):
             journal = feed['feed']['title']
         except KeyError:
             l.error("Failed to get title for: {}".format(site))
-            # pytest.fail("Failed to get title for: {}".format(site))
-            continue
+            pytest.fail("Failed to get title for: {}".format(site))
 
         # Get the company name
         for publisher, data in dict_journals.items():
@@ -322,8 +321,7 @@ def test_getDoi(journalsUrls):
             journal = feed['feed']['title']
         except KeyError:
             l.error("Failed to get title for: {}".format(site))
-            # pytest.fail("Failed to get title for: {}".format(site))
-            continue
+            pytest.fail("Failed to get title for: {}".format(site))
 
         # Get the company name
         for publisher, data in dict_journals.items():
