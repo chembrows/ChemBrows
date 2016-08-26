@@ -48,6 +48,9 @@ class WizardJournal(QtGui.QDialog):
         # When clicking OK, verify the user's input
         self.ok_button.clicked.connect(self.verifyInput)
 
+        # Display help
+        self.help_button.clicked.connect(self.showHelp)
+
 
     def verifyInput(self):
 
@@ -90,23 +93,46 @@ class WizardJournal(QtGui.QDialog):
             return
 
 
+    def showHelp(self):
+
+        mes = """Define the abbreviation of the journal you want to add.\n\n\
+        Find the URL of the RSS page of the journal you want to add.\n\n\
+        Publisher: to which publisher does the new journal belong ? This\
+         choice will help ChemBrows to format the articles.
+        """
+
+        # Clean the tabs in the message (tabs are 4 spaces)
+        mes = mes.replace("    ", "")
+
+        QtGui.QMessageBox.information(self, "Information", mes,
+                                      QtGui.QMessageBox.Ok)
+
+
     def initUI(self):
 
         """Handles the display"""
 
         self.setWindowTitle('Adding new journal')
 
+        # Open a dialog box to explain how to add a journal
+        self.help_button = QtGui.QPushButton("Help")
+
+        # Validate. Triggers verification process
         self.ok_button = QtGui.QPushButton("OK")
 
         self.form_layout = QtGui.QFormLayout()
 
         self.line_abbreviation = QtGui.QLineEdit()
+        self.line_abbreviation.setPlaceholderText("Ex: Chem. Commun.")
+
         self.line_url_journal = QtGui.QLineEdit()
+        self.line_url_journal.setPlaceholderText("http://feeds.rsc.org/rss/cc")
 
         list_publishers = sorted(hosts.getCompanies())
         self.combo_publishers = QtGui.QComboBox()
         self.combo_publishers.addItems(list_publishers)
 
+        self.form_layout.addRow(self.help_button)
         self.form_layout.addRow("Journal abbreviation:",
                                 self.line_abbreviation)
         self.form_layout.addRow("URL RSS page:", self.line_url_journal)

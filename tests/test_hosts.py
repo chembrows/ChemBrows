@@ -11,7 +11,6 @@ py.test -xs test_hosts.py -k getData
 """
 
 
-import os
 import feedparser
 import requests
 import pytest
@@ -138,8 +137,7 @@ def journalsUrls():
 
 
     urls = []
-    for company in os.listdir('journals'):
-        company = company.split('.')[0]
+    for company in hosts.getCompanies():
         urls += hosts.getJournals(company)[2]
 
     return urls
@@ -163,7 +161,7 @@ def test_getData(journalsUrls):
 
     # TODO: comment or uncomment
     # Bypass all companies but one
-    list_urls_feed = hosts.getJournals("Wiley")[2]
+    # list_urls_feed = hosts.getJournals("Wiley")[2]
 
     # Build a dic with key: company
                      # value: journal name
@@ -186,7 +184,7 @@ def test_getData(journalsUrls):
             journal = feed['feed']['title']
         except KeyError:
             l.error("Failed to get title for: {}".format(site))
-            pytest.fail("Failed to get title for: {}".format(site))
+            # pytest.fail("Failed to get title for: {}".format(site))
             continue
 
         # Get the company name
@@ -314,14 +312,18 @@ def test_getDoi(journalsUrls):
     # Build a dic with key: company
                      # value: journal name
     dict_journals = {}
-    for company in os.listdir('journals'):
-        company = company.split('.')[0]
+    for company in hosts.getCompanies():
         dict_journals[company] = hosts.getJournals(company)[0]
-
 
     for site in list_sites:
         feed = feedparser.parse(site)
-        journal = feed['feed']['title']
+
+        try:
+            journal = feed['feed']['title']
+        except KeyError:
+            l.error("Failed to get title for: {}".format(site))
+            # pytest.fail("Failed to get title for: {}".format(site))
+            continue
 
         # Get the company name
         for publisher, data in dict_journals.items():

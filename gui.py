@@ -2023,8 +2023,8 @@ class Fenetre(QtGui.QMainWindow):
         query.exec_("UPDATE papers SET author_simple=replace(author_simple, '  ', \
                      ' ' ) WHERE author_simple LIKE '%  %'")
 
+        # Delete all the articles of unselected journals
         requete = "DELETE FROM papers WHERE journal NOT IN ("
-
         journals_to_care = self.getJournalsToParse()
 
         # Building the query
