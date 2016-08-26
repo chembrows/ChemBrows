@@ -40,20 +40,51 @@ def logAssert(test, msg):
         assert test, msg
 
 
+def test_reject():
+
+    """Test each entry in a sample of rejectable articles"""
+
+    l.info("function reject")
+
+    with open("tests/reject_sample.txt", 'r') as f:
+        data = f.readlines()
+
+    for line in data:
+        logAssert(hosts.reject(line) is True, "Did not reject {}")
+
+
+def test_getCompanies():
+
+    """Test if getCompanies returned a list, and that companies names don't
+    contain a file extension
+    """
+
+    l.info("Function getCompanies")
+
+    companies = hosts.getCompanies()
+
+    l.debug(companies)
+
+    logAssert(type(companies) == list, "getCompanies didn't return a list")
+
+    for element in companies:
+        logAssert(".ini" not in element, "Company name contains .ini")
+
+
 def test_getJournals():
 
     """Function to get the informations about all the journals of
     a company. Returns the names, the URLs, the abbreviations, and also
     a boolean to set the download of the graphical abstracts"""
 
-    l.debug("Starting test getJournals")
+    l.info("Function getJournals")
     start_time = datetime.datetime.now()
 
     # Create a dictionnary w/ all the data concerning the journals
     # implemented in the program: names, abbreviations, urls
     dict_journals = {}
-    for company in os.listdir('journals'):
-        company = company.split('.')[0]
+
+    for company in hosts.getCompanies():
         dict_journals[company] = hosts.getJournals(company)
 
     l.debug(dict_journals)
@@ -105,6 +136,7 @@ def journalsUrls():
     All the journals of all the companies.
     Specific to the tests, fixture"""
 
+
     urls = []
     for company in os.listdir('journals'):
         company = company.split('.')[0]
@@ -118,7 +150,8 @@ def test_getData(journalsUrls):
     """Tests the function getData. For each journal of each company,
     tests LENGTH_SAMPLE entries"""
 
-    l.debug("Starting test getData \n")
+    l.info("Starting test getData")
+
     start_time = datetime.datetime.now()
 
     # Count Empty results
@@ -130,13 +163,13 @@ def test_getData(journalsUrls):
 
     # TODO: comment or uncomment
     # Bypass all companies but one
-    # list_urls_feed = hosts.getJournals("npg2")[2]
+    list_urls_feed = hosts.getJournals("Wiley")[2]
 
     # Build a dic with key: company
                      # value: journal name
     dict_journals = {}
-    for company in os.listdir('journals'):
-        company = company.split('.')[0]
+
+    for company in hosts.getCompanies():
         dict_journals[company] = hosts.getJournals(company)[0]
 
     s = requests.session()
@@ -148,7 +181,13 @@ def test_getData(journalsUrls):
                                          len(list_urls_feed)))
 
         feed = feedparser.parse(site)
-        journal = feed['feed']['title']
+
+        try:
+            journal = feed['feed']['title']
+        except KeyError:
+            l.error("Failed to get title for: {}".format(site))
+            pytest.fail("Failed to get title for: {}".format(site))
+            continue
 
         # Get the company name
         for publisher, data in dict_journals.items():
@@ -173,9 +212,14 @@ def test_getData(journalsUrls):
                 try:
                     response = s.get(url, timeout=10)
                     title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry, response)
-                except Exception as e:
+                except (requests.exceptions.ConnectionError,
+                        requests.exceptions.ReadTimeout) as e:
                     l.error("A problem occured: {}, continue to next entry".
                             format(e), exc_info=True)
+                except Exception as e:
+                    l.error("A problem occured: {}, unexepected error".
+                            format(e), exc_info=True)
+                    pytest.fail("Unexpected error, fail: {}".format(url))
 
             l.info("Title: {}".format(title))
             l.info("URL: {}".format(url))
@@ -190,7 +234,7 @@ def test_getData(journalsUrls):
                 count_image_empty += 1
 
             if response.history:
-                l.debug("Request was redirected")
+                l.debug("\nRequest was redirected")
                 for resp in response.history:
                     l.debug("Status code, URL: {}, {}".
                             format(resp.status_code, resp.url))
@@ -261,7 +305,8 @@ def test_getDoi(journalsUrls):
 
     """Tests if the function getDoi gets the DOI correctly"""
 
-    l.debug("Starting test getDoi")
+    l.info("Function getDoi")
+
     start_time = datetime.datetime.now()
 
     list_sites = journalsUrls

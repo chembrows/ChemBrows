@@ -68,7 +68,7 @@ def refineUrl(company, journal, entry):
     elif company == 'Wiley':
         # Optimization for Wiley
         doi = url.split('%2')[-1]
-        url = "http://onlinelibrary.wiley.com/doi/10.1002/{}/abstract"
+        url = "http://onlinelibrary.wiley.com/resolve/doi?DOI=10.1002%2F{}"
         url = url.format(doi)
 
     return url
@@ -834,7 +834,6 @@ def getRightDirs():
     else:
         resource_dir = '.'
         DATA_PATH = '.'
-
 
     return resource_dir, DATA_PATH
 
