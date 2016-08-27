@@ -1,0 +1,17 @@
+appdirs==1.4.0
+arrow==0.8.0
+beautifulsoup4==4.5.1
+decorator==4.0.10
+esky==0.9.9
+feedparser==5.2.1
+numpy==1.11.1
+Pillow==3.3.1
+python-dateutil==2.5.3
+requests==2.11.1
+requests-futures==0.9.7
+scikit-learn==0.17.1
+scipy==0.18.0
+six==1.10.0
+sklearn==0.0
+twitter==1.17.1
+validators==0.10.3

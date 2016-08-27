@@ -14,7 +14,7 @@ import platform
 import validators
 import collections as collec
 
-# To package and distribute the program
+# Temporary, will be deleted
 import esky
 
 # Personal modules
