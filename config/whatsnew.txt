@@ -1,0 +1,4 @@
+- It is now possible to add you own journals !
+- Performance improvements
+- New journals added to the base catalogue
+- Bug fixes

@@ -192,7 +192,7 @@ else:
 
     # Add the SSL file from the current OS, and the libstdc file. Avoids problems on Ubuntu
     my_data_files.append(('.', ['/usr/lib/python3.5/lib-dynload/_ssl.cpython-35m-x86_64-linux-gnu.so']))
-    my_data_files.append(('.', ['/usr/lib/libstdc++.so.6.0.21']))
+    my_data_files.append(('.', ['/usr/lib/libstdc++.so.6.0.22']))
     my_data_files.append(('.', ['/usr/lib/libstdc++.so.6']))
 
     FREEZER = 'cx_Freeze'

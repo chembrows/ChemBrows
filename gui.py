@@ -119,9 +119,9 @@ class Fenetre(QtGui.QMainWindow):
 
         diff_time = start_time
 
-        # Look for updates and create files
+        # Look for updates
         app.processEvents()
-        self.bootCheckList()
+        self.autoUpdate()
         self.l.debug("bootCheckList took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
@@ -179,17 +179,14 @@ class Fenetre(QtGui.QMainWindow):
         self.l.info("Boot took {}".
                     format(datetime.datetime.now() - start_time))
 
+        # Check if user_id present, and create some directories
         self.finishBoot()
 
 
-    def bootCheckList(self):
+    def autoUpdate(self):
 
         """Performs some startup checks"""
 
-        # Create the folder to store the graphical_abstracts if
-        # it doesn't exist
-        # http://stackoverflow.com/questions/12517451/python-automatically-creating-directories-with-file-output
-        os.makedirs(self.DATA_PATH + '/graphical_abstracts', exist_ok=True)
 
         # Check if the running ChemBrows is a frozen app
         if not self.debug_mod:
@@ -232,6 +229,14 @@ class Fenetre(QtGui.QMainWindow):
                         QtGui.QMessageBox.information(self, "ChemBrows update", message, QtGui.QMessageBox.Ok)
 
                         del self.updater
+
+                        with open(os.path.join(self.resource_dir,
+                                  'config/whatsnew.txt'), 'r') as f:
+                            message = f.read()
+
+                        QtGui.QMessageBox.information(self, "What is new ?",
+                                                      message,
+                                                      QtGui.QMessageBox.Ok)
 
                     # Display a QProgressBar while updating
                     app.processEvents()
@@ -304,6 +309,11 @@ class Fenetre(QtGui.QMainWindow):
 
         """Method to register a new user. When it is done,
         start the tutorial"""
+
+        # Create the folder to store the graphical_abstracts if
+        # it doesn't exist
+        # http://stackoverflow.com/questions/12517451/python-automatically-creating-directories-with-file-output
+        os.makedirs(self.DATA_PATH + '/graphical_abstracts', exist_ok=True)
 
         # Check if there is a user_id. If not, register the user
         if self.options.value("user_id", None) is None:
@@ -2707,26 +2717,3 @@ if __name__ == '__main__':
     ex = Fenetre()
     app.processEvents()
     sys.exit(app.exec_())
-
-    # except Exception as e:
-        # exc_type, exc_obj, exc_tb = sys.exc_info()
-        # exc_type = type(e).__name__
-        # fname = exc_tb.tb_frame.f_code.co_filename
-        # logger.warning("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-        # logger.warning("{0}: {1}".format(exc_type, e))
-    # finally:
-        # # Try to kill all the threads
-    # try:
-        # for worker in ex.list_threads:
-            # worker.terminate()
-
-            # logger.debug("Starting killing the futures")
-            # to_cancel = worker.list_futures_urls + worker.list_futures_images
-            # for future in to_cancel:
-                # if type(future) is not bool:
-                    # future.cancel()
-            # logger.debug("Done killing the futures")
-
-        # logger.info("Quitting the program, killing all the threads")
-    # except AttributeError:
-        # logger.info("Quitting the program, no threads")
