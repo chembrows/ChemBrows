@@ -33,7 +33,7 @@ a = Analysis(['gui.py'],
 rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
            'libQt3Support', 'libwebp', 'libXss', 'libxft', 'libcrypto', 'libtcl',
            'libtk', 'libX11', 'libgstreamer', 'libgcrypt', 'libQtOpenGL.so',
-           'libgfortran', 'libfbclient', 'libfreetype', 'libgcc_s', 'libsqlite3',
+           'libfbclient', 'libfreetype', 'libgcc_s', 'libsqlite3',
            'libQtDBus', 'libsystemd', 'libgstvideo', 'liborc', 'libharfbuzz', 'libpcre',
            'libmng', 'bncursesw', 'libgstbase', 'libgstaudio', 'liblcms2', 'libQtSvg']
 full_tuples = []
@@ -51,7 +51,7 @@ exe = EXE(pyz,
           exclude_binaries=True,
           name='gui',
           debug=False,
-          strip=False,
+          strip=True,
           upx=True,
           console=True)
 coll = COLLECT(exe,
