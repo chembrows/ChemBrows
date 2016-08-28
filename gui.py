@@ -39,12 +39,12 @@ from little_thread import LittleThread
 # from memory_profiler import profile
 
 
-class Fenetre(QtGui.QMainWindow):
+class MyWindow(QtGui.QMainWindow):
 
     # def __init__(self, logger):
     def __init__(self):
 
-        super(Fenetre, self).__init__()
+        super(MyWindow, self).__init__()
 
         # Check if the running ChemBrows is a frozen app
         if getattr(sys, "frozen", False):
@@ -55,9 +55,6 @@ class Fenetre(QtGui.QMainWindow):
             # http://stackoverflow.com/questions/10293808/how-to-get-the-path-of-the-executing-frozen-script
             self.resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
             QtGui.QApplication.addLibraryPath(self.resource_dir)
-
-            # Create the user directory if it doesn't exist
-            os.makedirs(self.DATA_PATH, exist_ok=True)
 
             # Create the logger w/ the appropriate size
             self.l = MyLog(self.DATA_PATH + "/activity.log")
@@ -81,7 +78,7 @@ class Fenetre(QtGui.QMainWindow):
                                            platform.release()))
         self.l.info('Starting the program')
 
-        app.setWindowIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/icon_main.png')))
+        QtGui.qApp.setWindowIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/icon_main.png')))
 
         # Display a splash screen when booting
         # http://eli.thegreenplace.net/2009/05/09/creating-splash-screens-in-pyqt
@@ -90,9 +87,9 @@ class Fenetre(QtGui.QMainWindow):
         splash_pix = QtGui.QPixmap(os.path.join(self.resource_dir, 'images/splash.png'))
         self.splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
         self.splash.show()
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
-        self.styles = MyStyles(app)
+        self.styles = MyStyles(QtGui.qApp)
 
         # Bool to check if the program is collecting data
         self.parsing = False
@@ -115,7 +112,7 @@ class Fenetre(QtGui.QMainWindow):
         diff_time = start_time
 
         # Look for updates
-        app.processEvents()
+        QtGui.qApp.processEvents()
         self.autoUpdate()
         self.l.debug("bootCheckList took {}".
                      format(datetime.datetime.now() - diff_time))
@@ -125,7 +122,7 @@ class Fenetre(QtGui.QMainWindow):
         self.options = QtCore.QSettings(self.DATA_PATH + "/config/options.ini",
                                         QtCore.QSettings.IniFormat)
 
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
         # Connect to the database & log the connection
         self.connectionBdd()
@@ -136,34 +133,34 @@ class Fenetre(QtGui.QMainWindow):
         diff_time = datetime.datetime.now()
 
         # Create the GUI
-        app.processEvents()
+        QtGui.qApp.processEvents()
         self.initUI()
         self.l.debug("initUI took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         # Define the slots
-        app.processEvents()
+        QtGui.qApp.processEvents()
         self.defineSlots()
         self.l.debug("defineSlots took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         # Creates the journals buttons
-        app.processEvents()
+        QtGui.qApp.processEvents()
         self.displayTags()
         self.l.debug("displayTags took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         # Restore the settings
-        app.processEvents()
+        QtGui.qApp.processEvents()
         self.restoreSettings()
         self.l.debug("restoreSettings took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
         # Show the window
         self.show()
@@ -234,11 +231,11 @@ class Fenetre(QtGui.QMainWindow):
                                                       QtGui.QMessageBox.Ok)
 
                     # Display a QProgressBar while updating
-                    app.processEvents()
+                    QtGui.qApp.processEvents()
                     self.progress = QtGui.QProgressDialog("Updating ChemBrows...", None, 0, 0, self)
                     self.progress.setWindowTitle("Updating")
                     self.progress.show()
-                    app.processEvents()
+                    QtGui.qApp.processEvents()
 
                     updater.finished.connect(whenDone)
                     updater.start()
@@ -464,7 +461,7 @@ class Fenetre(QtGui.QMainWindow):
                 self.urls.remove(url)
                 self.list_threads.append(worker)
                 worker.start()
-                app.processEvents()
+                QtGui.qApp.processEvents()
             except IndexError:
                 break
 
@@ -499,7 +496,7 @@ class Fenetre(QtGui.QMainWindow):
         self.progress.setValue(round(percent, 0))
         if percent >= 100:
             self.progress.reset()
-            app.processEvents()
+            QtGui.qApp.processEvents()
 
         if self.count_threads == self.urls_max:
 
@@ -542,7 +539,7 @@ class Fenetre(QtGui.QMainWindow):
                 self.urls.remove(worker.url_feed)
                 self.list_threads.append(worker)
                 worker.start()
-                app.processEvents()
+                QtGui.qApp.processEvents()
 
 
     def cancelRefresh(self):
@@ -555,7 +552,7 @@ class Fenetre(QtGui.QMainWindow):
         # Cancel all the futures of each worker
         for worker in self.list_threads:
             for future in worker.list_futures:
-                app.processEvents()
+                QtGui.qApp.processEvents()
                 if type(future) is not bool:
                     future.cancel()
             self.l.debug("Killed all the futures for this worker")
@@ -566,7 +563,7 @@ class Fenetre(QtGui.QMainWindow):
         self.progress.show()
 
         while False in [worker.isFinished() for worker in self.list_threads]:
-            app.processEvents()
+            QtGui.qApp.processEvents()
 
         self.progress.setLabelText("Loading notifications...")
 
@@ -578,7 +575,7 @@ class Fenetre(QtGui.QMainWindow):
             worker.start()
 
             while worker.isRunning():
-                app.processEvents()
+                QtGui.qApp.processEvents()
                 worker.sleep(0.5)
 
         self.updateCellSize()
@@ -1046,7 +1043,7 @@ class Fenetre(QtGui.QMainWindow):
         Reimplemented to resize the cell when the window
         is resized"""
 
-        super(Fenetre, self).resizeEvent(event)
+        super(MyWindow, self).resizeEvent(event)
 
         QtCore.QTimer.singleShot(30, self.updateCellSize)
 
@@ -1633,7 +1630,7 @@ class Fenetre(QtGui.QMainWindow):
                 if widget is not None:
                     widget.deleteLater()
 
-                    QtGui.QApplication.processEvents()
+                    QtGui.qApp.processEvents()
                 else:
                     self.clearLayout(item.layout())
 
@@ -1897,7 +1894,7 @@ class Fenetre(QtGui.QMainWindow):
                                          None, 0, 0, self)
         progress.setWindowTitle("resetting database")
         progress.show()
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
         # Perform the db modifications in a thread
         def internalReset():
@@ -1916,7 +1913,7 @@ class Fenetre(QtGui.QMainWindow):
         worker.start()
 
         while worker.isRunning():
-            app.processEvents()
+            QtGui.qApp.processEvents()
             worker.sleep(0.5)
 
         progress.reset()
@@ -1948,7 +1945,7 @@ class Fenetre(QtGui.QMainWindow):
                                          None, 0, 0, self)
         progress.setWindowTitle("Erasing database")
         progress.show()
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
         def internalErase():
 
@@ -1976,7 +1973,7 @@ class Fenetre(QtGui.QMainWindow):
         worker.start()
 
         while worker.isRunning():
-            app.processEvents()
+            QtGui.qApp.processEvents()
             worker.sleep(0.5)
 
         progress.reset()
@@ -2017,7 +2014,7 @@ class Fenetre(QtGui.QMainWindow):
         progress = QtGui.QProgressDialog("Deleting articles from unfollowed journals", None, 0, 100, self)
         progress.setWindowTitle("Cleaning database")
         progress.show()
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
         # Create a query and start a transaction, more efficient
         query = QtSql.QSqlQuery(self.bdd)
@@ -2052,7 +2049,7 @@ class Fenetre(QtGui.QMainWindow):
 
         progress.setLabelText("Deleting articles with empty abstracts")
         progress.setValue(20)
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
         query.exec_("DELETE FROM papers WHERE abstract=''")
 
@@ -2063,7 +2060,7 @@ class Fenetre(QtGui.QMainWindow):
 
         progress.setLabelText("Deleting useless images")
         progress.setValue(40)
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
         query.exec_("SELECT graphical_abstract FROM papers WHERE graphical_abstract != 'Empty'")
 
@@ -2086,7 +2083,7 @@ class Fenetre(QtGui.QMainWindow):
 
         progress.setLabelText("Building list of filtered articles")
         progress.setValue(60)
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
         query.exec_("SELECT id, doi, title, journal, url FROM papers")
 
@@ -2111,7 +2108,7 @@ class Fenetre(QtGui.QMainWindow):
 
         progress.setLabelText("Deleting filtered articles")
         progress.setValue(80)
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
         requete = "DELETE FROM papers WHERE id IN ("
 
@@ -2127,12 +2124,12 @@ class Fenetre(QtGui.QMainWindow):
 
         self.l.info("Rejected entries deleted from the database")
 
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
         if self.debug_mod:
             progress.setLabelText("Building list of filtered articles")
             progress.setValue(85)
-            app.processEvents()
+            QtGui.qApp.processEvents()
 
             # Build a list of DOIs to avoid duplicate in debug table
             list_doi = []
@@ -2142,7 +2139,7 @@ class Fenetre(QtGui.QMainWindow):
 
             progress.setLabelText("Inserting filtered articles in debug db")
             progress.setValue(90)
-            app.processEvents()
+            QtGui.qApp.processEvents()
 
             # Insert all the rejected articles in the debug table
             self.bdd.transaction()
@@ -2170,12 +2167,12 @@ class Fenetre(QtGui.QMainWindow):
 
         progress.setLabelText("Loading notifications")
         progress.setValue(95)
-        app.processEvents()
+        QtGui.qApp.processEvents()
 
         self.loadNotifications()
 
         progress.setValue(100)
-        app.processEvents()
+        QtGui.qApp.processEvents()
         progress.reset()
 
         self.searchByButton()
@@ -2317,7 +2314,7 @@ class Fenetre(QtGui.QMainWindow):
                     worker.start()
 
                     while worker.isRunning():
-                        app.processEvents()
+                        QtGui.qApp.processEvents()
                         worker.sleep(0.5)
 
             except AttributeError:
@@ -2335,7 +2332,7 @@ class Fenetre(QtGui.QMainWindow):
             if not self.predictor.calculated_something:
                 QtGui.QMessageBox.information(self, "Feed ChemBrows", mes,
                                               QtGui.QMessageBox.Ok)
-                app.processEvents()
+                QtGui.qApp.processEvents()
 
             if not alone:
                 # Display the number of articles added
@@ -2362,7 +2359,7 @@ class Fenetre(QtGui.QMainWindow):
         # While calculating, display a smooth progress bar
         try:
             while not self.predictor.isFinished():
-                app.processEvents()
+                QtGui.qApp.processEvents()
                 self.predictor.sleep(0.5)
         except AttributeError:
             self.l.debug("Predictor deleted while processEvents ?")
@@ -2403,7 +2400,7 @@ class Fenetre(QtGui.QMainWindow):
         font = QtGui.QFont()
         font.setPointSize(self.styles.FONT_SIZE)
         font.setStyleStrategy(QtGui.QFont.PreferAntialias)
-        app.setFont(font)
+        QtGui.qApp.setFont(font)
 
         self.l.debug('Font: {}'.format(font.family()))
         self.l.debug('Font size: {}pt'.format(self.styles.FONT_SIZE))
@@ -2713,6 +2710,6 @@ if __name__ == '__main__':
 
     app = QtGui.QApplication(sys.argv)
     # ex = Fenetre(logger)
-    ex = Fenetre()
+    ex = MyWindow()
     app.processEvents()
     sys.exit(app.exec_())
