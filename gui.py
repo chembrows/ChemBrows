@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # coding: utf-8
 
-
 import sys
 import os
 from PyQt4 import QtGui, QtSql, QtCore
@@ -13,9 +12,6 @@ import requests
 import platform
 import validators
 import collections as collec
-
-# Temporary, will be deleted
-import esky
 
 # Personal modules
 from log import MyLog
@@ -95,7 +91,6 @@ class Fenetre(QtGui.QMainWindow):
         self.splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
         self.splash.show()
         app.processEvents()
-
 
         self.styles = MyStyles(app)
 
@@ -195,14 +190,14 @@ class Fenetre(QtGui.QMainWindow):
             # # TODO: make the update process work
             # return
 
-            self.updater = Updater(self.l)
+            updater = Updater(self.l)
 
-            if self.updater is None:
+            if updater is None:
                 return
 
             # If an update is available, ask the user if he wants to
             # update immediately
-            if self.updater.update_available:
+            if updater.update_available:
 
                 # Hide the splash screen if there is an update.
                 # On windows, the message box was hidden by the splash
@@ -219,7 +214,7 @@ class Fenetre(QtGui.QMainWindow):
 
                     def whenDone():
 
-                        """Slot called when the update id finished"""
+                        """Slot called when the update is finished"""
 
                         self.l.info("Update finished")
                         self.progress.reset()
@@ -228,7 +223,7 @@ class Fenetre(QtGui.QMainWindow):
                         message = "ChemBrows is now up-to-date. Restart it to use the latest version"
                         QtGui.QMessageBox.information(self, "ChemBrows update", message, QtGui.QMessageBox.Ok)
 
-                        del self.updater
+                        del updater
 
                         with open(os.path.join(self.resource_dir,
                                   'config/whatsnew.txt'), 'r') as f:
@@ -245,8 +240,8 @@ class Fenetre(QtGui.QMainWindow):
                     self.progress.show()
                     app.processEvents()
 
-                    self.updater.finished.connect(whenDone)
-                    self.updater.start()
+                    updater.finished.connect(whenDone)
+                    updater.start()
 
 
     def logConnection(self):
@@ -314,6 +309,9 @@ class Fenetre(QtGui.QMainWindow):
         # it doesn't exist
         # http://stackoverflow.com/questions/12517451/python-automatically-creating-directories-with-file-output
         os.makedirs(self.DATA_PATH + '/graphical_abstracts', exist_ok=True)
+
+        # Create the journals folder in the user's space
+        os.makedirs(self.DATA_PATH + '/journals', exist_ok=True)
 
         # Check if there is a user_id. If not, register the user
         if self.options.value("user_id", None) is None:
@@ -2711,6 +2709,7 @@ class Fenetre(QtGui.QMainWindow):
 if __name__ == '__main__':
     # logger = MyLog()
     # try:
+    print("plouf")
 
     app = QtGui.QApplication(sys.argv)
     # ex = Fenetre(logger)

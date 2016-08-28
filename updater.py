@@ -3,7 +3,7 @@
 
 
 import sys
-import esky
+# import esky
 from PyQt4 import QtCore
 
 
@@ -28,28 +28,30 @@ class Updater(QtCore.QThread):
         self.update_available = False
 
         # self.app = esky.Esky(sys.executable, "http://chembrows.com/downloads/updates/")
-        self.app = esky.Esky(sys.executable, "http://127.0.0.1:8000")
+        # self.app = esky.Esky(sys.executable, "http://127.0.0.1:8000")
 
-        # Get the number of the latest version
-        try:
-            best_version = self.app.find_update()
-        except Exception as e:
-            self.l.critical("ERROR FINDING VERSION APP: {}".format(e),
-                            exc_info=True)
-            return None
+        # # Get the number of the latest version
+        # try:
+            # best_version = self.app.find_update()
+        # except Exception as e:
+            # self.l.critical("ERROR FINDING VERSION APP: {}".format(e),
+                            # exc_info=True)
+            # return None
 
-        if best_version is None:
-            self.l.info("Latest version of ChemBrows running: {}".format(self.app.version))
-        else:
-            self.l.info("Latest version available: {}. Running version : {}".format(best_version, self.app.active_version))
-            self.update_available = True
+        # if best_version is None:
+            # self.l.info("Latest version of ChemBrows running: {}".format(self.app.version))
+        # else:
+            # self.l.info("Latest version available: {}. Running version : {}".format(best_version, self.app.active_version))
+            # self.update_available = True
 
 
     def run(self):
 
-        try:
-            # Update ChemBrows
-            self.app.auto_update()
-            self.app.cleanup()
-        except Exception as e:
-            self.l.critical("ERROR UPDATING APP: {}".format(e), exc_info=True)
+        # try:
+            # # Update ChemBrows
+            # self.app.auto_update()
+            # self.app.cleanup()
+        # except Exception as e:
+            # self.l.critical("ERROR UPDATING APP: {}".format(e), exc_info=True)
+
+        pass

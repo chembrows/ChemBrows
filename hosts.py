@@ -798,6 +798,11 @@ def getJournals(company):
             except IndexError:
                 cares_image.append(True)
 
+    # If the user didn't add a journal from this company, the file
+    # won't exist, so exit
+    if not os.path.exists(os.path.join(DATA_PATH, 'journals/{0}.ini'.
+                                                  format(company))):
+        return names, abb, urls, cares_image
 
     with open(os.path.join(DATA_PATH, 'journals/{0}.ini'.
               format(company)), 'r') as config:
