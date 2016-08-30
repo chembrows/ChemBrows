@@ -2706,8 +2706,6 @@ class MyWindow(QtGui.QMainWindow):
 if __name__ == '__main__':
     # logger = MyLog()
     # try:
-    print("plouf")
-
     app = QtGui.QApplication(sys.argv)
     # ex = Fenetre(logger)
     ex = MyWindow()
