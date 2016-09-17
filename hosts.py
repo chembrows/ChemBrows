@@ -3,14 +3,12 @@
 
 
 import os
-import sys
 import feedparser
 from bs4 import BeautifulSoup, SoupStrainer
 import requests
 import arrow
 from time import mktime
 import re
-import constants
 
 # DEBUG
 # from memory_profiler import profile
@@ -24,7 +22,7 @@ def reject(entry_title):
     """Function called by a Worker object to filter crappy entries.
     It is meant to reject articles like corrigendum, erratum, etc"""
 
-    resource_dir, DATA_PATH = getRightDirs()
+    resource_dir, DATA_PATH = functions.getRightDirs()
 
     # resource_dir = os.path.dirname(os.path.dirname(sys.executable))
     # Load the regex stored in a config file, as filters
@@ -464,17 +462,11 @@ def getData(company, journal, entry, response=None):
 
             soup = BeautifulSoup(abstract)
 
+            abstract = soup("simple-para")[0].renderContents().decode()
+
             r = soup.find_all("img")
             if r:
                 graphical_abstract = r[0]['src']
-
-            try:
-                abstract = abstract.split("<br />")[3].lstrip()
-            except IndexError:
-                abstract = ""
-
-            if abstract == "":
-                abstract = None
 
         # NOTE: javascript embedded, impossible
         # if response.status_code is requests.codes.ok:
@@ -779,7 +771,7 @@ def getJournals(company):
     urls = []
     cares_image = []
 
-    resource_dir, DATA_PATH = getRightDirs()
+    resource_dir, DATA_PATH = functions.getRightDirs()
 
     with open(os.path.join(resource_dir, 'journals/{0}.ini'.
               format(company)), 'r') as config:
@@ -828,27 +820,12 @@ def getJournals(company):
     return names, abb, urls, cares_image
 
 
-def getRightDirs():
-
-    """Get the DATA_PATH and the resource_dir pathes.
-    DATA_PATH is on the user side if CB is frozen"""
-
-    if getattr(sys, "frozen", False):
-        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-        DATA_PATH = constants.DATA_PATH
-    else:
-        resource_dir = '.'
-        DATA_PATH = '.'
-
-    return resource_dir, DATA_PATH
-
-
 def getCompanies():
 
     """Get a list of all the companies. Will return a list of
     publishers, without .ini at the end"""
 
-    resource_dir, DATA_PATH = getRightDirs()
+    resource_dir, DATA_PATH = functions.getRightDirs()
 
     list_companies = []
 
@@ -878,22 +855,22 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("ACS", journal, entry, response)
-        print(abstract)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry, response)
         print("\n")
+        print(abstract)
         # print(date)
         # print("\n")
         # print(authors)
         # print("\n")
-        print(title)
-        print("\n")
+        # print(title)
+        # print("\n")
         # print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
     # urls_test = ["http://feeds.nature.com/nature/rss/aop"]
     # urls_test = ["debug/springer.xml"]
-    urls_test = ["http://feeds.feedburner.com/acs/jacsat"]
+    urls_test = ["http://rss.sciencedirect.com/publication/science/09565663"]
 
     session = FuturesSession(max_workers=20)
 
@@ -915,7 +892,7 @@ if __name__ == "__main__":
 
         # pprint(entry)
 
-        url = refineUrl("ACS", journal, entry)
+        url = refineUrl("Elsevier", journal, entry)
 
         print(url)
 
@@ -923,6 +900,8 @@ if __name__ == "__main__":
 
         # url = entry.feedburner_origlink
         title = entry.title
+
+        print(entry.summary)
 
         # print(title)
 
