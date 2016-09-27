@@ -24,7 +24,7 @@ class AdvancedSearch(QtGui.QDialog):
 
         self.parent = parent
 
-        self.resource_dir, DATA_PATH = hosts.getRightDirs()
+        self.resource_dir, DATA_PATH = functions.getRightDirs()
 
         # Condition to use a specific logger if
         # module started in standalone

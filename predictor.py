@@ -18,6 +18,7 @@ import datetime
 
 # Personal
 from log import MyLog
+import functions
 
 
 class Predictor(QtCore.QThread):
@@ -56,10 +57,7 @@ class Predictor(QtCore.QThread):
 
         my_additional_stop_words = []
 
-        if getattr(sys, "frozen", False):
-            resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-        else:
-            resource_dir = '.'
+        resource_dir, _ = functions.getRightDirs()
 
         with open(os.path.join(resource_dir, 'config/stop_words.txt'), 'r') as config:
             for word in config.readlines():

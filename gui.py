@@ -50,10 +50,10 @@ class MyWindow(QtGui.QMainWindow):
         if getattr(sys, "frozen", False):
             # The program is NOT in debug mod if it's frozen
             self.debug_mod = False
-            self.DATA_PATH = constants.DATA_PATH
 
             # http://stackoverflow.com/questions/10293808/how-to-get-the-path-of-the-executing-frozen-script
-            self.resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+            # self.resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+            self.resource_dir, self.DATA_PATH = functions.getRightDirs()
             QtGui.QApplication.addLibraryPath(self.resource_dir)
 
             # Create the logger w/ the appropriate size
@@ -558,8 +558,8 @@ class MyWindow(QtGui.QMainWindow):
             self.l.debug("Killed all the futures for this worker")
 
         # Display a smooth progress bar
-        self.progress = QtGui.QProgressDialog("Canceling...", None, 0, 0, self)
-        self.progress.setWindowTitle("Canceling refresh")
+        self.progress = QtGui.QProgressDialog("Cancelling...", None, 0, 0, self)
+        self.progress.setWindowTitle("Cancelling refresh")
         self.progress.show()
 
         while False in [worker.isFinished() for worker in self.list_threads]:

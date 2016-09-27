@@ -14,7 +14,7 @@ from twitter.oauth import OAuth, write_token_file, read_token_file
 
 from log import MyLog
 import constants
-import hosts
+import functions
 
 
 class MyTwit(QtGui.QDialog):
@@ -39,7 +39,7 @@ class MyTwit(QtGui.QDialog):
         self.link = link
         self.graphical = graphical
 
-        self.resource_dir, self.DATA_PATH = hosts.getRightDirs()
+        self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
 
         # Get the logger of the parent window or create one

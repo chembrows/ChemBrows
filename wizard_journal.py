@@ -9,6 +9,7 @@ import feedparser
 
 from log import MyLog
 import hosts
+import functions
 
 
 class WizardJournal(QtGui.QDialog):
@@ -20,7 +21,7 @@ class WizardJournal(QtGui.QDialog):
 
         self.parent = parent
 
-        self.resource_dir, self.DATA_PATH = hosts.getRightDirs()
+        self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
         if type(parent) is QtGui.QWidget:
             self.l = MyLog("activity.log")

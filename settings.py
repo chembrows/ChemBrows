@@ -9,6 +9,7 @@ from PyQt4 import QtGui, QtCore
 from log import MyLog
 from wizard_journal import WizardJournal
 import hosts
+import functions
 
 
 class Settings(QtGui.QDialog):
@@ -24,7 +25,7 @@ class Settings(QtGui.QDialog):
 
         self.parent = parent
 
-        self.resource_dir, self.DATA_PATH = hosts.getRightDirs()
+        self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
         if type(parent) is QtGui.QWidget:
             self.l = MyLog("activity.log")

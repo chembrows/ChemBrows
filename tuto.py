@@ -5,6 +5,7 @@
 import sys
 import os
 from PyQt4 import QtGui, QtCore
+import functions
 
 
 class Tuto(QtGui.QDialog):
@@ -19,7 +20,7 @@ class Tuto(QtGui.QDialog):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.parent = parent
-        self.resource_dir, self.DATA_PATH = hosts.getRightDirs()
+        self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
         if type(parent) is QtGui.QWidget:
             self.test = True

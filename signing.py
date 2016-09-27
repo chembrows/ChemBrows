@@ -12,8 +12,8 @@ import base64
 from PIL import Image
 
 from line_icon import ButtonLineIcon
-import hosts
 from log import MyLog
+import functions
 
 
 class Signing(QtGui.QDialog):
@@ -29,7 +29,7 @@ class Signing(QtGui.QDialog):
 
         self.parent = parent
 
-        self.resource_dir, self.DATA_PATH = hosts.getRightDirs()
+        self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
 
         if type(parent) is QtGui.QWidget:
