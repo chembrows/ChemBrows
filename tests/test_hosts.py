@@ -159,9 +159,9 @@ def test_getData(journalsUrls):
     # Returns a list of the urls of the feed pages
     list_urls_feed = journalsUrls
 
-    # TODO: comment or uncomment
-    # Bypass all companies but one
-    # list_urls_feed = hosts.getJournals("Wiley")[2]
+    # # TODO: comment or uncomment
+    # # Bypass all companies but one
+    # list_urls_feed = hosts.getJournals("Elsevier")[2]
 
     # Build a dic with key: company
                      # value: journal name
@@ -201,7 +201,7 @@ def test_getData(journalsUrls):
         # Tests LENGTH_SAMPLE entries for a journal, not all of them
         for entry in samples:
 
-            if company in ['science', 'elsevier', 'beilstein']:
+            if company in ['Science', 'Elsevier', 'Beilstein', 'PLOS']:
                 title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry)
             else:
                 url = hosts.refineUrl(company, journal, entry)
@@ -230,17 +230,19 @@ def test_getData(journalsUrls):
             if graphical_abstract == "Empty":
                 count_image_empty += 1
 
-            if response.history:
-                l.debug("\nRequest was redirected")
-                for resp in response.history:
-                    l.debug("Status code, URL: {}, {}".
-                            format(resp.status_code, resp.url))
-                l.debug("Final destination:")
-                l.debug("Status code, URL: {}, {} \n".
-                        format(resp.status_code, response.url))
-            else:
-                l.debug("Request was not redirected \n")
-
+            try:
+                if response.history:
+                    l.debug("\nRequest was redirected")
+                    for resp in response.history:
+                        l.debug("Status code, URL: {}, {}".
+                                format(resp.status_code, resp.url))
+                    l.debug("Final destination:")
+                    l.debug("Status code, URL: {}, {} \n".
+                            format(resp.status_code, response.url))
+                else:
+                    l.debug("Request was not redirected \n")
+            except UnboundLocalError:
+                pass
 
             # ------------------------ ASSERT SECTION -------------------------
 

@@ -115,7 +115,7 @@ class Worker(QtCore.QThread):
 
         # Create a list for the journals which a dl of the article
         # page is not required. All the data are in the rss page
-        company_no_dl = ['science', 'elsevier', 'beilstein', 'plos']
+        company_no_dl = ['Science', 'Elsevier', 'Beilstein', 'PLOS']
 
         query = QtSql.QSqlQuery(self.bdd)
 

@@ -208,6 +208,21 @@ def getRightDirs():
     return resource_dir, DATA_PATH
 
 
+def getVersion():
+
+    """Get the ChemBrows' version"""
+
+    resource_dir, DATA_PATH = getRightDirs()
+
+    with open(os.path.join(resource_dir, 'config/version.txt'),
+              'r') as version_file:
+
+        version = version_file.read()
+
+    return version
+
+
+
 
 if __name__ == "__main__":
     # like(10)

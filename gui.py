@@ -192,53 +192,53 @@ class MyWindow(QtGui.QMainWindow):
             if updater is None:
                 return
 
-            # If an update is available, ask the user if he wants to
-            # update immediately
-            if updater.update_available:
+            # # If an update is available, ask the user if he wants to
+            # # update immediately
+            # if updater.update_available:
 
-                # Hide the splash screen if there is an update.
-                # On windows, the message box was hidden by the splash
-                self.splash.finish(self)
+                # # Hide the splash screen if there is an update.
+                # # On windows, the message box was hidden by the splash
+                # self.splash.finish(self)
 
-                mes = "A new version of ChemBrows is available. Upgrade now ?"
-                choice = QtGui.QMessageBox.question(self, "Update of ChemBrows", mes,
-                                                    QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok,
-                                                    defaultButton=QtGui.QMessageBox.Ok)
+                # mes = "A new version of ChemBrows is available. Upgrade now ?"
+                # choice = QtGui.QMessageBox.question(self, "Update of ChemBrows", mes,
+                                                    # QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok,
+                                                    # defaultButton=QtGui.QMessageBox.Ok)
 
-                # If the user says yes, start the update
-                if choice == QtGui.QMessageBox.Ok:
-                    self.l.info("Starting update")
+                # # If the user says yes, start the update
+                # if choice == QtGui.QMessageBox.Ok:
+                    # self.l.info("Starting update")
 
-                    def whenDone():
+                    # def whenDone():
 
-                        """Slot called when the update is finished"""
+                        # """Slot called when the update is finished"""
 
-                        self.l.info("Update finished")
-                        self.progress.reset()
+                        # self.l.info("Update finished")
+                        # self.progress.reset()
 
-                        # Display a dialog box to tell the user to restart the program
-                        message = "ChemBrows is now up-to-date. Restart it to use the latest version"
-                        QtGui.QMessageBox.information(self, "ChemBrows update", message, QtGui.QMessageBox.Ok)
+                        # # Display a dialog box to tell the user to restart the program
+                        # message = "ChemBrows is now up-to-date. Restart it to use the latest version"
+                        # QtGui.QMessageBox.information(self, "ChemBrows update", message, QtGui.QMessageBox.Ok)
 
-                        del updater
+                        # del updater
 
-                        with open(os.path.join(self.resource_dir,
-                                  'config/whatsnew.txt'), 'r') as f:
-                            message = f.read()
+                        # with open(os.path.join(self.resource_dir,
+                                  # 'config/whatsnew.txt'), 'r') as f:
+                            # message = f.read()
 
-                        QtGui.QMessageBox.information(self, "What is new ?",
-                                                      message,
-                                                      QtGui.QMessageBox.Ok)
+                        # QtGui.QMessageBox.information(self, "What is new ?",
+                                                      # message,
+                                                      # QtGui.QMessageBox.Ok)
 
-                    # Display a QProgressBar while updating
-                    QtGui.qApp.processEvents()
-                    self.progress = QtGui.QProgressDialog("Updating ChemBrows...", None, 0, 0, self)
-                    self.progress.setWindowTitle("Updating")
-                    self.progress.show()
-                    QtGui.qApp.processEvents()
+                    # # Display a QProgressBar while updating
+                    # QtGui.qApp.processEvents()
+                    # self.progress = QtGui.QProgressDialog("Updating ChemBrows...", None, 0, 0, self)
+                    # self.progress.setWindowTitle("Updating")
+                    # self.progress.show()
+                    # QtGui.qApp.processEvents()
 
-                    updater.finished.connect(whenDone)
-                    updater.start()
+                    # updater.finished.connect(whenDone)
+                    # updater.start()
 
 
     def logConnection(self):
@@ -323,9 +323,7 @@ class MyWindow(QtGui.QMainWindow):
 
         """Shows a dialogBox w/ the version number"""
 
-        with open(os.path.join(self.resource_dir,
-                  'config/version.txt'), 'r') as version_file:
-            version = version_file.read()
+        version = functions.getVersion()
 
         mes = """
         You are using ChemBrows {}<br/><br/>
@@ -519,6 +517,7 @@ class MyWindow(QtGui.QMainWindow):
                 self.l.debug("Time per paper: irrelevant, 0 paper added")
 
             self.calculatePercentageMatch()
+
             self.parseAction.setEnabled(True)
             self.l.info("Parsing data finished. Enabling parseAction")
 

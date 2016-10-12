@@ -179,6 +179,8 @@ def getData(company, journal, entry, response=None):
     """Get the data. Starts from the data contained in the RSS page and, if
     necessary, parses the website for additional information"""
 
+    url = refineUrl(company, journal, entry)
+
     # If the journal is edited by the RSC
     if company == 'RSC':
 
@@ -187,8 +189,6 @@ def getData(company, journal, entry, response=None):
 
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
-
-        url = getattr(entry, 'feedburner_origlink', entry.link)
 
         abstract = None
         graphical_abstract = None
@@ -241,8 +241,6 @@ def getData(company, journal, entry, response=None):
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
 
         author = entry.author
-
-        url = entry.prism_url
 
         graphical_abstract = None
 
@@ -302,9 +300,6 @@ def getData(company, journal, entry, response=None):
         else:
             author = author[0]
 
-        url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
-        url = "http://pubs.acs.org/doi/abs/10.1021/" + url
-
         graphical_abstract = None
 
         soup = BeautifulSoup(entry.summary)
@@ -334,9 +329,6 @@ def getData(company, journal, entry, response=None):
         date = entry.date
         abstract = entry.summary
         graphical_abstract = None
-
-        url = getattr(entry, 'feedburner_origlink', entry.link).split('/')[-1]
-        url = "http://www.nature.com/nature/journal/vaop/ncurrent/abs/" + url + ".html"
 
         try:
             author = [dic['name'] for dic in entry.authors]
@@ -379,7 +371,6 @@ def getData(company, journal, entry, response=None):
 
         title = entry.title
         date = entry.date
-        url = entry.id
 
         graphical_abstract = None
         author = None
@@ -406,7 +397,6 @@ def getData(company, journal, entry, response=None):
 
         title = entry.title
         date = entry.prism_publicationdate
-        url = entry.id
 
         graphical_abstract = None
         author = None
@@ -445,8 +435,6 @@ def getData(company, journal, entry, response=None):
         title = entry.title
         date = arrow.get(mktime(entry.updated_parsed)).format('YYYY-MM-DD')
 
-        url = entry.id
-
         graphical_abstract = None
         author = None
 
@@ -462,7 +450,15 @@ def getData(company, journal, entry, response=None):
 
             soup = BeautifulSoup(abstract)
 
-            abstract = soup("simple-para")[0].renderContents().decode()
+            try:
+                # First type of abstract formatting
+                abstract = soup("simple-para")[0].renderContents().decode()
+            except IndexError:
+                try:
+                    # Second type of abstract formatting
+                    abstract = abstract.split("<br />")[3].lstrip()
+                except IndexError:
+                    abstract = None
 
             r = soup.find_all("img")
             if r:
@@ -486,7 +482,6 @@ def getData(company, journal, entry, response=None):
 
         title = entry.title
         date = arrow.get(entry.updated).format('YYYY-MM-DD')
-        url = entry.id
 
         abstract = None
         graphical_abstract = None
@@ -528,7 +523,6 @@ def getData(company, journal, entry, response=None):
 
         title = entry.title
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
-        url = entry.link
 
         abstract = None
         graphical_abstract = None
@@ -562,7 +556,6 @@ def getData(company, journal, entry, response=None):
         abstract = entry.summary
         graphical_abstract = None
 
-        url = entry.links[0]['href']
 
         try:
             author = [dic['name'] for dic in entry.authors]
@@ -601,7 +594,6 @@ def getData(company, journal, entry, response=None):
     elif company == 'PLOS':
 
         title = entry.title
-        url = entry.link
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
 
         if entry.authors:
@@ -633,7 +625,6 @@ def getData(company, journal, entry, response=None):
     elif company == 'Springer':
 
         title = entry.title
-        url = entry.link
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
         graphical_abstract = None
         author = None
@@ -899,11 +890,15 @@ if __name__ == "__main__":
         # webbrowser.open(url, new=0, autoraise=True)
 
         # url = entry.feedburner_origlink
-        title = entry.title
+        # title = entry.title
 
-        print(entry.summary)
+        # title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry)
+
+        # print(entry.summary)
 
         # print(title)
+
+        # print(abstract)
 
         # if "Density Functional" not in entry.title:
             # continue
