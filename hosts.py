@@ -52,7 +52,7 @@ def refineUrl(company, journal, entry):
     elif company == 'Nature':
         id_paper = url.split('/')[-1]
 
-        # Necesserary. Sometimes the id has a point, sometimes not
+        # Necessary. Sometimes the id has a point, sometimes not
         p = re.compile(r'[0-9.]')
         prefix = p.sub('', id_paper)
 

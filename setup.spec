@@ -15,17 +15,17 @@ added_files = [('images/*', 'images'),
 
 imports = ['packaging', 'packaging.version', 'packaging.specifiers', 'packaging.requirements']
 
-excludes = ['pyi_rth_pkgres', 'pyi_rth_qt4plugins', 'pkg_resources', 'distutils', 'lib2to3',
-            'runpy', 'xmlrpc', 'hmac', 'doctest', 'pprint', 'tty', 'pydoc', 'getopt']
+# excludes = ['pyi_rth_pkgres', 'pyi_rth_qt4plugins', 'pkg_resources', 'lib2to3', 'runpy', 'xmlrpc', 'doctest', 'tty', 'getopt']
+excludes = ['pyi_rth_pkgres', 'pyi_rth_qt4plugins', 'lib2to3', 'runpy', 'xmlrpc', 'doctest', 'tty', 'getopt']
 
-a = Analysis(['gui.py'],
-             pathex=['/home/djipey/informatique/python/ChemBrows'],
+a = Analysis(['/home/djipey/informatique/python/ChemBrows/gui.py'],
+             pathex=['/home/djipey/informatique/python/ChemBrows', '/home/djipey/informatique/python/ChemBrows'],
              binaries=None,
              datas=added_files,
              hiddenimports=imports,
-             hookspath=[],
+             hookspath=['/home/djipey/.local/share/virtualenvs/cb/lib/python3.5/site-packages/pyupdater/hooks'],
              runtime_hooks=[],
-             excludes=[],
+             excludes=excludes,
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher)
@@ -54,15 +54,8 @@ exe = EXE(pyz,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='gui',
+          name='nix64',
           debug=False,
-          strip=True,
+          strip=False,
           upx=True,
-          console=True)
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=True,
-               upx=True,
-               name='ChemBrows')
+          console=True )

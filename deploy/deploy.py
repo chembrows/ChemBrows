@@ -1,6 +1,12 @@
+#!/usr/bin/python
+# coding: utf-8
+
 """
-This script freezes the app using Esky with cx_Freeze and produces a Windows
-Installer with Inno Setup.
+This script freezes the app using PyInstaller and PyUpdater.
+
+Will produce a Linux executable.
+Will produce a Windows Installer with Inno Setup.
+Will produce an installable MacOS pkg.
 
 https://github.com/peterbrook/assetjet/blob/master/deploy/deploy.py
 https://github.com/peterbrook/assetjet/blob/master/deploy/build_inno_setup.py
@@ -12,14 +18,14 @@ import subprocess
 import distutils.util
 from zipfile import ZipFile
 from shutil import copyfile
+import tarfile
 
 app_name = 'ChemBrows'
-create_installer = True
+create_installer = False
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
     version = version_file.read().rstrip()
-
 
 # Name of Windows installer, architecture dependent
 if distutils.util.get_platform() == 'win-amd64':
@@ -33,23 +39,35 @@ if sys.platform == 'darwin':
     platform = distutils.util.get_platform().replace('.', '_')
     python_exe = 'python3'
 else:
-    platform = distutils.util.get_platform()
+    # platform = distutils.util.get_platform()
+    # TODO: check architecture (32 or 64 bits)
+    platform = 'nix64'
     python_exe = 'python'
 
+# pyupdater build --app-version 1.2 app.spec
+
 # Freeze !!!
-subprocess.call('{} setup.py bdist_esky'.format(python_exe), shell=True)
-# subprocess.call('{} setup.py bdist_esky_patch'.format(python_exe), shell=True)
-print('done with esky')
+subprocess.call("pyupdater build --app-version {} setup.spec".format(version),
+                shell=True)
+subprocess.call("pyupdater pkg --process --sign", shell=True)
+
+print('done freezing')
 
 # Unzip file
 print('unzipping')
 
 
 # Build the name of the Esky zip file
-filename = '{}-{}.{}'.format(app_name, version, platform)
+# ChemBrows-nix64-0.9.8.tar.gz
+filename = '{}-{}-{}'.format(app_name, platform, version)
 
-with ZipFile(os.path.join('./dist', filename + '.zip'), "r") as zf:
-    zf.extractall('./dist/' + filename)
+# with ZipFile(os.path.join('./pyu-data/deploy', filename + '.tar.gz'),
+             # "r") as zf:
+    # zf.extractall('./pyu-data/deploy' + filename)
+
+with tarfile.open(os.path.join('./pyu-data/deploy', filename + '.tar.gz'),
+                  "r:gz") as tf:
+    tf.extractall('./pyu-data/deploy/' + filename)
 
 print('unzipping done')
 
@@ -105,9 +123,10 @@ elif sys.platform == 'darwin':
 
 
 else:
-    copyfile('deploy/Linux_extras/README', 'dist/{}/README'.format(filename))
-    os.chmod('./dist/{}/gui'.format(filename), 0o777)
-    os.chmod('./dist/{}/{}/gui'.format(filename, filename), 0o777)
+    # copyfile('deploy/Linux_extras/README', 'dist/{}/README'.format(filename))
+    # os.chmod('./dist/{}/gui'.format(filename), 0o777)
+    # os.chmod('./dist/{}/{}/gui'.format(filename, filename), 0o777)
+    pass
 
 
 # Create installer for windows

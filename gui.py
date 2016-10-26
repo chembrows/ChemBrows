@@ -31,7 +31,6 @@ from line_icon import ButtonLineIcon
 from signing import Signing
 from tuto import Tuto
 from my_twit import MyTwit
-import constants
 from styles import MyStyles
 from little_thread import LittleThread
 
@@ -179,66 +178,57 @@ class MyWindow(QtGui.QMainWindow):
 
         """Performs some startup checks"""
 
-
         # Check if the running ChemBrows is a frozen app
         if not self.debug_mod:
 
-            # # IMPORTANT: for now, disable remote updates
-            # # TODO: make the update process work
-            # return
-
             updater = Updater(self.l)
 
-            if updater is None:
+            if not updater.update_available:
                 return
 
-            # # If an update is available, ask the user if he wants to
-            # # update immediately
-            # if updater.update_available:
+            # If still here, ask the user if he wants to update immediately
 
-                # # Hide the splash screen if there is an update.
-                # # On windows, the message box was hidden by the splash
-                # self.splash.finish(self)
+            # Hide the splash screen if there is an update.
+            # On windows, the message box was hidden by the splash
+            self.splash.finish(self)
 
-                # mes = "A new version of ChemBrows is available. Upgrade now ?"
-                # choice = QtGui.QMessageBox.question(self, "Update of ChemBrows", mes,
-                                                    # QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok,
-                                                    # defaultButton=QtGui.QMessageBox.Ok)
+            mes = "A new version of ChemBrows is available. Upgrade now ?"
+            choice = QtGui.QMessageBox.question(self, "Update of ChemBrows", mes,
+                                                QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok,
+                                                defaultButton=QtGui.QMessageBox.Ok)
 
-                # # If the user says yes, start the update
-                # if choice == QtGui.QMessageBox.Ok:
-                    # self.l.info("Starting update")
+            # If the user says yes, start the update
+            if choice == QtGui.QMessageBox.Ok:
+                self.l.info("Starting update")
 
-                    # def whenDone():
+                def whenDone():
 
-                        # """Slot called when the update is finished"""
+                    """Slot called when the update is finished"""
 
-                        # self.l.info("Update finished")
-                        # self.progress.reset()
+                    self.l.info("Update finished")
+                    self.progress.reset()
 
-                        # # Display a dialog box to tell the user to restart the program
-                        # message = "ChemBrows is now up-to-date. Restart it to use the latest version"
-                        # QtGui.QMessageBox.information(self, "ChemBrows update", message, QtGui.QMessageBox.Ok)
+                    # Display a dialog box to tell the user to restart the program
+                    message = "ChemBrows is now up-to-date. Restart it to use the latest version"
+                    QtGui.QMessageBox.information(self, "ChemBrows update", message, QtGui.QMessageBox.Ok)
 
-                        # del updater
+                    with open(os.path.join(self.resource_dir,
+                              'config/whatsnew.txt'), 'r') as f:
+                        message = f.read()
 
-                        # with open(os.path.join(self.resource_dir,
-                                  # 'config/whatsnew.txt'), 'r') as f:
-                            # message = f.read()
+                    QtGui.QMessageBox.information(self, "What is new ?",
+                                                  message,
+                                                  QtGui.QMessageBox.Ok)
 
-                        # QtGui.QMessageBox.information(self, "What is new ?",
-                                                      # message,
-                                                      # QtGui.QMessageBox.Ok)
+                # Display a QProgressBar while updating
+                QtGui.qApp.processEvents()
+                self.progress = QtGui.QProgressDialog("Updating ChemBrows...", None, 0, 0, self)
+                self.progress.setWindowTitle("Updating")
+                self.progress.show()
+                QtGui.qApp.processEvents()
 
-                    # # Display a QProgressBar while updating
-                    # QtGui.qApp.processEvents()
-                    # self.progress = QtGui.QProgressDialog("Updating ChemBrows...", None, 0, 0, self)
-                    # self.progress.setWindowTitle("Updating")
-                    # self.progress.show()
-                    # QtGui.qApp.processEvents()
-
-                    # updater.finished.connect(whenDone)
-                    # updater.start()
+                updater.finished.connect(whenDone)
+                updater.start()
 
 
     def logConnection(self):
@@ -2314,7 +2304,7 @@ class MyWindow(QtGui.QMainWindow):
 
                     while worker.isRunning():
                         QtGui.qApp.processEvents()
-                        worker.sleep(0.5)
+                        worker.sleep(1)
 
             except AttributeError:
                 self.l.debug("No entries added, skipping loadNotifications")
@@ -2359,7 +2349,7 @@ class MyWindow(QtGui.QMainWindow):
         try:
             while not self.predictor.isFinished():
                 QtGui.qApp.processEvents()
-                self.predictor.sleep(0.5)
+                self.predictor.sleep(1)
         except AttributeError:
             self.l.debug("Predictor deleted while processEvents ?")
             pass
