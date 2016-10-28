@@ -46,6 +46,7 @@ class Updater(QtCore.QThread):
 
         if self.app is not None:
             self.update_available = True
+            self.l.info("Version {} is available".format(self.app.latest))
         else:
             self.update_available = False
 
