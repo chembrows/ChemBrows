@@ -867,7 +867,7 @@ if __name__ == "__main__":
 
     list_urls = []
 
-    feed = feedparser.parse(urls_test[0])
+    feed = feedparser.parse(urls_test[0], timeout=20)
     # print(feed.entries)
     # print(feed)
     journal = feed['feed']['title']

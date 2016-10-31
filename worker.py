@@ -72,7 +72,7 @@ class Worker(QtCore.QThread):
 
         # Get the RSS page of the url provided
         try:
-            self.feed = feedparser.parse(self.url_feed)
+            self.feed = feedparser.parse(self.url_feed, timeout=self.TIMEOUT)
             self.l.debug("RSS page successfully dled")
         except Exception as e:
             self.l.error("RSS page could not be downloaded", exc_info=True)

@@ -62,15 +62,24 @@ class WizardJournal(QtGui.QDialog):
         url = self.line_url_journal.text()
         publisher = self.combo_publishers.currentText()
 
+        # Create error message if RSS page can't be downloaded
+        error_mes = "An error occured while downloading the RSS page.\
+                     Are you sure you have the right URL ?\
+                     Try again later, maybe ?"
+        error_mes = error_mes.replace("    ", "")
+
         try:
-            feed = feedparser.parse(url)
+            feed = feedparser.parse(url, timeout=60)
             self.l.info("verifyInput: RSS page successfully dled")
         except Exception as e:
-            self.l.error("verifyInput RSS page could not be downloaded",
+            self.l.error("verifyInput: RSS page could not be downloaded",
                          exc_info=True)
+            QtGui.QMessageBox.critical(self, "Error while adding new journal",
+                                       error_mes, QtGui.QMessageBox.Ok,
+                                       defaultButton=QtGui.QMessageBox.Ok)
             return
 
-        mes = "The following joural will be added to your selection:\n{}"
+        mes = "The following journal will be added to your selection:\n{}"
 
         try:
             title = feed['feed']['title']
@@ -91,6 +100,9 @@ class WizardJournal(QtGui.QDialog):
         except KeyError:
             self.l.critical("No title for the journal ! Aborting")
             self.l.critical(url)
+            QtGui.QMessageBox.critical(self, "Error while adding new journal",
+                                       error_mes, QtGui.QMessageBox.Ok,
+                                       defaultButton=QtGui.QMessageBox.Ok)
             return
 
 
