@@ -63,30 +63,44 @@ class Worker(QtCore.QThread):
         self.list_futures = []
 
 
+    def _getFeed(self, url: str,
+                 timeout: int) -> feedparser.util.FeedParserDict:
+
+        self.l.debug(url)
+
+        try:
+            # Get the RSS page of the url provided
+            feed = feedparser.parse(self.url_feed, timeout=timeout)
+
+            # Check if the feed has a title (journal's name)
+            journal = feed['feed']['title']
+
+            self.l.debug("RSS page successfully dled")
+            return feed
+
+        except Exception as e:
+            self.l.error("RSS page could not be downloaded: {}".format(e),
+                         exc_info=True)
+            return None
+
+
     def run(self):
 
         """Main function. Starts the real business"""
 
         self.l.debug("Entering worker")
-        self.l.debug(self.url_feed)
 
-        # Get the RSS page of the url provided
-        try:
-            self.feed = feedparser.parse(self.url_feed, timeout=self.TIMEOUT)
-            self.l.debug("RSS page successfully dled")
-        except Exception as e:
-            self.l.error("RSS page could not be downloaded", exc_info=True)
+        feed = self._getFeed(self.url_feed, timeout=self.TIMEOUT)
+
+        if feed is None:
+            self.l.debug("Exiting worker, problem w/ the feed")
             return
 
         # Get the journal name
-        try:
-            journal = self.feed['feed']['title']
-        except KeyError:
-            self.l.critical("No title for the journal ! Aborting")
-            self.l.critical(self.url_feed)
-            return
+        journal = feed['feed']['title']
 
-        self.l.info("{0}: {1}".format(journal, len(self.feed.entries)))
+
+        self.l.info("{0}: {1}".format(journal, len(feed.entries)))
 
         # Lists to check if the post is in the db, and if
         # it has all the infos
@@ -125,9 +139,9 @@ class Worker(QtCore.QThread):
         # if journal in wiley + science + elsevier:
         if company in company_no_dl:
 
-            self.count_futures_urls += len(self.feed.entries)
+            self.count_futures_urls += len(feed.entries)
 
-            for entry in self.feed.entries:
+            for entry in feed.entries:
 
                 # Get the DOI, a unique number for a publication
                 doi = hosts.getDoi(company, journal, entry)
@@ -274,7 +288,7 @@ class Worker(QtCore.QThread):
             self.session_pages = FuturesSession(max_workers=20,
                 session=self.parent.browsing_session)
 
-            for entry in self.feed.entries:
+            for entry in feed.entries:
 
                 doi = hosts.getDoi(company, journal, entry)
                 url = hosts.refineUrl(company, journal, entry)
@@ -377,7 +391,7 @@ class Worker(QtCore.QThread):
 
         # Check if the counters are full
         while ((self.count_futures_images + self.count_futures_urls) !=
-                len(self.feed.entries) * 2 and self.parent.parsing):
+                len(feed.entries) * 2 and self.parent.parsing):
             self.sleep(1)
 
         if self.parent.parsing:

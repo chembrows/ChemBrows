@@ -72,7 +72,6 @@ def refineUrl(company, journal, entry):
     return url
 
 
-
 def updateData(company, journal, entry, care_image):
 
     """Function called by a Worker object when an RSS entry is

@@ -178,13 +178,15 @@ def test_getData(journalsUrls):
         l.info("Site {} of {} \n".format(list_urls_feed.index(site) + 1,
                                          len(list_urls_feed)))
 
-        feed = feedparser.parse(site)
-
+        # Get the RSS page of the url provided
         try:
+            feed = feedparser.parse(site, timeout=20)
             journal = feed['feed']['title']
-        except KeyError:
-            l.error("Failed to get title for: {}".format(site))
-            pytest.fail("Failed to get title for: {}".format(site))
+            l.debug("RSS page successfully dled")
+        except Exception as e:
+            l.error("RSS page could not be downloaded: {}".format(e),
+                    exc_info=True)
+            continue
 
         # Get the company name
         for publisher, data in dict_journals.items():
@@ -213,10 +215,12 @@ def test_getData(journalsUrls):
                         requests.exceptions.ReadTimeout) as e:
                     l.error("A problem occured: {}, continue to next entry".
                             format(e), exc_info=True)
+                    continue
                 except Exception as e:
                     l.error("A problem occured: {}, unexepected error".
                             format(e), exc_info=True)
                     pytest.fail("Unexpected error, fail: {}".format(url))
+                    continue
 
             l.info("Title: {}".format(title))
             l.info("URL: {}".format(url))
