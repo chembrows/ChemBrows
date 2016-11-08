@@ -2626,7 +2626,7 @@ class MyWindow(QtGui.QMainWindow):
 
         # An empty widget, acts as spacer
         self.empty_widget = QtGui.QWidget()
-        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred);
+        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
 
         # A HBoxLayout to store the article "toolbar"
         self.hbox_toolbar_article = QtGui.QHBoxLayout()
