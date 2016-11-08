@@ -14,9 +14,11 @@ numpy==1.11.1
 packaging==16.7
 pbr==1.10.0
 Pillow==3.3.1
+py==1.4.31
 pycparser==2.14
 PyInstaller==3.2
 pyparsing==2.1.8
+pytest==3.0.3
 python-dateutil==2.5.3
 pytz==2016.6.1
 PyUpdater==2.2.0
