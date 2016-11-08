@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/chembrows/ChemBrows.svg?branch=update)](https://travis-ci.org/chembrows/ChemBrows)  
+![screenshot](http://i.imgur.com/6yE72c5.jpg?1)
+
+
 ChemBrows: keeps you up-to-date with scientific literature
 ==========================================================
 
@@ -8,6 +12,10 @@ Working as an enhanced RSS reader filled with powerful features, including machi
 
 ChemBrows is available for Mac OS X, Linux and Windows.
 
+* Website : http://www.chembrows.com
+* Twitter : [@ChemBrows](https://twitter.com/ChemBrows)
+
+**Reference** : [Francoia, J.-P.; Vial, L. *J. Chem. Educ.* 2016, **DOI**: 10.1021/acs.jchemed.6b00024](http://pubs.acs.org/doi/abs/10.1021/acs.jchemed.6b00024)
 
 # Who is ChemBrows for?
 
