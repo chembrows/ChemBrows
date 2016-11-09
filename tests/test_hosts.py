@@ -233,7 +233,6 @@ def test_getData(journalsUrls):
                     dict_res_by_company[company]['count_articles_untested'] += 1
                     l.error("A problem occured: {}, continue to next entry".
                             format(e), exc_info=True)
-                    pytest.fail("Error while contactin URL: {}".format(url))
                     continue
 
             dict_res_by_company[company]['count_articles_tested'] += 1
@@ -365,7 +364,7 @@ def test_getDoi(journalsUrls):
         dict_journals[company] = hosts.getJournals(company)[0]
 
     for site in list_sites:
-        feed = feedparser.parse(site)
+        feed = feedparser.parse(site, timeout=20)
 
         try:
             journal = feed['feed']['title']
