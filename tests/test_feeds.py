@@ -18,6 +18,9 @@ from bs4 import BeautifulSoup, SoupStrainer
 
 from log import MyLog
 
+# 52 ACS journals for now
+NBR_ACS_JOURNALS = 52
+
 
 l = MyLog("output_tests.log", mode='w')
 l.debug("---------------------- START NEW RUN OF TESTS ----------------------")
@@ -65,7 +68,9 @@ def test_ACSFeeds():
             # print("{} : {}".format(name, url))
             dic_journals[url] = name
 
-    logAssert(len(dic_journals) == 52, "Wrong number of ACS journals")
+    logAssert(len(dic_journals) == NBR_ACS_JOURNALS,
+              "Wrong number of ACS journals")
+
 
 if __name__ == "__main__":
     test_ACSFeeds()

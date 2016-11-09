@@ -26,7 +26,8 @@ def reject(entry_title):
 
     # resource_dir = os.path.dirname(os.path.dirname(sys.executable))
     # Load the regex stored in a config file, as filters
-    with open(os.path.join(resource_dir, 'config/regex.txt'), 'r') as filters_file:
+    with open(os.path.join(resource_dir, 'config/regex.txt'),
+              'r') as filters_file:
         filters = filters_file.read().splitlines()
 
     # Try to match the filters against the title entry

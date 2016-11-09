@@ -37,6 +37,10 @@ from little_thread import LittleThread
 # To debug and profile. Comment for prod
 # from memory_profiler import profile
 
+# DEBUG: do not show deprecation warningmport warningss
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 
 class MyWindow(QtGui.QMainWindow):
 
