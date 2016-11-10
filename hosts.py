@@ -492,14 +492,14 @@ def getData(company, journal, entry, response=None):
 
                 abstract = abstract.renderContents().decode()
 
+            # Get author strainer
             strainer = SoupStrainer("span", id="authorlist")
-            soup = BeautifulSoup(response.text, parse_only=strainer)
-            r = soup.find_all("span", id="authorlist")
-            if r:
-                author = r[0].text
-                author = author.replace("*a, b", "")
-                author = author.replace("*a", "")
-                author = author.replace("*", "")
+            author = BeautifulSoup(response.text, parse_only=strainer).span
+
+            # Clean supscripts
+            [tag.extract() for tag in author("sup")]
+            author = author.renderContents().decode()
+            author = author.replace("*", "")
 
 
     elif company == 'Beilstein':
@@ -860,14 +860,14 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Taylor", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Thieme", journal, entry, response)
         # print("\n")
         # print(abstract)
-        print(date)
-        # print("\n")
-        # print(authors)
+        # print(date)
         # print("\n")
         print(title)
+        print(authors)
+        # print("\n")
         # print("\n")
         # print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
@@ -875,7 +875,7 @@ if __name__ == "__main__":
 
     # urls_test = ["http://feeds.nature.com/nature/rss/aop"]
     # urls_test = ["debug/springer.xml"]
-    urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
+    urls_test = ["https://www.thieme-connect.de/rss/thieme/en/10.1055-s-00000083.xml"]
 
     session = FuturesSession(max_workers=20)
 
@@ -893,11 +893,11 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries:
+    for entry in feed.entries[2:]:
 
         # pprint(entry)
 
-        url = refineUrl("Taylor", journal, entry)
+        url = refineUrl("Thieme", journal, entry)
 
         print(url)
 
