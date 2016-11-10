@@ -392,7 +392,7 @@ class Worker(QtCore.QThread):
         # Check if the counters are full
         while ((self.count_futures_images + self.count_futures_urls) !=
                 len(feed.entries) * 2 and self.parent.parsing):
-            self.sleep(1)
+            self.sleep(0.5)
 
         if self.parent.parsing:
             if not self.bdd.commit():

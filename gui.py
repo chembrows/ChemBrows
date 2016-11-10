@@ -2272,6 +2272,10 @@ class MyWindow(QtGui.QMainWindow):
         """Slot to calculate the match percentage.
         alone=True means the user started the calculations only"""
 
+        # Block user input. This bool could be True if parse() was started,
+        # but it could also be False if the user refreshes the paperness
+        self.blocking_ui = True
+
         self.model.submitAll()
 
         self.predictor = Predictor(self.l,
@@ -2308,7 +2312,7 @@ class MyWindow(QtGui.QMainWindow):
 
                     while worker.isRunning():
                         QtGui.qApp.processEvents()
-                        worker.sleep(1)
+                        worker.sleep(0.5)
 
             except AttributeError:
                 self.l.debug("No entries added, skipping loadNotifications")
@@ -2336,10 +2340,6 @@ class MyWindow(QtGui.QMainWindow):
 
             del self.predictor
 
-        self.blocking_ui = True
-
-        self.predictor.finished.connect(whenDone)
-        self.predictor.start()
 
         # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
         # If the range is set to 0, get a busy progress bar,
@@ -2349,11 +2349,14 @@ class MyWindow(QtGui.QMainWindow):
         self.progress.setWindowTitle("Hot Paperness calculation")
         self.progress.show()
 
+        self.predictor.finished.connect(whenDone)
+        self.predictor.start()
+
         # While calculating, display a smooth progress bar
         try:
             while not self.predictor.isFinished():
                 QtGui.qApp.processEvents()
-                self.predictor.sleep(1)
+                self.predictor.sleep(0.5)
         except AttributeError:
             self.l.debug("Predictor deleted while processEvents ?")
             pass
