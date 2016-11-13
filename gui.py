@@ -434,9 +434,12 @@ class MyWindow(QtGui.QMainWindow):
         # max_nbr_threads = 1
 
         # Counter to count the new entries in the database
-        self.counter = 0
+        self.counter_added = 0
         self.counter_updates = 0
         self.counter_rejected = 0
+        self.counter_articles_failed = 0
+        self.counter_journals_failed = 0
+        self.counter_images_failed = 0
 
         self.browsing_session = requests.session()
 
@@ -493,20 +496,26 @@ class MyWindow(QtGui.QMainWindow):
         if self.count_threads == self.urls_max:
 
             self.l.info("{} new entries added to the database".
-                        format(self.counter))
+                        format(self.counter_added))
             self.l.info("{} entries rejected".
                         format(self.counter_rejected))
             self.l.info("{} attempts to update entries".
                         format(self.counter_updates))
+            self.l.info("{} RSS feeds were not downloaded".
+                        format(self.counter_journals_failed))
+            self.l.info("{} articles failed".
+                        format(self.counter_articles_failed))
+            self.l.info("{} images failed".
+                        format(self.counter_images_failed))
 
             total_time = datetime.datetime.now() - self.start_time
             self.l.debug("Total refresh time: {}".
                          format(total_time))
 
             # # TODO: checker cette instruction, should crash
-            if self.counter > 0:
+            if self.counter_added > 0:
                 self.l.debug("Time per paper: {} seconds".
-                             format(total_time.seconds / (self.counter + self.counter_updates)))
+                             format(total_time.seconds / (self.counter_added + self.counter_updates)))
             else:
                 self.l.debug("Time per paper: irrelevant, 0 paper added")
 
@@ -563,7 +572,7 @@ class MyWindow(QtGui.QMainWindow):
         # Start loadNotifications in a thread (CPU consumming),
         # and display a smooth progressBar while in the function
         # But only if some articles were collected
-        if self.counter > 0:
+        if self.counter_added > 0:
             worker = LittleThread(self.loadNotifications)
             worker.start()
 
@@ -2304,7 +2313,7 @@ class MyWindow(QtGui.QMainWindow):
             # If parsing, load the notifications
             # load the notifications only if some articles were collected
             try:
-                if self.counter > 0:
+                if self.counter_added > 0:
                     self.progress.setWindowTitle("Loading notifications")
                     self.progress.setLabelText("Loading notifications...")
                     worker = LittleThread(self.loadNotifications)
@@ -2334,7 +2343,7 @@ class MyWindow(QtGui.QMainWindow):
             if not alone:
                 # Display the number of articles added
                 mes = "{} new articles were added to your database !"
-                mes = mes.format(self.counter)
+                mes = mes.format(self.counter_added)
                 QtGui.QMessageBox.information(self, "New articles", mes,
                                               QtGui.QMessageBox.Ok)
 

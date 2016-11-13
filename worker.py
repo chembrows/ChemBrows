@@ -125,6 +125,9 @@ class Worker(QtCore.QThread):
             self.dico_doi = self.listDoi(journal_abb)
         except UnboundLocalError:
             self.l.error("Journal not recognized ! Aborting")
+
+            # Tell the parent the RSS page was not downloaded
+            self.parent.counter_journals_failed += 1
             return
 
         # Create a list for the journals which a dl of the article
@@ -136,7 +139,6 @@ class Worker(QtCore.QThread):
         self.bdd.transaction()
 
         # The feeds of these journals are complete
-        # if journal in wiley + science + elsevier:
         if company in company_no_dl:
 
             self.count_futures_urls += len(feed.entries)
@@ -209,6 +211,7 @@ class Worker(QtCore.QThread):
                         self.count_futures_images += 1
                         continue
 
+                # New article, treat it
                 else:
                     try:
                         title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry)
@@ -216,6 +219,7 @@ class Worker(QtCore.QThread):
                         self.l.error("Problem with getData: {}".
                                      format(journal), exc_info=True)
                         self.count_futures_images += 1
+                        self.count_articles_failed += 1
                         return
 
                     # Rejecting article if no author
@@ -238,7 +242,7 @@ class Worker(QtCore.QThread):
                               author_simple)
 
                     self.l.debug("Adding {0} to the database".format(doi))
-                    self.parent.counter += 1
+                    self.parent.counter_added += 1
                     self.new_entries_worker += 1
 
                     for value in params:
@@ -280,6 +284,7 @@ class Worker(QtCore.QThread):
                                               doi, url))
                         self.list_futures.append(future_image)
 
+        # The company requires to download the article's web page
         else:
 
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
@@ -375,10 +380,10 @@ class Worker(QtCore.QThread):
                         self.count_futures_images += 1
                         continue
 
+                # New article, treat it
                 else:
 
                     url = hosts.refineUrl(company, journal, entry)
-
                     self.l.debug("Starting adding new entry")
 
                     future = self.session_pages.get(url, timeout=self.TIMEOUT,
@@ -431,11 +436,13 @@ class Worker(QtCore.QThread):
 
             self.l.error("{} raised for {}. Handled".format(journal, e))
             self.count_futures_images += 1
+            self.parent.count_articles_failed += 1
             return
         except Exception as e:
             self.l.error("Unknown exception {} for {}".format(e, journal),
                          exc_info=True)
             self.count_futures_images += 1
+            self.parent.count_articles_failed += 1
             return
 
         query = QtSql.QSqlQuery(self.bdd)
@@ -445,11 +452,13 @@ class Worker(QtCore.QThread):
         except TypeError:
             self.l.error("getData returned None for {}".format(journal))
             self.count_futures_images += 1
+            self.parent.count_articles_failed += 1
             return
         except Exception as e:
             self.l.error("Unknown exception completeData {}".format(e),
                          exc_info=True)
             self.count_futures_images += 1
+            self.parent.count_articles_failed += 1
             return
 
 
@@ -473,7 +482,7 @@ class Worker(QtCore.QThread):
                       graphical_abstract, url, 1, topic_simple, author_simple)
 
             self.l.debug("Adding {0} to the database".format(doi))
-            self.parent.counter += 1
+            self.parent.counter_added += 1
 
             for value in params:
                 query.addBindValue(value)
@@ -528,8 +537,10 @@ class Worker(QtCore.QThread):
             response = future.result()
         except concurrent.futures._base.CancelledError:
             self.l.error("future cancelled for {}".format(entry_url))
-            return
+            self.parent.images_failed += 1
+            params = ("Empty", doi)
         except Exception as e:
+            self.parent.images_failed += 1
             self.l.error("pictureDownloaded: {}".format(e), exc_info=True)
             params = ("Empty", doi)
         else:
