@@ -1,5 +1,18 @@
 # -*- mode: python -*-
 
+import distutils.util
+
+compiling_platform = distutils.util.get_platform()
+
+if compiling_platform == 'win-amd64':
+    platform = 'win'
+elif compiling_platform == 'linux-x86_64':
+    platform = 'nix64'
+    pathex = ['/home/djipey/informatique/python/ChemBrows',
+              '/home/djipey/informatique/python/ChemBrows']
+    hookspath = ['/home/djipey/.local/share/virtualenvs/cb/lib/python3.5/site-packages/pyupdater/hooks']
+
+
 block_cipher = None
 
 added_files = [('images/*', 'images'),
@@ -13,17 +26,19 @@ added_files = [('images/*', 'images'),
                ('config/fields/*', 'config/fields')
                ]
 
-imports = ['packaging', 'packaging.version', 'packaging.specifiers', 'packaging.requirements']
+imports = ['packaging', 'packaging.version', 'packaging.specifiers',
+           'packaging.requirements', 'sklearn.neighbors.typedefs']
 
 # excludes = ['pyi_rth_pkgres', 'pyi_rth_qt4plugins', 'pkg_resources', 'lib2to3', 'runpy', 'xmlrpc', 'doctest', 'tty', 'getopt']
-excludes = ['pyi_rth_pkgres', 'pyi_rth_qt4plugins', 'lib2to3', 'runpy', 'xmlrpc', 'doctest', 'tty', 'getopt']
+excludes = ['pyi_rth_pkgres', 'pyi_rth_qt4plugins', 'lib2to3', 'runpy',
+            'xmlrpc', 'doctest', 'tty', 'getopt']
 
 a = Analysis(['/home/djipey/informatique/python/ChemBrows/gui.py'],
-             pathex=['/home/djipey/informatique/python/ChemBrows', '/home/djipey/informatique/python/ChemBrows'],
+             pathex=pathex,
              binaries=None,
              datas=added_files,
              hiddenimports=imports,
-             hookspath=['/home/djipey/.local/share/virtualenvs/cb/lib/python3.5/site-packages/pyupdater/hooks'],
+             hookspath=hookspath,
              runtime_hooks=[],
              excludes=excludes,
              win_no_prefer_redirects=False,
@@ -31,14 +46,17 @@ a = Analysis(['/home/djipey/informatique/python/ChemBrows/gui.py'],
              cipher=block_cipher)
 
 rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
-           'libQt3Support', 'libwebp', 'libXss', 'libXft', 'libcrypto', 'libtcl',
-           'libtk', 'libX11', 'libgstreamer', 'libgcrypt', 'libQtOpenGL.so',
-           'libfbclient', 'libfreetype', 'libgcc_s', 'libsqlite3',
-           'libQtDBus', 'libsystemd', 'libgstvideo', 'liborc', 'libharfbuzz', 'libpcre',
-           'libmng', 'bncursesw', 'libgstbase', 'libgstaudio', 'liblcms2', 'libQtSvg',
-           'liblapack', 'libatlas', 'libgobject', 'libopenjp2', 'libquadmath',
-           'libgsttag', 'libmpdec', 'libgstpbutils', 'libxcb-glx', 'libICE', 'libQtXml',
-           'libfontconfig', 'libglapi', 'libgraphite2', 'libexpat', 'libXext', 'liblz4']
+           'libQt3Support', 'libwebp', 'libXss', 'libXft', 'libcrypto',
+           'libtcl', 'libtk', 'libX11', 'libgstreamer', 'libgcrypt',
+           'libQtOpenGL.so', 'libfbclient', 'libfreetype', 'libgcc_s',
+           'libsqlite3', 'libQtDBus', 'libsystemd', 'libgstvideo', 'liborc',
+           'libharfbuzz', 'libpcre', 'libmng', 'bncursesw', 'libgstbase',
+           'libgstaudio', 'liblcms2', 'libQtSvg', 'liblapack', 'libatlas',
+           'libgobject', 'libquadmath', 'libgsttag', 'libmpdec',
+           'libgstpbutils', 'libxcb-glx', 'libICE', 'libQtXml',
+           'libfontconfig', 'libglapi', 'libgraphite2', 'libexpat',
+           'libXext', 'liblz4']
+
 full_tuples = []
 for each_bin in a.binaries:
     for each_rm_bin in rm_bins:
@@ -54,8 +72,8 @@ exe = EXE(pyz,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='nix64',
+          name=platform,
           debug=False,
           strip=False,
           upx=True,
-          console=True )
+          console=True)

@@ -59,6 +59,13 @@ class MyWindow(QtGui.QMainWindow):
             self.resource_dir, self.DATA_PATH = functions.getRightDirs()
             QtGui.QApplication.addLibraryPath(self.resource_dir)
 
+            # Create the user directory if it doesn't exist
+            os.makedirs(self.DATA_PATH, exist_ok=True)
+
+            # Create the 'journals' directory, user side
+            os.makedirs(os.path.join(self.DATA_PATH, 'journals/'),
+                        exist_ok=True)
+
             # Create the logger w/ the appropriate size
             self.l = MyLog(self.DATA_PATH + "/activity.log")
             self.l.info("This version of ChemBrows is frozen")

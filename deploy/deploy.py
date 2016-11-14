@@ -23,26 +23,33 @@ import tarfile
 app_name = 'ChemBrows'
 create_installer = False
 
+# Start the program after compile/extraction
+play = True
+
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
     version = version_file.read().rstrip()
 
+
+compiling_platform = distutils.util.get_platform()
+
+print("Compiling platform: {}".format(compiling_platform))
+
 # Name of Windows installer, architecture dependent
-if distutils.util.get_platform() == 'win-amd64':
+if compiling_platform == 'win-amd64':
     installerName = 'setup {0} {1} (64bit)'.format(app_name, version)
-else:
-    installerName = 'setup {0} {1} (32bit)'.format(app_name, version)
+# else:
+    # installerName = 'setup {0} {1} (32bit)'.format(app_name, version)
 
-
-# get_platform returns a different string than the one used by py2app
-if sys.platform == 'darwin':
-    platform = distutils.util.get_platform().replace('.', '_')
-    python_exe = 'python3'
-else:
-    # platform = distutils.util.get_platform()
-    # TODO: check architecture (32 or 64 bits)
+elif compiling_platform == 'linux-x86_64':
     platform = 'nix64'
     python_exe = 'python'
+
+# get_platform returns a different string than the one used by py2app
+# if sys.platform == 'darwin':
+    # platform = distutils.util.get_platform().replace('.', '_')
+    # python_exe = 'python3'
+
 
 # pyupdater build --app-version 1.2 app.spec
 
@@ -70,6 +77,9 @@ with tarfile.open(os.path.join('./pyu-data/deploy', filename + '.tar.gz'),
     tf.extractall('./pyu-data/deploy/' + filename)
 
 print('unzipping done')
+
+subprocess.call("./pyu-data/deploy/{}/{}".format(filename, app_name),
+                shell=True)
 
 
 # Change permissions to allow execution

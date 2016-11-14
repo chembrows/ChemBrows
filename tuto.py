@@ -5,6 +5,7 @@
 import sys
 import os
 from PyQt4 import QtGui, QtCore
+
 import functions
 
 
@@ -103,8 +104,13 @@ class Tuto(QtGui.QDialog):
 
     def parseSlide(self, text):
 
+        """Method to parse the content of the slides. Will automatically
+        detect images"""
+
         try:
-            path = './images/' + text.split('!!!')[1].rstrip()
+            path = os.path.join(self.resource_dir, 'images/',
+                                text.split('!!!')[1].rstrip())
+            # path = './images/' + text.split('!!!')[1].rstrip()
             image = QtGui.QPixmap(path)
             image = image.scaledToWidth(60, QtCore.Qt.SmoothTransformation)
             self.label_image.setPixmap(image)
