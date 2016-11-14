@@ -41,7 +41,10 @@ def test_ACSFeeds():
 
     """Function to test we have the right number of ACS journals"""
 
-    page = requests.get("http://pubs.acs.org/page/follow.html")
+    page = requests.get("http://pubs.acs.org/page/follow.html", timeout=60)
+
+    if page.status_code is not requests.codes.ok:
+        pytest.fail("Failed to download ACS journals page")
 
     # Strainer: get a soup with only the interesting part.
     # Don't load the complete tree in memory. Saves RAM

@@ -364,7 +364,15 @@ def test_getDoi(journalsUrls):
         dict_journals[company] = hosts.getJournals(company)[0]
 
     for site in list_sites:
-        feed = feedparser.parse(site, timeout=20)
+
+        try:
+            feed = feedparser.parse(site, timeout=20)
+            journal = feed['feed']['title']
+            l.debug("RSS page successfully dled")
+        except Exception as e:
+            l.error("RSS page could not be downloaded: {}".format(e),
+                    exc_info=True)
+            continue
 
         try:
             journal = feed['feed']['title']
