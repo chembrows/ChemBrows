@@ -16,42 +16,42 @@ import sys
 import os
 import subprocess
 import distutils.util
-from zipfile import ZipFile
+import zipfile
 from shutil import copyfile
 import tarfile
 
 app_name = 'ChemBrows'
 create_installer = False
 
-# Start the program after compile/extraction
+# Start the program after compiling/extraction
 play = True
+
+# Get the current platform and print it
+compiling_platform = distutils.util.get_platform()
+print("Compiling platform: {}".format(compiling_platform))
+
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
     version = version_file.read().rstrip()
 
-
-compiling_platform = distutils.util.get_platform()
-
-print("Compiling platform: {}".format(compiling_platform))
-
-# Name of Windows installer, architecture dependent
 if compiling_platform == 'win-amd64':
+    # Name of Windows installer, architecture dependent
     installerName = 'setup {0} {1} (64bit)'.format(app_name, version)
-# else:
-    # installerName = 'setup {0} {1} (32bit)'.format(app_name, version)
+    platform = 'win'
+    extension = '.zip'
 
 elif compiling_platform == 'linux-x86_64':
     platform = 'nix64'
-    python_exe = 'python'
+    extension = '.tar.gz'
+
+else:
+    print("Platform not recognized, EXITING NOW !")
+    sys.exit()
 
 # get_platform returns a different string than the one used by py2app
 # if sys.platform == 'darwin':
     # platform = distutils.util.get_platform().replace('.', '_')
-    # python_exe = 'python3'
-
-
-# pyupdater build --app-version 1.2 app.spec
 
 # Freeze !!!
 subprocess.call("pyupdater build --app-version {} setup.spec".format(version),
@@ -63,23 +63,32 @@ print('done freezing')
 # Unzip file
 print('unzipping')
 
-
-# Build the name of the Esky zip file
-# ChemBrows-nix64-0.9.8.tar.gz
+# Build the name of the archive
+# Ex: ChemBrows-nix64-0.9.8.tar.gz
 filename = '{}-{}-{}'.format(app_name, platform, version)
+path_archive = os.path.join('.', 'pyu-data', 'deploy', filename)
 
-# with ZipFile(os.path.join('./pyu-data/deploy', filename + '.tar.gz'),
-             # "r") as zf:
-    # zf.extractall('./pyu-data/deploy' + filename)
+if platform == 'win':
+    # Exctract the zip file
+    with zipfile.ZipFile(path_archive + extension) as zf:
+        zf.extractall(os.path.join('.', 'pyu-data', 'deploy', filename))
 
-with tarfile.open(os.path.join('./pyu-data/deploy', filename + '.tar.gz'),
-                  "r:gz") as tf:
-    tf.extractall('./pyu-data/deploy/' + filename)
+    print('unzipping done')
 
-print('unzipping done')
+    # Run ChemBrows
+    subprocess.call("{}\\ChemBrows.exe".format(path_archive),
+                    shell=True)
 
-subprocess.call("./pyu-data/deploy/{}/{}".format(filename, app_name),
-                shell=True)
+if platform == 'nix64':
+    # Extract the tar.gz file
+    with tarfile.open(path_archive + extension, "r:gz") as tf:
+        tf.extractall(os.path.join('.', 'pyu-data', 'deploy', filename))
+
+    print('unzipping done')
+
+    # Run ChemBrows
+    subprocess.call("{}/ChemBrows".format(path_archive),
+                    shell=True)
 
 
 # Change permissions to allow execution

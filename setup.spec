@@ -1,15 +1,18 @@
 # -*- mode: python -*-
 
+import os
 import distutils.util
 
-compiling_platform = distutils.util.get_platform()
+DIR_PATH = os.getcwd()
+COMPILING_PLATFORM = distutils.util.get_platform()
 
-if compiling_platform == 'win-amd64':
+PATH_EXE = [os.path.join(DIR_PATH, 'gui.py')]
+
+if COMPILING_PLATFORM == 'win-amd64':
     platform = 'win'
-elif compiling_platform == 'linux-x86_64':
+    hookspath = ['C:\\Users\\djipey\\Miniconda3\\Lib\\site-packages\\pyupdater\\hooks']
+elif COMPILING_PLATFORM == 'linux-x86_64':
     platform = 'nix64'
-    pathex = ['/home/djipey/informatique/python/ChemBrows',
-              '/home/djipey/informatique/python/ChemBrows']
     hookspath = ['/home/djipey/.local/share/virtualenvs/cb/lib/python3.5/site-packages/pyupdater/hooks']
 
 
@@ -29,12 +32,11 @@ added_files = [('images/*', 'images'),
 imports = ['packaging', 'packaging.version', 'packaging.specifiers',
            'packaging.requirements', 'sklearn.neighbors.typedefs']
 
-# excludes = ['pyi_rth_pkgres', 'pyi_rth_qt4plugins', 'pkg_resources', 'lib2to3', 'runpy', 'xmlrpc', 'doctest', 'tty', 'getopt']
 excludes = ['pyi_rth_pkgres', 'pyi_rth_qt4plugins', 'lib2to3', 'runpy',
             'xmlrpc', 'doctest', 'tty', 'getopt']
 
-a = Analysis(['/home/djipey/informatique/python/ChemBrows/gui.py'],
-             pathex=pathex,
+a = Analysis(PATH_EXE,
+             pathex=[DIR_PATH] * 2,
              binaries=None,
              datas=added_files,
              hiddenimports=imports,
@@ -66,7 +68,8 @@ for each_bin in a.binaries:
 a.binaries = a.binaries - TOC(full_tuples)
 
 pyz = PYZ(a.pure, a.zipped_data,
-             cipher=block_cipher)
+          cipher=block_cipher)
+
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
@@ -74,6 +77,6 @@ exe = EXE(pyz,
           a.datas,
           name=platform,
           debug=False,
-          strip=False,
+          strip=True,
           upx=True,
           console=True)
