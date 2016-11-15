@@ -51,6 +51,9 @@ class AdvancedSearch(QtGui.QDialog):
         """Restore the right number of tabs"""
 
         for query in self.options.childGroups():
+            # Don't create a search tab for the to read list
+            if query == "ToRead":
+                continue
             self.tabs.addTab(self.createForm(), query)
 
         # Try to restore the geometry of the AdvancedSearch window
