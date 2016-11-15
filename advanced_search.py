@@ -35,7 +35,8 @@ class AdvancedSearch(QtGui.QDialog):
             self.logger = self.parent.l
             self.test = False
 
-        self.options = QtCore.QSettings(DATA_PATH + "/config/searches.ini", QtCore.QSettings.IniFormat)
+        self.options = QtCore.QSettings(DATA_PATH + "/config/searches.ini",
+                                        QtCore.QSettings.IniFormat)
 
         # List to store the lineEdit, with the value of
         # the search fields
@@ -190,8 +191,10 @@ class AdvancedSearch(QtGui.QDialog):
 
         # Creating a new search
         if tab_title == "New query":
-            # Get the search name with a dialogBox, if the user pushed the save button
-            name_search = QtGui.QInputDialog.getText(self, "Search name", "Save your search as:")
+            # Get the search name with a dialogBox, if the user pushed the
+            # save button
+            name_search = QtGui.QInputDialog.getText(self, "Search name",
+                                                     "Save your search as:")
 
             if "/" in name_search:
                 name_search = name_search.replace("/", "-")
