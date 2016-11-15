@@ -21,10 +21,13 @@ from shutil import copyfile
 import tarfile
 
 app_name = 'ChemBrows'
-create_installer = False
+create_installer = True
 
 # Start the program after compiling/extraction
-play = True
+play = False
+
+# Freeze/bundle the program
+bundle = False
 
 # Get the current platform and print it
 compiling_platform = distutils.util.get_platform()
@@ -54,11 +57,12 @@ else:
     # platform = distutils.util.get_platform().replace('.', '_')
 
 # Freeze !!!
-subprocess.call("pyupdater build --app-version {} setup.spec".format(version),
-                shell=True)
-subprocess.call("pyupdater pkg --process --sign", shell=True)
+if bundle:
+    subprocess.call("pyupdater build --app-version {} setup.spec".format(version),
+                    shell=True)
+    subprocess.call("pyupdater pkg --process --sign", shell=True)
 
-print('done freezing')
+    print('done freezing')
 
 # Unzip file
 print('unzipping')
@@ -76,8 +80,9 @@ if platform == 'win':
     print('unzipping done')
 
     # Run ChemBrows
-    subprocess.call("{}\\ChemBrows.exe".format(path_archive),
-                    shell=True)
+    if play:
+        subprocess.call("{}\\ChemBrows.exe".format(path_archive),
+                        shell=True)
 
 if platform == 'nix64':
     # Extract the tar.gz file
@@ -87,12 +92,13 @@ if platform == 'nix64':
     print('unzipping done')
 
     # Run ChemBrows
-    subprocess.call("{}/ChemBrows".format(path_archive),
-                    shell=True)
+    if play:
+        subprocess.call("{}/ChemBrows".format(path_archive),
+                        shell=True)
 
 
 # Change permissions to allow execution
-if sys.platform in ['win32', 'cygwin', 'win64']:
+if platform == 'win':
     pass
 elif sys.platform == 'darwin':
 
@@ -149,8 +155,8 @@ else:
 
 
 # Create installer for windows
-if create_installer and sys.platform in ['win32', 'cygwin', 'win64']:
-    innoSetupLoc = "C:\Program Files\Inno Setup 5\ISCC"
+if create_installer and platform == 'win':
+    innoSetupLoc = "C:\Program Files (x86)\Inno Setup 5\ISCC"
 
     architecture = sys.platform
 
