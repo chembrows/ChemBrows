@@ -206,7 +206,10 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             painter.fillRect(option.rect, QtGui.QColor(255, 255, 255))
 
             if type(index.data()) is str and index.data() != "Empty":
-                path_photo = self.DATA_PATH + "/graphical_abstracts/" + index.data()
+
+                # TODO: check if path exists, else log the problem
+                path_photo = os.path.join(self.DATA_PATH,
+                                          "graphical_abstracts", index.data())
 
                 if os.path.exists(path_photo):
                     # The photo exists, display it

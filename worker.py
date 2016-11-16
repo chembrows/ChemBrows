@@ -537,10 +537,10 @@ class Worker(QtCore.QThread):
             response = future.result()
         except concurrent.futures._base.CancelledError:
             self.l.error("future cancelled for {}".format(entry_url))
-            self.parent.images_failed += 1
+            self.parent.counter_images_failed += 1
             params = ("Empty", doi)
         except Exception as e:
-            self.parent.images_failed += 1
+            self.parent.counter_images_failed += 1
             self.l.error("pictureDownloaded: {}".format(e), exc_info=True)
             params = ("Empty", doi)
         else:
