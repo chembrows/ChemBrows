@@ -10,6 +10,7 @@ import requests
 from io import BytesIO
 import base64
 from PIL import Image
+import platform
 
 from line_icon import ButtonLineIcon
 from log import MyLog
@@ -146,7 +147,7 @@ class Signing(QtGui.QDialog):
                        'email': self.line_email.text(),
                        'user_input': self.line_captcha.text(),
                        'captcha_id': self.captcha_id,
-                       'platform': sys.platform,
+                       'platform': platform.platform(),
                        }
 
             try:

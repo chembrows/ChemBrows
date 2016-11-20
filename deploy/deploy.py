@@ -21,13 +21,13 @@ from shutil import copyfile
 import tarfile
 
 app_name = 'ChemBrows'
-create_installer = True
+create_installer = False
 
 # Start the program after compiling/extraction
 play = False
 
 # Freeze/bundle the program
-bundle = False
+bundle = True
 
 # Get the current platform and print it
 compiling_platform = distutils.util.get_platform()

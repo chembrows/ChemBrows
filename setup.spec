@@ -77,6 +77,6 @@ exe = EXE(pyz,
           a.datas,
           name=platform,
           debug=False,
-          strip=True,
+          strip=False,
           upx=True,
-          console=True)
+          console=False)
