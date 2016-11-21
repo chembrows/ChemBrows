@@ -161,7 +161,7 @@ class MyStyles():
 
 
 if __name__ == '__main__':
-    from PyQt4 import QtGui
+    from PyQt5 import QtGui
     import sys
 
     app = QtGui.QApplication(sys.argv)

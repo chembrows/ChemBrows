@@ -4,12 +4,12 @@
 
 import sys
 import os
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 
 import functions
 
 
-class Tuto(QtGui.QDialog):
+class Tuto(QtWidgets.QDialog):
 
     """Module to show a tutorial. It will guide the user
     trough the use of ChemBrows"""

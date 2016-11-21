@@ -2,7 +2,7 @@
 # coding: utf-8
 
 
-from PyQt4 import QtSql
+from PyQt5 import QtSql
 
 
 class ModelPerso(QtSql.QSqlTableModel):

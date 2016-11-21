@@ -2,14 +2,14 @@
 # coding: utf-8
 
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 # Personal
 # TEST
 import constants
 
 
-class ViewPerso(QtGui.QTableView):
+class ViewPerso(QtWidgets.QTableView):
 
     """New class to modify the view. Basically reimplements some methods.
     Generates a personnal table view, which will be used for each tab in the
@@ -28,10 +28,10 @@ class ViewPerso(QtGui.QTableView):
         self.radio_states = None
         self.articles = {}
 
-        self.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 
         # Scroll per "pixel". Gives a better impression when scrolling
-        self.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
+        self.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
 
 
     def defineSlots(self):
@@ -158,7 +158,7 @@ class ViewPerso(QtGui.QTableView):
         self.horizontalHeader().setVisible(False)
 
         # No cell editing
-        self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
 
     def keyboardSearch(self, search):

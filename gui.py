@@ -3,7 +3,7 @@
 
 import sys
 import os
-from PyQt4 import QtGui, QtSql, QtCore
+from PyQt5 import QtGui, QtSql, QtCore, QtWidgets
 import datetime
 import urllib
 import fnmatch
@@ -38,11 +38,11 @@ from little_thread import LittleThread
 # from memory_profiler import profile
 
 # DEBUG: do not show deprecation warningmport warningss
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
+# import warnings
+# warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-class MyWindow(QtGui.QMainWindow):
+class MyWindow(QtWidgets.QMainWindow):
 
     # def __init__(self, logger):
     def __init__(self):
@@ -82,23 +82,23 @@ class MyWindow(QtGui.QMainWindow):
 
         self.l.debug('Resources dir: {}'.format(self.resource_dir))
         # self.l.setLevel(20)
-        self.l.info(QtGui.QApplication.libraryPaths())
+        self.l.info(QtWidgets.QApplication.libraryPaths())
         self.l.info('Running {} {}'.format(platform.system(),
                                            platform.release()))
         self.l.info('Starting the program')
 
-        QtGui.qApp.setWindowIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/icon_main.png')))
+        QtWidgets.qApp.setWindowIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/icon_main.png')))
 
         # Display a splash screen when booting
         # http://eli.thegreenplace.net/2009/05/09/creating-splash-screens-in-pyqt
         # CAREFUL, there is a bug with the splash screen
         # https://bugreports.qt.io/browse/QTBUG-24910
         splash_pix = QtGui.QPixmap(os.path.join(self.resource_dir, 'images/splash.png'))
-        self.splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+        self.splash = QtWidgets.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
         self.splash.show()
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
-        self.styles = MyStyles(QtGui.qApp)
+        self.styles = MyStyles(QtWidgets.qApp)
 
         # Bool to check if the program is collecting data
         self.parsing = False
@@ -106,7 +106,7 @@ class MyWindow(QtGui.QMainWindow):
         # Bool to check if the ui is locked for the user
         self.blocking_ui = False
 
-        QtGui.qApp.installEventFilter(self)
+        QtWidgets.qApp.installEventFilter(self)
 
         # List to store the tags checked
         self.tags_selected = []
@@ -121,7 +121,7 @@ class MyWindow(QtGui.QMainWindow):
         diff_time = start_time
 
         # Look for updates
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
         self.autoUpdate()
         self.l.debug("bootCheckList took {}".
                      format(datetime.datetime.now() - diff_time))
@@ -131,7 +131,7 @@ class MyWindow(QtGui.QMainWindow):
         self.options = QtCore.QSettings(self.DATA_PATH + "/config/options.ini",
                                         QtCore.QSettings.IniFormat)
 
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
         # Connect to the database & log the connection
         self.connectionBdd()
@@ -142,34 +142,34 @@ class MyWindow(QtGui.QMainWindow):
         diff_time = datetime.datetime.now()
 
         # Create the GUI
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
         self.initUI()
         self.l.debug("initUI took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         # Define the slots
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
         self.defineSlots()
         self.l.debug("defineSlots took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         # Creates the journals buttons
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
         self.displayTags()
         self.l.debug("displayTags took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         # Restore the settings
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
         self.restoreSettings()
         self.l.debug("restoreSettings took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
         # Show the window
         self.show()
@@ -203,12 +203,12 @@ class MyWindow(QtGui.QMainWindow):
             self.splash.finish(self)
 
             mes = "A new version of ChemBrows is available. Upgrade now ?"
-            choice = QtGui.QMessageBox.question(self, "Update of ChemBrows", mes,
-                                                QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok,
-                                                defaultButton=QtGui.QMessageBox.Ok)
+            choice = QtWidgets.QMessageBox.question(self, "Update of ChemBrows", mes,
+                                                QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ok,
+                                                defaultButton=QtWidgets.QMessageBox.Ok)
 
             # If the user says yes, start the update
-            if choice == QtGui.QMessageBox.Ok:
+            if choice == QtWidgets.QMessageBox.Ok:
                 self.l.info("Starting update")
 
                 def whenDone():
@@ -220,22 +220,22 @@ class MyWindow(QtGui.QMainWindow):
 
                     # Display a dialog box to tell the user to restart the program
                     message = "ChemBrows is now up-to-date. Restart it to use the latest version"
-                    QtGui.QMessageBox.information(self, "ChemBrows update", message, QtGui.QMessageBox.Ok)
+                    QtWidgets.QMessageBox.information(self, "ChemBrows update", message, QtWidgets.QMessageBox.Ok)
 
                     with open(os.path.join(self.resource_dir,
                               'config/whatsnew.txt'), 'r') as f:
                         message = f.read()
 
-                    QtGui.QMessageBox.information(self, "What is new ?",
+                    QtWidgets.QMessageBox.information(self, "What is new ?",
                                                   message,
-                                                  QtGui.QMessageBox.Ok)
+                                                  QtWidgets.QMessageBox.Ok)
 
                 # Display a QProgressBar while updating
-                QtGui.qApp.processEvents()
-                self.progress = QtGui.QProgressDialog("Updating ChemBrows...", None, 0, 0, self)
+                QtWidgets.qApp.processEvents()
+                self.progress = QtWidgets.QProgressDialog("Updating ChemBrows...", None, 0, 0, self)
                 self.progress.setWindowTitle("Updating")
                 self.progress.show()
-                QtGui.qApp.processEvents()
+                QtWidgets.qApp.processEvents()
 
                 updater.finished.connect(whenDone)
                 updater.start()
@@ -340,7 +340,7 @@ class MyWindow(QtGui.QMainWindow):
         """.replace('    ', '').format(version)
 
         # Use this complicated messageBox to get clickable URLs
-        box = QtGui.QMessageBox(QtGui.QMessageBox.Information,
+        box = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information,
                                 'About ChemBrows', mes)
         box.setTextFormat(QtCore.Qt.RichText)
         box.setText(mes)
@@ -426,7 +426,7 @@ class MyWindow(QtGui.QMainWindow):
                     self.urls.append(url)
 
         # Display a progress dialog box
-        self.progress = QtGui.QProgressDialog("Collecting in progress", "Cancel", 0, 100, self)
+        self.progress = QtWidgets.QProgressDialog("Collecting in progress", "Cancel", 0, 100, self)
         self.progress.setWindowTitle("Collecting articles")
         self.progress.canceled.connect(self.cancelRefresh)
         self.progress.show()
@@ -462,7 +462,7 @@ class MyWindow(QtGui.QMainWindow):
                 self.urls.remove(url)
                 self.list_threads.append(worker)
                 worker.start()
-                QtGui.qApp.processEvents()
+                QtWidgets.qApp.processEvents()
             except IndexError:
                 break
 
@@ -497,7 +497,7 @@ class MyWindow(QtGui.QMainWindow):
         self.progress.setValue(round(percent, 0))
         if percent >= 100:
             self.progress.reset()
-            QtGui.qApp.processEvents()
+            QtWidgets.qApp.processEvents()
 
         if self.count_threads == self.urls_max:
 
@@ -547,12 +547,14 @@ class MyWindow(QtGui.QMainWindow):
                 self.urls.remove(worker.url_feed)
                 self.list_threads.append(worker)
                 worker.start()
-                QtGui.qApp.processEvents()
+                QtWidgets.qApp.processEvents()
 
 
     def cancelRefresh(self):
 
         """Slot to cancel the refresh process"""
+
+        print("bam")
 
         # Set the parsing bool to false, block checkThreads
         self.parsing = False
@@ -560,18 +562,18 @@ class MyWindow(QtGui.QMainWindow):
         # Cancel all the futures of each worker
         for worker in self.list_threads:
             for future in worker.list_futures:
-                QtGui.qApp.processEvents()
+                QtWidgets.qApp.processEvents()
                 if type(future) is not bool:
                     future.cancel()
             self.l.debug("Killed all the futures for this worker")
 
         # Display a smooth progress bar
-        self.progress = QtGui.QProgressDialog("Cancelling...", None, 0, 0, self)
+        self.progress = QtWidgets.QProgressDialog("Cancelling...", None, 0, 0, self)
         self.progress.setWindowTitle("Cancelling refresh")
         self.progress.show()
 
         while False in [worker.isFinished() for worker in self.list_threads]:
-            QtGui.qApp.processEvents()
+            QtWidgets.qApp.processEvents()
 
         self.progress.setLabelText("Loading notifications...")
 
@@ -583,7 +585,7 @@ class MyWindow(QtGui.QMainWindow):
             worker.start()
 
             while worker.isRunning():
-                QtGui.qApp.processEvents()
+                QtWidgets.qApp.processEvents()
                 worker.sleep(0.5)
 
         self.updateCellSize()
@@ -599,87 +601,87 @@ class MyWindow(QtGui.QMainWindow):
         appelée à la création de la classe"""
 
         # Action to quit
-        self.exitAction = QtGui.QAction('&Quit', self)
+        self.exitAction = QtWidgets.QAction('&Quit', self)
         self.exitAction.setShortcut('Ctrl+Q')
         self.exitAction.setStatusTip("Quit")
         self.exitAction.triggered.connect(self.closeEvent)
 
         # Action to refresh the posts
-        self.parseAction = QtGui.QAction('&Refresh', self)
+        self.parseAction = QtWidgets.QAction('&Refresh', self)
         self.parseAction.setShortcut('F5')
         self.parseAction.setToolTip("Refresh: download new posts")
         self.parseAction.triggered.connect(self.parse)
 
         # Action to calculate the percentages of match
-        self.calculatePercentageMatchAction = QtGui.QAction('&Percentages', self)
+        self.calculatePercentageMatchAction = QtWidgets.QAction('&Percentages', self)
         self.calculatePercentageMatchAction.setShortcut('F6')
         self.calculatePercentageMatchAction.setToolTip("Re-calculate Hot Paperness")
         self.calculatePercentageMatchAction.triggered.connect(lambda: self.calculatePercentageMatch(True))
 
         # Action to like a post
-        self.toggleLikeAction = QtGui.QAction('Toggle like', self)
+        self.toggleLikeAction = QtWidgets.QAction('Toggle like', self)
         self.toggleLikeAction.setShortcut('L')
         self.toggleLikeAction.triggered.connect(self.toggleLike)
 
         # Action to open the post in browser
-        self.openInBrowserAction = QtGui.QAction('Open post in browser', self)
+        self.openInBrowserAction = QtWidgets.QAction('Open post in browser', self)
         self.openInBrowserAction.triggered.connect(self.openInBrowser)
         self.openInBrowserAction.setShortcut('Ctrl+W')
 
         # Action to update the model. For TEST
-        # self.updateAction = QtGui.QAction('Update model', self)
+        # self.updateAction = QtWidgets.QAction('Update model', self)
         # self.updateAction.triggered.connect(self.updateModel)
         # self.updateAction.setShortcut('F7')
 
         # Action to show a settings window
-        self.settingsAction = QtGui.QAction('Preferences', self)
+        self.settingsAction = QtWidgets.QAction('Preferences', self)
         self.settingsAction.triggered.connect(lambda: Settings(self))
 
-        self.tutoAction = QtGui.QAction('Tutorial', self)
+        self.tutoAction = QtWidgets.QAction('Tutorial', self)
         self.tutoAction.triggered.connect(lambda: Tuto(self))
 
         # Action to show a settings window
-        self.showAboutAction = QtGui.QAction('About', self)
+        self.showAboutAction = QtWidgets.QAction('About', self)
         self.showAboutAction.triggered.connect(self.showAbout)
 
         # # Action so show new articles
-        # self.searchNewAction = QtGui.QAction('View unread', self)
+        # self.searchNewAction = QtWidgets.QAction('View unread', self)
         # self.searchNewAction.setToolTip("Display unread articles")
         # self.searchNewAction.triggered.connect(self.searchNew)
 
         # Action to toggle the read state of an article
-        self.toggleReadAction = QtGui.QAction('Toggle read', self)
+        self.toggleReadAction = QtWidgets.QAction('Toggle read', self)
         self.toggleReadAction.setShortcut('M')
         self.toggleReadAction.triggered.connect(self.toggleRead)
 
         # Action to change the sorting method of the views. In the menu
-        self.sortingPercentageAction = QtGui.QAction('By Hot Paperness', self, checkable=True)
+        self.sortingPercentageAction = QtWidgets.QAction('By Hot Paperness', self, checkable=True)
         self.sortingPercentageAction.triggered.connect(lambda: self.changeSortingMethod(0))
 
         # Action to change the sorting method of the views. In the menu
-        self.sortingDateAction = QtGui.QAction('By date', self, checkable=True)
+        self.sortingDateAction = QtWidgets.QAction('By date', self, checkable=True)
         self.sortingDateAction.triggered.connect(lambda: self.changeSortingMethod(1))
 
         # Action to change the sorting method of the views, reverse the results. In the menu
-        self.sortingReversedAction = QtGui.QAction('Reverse order', self, checkable=True)
+        self.sortingReversedAction = QtWidgets.QAction('Reverse order', self, checkable=True)
         self.sortingReversedAction.triggered.connect(lambda: self.changeSortingMethod(self.sorting_method, True))
 
         # Action to change the sorting method of the views, reverse the results. In the menu
-        self.emptyWaitAction = QtGui.QAction('Empty to-read list', self)
+        self.emptyWaitAction = QtWidgets.QAction('Empty to-read list', self)
         self.emptyWaitAction.triggered.connect(self.emptyWait)
 
         # Action add/remove a post of the to-read list. For the right click
-        self.toggleWaitAction = QtGui.QAction('Add/remove to to-read list', self)
+        self.toggleWaitAction = QtWidgets.QAction('Add/remove to to-read list', self)
         self.toggleWaitAction.triggered.connect(self.toggleWait)
 
-        self.showLikesAction = QtGui.QAction('Show liked articles', self)
+        self.showLikesAction = QtWidgets.QAction('Show liked articles', self)
         self.showLikesAction.triggered.connect(self.showLikes)
 
-        self.showReadAction = QtGui.QAction('Show read articles', self)
+        self.showReadAction = QtWidgets.QAction('Show read articles', self)
         self.showReadAction.triggered.connect(self.showRead)
 
         # Action to serve use as a separator
-        self.separatorAction = QtGui.QAction(self)
+        self.separatorAction = QtWidgets.QAction(self)
         self.separatorAction.setSeparator(True)
 
 
@@ -796,6 +798,7 @@ class MyWindow(QtGui.QMainWindow):
 
         """Method to perform actions before exiting.
         Allows to save the prefs in a file"""
+        print("coucou")
 
         # http://stackoverflow.com/questions/9249500/
         # pyside-pyqt-detect-if-user-trying-to-close-window
@@ -852,7 +855,7 @@ class MyWindow(QtGui.QMainWindow):
         self.bdd.removeDatabase(self.DATA_PATH + "/fichiers.sqlite")
         self.bdd.close()
 
-        QtGui.qApp.quit()
+        QtWidgets.qApp.quit()
 
         self.l.info("Closing the program")
 
@@ -989,10 +992,10 @@ class MyWindow(QtGui.QMainWindow):
         It also blocks the user interactions with the UI while parsing"""
 
         # do not hide menubar when menu shown
-        if QtGui.qApp.activePopupWidget() is None:
+        if QtWidgets.qApp.activePopupWidget() is None:
             # If parsing running, block some user inputs
             if self.blocking_ui:
-                if (type(source) == QtGui.QPushButton and
+                if (type(source) == QtWidgets.QPushButton and
                         source.text() == 'Cancel'):
                     forbidden = []
                 else:
@@ -1042,7 +1045,7 @@ class MyWindow(QtGui.QMainWindow):
                 self.scroll_tags.hide()
                 self.updateCellSize()
 
-        return QtGui.QMainWindow.eventFilter(self, source, event)
+        return QtWidgets.QMainWindow.eventFilter(self, source, event)
 
 
     def resizeEvent(self, event):
@@ -1071,7 +1074,7 @@ class MyWindow(QtGui.QMainWindow):
         new_pos = QtCore.QPoint(pos.x() + 10, pos.y() + 107)
 
         # Create the right-click menu and add the actions
-        menu = QtGui.QMenu()
+        menu = QtWidgets.QMenu()
         menu.addAction(self.toggleLikeAction)
         menu.addAction(self.toggleReadAction)
         menu.addAction(self.openInBrowserAction)
@@ -1233,7 +1236,11 @@ class MyWindow(QtGui.QMainWindow):
         """Method to restore the ToRead list.
         Might be useless, I think it could be done in restoreSettings()"""
 
-        proxy = QtGui.QSortFilterProxyModel()
+        proxy = QtCore.QSortFilterProxyModel()
+
+        # Don't "refresh" the proxy immediately, so when just unread articles
+        # are shown, a click on an article doesn't make it disappear
+        proxy.setDynamicSortFilter(False)
 
         proxy.setSourceModel(self.model)
         self.list_proxies_in_tabs.append(proxy)
@@ -1300,7 +1307,11 @@ class MyWindow(QtGui.QMainWindow):
 
             return
 
-        proxy = QtGui.QSortFilterProxyModel()
+        proxy = QtCore.QSortFilterProxyModel()
+
+        # Don't "refresh" the proxy immediately, so when just unread articles
+        # are shown, a click on an article doesn't make it disappear
+        proxy.setDynamicSortFilter(False)
 
         proxy.setSourceModel(self.model)
         self.list_proxies_in_tabs.append(proxy)
@@ -1348,7 +1359,7 @@ class MyWindow(QtGui.QMainWindow):
 
         for journal in journals_to_care:
 
-            button = QtGui.QPushButton(journal)
+            button = QtWidgets.QPushButton(journal)
             button.setAccessibleName("button_text_left")
             button.setCheckable(True)
             button.adjustSize()
@@ -1584,6 +1595,8 @@ class MyWindow(QtGui.QMainWindow):
         """Slot to search on title and abstract.
         The search can be performed on a particular tab"""
 
+        self.model.submitAll()
+
         # If it's not the main tab, filter through the already-filtered
         # results of a particular tab
         if self.onglets.currentIndex() != 0:
@@ -1638,7 +1651,7 @@ class MyWindow(QtGui.QMainWindow):
                 if widget is not None:
                     widget.deleteLater()
 
-                    QtGui.qApp.processEvents()
+                    QtWidgets.qApp.processEvents()
                 else:
                     self.clearLayout(item.layout())
 
@@ -1890,19 +1903,19 @@ class MyWindow(QtGui.QMainWindow):
         mes = mes.replace("    ", "")
         mes = mes.replace("\n", "")
 
-        choice = QtGui.QMessageBox.critical(self, "Resetting database", mes,
-                                            QtGui.QMessageBox.Cancel |
-                                            QtGui.QMessageBox.Ok,
-                                            defaultButton=QtGui.QMessageBox.Cancel)
+        choice = QtWidgets.QMessageBox.critical(self, "Resetting database", mes,
+                                            QtWidgets.QMessageBox.Cancel |
+                                            QtWidgets.QMessageBox.Ok,
+                                            defaultButton=QtWidgets.QMessageBox.Cancel)
 
-        if choice == QtGui.QMessageBox.Cancel:
+        if choice == QtWidgets.QMessageBox.Cancel:
             return
 
-        progress = QtGui.QProgressDialog("Resetting database...",
+        progress = QtWidgets.QProgressDialog("Resetting database...",
                                          None, 0, 0, self)
         progress.setWindowTitle("resetting database")
         progress.show()
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
         # Perform the db modifications in a thread
         def internalReset():
@@ -1921,7 +1934,7 @@ class MyWindow(QtGui.QMainWindow):
         worker.start()
 
         while worker.isRunning():
-            QtGui.qApp.processEvents()
+            QtWidgets.qApp.processEvents()
             worker.sleep(0.5)
 
         progress.reset()
@@ -1941,19 +1954,19 @@ class MyWindow(QtGui.QMainWindow):
         mes = mes.replace("    ", "")
         mes = mes.replace("\n", "")
 
-        choice = QtGui.QMessageBox.critical(self, "Erasing database", mes,
-                                            QtGui.QMessageBox.Cancel |
-                                            QtGui.QMessageBox.Ok,
-                                            defaultButton=QtGui.QMessageBox.Cancel)
+        choice = QtWidgets.QMessageBox.critical(self, "Erasing database", mes,
+                                            QtWidgets.QMessageBox.Cancel |
+                                            QtWidgets.QMessageBox.Ok,
+                                            defaultButton=QtWidgets.QMessageBox.Cancel)
 
-        if choice == QtGui.QMessageBox.Cancel:
+        if choice == QtWidgets.QMessageBox.Cancel:
             return
 
-        progress = QtGui.QProgressDialog("Erasing database...",
+        progress = QtWidgets.QProgressDialog("Erasing database...",
                                          None, 0, 0, self)
         progress.setWindowTitle("Erasing database")
         progress.show()
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
         def internalErase():
 
@@ -1981,7 +1994,7 @@ class MyWindow(QtGui.QMainWindow):
         worker.start()
 
         while worker.isRunning():
-            QtGui.qApp.processEvents()
+            QtWidgets.qApp.processEvents()
             worker.sleep(0.5)
 
         progress.reset()
@@ -2010,19 +2023,19 @@ class MyWindow(QtGui.QMainWindow):
         # Clean the tabs in the message (tabs are 4 spaces)
         mes = mes.replace("    ", "")
 
-        choice = QtGui.QMessageBox.critical(self, "Cleaning database", mes,
-                                            QtGui.QMessageBox.Cancel |
-                                            QtGui.QMessageBox.Ok,
-                                            defaultButton=QtGui.QMessageBox.Cancel)
+        choice = QtWidgets.QMessageBox.critical(self, "Cleaning database", mes,
+                                            QtWidgets.QMessageBox.Cancel |
+                                            QtWidgets.QMessageBox.Ok,
+                                            defaultButton=QtWidgets.QMessageBox.Cancel)
 
-        if choice == QtGui.QMessageBox.Cancel:
+        if choice == QtWidgets.QMessageBox.Cancel:
             return
 
         # Display a progress bar
-        progress = QtGui.QProgressDialog("Deleting articles from unfollowed journals", None, 0, 100, self)
+        progress = QtWidgets.QProgressDialog("Deleting articles from unfollowed journals", None, 0, 100, self)
         progress.setWindowTitle("Cleaning database")
         progress.show()
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
         # Create a query and start a transaction, more efficient
         query = QtSql.QSqlQuery(self.bdd)
@@ -2057,7 +2070,7 @@ class MyWindow(QtGui.QMainWindow):
 
         progress.setLabelText("Deleting articles with empty abstracts")
         progress.setValue(20)
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
         query.exec_("DELETE FROM papers WHERE abstract=''")
 
@@ -2068,7 +2081,7 @@ class MyWindow(QtGui.QMainWindow):
 
         progress.setLabelText("Deleting useless images")
         progress.setValue(40)
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
         query.exec_("SELECT graphical_abstract FROM papers WHERE graphical_abstract != 'Empty'")
 
@@ -2091,7 +2104,7 @@ class MyWindow(QtGui.QMainWindow):
 
         progress.setLabelText("Building list of filtered articles")
         progress.setValue(60)
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
         query.exec_("SELECT id, doi, title, journal, url FROM papers")
 
@@ -2116,7 +2129,7 @@ class MyWindow(QtGui.QMainWindow):
 
         progress.setLabelText("Deleting filtered articles")
         progress.setValue(80)
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
         requete = "DELETE FROM papers WHERE id IN ("
 
@@ -2132,12 +2145,12 @@ class MyWindow(QtGui.QMainWindow):
 
         self.l.info("Rejected entries deleted from the database")
 
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
         if self.debug_mod:
             progress.setLabelText("Building list of filtered articles")
             progress.setValue(85)
-            QtGui.qApp.processEvents()
+            QtWidgets.qApp.processEvents()
 
             # Build a list of DOIs to avoid duplicate in debug table
             list_doi = []
@@ -2147,7 +2160,7 @@ class MyWindow(QtGui.QMainWindow):
 
             progress.setLabelText("Inserting filtered articles in debug db")
             progress.setValue(90)
-            QtGui.qApp.processEvents()
+            QtWidgets.qApp.processEvents()
 
             # Insert all the rejected articles in the debug table
             self.bdd.transaction()
@@ -2175,12 +2188,12 @@ class MyWindow(QtGui.QMainWindow):
 
         progress.setLabelText("Loading notifications")
         progress.setValue(95)
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
         self.loadNotifications()
 
         progress.setValue(100)
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
         progress.reset()
 
         self.searchByButton()
@@ -2303,8 +2316,8 @@ class MyWindow(QtGui.QMainWindow):
         # Display a message if the classifier is not trained yet
         if self.predictor.initializePipeline() is None:
             self.blocking_ui = False
-            QtGui.QMessageBox.information(self, "Feed ChemBrows", mes,
-                                          QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
+                                          QtWidgets.QMessageBox.Ok)
 
             # Re-sort otherwise the display looks messy
             self.searchByButton()
@@ -2326,7 +2339,7 @@ class MyWindow(QtGui.QMainWindow):
                     worker.start()
 
                     while worker.isRunning():
-                        QtGui.qApp.processEvents()
+                        QtWidgets.qApp.processEvents()
                         worker.sleep(0.5)
 
             except AttributeError:
@@ -2342,16 +2355,16 @@ class MyWindow(QtGui.QMainWindow):
 
             # Display a message if the classifier is not trained yet
             if not self.predictor.calculated_something:
-                QtGui.QMessageBox.information(self, "Feed ChemBrows", mes,
-                                              QtGui.QMessageBox.Ok)
-                QtGui.qApp.processEvents()
+                QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
+                                              QtWidgets.QMessageBox.Ok)
+                QtWidgets.qApp.processEvents()
 
             if not alone:
                 # Display the number of articles added
                 mes = "{} new articles were added to your database !"
                 mes = mes.format(self.counter_added)
-                QtGui.QMessageBox.information(self, "New articles", mes,
-                                              QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.information(self, "New articles", mes,
+                                              QtWidgets.QMessageBox.Ok)
 
             del self.predictor
 
@@ -2359,7 +2372,7 @@ class MyWindow(QtGui.QMainWindow):
         # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
         # If the range is set to 0, get a busy progress bar,
         # without percentage
-        self.progress = QtGui.QProgressDialog("Calculating Hot Paperness...",
+        self.progress = QtWidgets.QProgressDialog("Calculating Hot Paperness...",
                                               None, 0, 0, self)
         self.progress.setWindowTitle("Hot Paperness calculation")
         self.progress.show()
@@ -2370,7 +2383,7 @@ class MyWindow(QtGui.QMainWindow):
         # While calculating, display a smooth progress bar
         try:
             while not self.predictor.isFinished():
-                QtGui.qApp.processEvents()
+                QtWidgets.qApp.processEvents()
                 self.predictor.sleep(0.5)
         except AttributeError:
             self.l.debug("Predictor deleted while processEvents ?")
@@ -2411,7 +2424,7 @@ class MyWindow(QtGui.QMainWindow):
         font = QtGui.QFont()
         font.setPointSize(self.styles.FONT_SIZE)
         font.setStyleStrategy(QtGui.QFont.PreferAntialias)
-        QtGui.qApp.setFont(font)
+        QtWidgets.qApp.setFont(font)
 
         self.l.debug('Font: {}'.format(font.family()))
         self.l.debug('Font size: {}pt'.format(self.styles.FONT_SIZE))
@@ -2457,26 +2470,26 @@ class MyWindow(QtGui.QMainWindow):
 
         # Refresh button. I use buttons and not actions because I want to
         # set their style
-        self.button_refresh = QtGui.QPushButton()
+        self.button_refresh = QtWidgets.QPushButton()
         self.button_refresh.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/refresh.png")))
         self.button_refresh.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_refresh.setToolTip("Refresh: download new posts")
         self.button_refresh.setAccessibleName('toolbar_round_button')
 
         # Percentage calculation button
-        self.button_calculate_percentage = QtGui.QPushButton()
+        self.button_calculate_percentage = QtWidgets.QPushButton()
         self.button_calculate_percentage.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/stats.png")))
         self.button_calculate_percentage.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_calculate_percentage.setToolTip("Re-calculate Hot Paperness")
         self.button_calculate_percentage.setAccessibleName('toolbar_round_button')
 
         # Button to display new articles, or view them all
-        self.button_search_new = QtGui.QPushButton('View unread')
+        self.button_search_new = QtWidgets.QPushButton('View unread')
         self.button_search_new.setToolTip("Display unread or all articles")
         self.button_search_new.setAccessibleName('toolbar_text_button')
 
         # Button to change the sorting method of the articles
-        self.button_sort_by = QtGui.QPushButton()
+        self.button_sort_by = QtWidgets.QPushButton()
         self.button_sort_by.setToolTip("Sort articles by date or Hot Paperness")
         self.button_sort_by.clicked.connect(lambda: self.changeSortingMethod(None, self.sortingReversedAction.isChecked()))
         self.button_sort_by.setAccessibleName('toolbar_text_button')
@@ -2488,22 +2501,22 @@ class MyWindow(QtGui.QMainWindow):
         self.line_research.setFixedSize(self.line_research.sizeHint().width(), self.line_research.sizeHint().height() * 1.3)
 
         # Advanced search button
-        self.button_advanced_search = QtGui.QPushButton()
+        self.button_advanced_search = QtWidgets.QPushButton()
         self.button_advanced_search.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/advanced_search.png")))
         self.button_advanced_search.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_advanced_search.setToolTip("Create filters")
         self.button_advanced_search.setAccessibleName('toolbar_round_button')
 
-        self.button_settings = QtGui.QPushButton()
+        self.button_settings = QtWidgets.QPushButton()
         self.button_settings.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/settings.png")))
         self.button_settings.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_settings.setToolTip("Preferences, settings")
         self.button_settings.setAccessibleName('toolbar_round_button')
 
         # Empty widget acting like a spacer
-        self.empty_widget = QtGui.QWidget()
-        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                                        QtGui.QSizePolicy.Preferred)
+        self.empty_widget = QtWidgets.QWidget()
+        self.empty_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                                        QtWidgets.QSizePolicy.Preferred)
 
         self.toolbar.addWidget(self.button_refresh)
         self.toolbar.addWidget(self.button_calculate_percentage)
@@ -2520,7 +2533,7 @@ class MyWindow(QtGui.QMainWindow):
         # ------------------------- LEFT AREA --------------------------------
 
         # Create scrollarea to put the journals buttons
-        self.scroll_tags = QtGui.QScrollArea()
+        self.scroll_tags = QtWidgets.QScrollArea()
 
         # Always disable the horizontal scroll bar of the left dock
         self.scroll_tags.setHorizontalScrollBarPolicy(
@@ -2528,9 +2541,9 @@ class MyWindow(QtGui.QMainWindow):
 
         # Create scrolling zone
         # http://www.mattmurrayanimation.com/archives/tag/how-do-i-use-a-qscrollarea-in-pyqt
-        self.scrolling_tags = QtGui.QWidget()
+        self.scrolling_tags = QtWidgets.QWidget()
 
-        self.vbox_all_tags = QtGui.QVBoxLayout()
+        self.vbox_all_tags = QtWidgets.QVBoxLayout()
         self.scrolling_tags.setLayout(self.vbox_all_tags)
 
         self.scroll_tags.hide()
@@ -2538,77 +2551,77 @@ class MyWindow(QtGui.QMainWindow):
         # ------------------------- RIGHT TOP AREA ---------------------------
 
         # Creation of a gridLayout to handle the top right area
-        self.area_right_top = QtGui.QWidget()
-        self.grid_area_right_top = QtGui.QGridLayout()
+        self.area_right_top = QtWidgets.QWidget()
+        self.grid_area_right_top = QtWidgets.QGridLayout()
         self.grid_area_right_top.setContentsMargins(10, 0, 0, 0)
         self.area_right_top.setLayout(self.grid_area_right_top)
 
         # Here I set a prelabel: a label w/ just "Title: " to label the title.
         # I set the sizePolicy of this prelabel to the minimum. It will stretch
         # to the minimum. Makes the display better with the grid
-        prelabel_title = QtGui.QLabel("Title: ")
-        prelabel_title.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
-        self.label_title = QtGui.QLabel()
+        prelabel_title = QtWidgets.QLabel("Title: ")
+        prelabel_title.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
+        self.label_title = QtWidgets.QLabel()
         self.label_title.setTextInteractionFlags(
             QtCore.Qt.TextSelectableByMouse)
         self.label_title.setWordWrap(True)
-        self.label_title.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_title.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
-        prelabel_author = QtGui.QLabel("Author(s): ")
-        prelabel_author.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
-        self.label_author = QtGui.QLabel()
+        prelabel_author = QtWidgets.QLabel("Author(s): ")
+        prelabel_author.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
+        self.label_author = QtWidgets.QLabel()
         self.label_author.setTextInteractionFlags(
             QtCore.Qt.TextSelectableByMouse)
         self.label_author.setWordWrap(True)
-        self.label_author.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_author.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
-        prelabel_journal = QtGui.QLabel("Journal: ")
-        prelabel_journal.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
-        self.label_journal = QtGui.QLabel()
+        prelabel_journal = QtWidgets.QLabel("Journal: ")
+        prelabel_journal.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
+        self.label_journal = QtWidgets.QLabel()
         self.label_journal.setTextInteractionFlags(
             QtCore.Qt.TextSelectableByMouse)
         self.label_journal.setWordWrap(True)
-        self.label_journal.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_journal.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
-        prelabel_date = QtGui.QLabel("Date: ")
-        prelabel_date.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
-        self.label_date = QtGui.QLabel()
+        prelabel_date = QtWidgets.QLabel("Date: ")
+        prelabel_date.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
+        self.label_date = QtWidgets.QLabel()
         self.label_date.setTextInteractionFlags(
             QtCore.Qt.TextSelectableByMouse)
         self.label_date.setWordWrap(True)
-        self.label_date.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_date.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
-        prelabel_doi = QtGui.QLabel("DOI: ")
-        prelabel_doi.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum,
-                                   QtGui.QSizePolicy.Minimum))
-        self.label_doi = QtGui.QLabel()
+        prelabel_doi = QtWidgets.QLabel("DOI: ")
+        prelabel_doi.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum,
+                                   QtWidgets.QSizePolicy.Minimum))
+        self.label_doi = QtWidgets.QLabel()
         self.label_doi.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         self.label_doi.setWordWrap(True)
-        self.label_doi.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_doi.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
         # Buttons for the display of the article: zoom & dark background
-        self.button_zoom_less = QtGui.QPushButton()
+        self.button_zoom_less = QtWidgets.QPushButton()
         self.button_zoom_less.setToolTip("Zoom out")
         self.button_zoom_less.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/zoom_out.png')))
         self.button_zoom_less.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_zoom_less.setAccessibleName('round_button_article')
         self.button_zoom_less.hide()
-        self.button_zoom_more = QtGui.QPushButton()
+        self.button_zoom_more = QtWidgets.QPushButton()
         self.button_zoom_more.setToolTip("Zoom in")
         self.button_zoom_more.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/zoom_in.png')))
         self.button_zoom_more.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_zoom_more.setAccessibleName('round_button_article')
         self.button_zoom_more.hide()
-        self.button_color_read = QtGui.QPushButton()
+        self.button_color_read = QtWidgets.QPushButton()
         self.button_color_read.setToolTip("Change background color")
         self.button_color_read.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/black_text.png')))
         self.button_color_read.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
@@ -2616,7 +2629,7 @@ class MyWindow(QtGui.QMainWindow):
         self.button_color_read.hide()
 
         # Button to share on twitter
-        self.button_twitter = QtGui.QPushButton()
+        self.button_twitter = QtWidgets.QPushButton()
         self.button_twitter.setToolTip("Tweet this article")
         self.button_twitter.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/twitter.png')))
         self.button_twitter.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
@@ -2624,7 +2637,7 @@ class MyWindow(QtGui.QMainWindow):
         self.button_twitter.hide()
 
         # Button to share by email
-        self.button_share_mail = QtGui.QPushButton()
+        self.button_share_mail = QtWidgets.QPushButton()
         self.button_share_mail.setToolTip("Share by mail")
         self.button_share_mail.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/email.png')))
         self.button_share_mail.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
@@ -2647,11 +2660,11 @@ class MyWindow(QtGui.QMainWindow):
         self.grid_area_right_top.addWidget(self.label_doi, 4, 1, 1, 4)
 
         # An empty widget, acts as spacer
-        self.empty_widget = QtGui.QWidget()
-        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
+        self.empty_widget = QtWidgets.QWidget()
+        self.empty_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
         # A HBoxLayout to store the article "toolbar"
-        self.hbox_toolbar_article = QtGui.QHBoxLayout()
+        self.hbox_toolbar_article = QtWidgets.QHBoxLayout()
         self.hbox_toolbar_article.addWidget(self.button_zoom_less, alignment=QtCore.Qt.AlignLeft)
         self.hbox_toolbar_article.addWidget(self.button_zoom_more, alignment=QtCore.Qt.AlignLeft)
         self.hbox_toolbar_article.addWidget(self.button_color_read, alignment=QtCore.Qt.AlignLeft)
@@ -2671,13 +2684,13 @@ class MyWindow(QtGui.QMainWindow):
         # Allows to create other tabs
         self.onglets = TabPerso(self)
 
-        self.central_widget = QtGui.QWidget()
-        self.hbox_central = QtGui.QHBoxLayout()
+        self.central_widget = QtWidgets.QWidget()
+        self.hbox_central = QtWidgets.QHBoxLayout()
         # (int left, int top, int right, int bottom) getContentsMargins (self)
         self.hbox_central.setContentsMargins(0, 5, 0, 5)
         self.central_widget.setLayout(self.hbox_central)
 
-        self.splitter2 = QtGui.QSplitter(QtCore.Qt.Horizontal)
+        self.splitter2 = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.splitter2.addWidget(self.onglets)
         self.splitter2.addWidget(self.area_right_top)
 
@@ -2717,7 +2730,7 @@ class MyWindow(QtGui.QMainWindow):
 if __name__ == '__main__':
     # logger = MyLog()
     # try:
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
 
     # ex = Fenetre(logger)
     ex = MyWindow()

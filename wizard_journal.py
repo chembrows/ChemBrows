@@ -4,7 +4,7 @@
 
 import os
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import feedparser
 
 from log import MyLog
@@ -12,7 +12,7 @@ import hosts
 import functions
 
 
-class WizardJournal(QtGui.QDialog):
+class WizardJournal(QtWidgets.QDialog):
 
     def __init__(self, parent):
 

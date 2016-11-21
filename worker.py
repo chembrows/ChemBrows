@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import os
-from PyQt4 import QtSql, QtCore
+from PyQt5 import QtSql, QtCore
 import feedparser
 import functools
 from requests_futures.sessions import FuturesSession

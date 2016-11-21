@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # coding: utf-8
 
-from PyQt4 import QtGui, QtCore, QtWebKit
+from PyQt5 import QtGui, QtCore, QtWebKitWidgets, QtWebKit
 
 
-class WebViewPerso(QtWebKit.QWebView):
+class WebViewPerso(QtWebKitWidgets.QWebView):
 
     """Zoomable QWebView"""
 
@@ -24,7 +24,7 @@ class WebViewPerso(QtWebKit.QWebView):
         self.settings().setFontFamily(QtWebKit.QWebSettings.StandardFont, self.font().family())
 
         # Disable following links
-        self.page().setLinkDelegationPolicy(QtWebKit.QWebPage.DelegateAllLinks)
+        self.page().setLinkDelegationPolicy(QtWebKitWidgets.QWebPage.DelegateAllLinks)
 
 
     def darkAndLight(self):

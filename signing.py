@@ -3,7 +3,7 @@
 
 
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import re
 import os
 import requests
@@ -17,7 +17,7 @@ from log import MyLog
 import functions
 
 
-class Signing(QtGui.QDialog):
+class Signing(QtWidgets.QDialog):
 
     """Module to log the user and assign to him a user_id
     the first time he starts the programm"""

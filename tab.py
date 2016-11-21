@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # coding: utf-8
 
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 
-class TabPerso(QtGui.QTabWidget):
+class TabPerso(QtWidgets.QTabWidget):
 
     """Subclassing the TabWidget, to implement the notifications"""
 

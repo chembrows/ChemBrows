@@ -2,7 +2,7 @@
 # coding: utf-8
 
 
-from PyQt4 import QtSql, QtCore
+from PyQt5 import QtSql, QtCore
 
 import sys
 import os

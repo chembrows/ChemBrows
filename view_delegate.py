@@ -3,13 +3,13 @@
 
 
 import os
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 # Personal
 from functions import prettyDate
 
 
-class ViewDelegate(QtGui.QStyledItemDelegate):
+class ViewDelegate(QtWidgets.QStyledItemDelegate):
 
     """
     Personnal delegate to draw thumbnails.
@@ -51,7 +51,8 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # http://stackoverflow.com/questions/23802170/word-wrap-with-html-qtabelview-and-delegates
 
             # Modify the text to display
-            options = QtGui.QStyleOptionViewItemV4(option)
+            # options = QtWidgets.QStyleOptionViewItemV4(option)
+            options = QtWidgets.QStyleOptionViewItem(option)
             self.initStyleOption(options, index)
 
             # If the article is unread, color the background of the cell
@@ -114,7 +115,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 height = doc.documentLayout().documentSize().height()
 
             options.text = ""
-            options.widget.style().drawControl(QtGui.QStyle.CE_ItemViewItem, options, painter)
+            options.widget.style().drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter)
 
             # Do not center the text vertically, causes too much bugs
             painter.translate(options.rect.left(), options.rect.top() + options.rect.height() / 2.5 - height / 2)
@@ -125,7 +126,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             # Change the background color of the cell here, won't be
             # possible later
-            if option.state & QtGui.QStyle.State_Selected:
+            if option.state & QtWidgets.QStyle.State_Selected:
                 painter.fillRect(clip, QtGui.QColor(120, 187, 222))
             elif grey:
                 painter.fillRect(clip, QtGui.QColor(231, 231, 231))
