@@ -57,7 +57,6 @@ class MyWindow(QtGui.QMainWindow):
             # http://stackoverflow.com/questions/10293808/how-to-get-the-path-of-the-executing-frozen-script
             # self.resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
             self.resource_dir, self.DATA_PATH = functions.getRightDirs()
-            # QtGui.QApplication.addLibraryPath(self.resource_dir)
 
             # Create the user directory if it doesn't exist
             os.makedirs(self.DATA_PATH, exist_ok=True)
@@ -2719,6 +2718,7 @@ if __name__ == '__main__':
     # logger = MyLog()
     # try:
     app = QtGui.QApplication(sys.argv)
+
     # ex = Fenetre(logger)
     ex = MyWindow()
     app.processEvents()
