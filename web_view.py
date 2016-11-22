@@ -13,15 +13,16 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
         super(WebViewPerso, self).__init__(parent)
         self.parent = parent
 
-        # Attribute to store the background state: dark or light
-        # self.dark = 0
+        # String to store the content of the 'web page'. Avoids multiple calls
+        # to toHtml
+        self.content = ""
 
         self.x = 0
         # self.setRenderHint(QtGui.QPainter.Antialiasing)
         # self.setRenderHint(QtGui.QPainter.TextAntialiasing)
 
         # Get the default font and use it for the QWebView
-        # self.settings().setFontFamily(QtWebEngineWidgets.QWebSettings.StandardFont, self.font().family())
+        self.settings().setFontFamily(QtWebEngineWidgets.QWebEngineSettings.StandardFont, self.font().family())
 
         # Disable following links
         # self.page().setLinkDelegationPolicy(QtWebEngineWidgets.QWebPage.DelegateAllLinks)
@@ -41,17 +42,21 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
         """Re-implementation of the parent method"""
 
         if string is None:
-            string = self.page().mainFrame().toHtml().split("</style>")[-1]
+            string = self.content.split("</style>")[-1]
+        else:
+            self.content = string
 
         # Change the background and font colors
         if self.parent.dark == 1:
-            self.setStyleSheet("background-color: grey;")
+            self.page().setBackgroundColor(QtGui.QColor('grey'))
             string = "<style>body {color:white}</style>" + string
         else:
-            self.setStyleSheet("background-color: white;")
+            self.page().setBackgroundColor(QtGui.QColor('white'))
             string = "<style>body {color:black}</style>" + string
 
-        super().setHtml(string)
+        # Need to set a base url of 'qrc:/' when you call setHtml.
+        # http://www.qtcentre.org/threads/34091-QWebView-with-css-js-and-images-in-a-resource-file
+        super().setHtml(string, QtCore.QUrl('qrc:/'))
 
 
     def zoom(self, more_or_less):
