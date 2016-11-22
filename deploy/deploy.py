@@ -24,7 +24,7 @@ app_name = 'ChemBrows'
 create_installer = False
 
 # Start the program after compiling/extraction
-play = False
+play = True
 
 # Freeze/bundle the program
 bundle = True
