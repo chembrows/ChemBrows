@@ -4,10 +4,6 @@
 
 from PyQt5 import QtGui, QtWidgets, QtCore
 
-# Personal
-# TEST
-import constants
-
 
 class ViewPerso(QtWidgets.QTableView):
 
@@ -173,7 +169,10 @@ class ViewPerso(QtWidgets.QTableView):
         """Reimplementation to propagate the event to the parent
         widget. Also, defines some special behaviors"""
 
+        # super(ViewPerso, self).keyPressEvent(e)
+
         key = e.key()
+        print(key)
 
         # To avoid a bug: the user scrolls the articles w/ the keyboard,
         # put an article in the toread list, and then continues scrolling.
@@ -184,6 +183,7 @@ class ViewPerso(QtWidgets.QTableView):
         # Browsing with up and down keys. Verifications made for
         # when the selection is completely at the top or the bottom
         if key == QtCore.Qt.Key_Down:
+            print("Down")
             current_index = self.selectionModel().currentIndex()
 
             if not current_index.isValid():
@@ -198,6 +198,7 @@ class ViewPerso(QtWidgets.QTableView):
                     self.clicked.emit(current_index)
 
         if key == QtCore.Qt.Key_Up:
+            print("up")
             current_index = self.selectionModel().currentIndex()
             new_index = current_index.sibling(current_index.row() - 1, current_index.column())
 

@@ -53,8 +53,12 @@ class Worker(QtCore.QThread):
         # W/ a large timeout, less chances to get en exception
         self.TIMEOUT = 20
 
-        self.count_futures_urls = 0
-        self.count_futures_images = 0
+        # Maximum nbr of concurrent workers. Set for session_images and
+        # session_pages
+        self.MAX_WORKERS = 20
+
+        self.counter_futures_urls = 0
+        self.counter_futures_images = 0
 
         # Count the entries added by a particular worker
         self.new_entries_worker = 0
@@ -104,7 +108,7 @@ class Worker(QtCore.QThread):
 
         # Lists to check if the post is in the db, and if
         # it has all the infos
-        self.session_images = FuturesSession(max_workers=20,
+        self.session_images = FuturesSession(max_workers=self.MAX_WORKERS,
             session=self.parent.browsing_session)
 
         # Get the company and the journal_abb by scrolling the dictionnary
@@ -141,7 +145,7 @@ class Worker(QtCore.QThread):
         # The feeds of these journals are complete
         if company in company_no_dl:
 
-            self.count_futures_urls += len(feed.entries)
+            self.counter_futures_urls += len(feed.entries)
 
             for entry in feed.entries:
 
@@ -152,7 +156,7 @@ class Worker(QtCore.QThread):
                 # Reject crappy entries: corrigendum, erratum, etc
                 if hosts.reject(entry.title):
                     title = entry.title
-                    self.count_futures_images += 1
+                    self.counter_futures_images += 1
                     self.parent.counter_rejected += 1
                     self.l.debug("Rejecting {0}".format(doi))
 
@@ -171,7 +175,7 @@ class Worker(QtCore.QThread):
 
                 # Artice complete, skip it
                 elif doi in self.dico_doi and self.dico_doi[doi]:
-                    self.count_futures_images += 1
+                    self.counter_futures_images += 1
                     self.l.debug("Skipping {}".format(doi))
                     continue
 
@@ -194,7 +198,7 @@ class Worker(QtCore.QThread):
                         if os.path.exists(self.DATA_PATH +
                                           functions.simpleChar(
                                               graphical_abstract)):
-                            self.count_futures_images += 1
+                            self.counter_futures_images += 1
                         else:
                             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                                        'Connection': 'close',
@@ -208,7 +212,7 @@ class Worker(QtCore.QThread):
                             self.list_futures.append(future_image)
 
                     else:
-                        self.count_futures_images += 1
+                        self.counter_futures_images += 1
                         continue
 
                 # New article, treat it
@@ -218,13 +222,13 @@ class Worker(QtCore.QThread):
                     except Exception as e:
                         self.l.error("Problem with getData: {}".
                                      format(journal), exc_info=True)
-                        self.count_futures_images += 1
-                        self.count_articles_failed += 1
+                        self.counter_futures_images += 1
+                        self.counter_articles_failed += 1
                         return
 
                     # Rejecting article if no author
                     if authors == "Empty":
-                        self.count_futures_images += 1
+                        self.counter_futures_images += 1
                         self.parent.counter_rejected += 1
                         self.l.debug("Rejecting article {}, no author".
                                      format(title))
@@ -253,7 +257,7 @@ class Worker(QtCore.QThread):
                             self.DATA_PATH +
                             functions.simpleChar(graphical_abstract)):
 
-                        self.count_futures_images += 1
+                        self.counter_futures_images += 1
 
                         # This block is executed when you delete the db, but
                         # not the images. Allows to update the
@@ -290,7 +294,7 @@ class Worker(QtCore.QThread):
             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                        'Connection': 'close'}
 
-            self.session_pages = FuturesSession(max_workers=20,
+            self.session_pages = FuturesSession(max_workers=self.MAX_WORKERS,
                 session=self.parent.browsing_session)
 
             for entry in feed.entries:
@@ -301,8 +305,8 @@ class Worker(QtCore.QThread):
                 # Reject crappy entries: corrigendum, erratum, etc
                 if hosts.reject(entry.title):
                     title = entry.title
-                    self.count_futures_images += 1
-                    self.count_futures_urls += 1
+                    self.counter_futures_images += 1
+                    self.counter_futures_urls += 1
                     self.parent.counter_rejected += 1
                     self.l.debug("Rejecting {0}".format(doi))
 
@@ -322,8 +326,8 @@ class Worker(QtCore.QThread):
 
                 # Article complete, skip it
                 elif doi in self.dico_doi and self.dico_doi[doi]:
-                    self.count_futures_images += 1
-                    self.count_futures_urls += 1
+                    self.counter_futures_images += 1
+                    self.counter_futures_urls += 1
                     self.l.debug("Skipping {}".format(doi))
                     continue
 
@@ -355,14 +359,14 @@ class Worker(QtCore.QThread):
 
                     elif dl_image:
                         self.parent.counter_updates += 1
-                        self.count_futures_urls += 1
+                        self.counter_futures_urls += 1
 
                         graphical_abstract = data['graphical_abstract']
 
                         if os.path.exists(self.DATA_PATH +
                                           functions.simpleChar(
                                               graphical_abstract)):
-                            self.count_futures_images += 1
+                            self.counter_futures_images += 1
                         else:
                             headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                                        'Connection': 'close',
@@ -376,8 +380,8 @@ class Worker(QtCore.QThread):
                             self.list_futures.append(future_image)
 
                     else:
-                        self.count_futures_urls += 1
-                        self.count_futures_images += 1
+                        self.counter_futures_urls += 1
+                        self.counter_futures_images += 1
                         continue
 
                 # New article, treat it
@@ -395,7 +399,7 @@ class Worker(QtCore.QThread):
 
 
         # Check if the counters are full
-        while ((self.count_futures_images + self.count_futures_urls) !=
+        while ((self.counter_futures_images + self.counter_futures_urls) !=
                 len(feed.entries) * 2 and self.parent.parsing):
             self.sleep(0.5)
 
@@ -423,7 +427,7 @@ class Worker(QtCore.QThread):
         download the page of the articles"""
 
         self.l.debug("Page dled")
-        self.count_futures_urls += 1
+        self.counter_futures_urls += 1
 
         if not self.parent.parsing:
             return
@@ -435,14 +439,14 @@ class Worker(QtCore.QThread):
                 socket.timeout, concurrent.futures._base.CancelledError) as e:
 
             self.l.error("{} raised for {}. Handled".format(journal, e))
-            self.count_futures_images += 1
-            self.parent.count_articles_failed += 1
+            self.counter_futures_images += 1
+            self.parent.counter_articles_failed += 1
             return
         except Exception as e:
             self.l.error("Unknown exception {} for {}".format(e, journal),
                          exc_info=True)
-            self.count_futures_images += 1
-            self.parent.count_articles_failed += 1
+            self.counter_futures_images += 1
+            self.parent.counter_articles_failed += 1
             return
 
         query = QtSql.QSqlQuery(self.bdd)
@@ -451,20 +455,20 @@ class Worker(QtCore.QThread):
             title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry, response)
         except TypeError:
             self.l.error("getData returned None for {}".format(journal))
-            self.count_futures_images += 1
-            self.parent.count_articles_failed += 1
+            self.counter_futures_images += 1
+            self.parent.counter_articles_failed += 1
             return
         except Exception as e:
             self.l.error("Unknown exception completeData {}".format(e),
                          exc_info=True)
-            self.count_futures_images += 1
-            self.parent.count_articles_failed += 1
+            self.counter_futures_images += 1
+            self.parent.counter_articles_failed += 1
             return
 
 
         # Rejecting the article if no authors
         if authors == "Empty":
-            self.count_futures_images += 1
+            self.counter_futures_images += 1
             self.parent.counter_rejected += 1
             self.l.debug("Rejecting article {}, no author".format(title))
             return
@@ -496,7 +500,7 @@ class Worker(QtCore.QThread):
         if (graphical_abstract == "Empty" or
                 os.path.exists(self.DATA_PATH +
                                functions.simpleChar(graphical_abstract))):
-            self.count_futures_images += 1
+            self.counter_futures_images += 1
             self.l.debug("Image already dled or Empty")
 
             # This block is executed when you delete the db, but not the
@@ -573,7 +577,7 @@ class Worker(QtCore.QThread):
             self.new_entries_worker += 1
             query.exec_()
 
-        self.count_futures_images += 1
+        self.counter_futures_images += 1
 
 
     def listDoi(self, journal_abb):

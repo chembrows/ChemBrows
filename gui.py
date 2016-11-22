@@ -554,8 +554,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
         """Slot to cancel the refresh process"""
 
-        print("bam")
-
         # Set the parsing bool to false, block checkThreads
         self.parsing = False
 
@@ -985,7 +983,7 @@ class MyWindow(QtWidgets.QMainWindow):
         QtCore.QTimer.singleShot(50, self.updateCellSize)
 
 
-    def eventFilter(self, source, event):
+    def eventFilter(self, source, event) -> bool:
 
         """Sublclassing of this method allows to hide/show
         the journals filters on the left, through a mouse hover event.
@@ -993,22 +991,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
         # do not hide menubar when menu shown
         if QtWidgets.qApp.activePopupWidget() is None:
-            # If parsing running, block some user inputs
-            if self.blocking_ui:
-                if (type(source) == QtWidgets.QPushButton and
-                        source.text() == 'Cancel'):
-                    forbidden = []
-                else:
-                    forbidden = [QtCore.QEvent.KeyPress,
-                                 QtCore.QEvent.KeyRelease,
-                                 QtCore.QEvent.MouseButtonPress,
-                                 QtCore.QEvent.MouseButtonDblClick,
-                                 QtCore.QEvent.MouseMove, QtCore.QEvent.Wheel]
-                if event.type() == QtCore.QEvent.Close:
-                    self.progress.reset()
-                    return False
-                elif event.type() in forbidden:
-                    return True
             if event.type() == QtCore.QEvent.MouseMove:
                 try:
                     if self.scroll_tags.isHidden():
