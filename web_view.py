@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # coding: utf-8
 
-from PyQt5 import QtGui, QtCore, QtWebKitWidgets, QtWebKit
+from PyQt5 import QtGui, QtCore, QtWebEngineWidgets, QtWidgets
 
 
-class WebViewPerso(QtWebKitWidgets.QWebView):
+class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
 
     """Zoomable QWebView"""
 
@@ -17,14 +17,14 @@ class WebViewPerso(QtWebKitWidgets.QWebView):
         # self.dark = 0
 
         self.x = 0
-        self.setRenderHint(QtGui.QPainter.Antialiasing)
-        self.setRenderHint(QtGui.QPainter.TextAntialiasing)
+        # self.setRenderHint(QtGui.QPainter.Antialiasing)
+        # self.setRenderHint(QtGui.QPainter.TextAntialiasing)
 
         # Get the default font and use it for the QWebView
-        self.settings().setFontFamily(QtWebKit.QWebSettings.StandardFont, self.font().family())
+        # self.settings().setFontFamily(QtWebEngineWidgets.QWebSettings.StandardFont, self.font().family())
 
         # Disable following links
-        self.page().setLinkDelegationPolicy(QtWebKitWidgets.QWebPage.DelegateAllLinks)
+        # self.page().setLinkDelegationPolicy(QtWebEngineWidgets.QWebPage.DelegateAllLinks)
 
 
     def darkAndLight(self):
@@ -77,9 +77,9 @@ class WebViewPerso(QtWebKitWidgets.QWebView):
 
         super(WebViewPerso, self).wheelEvent(event)
 
-        modifiers = QtGui.QApplication.keyboardModifiers()
+        modifiers = QtWidgets.QApplication.keyboardModifiers()
 
-        # # Zoom only if ctrl is pressed
+        # Zoom only if ctrl is pressed
         if modifiers == QtCore.Qt.ControlModifier:
-            self.x += float(event.delta() / 120)
+            self.x += event.angleDelta().y() / 120
             self.setZoomFactor(1 + self.x / 10)
