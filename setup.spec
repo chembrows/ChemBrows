@@ -48,17 +48,18 @@ a = Analysis(PATH_EXE,
              win_private_assemblies=False,
              cipher=block_cipher)
 
-rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
-           'libQt3Support', 'libwebp', 'libXss', 'libXft', 'libcrypto',
-           'libtcl', 'libtk', 'libX11', 'libgstreamer', 'libgcrypt',
-           'libQtOpenGL.so', 'libfbclient', 'libfreetype', 'libgcc_s',
-           'libsqlite3', 'libQtDBus', 'libsystemd', 'libgstvideo', 'liborc',
-           'libharfbuzz', 'libpcre', 'libmng', 'bncursesw', 'libgstbase',
-           'libgstaudio', 'liblcms2', 'libQtSvg', 'liblapack', 'libatlas',
-           'libgobject', 'libquadmath', 'libgsttag', 'libmpdec',
-           'libgstpbutils', 'libxcb-glx', 'libICE', 'libQtXml',
-           'libfontconfig', 'libglapi', 'libgraphite2', 'libexpat',
-           'libXext', 'liblz4']
+# rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
+           # 'libQt3Support', 'libwebp', 'libXss', 'libXft', 'libcrypto',
+           # 'libtcl', 'libtk', 'libX11', 'libgstreamer', 'libgcrypt',
+           # 'libQtOpenGL.so', 'libfbclient', 'libfreetype', 'libgcc_s',
+           # 'libsqlite3', 'libQtDBus', 'libsystemd', 'libgstvideo', 'liborc',
+           # 'libharfbuzz', 'libpcre', 'libmng', 'bncursesw', 'libgstbase',
+           # 'libgstaudio', 'liblcms2', 'libQtSvg', 'liblapack', 'libatlas',
+           # 'libgobject', 'libquadmath', 'libgsttag', 'libmpdec',
+           # 'libgstpbutils', 'libxcb-glx', 'libICE', 'libQtXml',
+           # 'libfontconfig', 'libglapi', 'libgraphite2', 'libexpat',
+           # 'libXext', 'liblz4']
+rm_bins = []
 
 full_tuples = []
 for each_bin in a.binaries:

@@ -426,8 +426,10 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.urls.append(url)
 
         # Display a progress dialog box
-        self.progress = QtWidgets.QProgressDialog("Collecting in progress", "Cancel", 0, 100, self)
+        self.progress = QtWidgets.QProgressDialog("Collecting in progress",
+                                                  "Cancel", 0, 100, self)
         self.progress.setWindowTitle("Collecting articles")
+        self.progress.setModal(True)
         self.progress.canceled.connect(self.cancelRefresh)
         self.progress.show()
 
@@ -1006,7 +1008,8 @@ class MyWindow(QtWidgets.QMainWindow):
                         rect.setWidth(25)
                         rect.setTop(table_y)
 
-                        if rect.contains(event.globalPos()):
+                        if (rect.contains(event.globalPos()) and
+                                not self.blocking_ui):
                             self.scroll_tags.show()
                     else:
                         width_layout = self.hbox_central.getContentsMargins()[2]
