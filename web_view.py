@@ -3,6 +3,9 @@
 
 from PyQt5 import QtGui, QtCore, QtWebEngineWidgets, QtWidgets
 
+# Perso
+from web_engine_page import WebEnginePage
+
 
 class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
 
@@ -12,6 +15,9 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
 
         super(WebViewPerso, self).__init__(parent)
         self.parent = parent
+
+        # Load custom page, to disable link navigation
+        self.setPage(WebEnginePage(self))
 
         # String to store the content of the 'web page'. Avoids multiple calls
         # to toHtml
@@ -25,10 +31,6 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
         self.settings().setFontFamily(
             QtWebEngineWidgets.QWebEngineSettings.StandardFont,
             self.font().family())
-
-        # Disable following links
-        # self.page().setLinkDelegationPolicy(QtWebKit.QWebPage.DelegateAllLinks)
-        # self.triggerPageAction(QtWebEngineWidgets.QWebEnginePage.NoWebAction)
 
 
     def contextMenuEvent(self, e):
