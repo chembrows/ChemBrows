@@ -22,10 +22,20 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
         # self.setRenderHint(QtGui.QPainter.TextAntialiasing)
 
         # Get the default font and use it for the QWebView
-        self.settings().setFontFamily(QtWebEngineWidgets.QWebEngineSettings.StandardFont, self.font().family())
+        self.settings().setFontFamily(
+            QtWebEngineWidgets.QWebEngineSettings.StandardFont,
+            self.font().family())
 
         # Disable following links
-        # self.page().setLinkDelegationPolicy(QtWebEngineWidgets.QWebPage.DelegateAllLinks)
+        # self.page().setLinkDelegationPolicy(QtWebKit.QWebPage.DelegateAllLinks)
+        # self.triggerPageAction(QtWebEngineWidgets.QWebEnginePage.NoWebAction)
+
+
+    def contextMenuEvent(self, e):
+
+        """Disable right click"""
+
+        pass
 
 
     def darkAndLight(self):
@@ -54,9 +64,16 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
             self.page().setBackgroundColor(QtGui.QColor('white'))
             string = "<style>body {color:black}</style>" + string
 
+        # Disable/enable the view bc call to setHtml grabs focus. See:
+        # https://bugreports.qt.io/browse/QTBUG-52999
+        # This bug should be fixed in PyQT 5.7.1
+        self.setEnabled(False)
+
         # Need to set a base url of 'qrc:/' when you call setHtml.
         # http://www.qtcentre.org/threads/34091-QWebView-with-css-js-and-images-in-a-resource-file
         super().setHtml(string, QtCore.QUrl('qrc:/'))
+
+        self.setEnabled(True)
 
 
     def zoom(self, more_or_less):

@@ -796,7 +796,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
         """Method to perform actions before exiting.
         Allows to save the prefs in a file"""
-        print("coucou")
 
         # http://stackoverflow.com/questions/9249500/
         # pyside-pyqt-detect-if-user-trying-to-close-window
