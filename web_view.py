@@ -16,6 +16,9 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
         super(WebViewPerso, self).__init__(parent)
         self.parent = parent
 
+        style = "font-family: Times;"
+        self.setStyleSheet(style)
+
         # Load custom page, to disable link navigation
         self.setPage(WebEnginePage(self))
 
@@ -24,13 +27,14 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
         self.content = ""
 
         self.x = 0
-        # self.setRenderHint(QtGui.QPainter.Antialiasing)
-        # self.setRenderHint(QtGui.QPainter.TextAntialiasing)
 
-        # Get the default font and use it for the QWebView
-        self.settings().setFontFamily(
-            QtWebEngineWidgets.QWebEngineSettings.StandardFont,
-            self.font().family())
+        # # Get the default font and use it for the QWebView
+        # self.settings().setFontFamily(
+            # QtWebEngineWidgets.QWebEngineSettings.StandardFont,
+            # self.font().family())
+        # print(type(self.parent.font())
+        # print(self.parent.font().family())
+        # self.setFont(self.parent.font())
 
 
     def contextMenuEvent(self, e):
@@ -61,10 +65,10 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
         # Change the background and font colors
         if self.parent.dark == 1:
             self.page().setBackgroundColor(QtGui.QColor('grey'))
-            string = "<style>body {color:white}</style>" + string
+            string = "<style>body {color:white; font-family: %s;};</style>" % self.parent.font().family() + string
         else:
             self.page().setBackgroundColor(QtGui.QColor('white'))
-            string = "<style>body {color:black}</style>" + string
+            string = "<style>body {color:black; font-family: %s;};</style>" % self.parent.font().family() + string
 
         # Disable/enable the view bc call to setHtml grabs focus. See:
         # https://bugreports.qt.io/browse/QTBUG-52999
