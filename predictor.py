@@ -103,7 +103,7 @@ class Predictor(QtCore.QThread):
         if (not self.x_train or 0 not in self.y_train or
                 1 not in self.y_train):
             self.l.error("Not enough data yet to feed the classifier")
-            return
+            return None
 
         self.classifier = Pipeline([
             ('vectorizer', CountVectorizer(stop_words=self.stop_words)),
@@ -114,7 +114,7 @@ class Predictor(QtCore.QThread):
             self.classifier.fit(self.x_train, self.y_train)
         except ValueError:
             self.l.error("Not enough data yet to train the classifier")
-            return
+            return None
 
         elapsed_time = datetime.datetime.now() - start_time
         self.l.debug("Initializing classifier in {0}".format(elapsed_time))
@@ -134,6 +134,8 @@ class Predictor(QtCore.QThread):
 
         query = QtSql.QSqlQuery(self.bdd)
 
+        # topic_simple also contains the title of the abstract
+        # the calculations will be performed on the topic and title
         query.exec_("SELECT id, topic_simple FROM papers")
 
         list_id = []
@@ -184,10 +186,6 @@ class Predictor(QtCore.QThread):
                 query.addBindValue(value)
 
             query.exec_()
-
-        # # Set the percentage_match to 0 if the abstact is 'Empty' or empty
-        # query.prepare("UPDATE papers SET percentage_match = 0 WHERE abstract = 'Empty' OR abstract = ''")
-        # query.exec_()
 
         if not self.bdd.commit():
             self.l.critical("Percentages match not correctly written in db")

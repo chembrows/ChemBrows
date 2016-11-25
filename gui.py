@@ -66,7 +66,7 @@ class MyWindow(QtWidgets.QMainWindow):
                         exist_ok=True)
 
             # Create the logger w/ the appropriate size
-            self.l = MyLog(self.DATA_PATH + "/activity.log")
+            self.l = MyLog(os.path.join(self.DATA_PATH, "activity.log"))
             self.l.info("This version of ChemBrows is frozen")
             self.l.info("You are NOT in debug mode")
         else:
@@ -2338,9 +2338,11 @@ class MyWindow(QtWidgets.QMainWindow):
             self.progress.reset()
 
             # Display a message if the classifier is not trained yet
-            if not self.predictor.calculated_something:
+            if (self.predictor.initializePipeline() is not None and
+                    not self.predictor.calculated_something):
+
                 QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
-                                              QtWidgets.QMessageBox.Ok)
+                                                  QtWidgets.QMessageBox.Ok)
                 QtWidgets.qApp.processEvents()
 
             if not alone:
@@ -2406,6 +2408,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('ChemBrows')
 
         font = QtGui.QFont()
+        font.setStyleHint(QtGui.QFont.System)
         font.setPointSize(self.styles.FONT_SIZE)
         font.setStyleStrategy(QtGui.QFont.PreferAntialias)
         QtWidgets.qApp.setFont(font)
