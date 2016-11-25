@@ -16,25 +16,16 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
         super(WebViewPerso, self).__init__(parent)
         self.parent = parent
 
-        style = "font-family: Times;"
-        self.setStyleSheet(style)
-
-        # Load custom page, to disable link navigation
-        self.setPage(WebEnginePage(self))
-
         # String to store the content of the 'web page'. Avoids multiple calls
         # to toHtml
         self.content = ""
 
         self.x = 0
 
-        # # Get the default font and use it for the QWebView
-        # self.settings().setFontFamily(
-            # QtWebEngineWidgets.QWebEngineSettings.StandardFont,
-            # self.font().family())
-        # print(type(self.parent.font())
-        # print(self.parent.font().family())
-        # self.setFont(self.parent.font())
+        # Get the default font and use it for the QWebView
+        self.settings().setFontFamily(
+            QtWebEngineWidgets.QWebEngineSettings.StandardFont,
+            self.parent.font().family())
 
 
     def contextMenuEvent(self, e):
@@ -53,7 +44,7 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
         self.setHtml()
 
 
-    def setHtml(self, string=None):
+    def setHtml(self, string=None, url='qrc:/'):
 
         """Re-implementation of the parent method"""
 
@@ -65,10 +56,12 @@ class WebViewPerso(QtWebEngineWidgets.QWebEngineView):
         # Change the background and font colors
         if self.parent.dark == 1:
             self.page().setBackgroundColor(QtGui.QColor('grey'))
-            string = "<style>body {color:white; font-family: %s;};</style>" % self.parent.font().family() + string
+            # string = "<style>body {color:white; font-family: %s;};</style>" % "AkrutiMal1" + string
+            string = "<style>body {color:white};</style>" + string
         else:
             self.page().setBackgroundColor(QtGui.QColor('white'))
-            string = "<style>body {color:black; font-family: %s;};</style>" % self.parent.font().family() + string
+            # string = "<style>body {color:black; font-family: %s;};</style>" % "AkrutiMal1" + string
+            string = "<style>body {color:black};</style>" + string
 
         # Disable/enable the view bc call to setHtml grabs focus. See:
         # https://bugreports.qt.io/browse/QTBUG-52999
