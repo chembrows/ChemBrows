@@ -25,7 +25,7 @@ class MyTwit(QtWidgets.QDialog):
     # https://dev.twitter.com/rest/reference/get/help/configuration
 
 
-    def __init__(self, parent, title, link, graphical=None):
+    def __init__(self, title, link, graphical=None, parent=None):
 
         super(MyTwit, self).__init__(parent)
 
@@ -41,9 +41,10 @@ class MyTwit(QtWidgets.QDialog):
 
         self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
-
-        # Get the logger of the parent window or create one
-        self.l = getattr(parent, 'l', MyLog(self.DATA_PATH + "/activity.log"))
+        if parent is None:
+            self.l = MyLog("activity.log")
+        else:
+            self.l = self.parent.l
 
         self.CONSUMER_KEY = 'IaTVXKtZ7uBjzcVWzsVmMYKtP'
         self.CONSUMER_SECRET = '8hsz0Zj3CupFfvJMAhpG3UjMLs7HZjGywRsjRJI8IcjIA4NrEk'
@@ -243,8 +244,6 @@ class MyTwit(QtWidgets.QDialog):
 if __name__ == '__main__':
 
     app = QtWidgets.QApplication(sys.argv)
-    parent = QtWidgets.QWidget()
-    parent.DATA_PATH = '.'
     # obj = MyTwit(parent, "Mesoporous Ni<small><sub>60</sub></small>Fe<small><sub>30</sub></small>Mn<small><sub>10</sub></small>-alloy based metal/metal oxide composite thick films as highly active and robust oxygen evolution catalysts", "http://pubs.rsc.org/en/Content/ArticleLanding/2016/EE/C5EE02509E", "http pubs rsc org services images rscpubs eplatform service freecontent imageservice svc imageservice image ga id c5ee02509e")
-    obj = MyTwit(parent, "<span class=\"hlFld-Title\">Molecular Rift: Virtual Reality for Drug Designers</span>", "http://dx.doi.org/10.1021/acs.jcim.5b00544", "http pubs acs org appl literatum publisher achs journals content jcisd8 0 jcisd8 ahead of print acs jcim 5b00544 20151111 images medium ci 2015 00544d_0015 gif")
+    obj = MyTwit("<span class=\"hlFld-Title\">Molecular Rift: Virtual Reality for Drug Designers</span>", "http://dx.doi.org/10.1021/acs.jcim.5b00544", "http pubs acs org appl literatum publisher achs journals content jcisd8 0 jcisd8 ahead of print acs jcim 5b00544 20151111 images medium ci 2015 00544d_0015 gif")
     sys.exit(app.exec_())

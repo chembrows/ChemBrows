@@ -14,7 +14,7 @@ import functions
 
 class WizardJournal(QtWidgets.QDialog):
 
-    def __init__(self, parent):
+    def __init__(self, parent=None):
 
         super(WizardJournal, self).__init__(parent)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -23,7 +23,7 @@ class WizardJournal(QtWidgets.QDialog):
 
         self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
-        if type(parent) is QtWidgets.QWidget:
+        if parent is None:
             self.l = MyLog("activity.log")
 
             # Dummy file for saving if testing
@@ -194,6 +194,6 @@ class WizardJournal(QtWidgets.QDialog):
 if __name__ == '__main__':
 
     app = QtWidgets.QApplication(sys.argv)
-    parent = QtWidgets.QWidget()
-    obj = WizardJournal(parent)
+    # parent = QtWidgets.QWidget()
+    obj = WizardJournal()
     sys.exit(app.exec_())

@@ -20,6 +20,7 @@ PyInstaller==3.2
 pyparsing==2.1.8
 PyQt5==5.7
 pytest==3.0.3
+pytest-qt==2.1.0
 python-dateutil==2.5.3
 pytz==2016.6.1
 PyUpdater==2.2.0

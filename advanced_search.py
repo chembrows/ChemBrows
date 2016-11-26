@@ -15,7 +15,7 @@ class AdvancedSearch(QtWidgets.QDialog):
 
     """Class to perform advanced searches"""
 
-    def __init__(self, parent):
+    def __init__(self, parent=None):
 
         super(AdvancedSearch, self).__init__(parent)
 
@@ -27,7 +27,7 @@ class AdvancedSearch(QtWidgets.QDialog):
 
         # Condition to use a specific logger if
         # module started in standalone
-        if type(parent) is QtWidgets.QWidget:
+        if parent is None:
             self.logger = MyLog("activity.log")
             self.test = True
         else:

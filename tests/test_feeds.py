@@ -22,7 +22,7 @@ from log import MyLog
 NBR_ACS_JOURNALS = 52
 
 
-l = MyLog("output_tests.log", mode='w')
+l = MyLog("output_tests_feeds.log", mode='w')
 l.debug("---------------------- START NEW RUN OF TESTS ----------------------")
 
 

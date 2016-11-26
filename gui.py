@@ -2220,9 +2220,9 @@ class MyWindow(QtWidgets.QMainWindow):
         graphical_abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 8).data()
 
         if type(graphical_abstract) is str and graphical_abstract != "Empty":
-            MyTwit(self, title, link, graphical_abstract)
+            MyTwit(title, link, graphical_abstract, self)
         else:
-            MyTwit(self, title, link)
+            MyTwit(title, link, self)
 
 
     def shareByEmail(self):
