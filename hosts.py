@@ -687,6 +687,9 @@ def getData(company, journal, entry, response=None):
     else:
         return None
 
+    if title is None:
+        return None
+
 
     if abstract is not None:
 

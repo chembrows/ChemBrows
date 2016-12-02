@@ -105,27 +105,9 @@ class ViewPerso(QtWidgets.QTableView):
         Allows to resize the columns of the table to optimize space.
         new_size is the width of the central splitter of the parent"""
 
-        row_height = self.rowHeight(0)
-        nbr_rows = self.model().rowCount()
-
-        if row_height * nbr_rows > self.height():
-            scroll_bar_visible = True
-        else:
-            scroll_bar_visible = False
-
         # The thumbnail's size is set to 30 % of the view's width
-        size_thumbnail = new_size * 0.3
-
-        # If the scrollbar is not visible (not enough posts), its width
-        # is set to 100 px. Weird. So if the scrollBar is not visible,
-        # don't substract its size
-        if scroll_bar_visible:
-            size_title = new_size - size_thumbnail - self.verticalScrollBar().sizeHint().width()
-        else:
-            size_title = new_size - size_thumbnail
-
-        self.setColumnWidth(8, size_thumbnail)
-        self.setColumnWidth(3, size_title)
+        # The rest is filled with the stretchable title
+        self.setColumnWidth(8, new_size * 0.3)
 
 
     def initUI(self):
@@ -146,6 +128,10 @@ class ViewPerso(QtWidgets.QTableView):
         self.hideColumn(11)  # Hide new
         self.hideColumn(12)  # Hide topic_simple
         self.hideColumn(13)  # Hide author_simple
+
+        # Stretch the title into the remaining space
+        self.horizontalHeader().setSectionResizeMode(3,
+            QtWidgets.QHeaderView.Stretch)
 
         # Move the graphical abstract to first
         self.horizontalHeader().moveSection(8, 0)
