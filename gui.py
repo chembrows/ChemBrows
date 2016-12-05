@@ -2361,6 +2361,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.progress = QtWidgets.QProgressDialog("Calculating Hot Paperness...",
                                               None, 0, 0, self)
         self.progress.setWindowTitle("Hot Paperness calculation")
+        self.progress.setModal(True)
         self.progress.show()
 
         self.predictor.finished.connect(whenDone)
