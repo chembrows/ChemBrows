@@ -33,10 +33,10 @@ def logAssert(test, msg):
         assert test, msg
 
 
-def test_WizardJournal(qtbot):
+# def test_WizardJournal(qtbot):
 
-    test = WizardJournal()
-    qtbot.addWidget(test)
+    # test = WizardJournal()
+    # qtbot.addWidget(test)
 
 
 
