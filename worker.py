@@ -67,10 +67,9 @@ class Worker(QtCore.QThread):
         self.list_futures = []
 
 
-    def _getFeed(self, url: str,
-                 timeout: int) -> feedparser.util.FeedParserDict:
+    def _getFeed(self, timeout: int) -> feedparser.util.FeedParserDict:
 
-        self.l.debug(url)
+        self.l.debug(self.url_feed)
 
         try:
             # Get the RSS page of the url provided
@@ -83,8 +82,8 @@ class Worker(QtCore.QThread):
             return feed
 
         except Exception as e:
-            self.l.error("RSS page could not be downloaded: {}".format(e),
-                         exc_info=True)
+            self.l.error("RSS page for {} could not be downloaded: {}".
+                         format(self.url_feed, e), exc_info=True)
             return None
 
 
@@ -94,7 +93,7 @@ class Worker(QtCore.QThread):
 
         self.l.debug("Entering worker")
 
-        feed = self._getFeed(self.url_feed, timeout=self.TIMEOUT)
+        feed = self._getFeed(timeout=self.TIMEOUT)
 
         if feed is None:
             self.l.debug("Exiting worker, problem w/ the feed")
