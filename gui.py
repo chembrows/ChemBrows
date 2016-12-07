@@ -49,6 +49,8 @@ class MyWindow(QtWidgets.QMainWindow):
 
         super(MyWindow, self).__init__()
 
+        self.resource_dir, self.DATA_PATH = functions.getRightDirs()
+
         # Check if the running ChemBrows is a frozen app
         if getattr(sys, "frozen", False):
             # The program is NOT in debug mod if it's frozen
@@ -56,7 +58,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
             # http://stackoverflow.com/questions/10293808/how-to-get-the-path-of-the-executing-frozen-script
             # self.resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-            self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
             # Create the user directory if it doesn't exist
             os.makedirs(self.DATA_PATH, exist_ok=True)
@@ -72,11 +73,10 @@ class MyWindow(QtWidgets.QMainWindow):
         else:
             # The program is in debug mod if it's not frozen
             self.debug_mod = True
-            self.DATA_PATH = "."
-            self.resource_dir = self.DATA_PATH
 
             # Create the logger w/ the appropriate size
-            self.l = MyLog(self.DATA_PATH + "/activity.log", size=100000000)
+            self.l = MyLog(os.path.join(self.DATA_PATH, "activity.log"),
+                           size=100000000)
             self.l.info("This version of ChemBrows is NOT frozen")
             self.l.info("You are in debug mod")
 
@@ -87,14 +87,17 @@ class MyWindow(QtWidgets.QMainWindow):
                                            platform.release()))
         self.l.info('Starting the program')
 
-        QtWidgets.qApp.setWindowIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/icon_main.png')))
+        QtWidgets.qApp.setWindowIcon(QtGui.QIcon(
+            os.path.join(self.resource_dir, 'images', 'icon_main.png')))
 
         # Display a splash screen when booting
         # http://eli.thegreenplace.net/2009/05/09/creating-splash-screens-in-pyqt
         # CAREFUL, there is a bug with the splash screen
         # https://bugreports.qt.io/browse/QTBUG-24910
-        splash_pix = QtGui.QPixmap(os.path.join(self.resource_dir, 'images/splash.png'))
-        self.splash = QtWidgets.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+        splash_pix = QtGui.QPixmap(os.path.join(self.resource_dir, 'images',
+                                                'splash.png'))
+        self.splash = QtWidgets.QSplashScreen(splash_pix,
+                                              QtCore.Qt.WindowStaysOnTopHint)
         self.splash.show()
         QtWidgets.qApp.processEvents()
 
@@ -128,7 +131,8 @@ class MyWindow(QtWidgets.QMainWindow):
         diff_time = datetime.datetime.now()
 
         # Object to store options and preferences
-        self.options = QtCore.QSettings(self.DATA_PATH + "/config/options.ini",
+        self.options = QtCore.QSettings(os.path.join(self.DATA_PATH, 'config',
+                                                     'options.ini'),
                                         QtCore.QSettings.IniFormat)
 
         QtWidgets.qApp.processEvents()
@@ -305,10 +309,11 @@ class MyWindow(QtWidgets.QMainWindow):
         # Create the folder to store the graphical_abstracts if
         # it doesn't exist
         # http://stackoverflow.com/questions/12517451/python-automatically-creating-directories-with-file-output
-        os.makedirs(self.DATA_PATH + '/graphical_abstracts', exist_ok=True)
+        os.makedirs(os.path.join(self.DATA_PATH, 'graphical_abstracts'),
+                    exist_ok=True)
 
         # Create the journals folder in the user's space
-        os.makedirs(self.DATA_PATH + '/journals', exist_ok=True)
+        os.makedirs(os.path.join(self.DATA_PATH, 'journals'), exist_ok=True)
 
         # Check if there is a user_id. If not, register the user
         if self.options.value("user_id", None) is None:
@@ -352,20 +357,26 @@ class MyWindow(QtWidgets.QMainWindow):
         """Method to connect to the database. Creates it
         if it does not exist"""
 
+        if not os.path.exists("fichiers.sqlite"):
+            self.l.info("db doesn't exist. Creating.")
+
         # Set the database
         self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        self.bdd.setDatabaseName(self.DATA_PATH + "/fichiers.sqlite")
+        self.bdd.setDatabaseName(os.path.join(self.DATA_PATH,
+                                              "fichiers.sqlite"))
 
         self.bdd.open()
 
         query = QtSql.QSqlQuery(self.bdd)
-        query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
-                     doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
-                     liked INTEGER, url TEXT, new INTEGER, topic_simple TEXT, author_simple TEXT)")
+        query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY\
+                    AUTOINCREMENT, percentage_match REAL, doi TEXT, title\
+                    TEXT, date TEXT, journal TEXT, authors TEXT, abstract\
+                    TEXT, graphical_abstract TEXT, liked INTEGER, url TEXT,\
+                    new INTEGER, topic_simple TEXT, author_simple TEXT)")
 
         if self.debug_mod:
-            query.exec_("CREATE TABLE IF NOT EXISTS debug \
-                        (id INTEGER PRIMARY KEY AUTOINCREMENT, doi TEXT, \
+            query.exec_("CREATE TABLE IF NOT EXISTS debug\
+                        (id INTEGER PRIMARY KEY AUTOINCREMENT, doi TEXT,\
                         title TEXT, journal TEXT, url TEXT)")
 
         # Create the model for the new tab
