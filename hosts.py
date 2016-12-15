@@ -64,10 +64,10 @@ def refineUrl(company, journal, entry):
         id_paper = url.split('/')[-1].split('.')[0]
         url = "http://www.nature.com/articles/{}".format(id_paper)
 
+    # Optimization for Wiley
     elif company == 'Wiley':
-        # Optimization for Wiley
-        doi = url.split('%2')[-1]
-        url = "http://onlinelibrary.wiley.com/resolve/doi?DOI=10.1002%2F{}"
+        doi = getDoi(company, journal, entry)
+        url = "http://onlinelibrary.wiley.com/doi/{}/abstract"
         url = url.format(doi)
 
     return url
@@ -863,7 +863,7 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Thieme", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Wiley", journal, entry, response)
         # print("\n")
         # print(abstract)
         # print(date)
@@ -878,7 +878,7 @@ if __name__ == "__main__":
 
     # urls_test = ["http://feeds.nature.com/nature/rss/aop"]
     # urls_test = ["debug/springer.xml"]
-    urls_test = ["https://www.thieme-connect.de/rss/thieme/en/10.1055-s-00000083.xml"]
+    urls_test = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/(ISSN)1521-3773"]
 
     session = FuturesSession(max_workers=20)
 
@@ -900,13 +900,12 @@ if __name__ == "__main__":
 
         # pprint(entry)
 
-        url = refineUrl("Thieme", journal, entry)
+        url = refineUrl("Wiley", journal, entry)
+        # print(url)
 
-        print(url)
+        webbrowser.open(url, new=0, autoraise=True)
 
-        # webbrowser.open(url, new=0, autoraise=True)
-
-        # url = entry.feedburner_origlink
+        # url = entry.link
         # title = entry.title
 
         # title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry)
