@@ -90,6 +90,9 @@ class MyStyles():
 
         """Define the general style"""
 
+        # NOTE: for the zoom action to be enabled in QTextBrowser, the font
+        # can't have a fixed size
+
         stylesheet = """
             QToolBar, QScrollArea, QTabWidget, QSplitter, .QWidget
             {
@@ -102,7 +105,7 @@ class MyStyles():
                 color: white
             }
 
-            QWidget
+            QWidget:not (QTextBrowser)
             {
                 font-size: FONT_SIZEpt
             }

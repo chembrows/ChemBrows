@@ -155,9 +155,7 @@ class ViewDelegate(QtWidgets.QStyledItemDelegate):
                 else:
                     path = os.path.join(self.parent.resource_dir, "images/pepper_empty.png")
 
-                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
                 pixmap = QtGui.QPixmap(path)
-                # pixmap = pixmap.scaled(DIMENSION, DIMENSION, QtCore.Qt.IgnoreAspectRatio,  QtCore.Qt.SmoothTransformation)
 
                 pos_x = option.rect.x() + DIMENSION * 0.5 * index
                 pos_y = option.rect.y() + option.rect.height() - DIMENSION * 0.8
@@ -171,7 +169,7 @@ class ViewDelegate(QtWidgets.QStyledItemDelegate):
             else:
                 path = os.path.join(self.parent.resource_dir, "images/not_like.png")
 
-            pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
+            pixmap = QtGui.QPixmap(path)
 
             pos_x = option.rect.x() + option.rect.width() - DIMENSION
             pos_y = option.rect.y() + option.rect.height() - DIMENSION
@@ -189,16 +187,6 @@ class ViewDelegate(QtWidgets.QStyledItemDelegate):
             pos_y = option.rect.y() + option.rect.height() - DIMENSION
 
             painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)
-
-            # # A picture to display the read/unread state
-            # if read:
-                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/unread.png"))
-                # # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_full.png"))
-                # painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
-            # else:
-                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read.png"))
-                # # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_empty.png"))
-                # painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
 
 
         # Thumbnail's index

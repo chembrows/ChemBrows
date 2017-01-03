@@ -1111,11 +1111,8 @@ class MyWindow(QtWidgets.QMainWindow):
         # Button in the toolbar: advanced search
         self.button_advanced_search.clicked.connect(lambda: AdvancedSearch(self))
 
-        self.button_zoom_more.clicked.connect(lambda: self.text_abstract.zoom(True))
-
-        self.button_zoom_less.clicked.connect(lambda: self.text_abstract.zoom(False))
-
-        self.button_color_read.clicked.connect(self.text_abstract.darkAndLight)
+        self.button_zoom_more.clicked.connect(self.text_abstract.zoomIn)
+        self.button_zoom_less.clicked.connect(self.text_abstract.zoomOut)
 
         self.button_search_new.clicked.connect(self.searchNew)
 
@@ -1161,20 +1158,30 @@ class MyWindow(QtWidgets.QMainWindow):
         abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
 
         try:
-            # Checkings on the graphical abstract. Add the path of the picture to
-            # the abstract if ok
+            # Checkings on the graphical abstract. Add the path of the picture
+            # to the abstract if ok
             graphical_abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 8).data()
+
             if type(graphical_abstract) is str and graphical_abstract != "Empty":
+
+                path = os.path.abspath(self.DATA_PATH +
+                                       "/graphical_abstracts/" +
+                                       graphical_abstract)
+
+                # Scale the graphical_abstract, 80% of the QTextBrowser
+                width = self.text_abstract.width() * 0.8
+
                 # Get the path of the graphical abstract
-                base = "<br/><br/><p align='center'><img src='file:///{}' align='center' /></p>"
-                base = base.format(os.path.abspath(self.DATA_PATH + "/graphical_abstracts/" + graphical_abstract))
+                base = "<br/><br/><p align='center'><img width={} src='file:///{}' align='center' /></p>"
+
+                base = base.format(width, path)
                 abstract += base
+
         except TypeError:
             self.l.debug("No graphical abstract for this post, displayInfos()")
 
         self.button_zoom_less.show()
         self.button_zoom_more.show()
-        self.button_color_read.show()
         self.button_twitter.show()
         self.button_share_mail.show()
 
@@ -1681,7 +1688,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.button_zoom_less.hide()
         self.button_zoom_more.hide()
-        self.button_color_read.hide()
         self.button_twitter.hide()
         self.button_share_mail.hide()
 
@@ -2261,14 +2267,6 @@ class MyWindow(QtWidgets.QMainWindow):
         # Create a simple title, by removing html tags (tags are not accepted in a mail subject)
         simple_title = functions.removeHtml(title) + " : spotted by ChemBrows"
 
-        # Conctsruct the body structure
-        # body = "<span style='font-weight:bold'>{}</span></br> \
-                # <span style='font-weight:bold'>Authors : </span>{}</br> \
-                # <span style='font-weight:bold'>Journal : </span>{}</br></br> \
-                # <span style='font-weight:bold'>Abstract : </span></br></br>{}</br></br> \
-                # Click on this link to see the article on the editor's website: <a href=\"{}\">editor's website</a></br></br> \
-                # This article was spotted with chemBrows.</br> Learn more about chemBrows : notre site web"
-
         body = "Click on this link to see the article on the editor's website: {}\n\nThis article was spotted by ChemBrows: www.chembrows.com"
         body = body.format(link)
 
@@ -2620,12 +2618,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.button_zoom_more.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_zoom_more.setAccessibleName('round_button_article')
         self.button_zoom_more.hide()
-        self.button_color_read = QtWidgets.QPushButton()
-        self.button_color_read.setToolTip("Change background color")
-        self.button_color_read.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/black_text.png')))
-        self.button_color_read.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
-        self.button_color_read.setAccessibleName('round_button_article')
-        self.button_color_read.hide()
 
         # Button to share on twitter
         self.button_twitter = QtWidgets.QPushButton()
@@ -2643,8 +2635,10 @@ class MyWindow(QtWidgets.QMainWindow):
         self.button_share_mail.setAccessibleName('round_button_article')
         self.button_share_mail.hide()
 
-        # A QWebView to render the sometimes rich text of the abstracts
-        self.text_abstract = WebViewPerso(self)
+        # A QTextBrowser to render the sometimes rich text of the abstracts.
+        # Disable right click
+        self.text_abstract = QtWidgets.QTextBrowser(self)
+        self.text_abstract.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
 
         # Building the grid
         self.grid_area_right_top.addWidget(prelabel_title, 0, 0, 1, 4)
@@ -2666,7 +2660,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.hbox_toolbar_article = QtWidgets.QHBoxLayout()
         self.hbox_toolbar_article.addWidget(self.button_zoom_less, alignment=QtCore.Qt.AlignLeft)
         self.hbox_toolbar_article.addWidget(self.button_zoom_more, alignment=QtCore.Qt.AlignLeft)
-        self.hbox_toolbar_article.addWidget(self.button_color_read, alignment=QtCore.Qt.AlignLeft)
         self.hbox_toolbar_article.addWidget(self.empty_widget)
         self.hbox_toolbar_article.addWidget(self.button_twitter, alignment=QtCore.Qt.AlignRight)
         self.hbox_toolbar_article.addWidget(self.button_share_mail, alignment=QtCore.Qt.AlignRight)
@@ -2723,7 +2716,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.button_share_mail.setStyleSheet(stylesheet)
         self.button_zoom_less.setStyleSheet(stylesheet)
         self.button_zoom_more.setStyleSheet(stylesheet)
-        self.button_color_read.setStyleSheet(stylesheet)
 
 
 if __name__ == '__main__':
