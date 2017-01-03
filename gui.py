@@ -17,7 +17,6 @@ import collections as collec
 from log import MyLog
 from model import ModelPerso
 from view import ViewPerso
-from web_view import WebViewPerso
 from view_delegate import ViewDelegate
 from worker import Worker
 from predictor import Predictor
