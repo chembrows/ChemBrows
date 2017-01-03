@@ -158,7 +158,6 @@ class ViewPerso(QtWidgets.QTableView):
         # super(ViewPerso, self).keyPressEvent(e)
 
         key = e.key()
-        print(key)
 
         # To avoid a bug: the user scrolls the articles w/ the keyboard,
         # put an article in the toread list, and then continues scrolling.
@@ -169,7 +168,6 @@ class ViewPerso(QtWidgets.QTableView):
         # Browsing with up and down keys. Verifications made for
         # when the selection is completely at the top or the bottom
         if key == QtCore.Qt.Key_Down:
-            print("Down")
             current_index = self.selectionModel().currentIndex()
 
             if not current_index.isValid():
