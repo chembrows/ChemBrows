@@ -32,11 +32,12 @@ from tuto import Tuto
 from my_twit import MyTwit
 from styles import MyStyles
 from little_thread import LittleThread
+from textbrowser import TextBrowserPerso
 
 # To debug and profile. Comment for prod
 # from memory_profiler import profile
 
-# DEBUG: do not show deprecation warningmport warningss
+# # DEBUG: do not show deprecation warningmport warningss
 # import warnings
 # warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -1110,8 +1111,8 @@ class MyWindow(QtWidgets.QMainWindow):
         # Button in the toolbar: advanced search
         self.button_advanced_search.clicked.connect(lambda: AdvancedSearch(self))
 
-        self.button_zoom_more.clicked.connect(self.text_abstract.zoomIn)
-        self.button_zoom_less.clicked.connect(self.text_abstract.zoomOut)
+        self.button_zoom_more.clicked.connect(lambda: self.text_abstract.zoom(True))
+        self.button_zoom_less.clicked.connect(lambda: self.text_abstract.zoom(False))
 
         self.button_search_new.clicked.connect(self.searchNew)
 
@@ -1129,9 +1130,6 @@ class MyWindow(QtWidgets.QMainWindow):
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         table.resizeCells(new_size)
         table.updateHeight()
-
-        # for table in self.list_tables_in_tabs:
-            # table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
 
 
     def displayInfos(self):
@@ -1167,19 +1165,23 @@ class MyWindow(QtWidgets.QMainWindow):
                                        "/graphical_abstracts/" +
                                        graphical_abstract)
 
-                # Scale the graphical_abstract, 80% of the QTextBrowser
-                # width = self.text_abstract.width() * 0.5
+                # Get picture's width
+                width = QtGui.QPixmap(path).width()
+
+                # Set text_abstract initial width attribute
+                self.text_abstract.ini_width = width
 
                 # Get the path of the graphical abstract
-                # base = "<br/><br/><p align='center'><img width={} src='file:///{}' align='center' /></p>"
-                base = "<br/><br/><p align='center'><img src='file:///{}' align='center' /></p>"
+                base = "<br/><br/><p align='center'><img width={} src='file:///{}' align='center' /></p>"
 
-                base = base.format(path)
-                # base = base.format(width, path)
+                base = base.format(width, path)
                 abstract += base
 
         except TypeError:
             self.l.debug("No graphical abstract for this post, displayInfos()")
+
+        # Reset text_abstract's zoom
+        self.text_abstract.resetZoom()
 
         self.button_zoom_less.show()
         self.button_zoom_more.show()
@@ -2636,10 +2638,9 @@ class MyWindow(QtWidgets.QMainWindow):
         self.button_share_mail.setAccessibleName('round_button_article')
         self.button_share_mail.hide()
 
-        # A QTextBrowser to render the sometimes rich text of the abstracts.
-        # Disable right click
-        self.text_abstract = QtWidgets.QTextBrowser(self)
-        self.text_abstract.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
+        # A personal QTextBrowser to render the sometimes rich text of the
+        # abstracts
+        self.text_abstract = TextBrowserPerso(self)
 
         # Building the grid
         self.grid_area_right_top.addWidget(prelabel_title, 0, 0, 1, 4)
