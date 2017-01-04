@@ -1168,12 +1168,14 @@ class MyWindow(QtWidgets.QMainWindow):
                                        graphical_abstract)
 
                 # Scale the graphical_abstract, 80% of the QTextBrowser
-                width = self.text_abstract.width() * 0.8
+                # width = self.text_abstract.width() * 0.5
 
                 # Get the path of the graphical abstract
-                base = "<br/><br/><p align='center'><img width={} src='file:///{}' align='center' /></p>"
+                # base = "<br/><br/><p align='center'><img width={} src='file:///{}' align='center' /></p>"
+                base = "<br/><br/><p align='center'><img src='file:///{}' align='center' /></p>"
 
-                base = base.format(width, path)
+                base = base.format(path)
+                # base = base.format(width, path)
                 abstract += base
 
         except TypeError:
