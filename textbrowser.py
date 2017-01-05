@@ -48,7 +48,7 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
 
         try:
             # Find the current width of the image
-            width = int(soup.findAll('img')[-1]['width'])
+            width = float(soup.findAll('img')[-1]['width'])
             if more_or_less:
                 size = width + 0.1 * self.ini_width
             else:
