@@ -863,22 +863,20 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Wiley", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry, response)
         # print("\n")
         # print(abstract)
-        # print(date)
+        print(date)
         # print("\n")
-        print(title)
-        print(authors)
+        # print(title)
+        # print(authors)
         # print("\n")
         # print("\n")
         # print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
-    # urls_test = ["http://feeds.nature.com/nature/rss/aop"]
-    # urls_test = ["debug/springer.xml"]
-    urls_test = ["http://onlinelibrary.wiley.com/rss/journal/10.1002/(ISSN)1521-3773"]
+    urls_test = ["http://rss.sciencedirect.com/publication/science/09565663"]
 
     session = FuturesSession(max_workers=20)
 
@@ -900,10 +898,10 @@ if __name__ == "__main__":
 
         # pprint(entry)
 
-        url = refineUrl("Wiley", journal, entry)
+        url = refineUrl("Elsevier", journal, entry)
         # print(url)
 
-        webbrowser.open(url, new=0, autoraise=True)
+        # webbrowser.open(url, new=0, autoraise=True)
 
         # url = entry.link
         # title = entry.title
