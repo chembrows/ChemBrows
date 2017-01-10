@@ -82,7 +82,7 @@ class Worker(QtCore.QThread):
             return feed
 
         except Exception as e:
-            self.l.error("RSS page for {} could not be downloaded: {}".
+            self.l.error("RSS page {} could not be downloaded: {}. Handled".
                          format(self.url_feed, e), exc_info=True)
             return None
 

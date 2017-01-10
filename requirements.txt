@@ -29,7 +29,7 @@ PyUserInput==0.1.11
 qtbot==0.0.1
 requests==2.11.1
 requests-futures==0.9.7
-scikit-learn==0.18
+scikit-learn==0.18.1
 scipy==0.18.0
 sgmllib3k==1.0.0
 sip==4.19

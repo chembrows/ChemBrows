@@ -639,11 +639,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.openInBrowserAction.triggered.connect(self.openInBrowser)
         self.openInBrowserAction.setShortcut('Ctrl+W')
 
-        # Action to update the model. For TEST
-        # self.updateAction = QtWidgets.QAction('Update model', self)
-        # self.updateAction.triggered.connect(self.updateModel)
-        # self.updateAction.setShortcut('F7')
-
         # Action to show a settings window
         self.settingsAction = QtWidgets.QAction('Preferences', self)
         self.settingsAction.triggered.connect(lambda: Settings(self))

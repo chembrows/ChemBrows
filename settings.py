@@ -21,6 +21,8 @@ class Settings(QtWidgets.QDialog):
 
         super(Settings, self).__init__(parent)
 
+        self.setModal(True)
+
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.parent = parent
@@ -74,7 +76,7 @@ class Settings(QtWidgets.QDialog):
         # Checkbox to select/unselect all the journals
         self.box_select_all.stateChanged.connect(self.selectUnselectAll)
 
-        self.button_wizard_journal.clicked.connect(lambda: WizardJournal(self.parent))
+        self.button_wizard_journal.clicked.connect(self.dialogManageJournals)
 
         # Button "clean database" (erase the unintersting journals from the db)
         # connected to the method of the main window class
@@ -84,6 +86,37 @@ class Settings(QtWidgets.QDialog):
             self.button_reset_db.clicked.connect(self.parent.resetDb)
             self.button_erase_db.clicked.connect(self.parent.eraseDb)
             self.button_wizard_journal.clicked.connect(self.close)
+
+
+    def dialogManageJournals(self):
+
+        """Opens a dialog, let the user choose between deleting and adding
+        journals"""
+
+
+        dial = QtWidgets.QDialog(self)
+
+        label_choice = QtWidgets.QLabel("Would you like to:")
+
+        button_add = QtWidgets.QPushButton("Add a journal")
+        button_del = QtWidgets.QPushButton("Delete a journal")
+
+        button_add.clicked.connect(dial.accept)
+        button_add.clicked.connect(lambda: WizardJournal(self))
+
+        button_del.clicked.connect(dial.accept)
+
+        hbox_dial = QtWidgets.QHBoxLayout()
+        hbox_dial.addWidget(button_add)
+        hbox_dial.addWidget(button_del)
+
+        vbox_dial = QtWidgets.QVBoxLayout()
+        vbox_dial.addWidget(label_choice, alignment=QtCore.Qt.AlignHCenter)
+        vbox_dial.addLayout(hbox_dial)
+
+        dial.setLayout(vbox_dial)
+
+        dial.show()
 
 
     def selectUnselectAll(self, state):
@@ -112,7 +145,7 @@ class Settings(QtWidgets.QDialog):
         self.vbox_check_journals = QtWidgets.QVBoxLayout()
         self.scrolling_check_journals.setLayout(self.vbox_check_journals)
 
-        self.button_wizard_journal = QtWidgets.QPushButton("Add a journal")
+        self.button_wizard_journal = QtWidgets.QPushButton("Manage journals")
         self.vbox_check_journals.addWidget(self.button_wizard_journal)
 
         labels_checkboxes = []
@@ -204,9 +237,10 @@ class Settings(QtWidgets.QDialog):
         else:
             self.options.remove("journals_to_parse")
 
-        self.parent.model.submitAll()
-        self.parent.displayTags()
-        self.parent.resetView()
+        if not self.test:
+            self.parent.model.submitAll()
+            self.parent.displayTags()
+            self.parent.resetView()
 
         # Close the settings window and free the memory
         self.close()

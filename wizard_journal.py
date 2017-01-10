@@ -17,6 +17,9 @@ class WizardJournal(QtWidgets.QDialog):
     def __init__(self, parent=None):
 
         super(WizardJournal, self).__init__(parent)
+
+        self.setModal(True)
+
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.parent = parent
@@ -134,7 +137,7 @@ class WizardJournal(QtWidgets.QDialog):
         self.help_button = QtWidgets.QPushButton("Help")
 
         # Validate. Triggers verification process
-        self.ok_button = QtWidgets.QPushButton("OK")
+        self.ok_button = QtWidgets.QPushButton("Add journal")
 
         self.form_layout = QtWidgets.QFormLayout()
 
