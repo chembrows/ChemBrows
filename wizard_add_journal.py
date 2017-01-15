@@ -118,7 +118,8 @@ class WizardAddJournal(QtWidgets.QDialog):
         mes = """Define the abbreviation of the journal you want to add.\n\n\
         Find the URL of the RSS page of the journal you want to add.\n\n\
         Publisher: to which publisher does the new journal belong ? This\
-         choice will help ChemBrows to format the articles.
+         choice will help ChemBrows to format the articles.\n\
+        NOTE: Nature2 is for journals with a RSS feed formatted like Sci. Rep.
         """
 
         # Clean the tabs in the message (tabs are 4 spaces)
