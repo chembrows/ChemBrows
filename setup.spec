@@ -32,9 +32,9 @@ added_files = [('images/*', 'images'),
 imports = ['packaging', 'packaging.version', 'packaging.specifiers',
            'packaging.requirements', 'sklearn.neighbors.typedefs']
 
-# excludes = ['pyi_rth_pkgres', 'pyi_rth_qt4plugins', 'lib2to3', 'runpy',
-            # 'xmlrpc', 'doctest', 'tty', 'getopt']
-excludes = []
+excludes = ['pyi_rth_pkgres', 'pyi_rth_qt5plugins', 'lib2to3', 'runpy',
+            'xmlrpc', 'doctest', 'tty', 'getopt']
+# excludes = []
 
 a = Analysis(PATH_EXE,
              pathex=[DIR_PATH] * 2,

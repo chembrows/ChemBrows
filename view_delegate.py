@@ -247,4 +247,4 @@ class ViewDelegate(QtWidgets.QStyledItemDelegate):
 
         else:
             # Using default painter
-            QtGui.QStyledItemDelegate.paint(self, painter, option, index)
+            QtWidgets.QStyledItemDelegate.paint(self, painter, option, index)

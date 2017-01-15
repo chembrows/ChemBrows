@@ -2,26 +2,12 @@
 
 block_cipher = None
 
-imports = ['packaging', 'packaging.version', 'packaging.specifiers',
-           'packaging.requirements', 'sklearn.neighbors.typedefs', 'QtWebEngineProcess']
-
-added_files = [('images/*', 'images'),
-               ('journals/*', 'journals'),
-               ('config/data.bin', 'config'),
-               ('config/regex.txt', 'config'),
-               ('config/stop_words.txt', 'config'),
-               ('config/tuto.txt', 'config'),
-               ('config/version.txt', 'config'),
-               ('config/whatsnew.txt', 'config'),
-               ('config/fields/*', 'config/fields')
-               ]
-
 
 a = Analysis(['gui.py'],
              pathex=['/home/djipey/informatique/python/ChemBrows'],
-             binaries=[],
-             datas=added_files,
-             hiddenimports=imports,
+             binaries=None,
+             datas=None,
+             hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],

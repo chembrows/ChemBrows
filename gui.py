@@ -82,7 +82,8 @@ class MyWindow(QtWidgets.QMainWindow):
             self.l.info("You are in debug mod")
 
         # Set the logging level
-        self.l.setLevel(logging.INFO)
+        # self.l.setLevel(logging.INFO)
+        self.l.setLevel(logging.DEBUG)
 
         self.l.info('Resources dir: {}'.format(self.resource_dir))
         # self.l.setLevel(20)
@@ -361,7 +362,7 @@ class MyWindow(QtWidgets.QMainWindow):
         """Method to connect to the database. Creates it
         if it does not exist"""
 
-        if not os.path.exists("fichiers.sqlite"):
+        if not os.path.exists(os.path.join(self.DATA_PATH, "fichiers.sqlite")):
             self.l.info("db doesn't exist. Creating.")
 
         # Set the database
@@ -794,15 +795,6 @@ class MyWindow(QtWidgets.QMainWindow):
         table.selectionModel().clearSelection()
 
 
-    def updateModel(self):
-
-        """Debug function, allows to update a model
-        with a button, at any time. Will not be used by
-        the final user"""
-
-        self.updateView()
-
-
     # @profile
     def closeEvent(self, event):
 
@@ -829,29 +821,32 @@ class MyWindow(QtWidgets.QMainWindow):
         self.options.setValue("sorting_method", self.sorting_method)
         self.options.setValue("sorting_reversed", self.sorting_reversed)
 
-        self.options.setValue("dark", self.dark)
+        # TODO
+        # self.options.setValue("dark", self.dark)
+
+        for index, each_table in enumerate(self.list_tables_in_tabs):
+            self.options.setValue("header_state{0}".format(index),
+                                  each_table.horizontalHeader().saveState())
 
         self.options.endGroup()
 
-        searches_saved = QtCore.QSettings(self.DATA_PATH + "/config/searches.ini", QtCore.QSettings.IniFormat)
+        searches_saved = QtCore.QSettings(os.path.join(self.DATA_PATH,
+                                                       "config",
+                                                       "searches.ini"),
+                                          QtCore.QSettings.IniFormat)
 
         # Save the to-read list
         if self.waiting_list.articles:
-            searches_saved.setValue("ids_waited",
+            searches_saved.setValue("ToRead/articles",
                                     list(self.waiting_list.articles.keys()))
         else:
-            searches_saved.remove("ids_waited")
+            searches_saved.remove("ToRead/articles")
 
         for index, each_table in enumerate(self.list_tables_in_tabs):
-            self.options.setValue("header_state{0}".format(index), each_table.horizontalHeader().saveState())
-
             tab_title = self.onglets.tabText(index)
-
             if tab_title != 'All articles':
                 searches_saved.setValue("{}/articles".format(tab_title),
                                         each_table.articles)
-
-
 
         # Be sure ini files finished their tasks
         # Correct a bug
@@ -956,10 +951,10 @@ class MyWindow(QtWidgets.QMainWindow):
             self.restoreGeometry(self.options.value("Window/window_geometry"))
             self.restoreState(self.options.value("Window/window_state"))
 
-            for index, each_table in enumerate(self.list_tables_in_tabs):
-                header_state = self.options.value("Window/header_state{0}".format(index))
-                if header_state is not None:
-                    each_table.horizontalHeader().restoreState(self.options.value("Window/header_state{0}".format(index)))
+            # for index, each_table in enumerate(self.list_tables_in_tabs):
+                # header_state = self.options.value("Window/header_state{0}".format(index))
+                # if header_state is not None:
+                    # each_table.horizontalHeader().restoreState(self.options.value("Window/header_state{0}".format(index)))
 
             self.splitter2.restoreState(self.options.value("Window/final_splitter"))
 
@@ -1216,7 +1211,7 @@ class MyWindow(QtWidgets.QMainWindow):
         Mainly sets the tab query to the saved query"""
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
-        table.updateHeight()
+        # table.updateHeight()
 
         # Submit the changes on the model.
         # Otherwise, a bug appears: one changing an article, the changes are visible
@@ -1800,19 +1795,7 @@ class MyWindow(QtWidgets.QMainWindow):
         # If the to read list was empty and is not anymore, fix the
         # header of the to read list
         if empty and len(self.waiting_list.articles) == 1:
-            self.waiting_list.hideColumn(0)  # Hide id
-            self.waiting_list.hideColumn(1)  # Hide percentage match
-            self.waiting_list.hideColumn(2)  # Hide doi
-            self.waiting_list.hideColumn(4)  # Hide date
-            self.waiting_list.hideColumn(5)  # Hide journals
-            self.waiting_list.hideColumn(6)  # Hide authors
-            self.waiting_list.hideColumn(7)  # Hide abstracts
-            self.waiting_list.hideColumn(9)  # Hide like
-            self.waiting_list.hideColumn(10)  # Hide urls
-            self.waiting_list.hideColumn(11)  # Hide new
-            self.waiting_list.hideColumn(12)  # Hide topic_simple
-            self.waiting_list.hideColumn(13)  # Hide author_simple
-            self.waiting_list.horizontalHeader().moveSection(8, 0)
+            self.waiting_list.initUI()
 
 
     def emptyWait(self):
