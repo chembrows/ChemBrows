@@ -3,13 +3,13 @@
 
 
 import os
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 # Personal
 from functions import prettyDate
 
 
-class ViewDelegate(QtGui.QStyledItemDelegate):
+class ViewDelegate(QtWidgets.QStyledItemDelegate):
 
     """
     Personnal delegate to draw thumbnails.
@@ -51,7 +51,8 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             # http://stackoverflow.com/questions/23802170/word-wrap-with-html-qtabelview-and-delegates
 
             # Modify the text to display
-            options = QtGui.QStyleOptionViewItemV4(option)
+            # options = QtWidgets.QStyleOptionViewItemV4(option)
+            options = QtWidgets.QStyleOptionViewItem(option)
             self.initStyleOption(options, index)
 
             # If the article is unread, color the background of the cell
@@ -114,7 +115,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 height = doc.documentLayout().documentSize().height()
 
             options.text = ""
-            options.widget.style().drawControl(QtGui.QStyle.CE_ItemViewItem, options, painter)
+            options.widget.style().drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter)
 
             # Do not center the text vertically, causes too much bugs
             painter.translate(options.rect.left(), options.rect.top() + options.rect.height() / 2.5 - height / 2)
@@ -125,7 +126,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             # Change the background color of the cell here, won't be
             # possible later
-            if option.state & QtGui.QStyle.State_Selected:
+            if option.state & QtWidgets.QStyle.State_Selected:
                 painter.fillRect(clip, QtGui.QColor(120, 187, 222))
             elif grey:
                 painter.fillRect(clip, QtGui.QColor(231, 231, 231))
@@ -154,9 +155,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
                 else:
                     path = os.path.join(self.parent.resource_dir, "images/pepper_empty.png")
 
-                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
                 pixmap = QtGui.QPixmap(path)
-                # pixmap = pixmap.scaled(DIMENSION, DIMENSION, QtCore.Qt.IgnoreAspectRatio,  QtCore.Qt.SmoothTransformation)
 
                 pos_x = option.rect.x() + DIMENSION * 0.5 * index
                 pos_y = option.rect.y() + option.rect.height() - DIMENSION * 0.8
@@ -170,7 +169,7 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             else:
                 path = os.path.join(self.parent.resource_dir, "images/not_like.png")
 
-            pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(path))
+            pixmap = QtGui.QPixmap(path)
 
             pos_x = option.rect.x() + option.rect.width() - DIMENSION
             pos_y = option.rect.y() + option.rect.height() - DIMENSION
@@ -189,16 +188,6 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
 
             painter.drawPixmap(pos_x, pos_y, DIMENSION, DIMENSION, pixmap)
 
-            # # A picture to display the read/unread state
-            # if read:
-                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/unread.png"))
-                # # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_full.png"))
-                # painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
-            # else:
-                # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read.png"))
-                # # pixmap = QtGui.QPixmap.fromImage(QtGui.QImage("./images/read_empty.png"))
-                # painter.drawPixmap(pos_x - DIMENSION, pos_y, DIMENSION, DIMENSION, pixmap)
-
 
         # Thumbnail's index
         elif index.column() == 8:
@@ -206,7 +195,10 @@ class ViewDelegate(QtGui.QStyledItemDelegate):
             painter.fillRect(option.rect, QtGui.QColor(255, 255, 255))
 
             if type(index.data()) is str and index.data() != "Empty":
-                path_photo = self.DATA_PATH + "/graphical_abstracts/" + index.data()
+
+                # TODO: check if path exists, else log the problem
+                path_photo = os.path.join(self.DATA_PATH,
+                                          "graphical_abstracts", index.data())
 
                 if os.path.exists(path_photo):
                     # The photo exists, display it

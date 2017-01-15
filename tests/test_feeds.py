@@ -18,8 +18,11 @@ from bs4 import BeautifulSoup, SoupStrainer
 
 from log import MyLog
 
+# 52 ACS journals for now
+NBR_ACS_JOURNALS = 52
 
-l = MyLog("output_tests.log", mode='w')
+
+l = MyLog("output_tests_feeds.log", mode='w')
 l.debug("---------------------- START NEW RUN OF TESTS ----------------------")
 
 
@@ -38,7 +41,10 @@ def test_ACSFeeds():
 
     """Function to test we have the right number of ACS journals"""
 
-    page = requests.get("http://pubs.acs.org/page/follow.html")
+    page = requests.get("http://pubs.acs.org/page/follow.html", timeout=60)
+
+    if page.status_code is not requests.codes.ok:
+        pytest.fail("Failed to download ACS journals page")
 
     # Strainer: get a soup with only the interesting part.
     # Don't load the complete tree in memory. Saves RAM
@@ -65,7 +71,9 @@ def test_ACSFeeds():
             # print("{} : {}".format(name, url))
             dic_journals[url] = name
 
-    logAssert(len(dic_journals) == 52, "Wrong number of ACS journals")
+    logAssert(len(dic_journals) == NBR_ACS_JOURNALS,
+              "Wrong number of ACS journals")
+
 
 if __name__ == "__main__":
     test_ACSFeeds()

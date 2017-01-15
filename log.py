@@ -17,7 +17,7 @@ class MyLog(logging.Logger):
     Use: logger.(info|warn|debug|error|critical)
     http://sametmax.com/ecrire-des-logs-en-python/"""
 
-    def __init__(self, output_file, mode='a', total=True, size=5000000):
+    def __init__(self, output_file='activity.log', mode='a', total=True, size=5000000):
 
         super(MyLog, self).__init__(self)
 

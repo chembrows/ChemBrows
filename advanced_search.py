@@ -4,19 +4,18 @@
 
 import sys
 import os
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 from log import MyLog
 
 from line_icon import ButtonLineIcon
 import functions
-import hosts
 
 
-class AdvancedSearch(QtGui.QDialog):
+class AdvancedSearch(QtWidgets.QDialog):
 
     """Class to perform advanced searches"""
 
-    def __init__(self, parent):
+    def __init__(self, parent=None):
 
         super(AdvancedSearch, self).__init__(parent)
 
@@ -24,18 +23,19 @@ class AdvancedSearch(QtGui.QDialog):
 
         self.parent = parent
 
-        self.resource_dir, DATA_PATH = hosts.getRightDirs()
+        self.resource_dir, DATA_PATH = functions.getRightDirs()
 
         # Condition to use a specific logger if
         # module started in standalone
-        if type(parent) is QtGui.QWidget:
+        if parent is None:
             self.logger = MyLog("activity.log")
             self.test = True
         else:
             self.logger = self.parent.l
             self.test = False
 
-        self.options = QtCore.QSettings(DATA_PATH + "/config/searches.ini", QtCore.QSettings.IniFormat)
+        self.options = QtCore.QSettings(DATA_PATH + "/config/searches.ini",
+                                        QtCore.QSettings.IniFormat)
 
         # List to store the lineEdit, with the value of
         # the search fields
@@ -51,6 +51,9 @@ class AdvancedSearch(QtGui.QDialog):
         """Restore the right number of tabs"""
 
         for query in self.options.childGroups():
+            # Don't create a search tab for the to read list
+            if query == "ToRead":
+                continue
             self.tabs.addTab(self.createForm(), query)
 
         # Try to restore the geometry of the AdvancedSearch window
@@ -112,8 +115,8 @@ class AdvancedSearch(QtGui.QDialog):
         """Build the query"""
 
         # Get all the lineEdit from the current tab
-        lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
-        radios = self.tabs.currentWidget().findChildren(QtGui.QRadioButton)
+        lines = self.tabs.currentWidget().findChildren(QtWidgets.QLineEdit)
+        radios = self.tabs.currentWidget().findChildren(QtWidgets.QRadioButton)
 
         # Clean the fields of tailing comma
         topic_entries = [line.text()[:-1] if line.text() and line.text()[-1] == ',' else line.text() for line in lines[0:2]]
@@ -136,11 +139,11 @@ class AdvancedSearch(QtGui.QDialog):
         tab_title = self.tabs.tabText(index)
 
         # Get the lineEdit objects of the current search tab displayed
-        lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
+        lines = self.tabs.currentWidget().findChildren(QtWidgets.QLineEdit)
         topic_entries = [line for line in lines[0:2]]
         author_entries = [line for line in lines[2:4]]
 
-        radios = self.tabs.currentWidget().findChildren(QtGui.QRadioButton)
+        radios = self.tabs.currentWidget().findChildren(QtWidgets.QRadioButton)
 
         if index != 0:
 
@@ -168,8 +171,8 @@ class AdvancedSearch(QtGui.QDialog):
 
         """Slot to save a query"""
 
-        lines = self.tabs.currentWidget().findChildren(QtGui.QLineEdit)
-        radios = self.tabs.currentWidget().findChildren(QtGui.QRadioButton)
+        lines = self.tabs.currentWidget().findChildren(QtWidgets.QLineEdit)
+        radios = self.tabs.currentWidget().findChildren(QtWidgets.QRadioButton)
 
         # Get the name of the current tab. Used to determine if the current
         # tab is the "new query" tab
@@ -187,8 +190,10 @@ class AdvancedSearch(QtGui.QDialog):
 
         # Creating a new search
         if tab_title == "New query":
-            # Get the search name with a dialogBox, if the user pushed the save button
-            name_search = QtGui.QInputDialog.getText(self, "Search name", "Save your search as:")
+            # Get the search name with a dialogBox, if the user pushed the
+            # save button
+            name_search = QtWidgets.QInputDialog.getText(self, "Search name",
+                                                     "Save your search as:")
 
             if "/" in name_search:
                 name_search = name_search.replace("/", "-")
@@ -199,8 +204,8 @@ class AdvancedSearch(QtGui.QDialog):
                 name_search = name_search[0]
             if name_search in self.options.childGroups():
                 # Display an error message if the search name is already used
-                QtGui.QMessageBox.critical(self, "Saving search", "You already have a search called like this",
-                                           QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, "Saving search", "You already have a search called like this",
+                                           QtWidgets.QMessageBox.Ok, defaultButton=QtWidgets.QMessageBox.Ok)
 
                 self.logger.debug("This search name is already used")
                 return
@@ -281,8 +286,8 @@ class AdvancedSearch(QtGui.QDialog):
         # Clean the tabs in the message (tabs are 4 spaces)
         mes = mes.replace("    ", "")
 
-        QtGui.QMessageBox.information(self, "Information", mes,
-                                      QtGui.QMessageBox.Ok)
+        QtWidgets.QMessageBox.information(self, "Information", mes,
+                                      QtWidgets.QMessageBox.Ok)
 
 
     def createForm(self):
@@ -290,37 +295,37 @@ class AdvancedSearch(QtGui.QDialog):
         # ------------------------ NEW SEARCH TAB -----------------------------
 
         # Main widget of the tab, with a grid layout
-        widget_query = QtGui.QWidget()
+        widget_query = QtWidgets.QWidget()
 
-        vbox_query = QtGui.QVBoxLayout()
+        vbox_query = QtWidgets.QVBoxLayout()
         widget_query.setLayout(vbox_query)
 
         vbox_query.addStretch(1)
 
         # ------------- TOPIC ----------------------------------
         # Create a groupbox for the topic
-        group_topic = QtGui.QGroupBox("Topic")
-        grid_topic = QtGui.QGridLayout()
+        group_topic = QtWidgets.QGroupBox("Topic")
+        grid_topic = QtWidgets.QGridLayout()
         group_topic.setLayout(grid_topic)
 
         # Add the topic groupbox to the global vbox
         vbox_query.addWidget(group_topic)
 
         # Create 3 lines, with their label: AND, OR, NOT
-        label_topic_include = QtGui.QLabel("Include:")
+        label_topic_include = QtWidgets.QLabel("Include:")
         line_topic_include = ButtonLineIcon(os.path.join(self.resource_dir,
                                                      'images/info'))
         line_topic_include.buttonClicked.connect(lambda: self.showInfo(1))
 
-        group_radio_topic = QtGui.QButtonGroup()
-        radio_topic_any = QtGui.QRadioButton("Any")
+        group_radio_topic = QtWidgets.QButtonGroup()
+        radio_topic_any = QtWidgets.QRadioButton("Any")
         radio_topic_any.setChecked(True)
-        radio_topic_all = QtGui.QRadioButton("All")
+        radio_topic_all = QtWidgets.QRadioButton("All")
         group_radio_topic.addButton(radio_topic_any)
         group_radio_topic.addButton(radio_topic_all)
 
-        label_topic_exclude = QtGui.QLabel("Exclude:")
-        line_topic_exclude = QtGui.QLineEdit()
+        label_topic_exclude = QtWidgets.QLabel("Exclude:")
+        line_topic_exclude = QtWidgets.QLineEdit()
         line_topic_exclude = ButtonLineIcon(os.path.join(self.resource_dir,
                                                      'images/info'))
         line_topic_exclude.buttonClicked.connect(lambda: self.showInfo(2))
@@ -338,28 +343,28 @@ class AdvancedSearch(QtGui.QDialog):
 
         # ------------- AUTHORS ----------------------------------
         # Create a groupbox for the authors
-        group_author = QtGui.QGroupBox("Author(s)")
-        grid_author = QtGui.QGridLayout()
+        group_author = QtWidgets.QGroupBox("Author(s)")
+        grid_author = QtWidgets.QGridLayout()
         group_author.setLayout(grid_author)
 
         # Add the author groupbox to the global vbox
         vbox_query.addWidget(group_author)
 
-        label_author_include = QtGui.QLabel("Include:")
-        line_author_include = QtGui.QLineEdit()
+        label_author_include = QtWidgets.QLabel("Include:")
+        line_author_include = QtWidgets.QLineEdit()
         line_author_include = ButtonLineIcon(os.path.join(self.resource_dir,
                                                       'images/info'))
         line_author_include.buttonClicked.connect(lambda: self.showInfo(3))
 
-        group_radio_author = QtGui.QButtonGroup()
-        radio_author_any = QtGui.QRadioButton("Any")
+        group_radio_author = QtWidgets.QButtonGroup()
+        radio_author_any = QtWidgets.QRadioButton("Any")
         radio_author_any.setChecked(True)
-        radio_author_all = QtGui.QRadioButton("All")
+        radio_author_all = QtWidgets.QRadioButton("All")
         group_radio_author.addButton(radio_author_any)
         group_radio_author.addButton(radio_author_all)
 
-        label_author_not = QtGui.QLabel("Exclude:")
-        line_author_exclude = QtGui.QLineEdit()
+        label_author_not = QtWidgets.QLabel("Exclude:")
+        line_author_exclude = QtWidgets.QLineEdit()
         line_author_exclude = ButtonLineIcon(os.path.join(self.resource_dir,
                                                       'images/info'))
         line_author_exclude.buttonClicked.connect(lambda: self.showInfo(4))
@@ -387,7 +392,7 @@ class AdvancedSearch(QtGui.QDialog):
 
         self.setWindowTitle('Advanced Search')
 
-        self.tabs = QtGui.QTabWidget()
+        self.tabs = QtWidgets.QTabWidget()
 
         query = self.createForm()
 
@@ -395,13 +400,13 @@ class AdvancedSearch(QtGui.QDialog):
 
         # ----------------- BUTTONS -----------------------------------------
 
-        self.button_delete_search = QtGui.QPushButton("Delete search", self)
-        self.button_search_and_save = QtGui.QPushButton("Save search", self)
+        self.button_delete_search = QtWidgets.QPushButton("Delete search", self)
+        self.button_search_and_save = QtWidgets.QPushButton("Save search", self)
 
         # ------------------------ ASSEMBLING ---------------------------------
 
         # Create a global vbox, and stack the main widget + the search button
-        self.vbox_global = QtGui.QVBoxLayout()
+        self.vbox_global = QtWidgets.QVBoxLayout()
         self.vbox_global.addWidget(self.tabs)
 
         self.vbox_global.addWidget(self.button_delete_search)
@@ -414,7 +419,7 @@ class AdvancedSearch(QtGui.QDialog):
 
 if __name__ == '__main__':
 
-    app = QtGui.QApplication(sys.argv)
-    parent = QtGui.QWidget()
+    app = QtWidgets.QApplication(sys.argv)
+    parent = QtWidgets.QWidget()
     obj = AdvancedSearch(parent)
     sys.exit(app.exec_())

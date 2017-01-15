@@ -1,6 +1,12 @@
+#!/usr/bin/python
+# coding: utf-8
+
 """
-This script freezes the app using Esky with cx_Freeze and produces a Windows
-Installer with Inno Setup.
+This script freezes the app using PyInstaller and PyUpdater.
+
+Will produce a Linux executable.
+Will produce a Windows Installer with Inno Setup.
+Will produce an installable MacOS pkg.
 
 https://github.com/peterbrook/assetjet/blob/master/deploy/deploy.py
 https://github.com/peterbrook/assetjet/blob/master/deploy/build_inno_setup.py
@@ -10,52 +16,89 @@ import sys
 import os
 import subprocess
 import distutils.util
-from zipfile import ZipFile
+import zipfile
 from shutil import copyfile
+import tarfile
 
 app_name = 'ChemBrows'
-create_installer = True
+create_installer = False
+
+# Start the program after compiling/extraction
+play = True
+
+# Freeze/bundle the program
+bundle = True
+
+# Get the current platform and print it
+compiling_platform = distutils.util.get_platform()
+print("Compiling platform: {}".format(compiling_platform))
+
 
 # Get the current version from the version file
 with open('config/version.txt', 'r') as version_file:
     version = version_file.read().rstrip()
 
-
-# Name of Windows installer, architecture dependent
-if distutils.util.get_platform() == 'win-amd64':
+if compiling_platform == 'win-amd64':
+    # Name of Windows installer, architecture dependent
     installerName = 'setup {0} {1} (64bit)'.format(app_name, version)
-else:
-    installerName = 'setup {0} {1} (32bit)'.format(app_name, version)
+    platform = 'win'
+    extension = '.zip'
 
+elif compiling_platform == 'linux-x86_64':
+    platform = 'nix64'
+    extension = '.tar.gz'
+
+else:
+    print("Platform not recognized, EXITING NOW !")
+    sys.exit()
 
 # get_platform returns a different string than the one used by py2app
-if sys.platform == 'darwin':
-    platform = distutils.util.get_platform().replace('.', '_')
-    python_exe = 'python3'
-else:
-    platform = distutils.util.get_platform()
-    python_exe = 'python'
+# if sys.platform == 'darwin':
+    # platform = distutils.util.get_platform().replace('.', '_')
 
 # Freeze !!!
-subprocess.call('{} setup.py bdist_esky'.format(python_exe), shell=True)
-# subprocess.call('{} setup.py bdist_esky_patch'.format(python_exe), shell=True)
-print('done with esky')
+if bundle:
+    subprocess.call("pyupdater build --app-version {} setup.spec".format(version),
+                    shell=True)
+    subprocess.call("pyupdater pkg --process --sign", shell=True)
+
+    print('done freezing')
 
 # Unzip file
 print('unzipping')
 
+# Build the name of the archive
+# Ex: ChemBrows-nix64-0.9.8.tar.gz
+filename = '{}-{}-{}'.format(app_name, platform, version)
+path_archive = os.path.join('.', 'pyu-data', 'deploy', filename)
 
-# Build the name of the Esky zip file
-filename = '{}-{}.{}'.format(app_name, version, platform)
+if platform == 'win':
+    # Exctract the zip file
+    with zipfile.ZipFile(path_archive + extension) as zf:
+        zf.extractall(os.path.join('.', 'pyu-data', 'deploy', filename))
 
-with ZipFile(os.path.join('./dist', filename + '.zip'), "r") as zf:
-    zf.extractall('./dist/' + filename)
+    print('unzipping done')
 
-print('unzipping done')
+    # Run ChemBrows
+    if play:
+        subprocess.call("{}\\ChemBrows.exe".format(path_archive),
+                        shell=True)
+
+if platform == 'nix64':
+    # Extract the tar.gz file
+    with tarfile.open(path_archive + extension, "r:gz") as tf:
+        tf.extractall(os.path.join('.', 'pyu-data', 'deploy', filename))
+
+    print('unzipping done')
+
+    # Run ChemBrows
+    if play:
+        subprocess.call("{}/ChemBrows".format(path_archive),
+                        shell=True)
 
 
 # Change permissions to allow execution
-if sys.platform in ['win32', 'cygwin', 'win64']:
+if platform == 'win':
     pass
 elif sys.platform == 'darwin':
 
@@ -105,14 +148,15 @@ elif sys.platform == 'darwin':
 
 
 else:
-    copyfile('deploy/Linux_extras/README', 'dist/{}/README'.format(filename))
-    os.chmod('./dist/{}/gui'.format(filename), 0o777)
-    os.chmod('./dist/{}/{}/gui'.format(filename, filename), 0o777)
+    # copyfile('deploy/Linux_extras/README', 'dist/{}/README'.format(filename))
+    # os.chmod('./dist/{}/gui'.format(filename), 0o777)
+    # os.chmod('./dist/{}/{}/gui'.format(filename, filename), 0o777)
+    pass
 
 
 # Create installer for windows
-if create_installer and sys.platform in ['win32', 'cygwin', 'win64']:
-    innoSetupLoc = "C:\Program Files\Inno Setup 5\ISCC"
+if create_installer and platform == 'win':
+    innoSetupLoc = "C:\Program Files (x86)\Inno Setup 5\ISCC"
 
     architecture = sys.platform
 

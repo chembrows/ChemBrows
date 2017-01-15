@@ -4,7 +4,7 @@
 
 import sys
 import os
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import webbrowser
 import time
 from functions import removeHtml
@@ -14,10 +14,10 @@ from twitter.oauth import OAuth, write_token_file, read_token_file
 
 from log import MyLog
 import constants
-import hosts
+import functions
 
 
-class MyTwit(QtGui.QDialog):
+class MyTwit(QtWidgets.QDialog):
 
     """Module to authenticate the user on Twitter. Allows to tweet"""
     # http://www.adrianjock.com/twitter-myth-url-shorteners/
@@ -25,7 +25,7 @@ class MyTwit(QtGui.QDialog):
     # https://dev.twitter.com/rest/reference/get/help/configuration
 
 
-    def __init__(self, parent, title, link, graphical=None):
+    def __init__(self, title, link, graphical=None, parent=None):
 
         super(MyTwit, self).__init__(parent)
 
@@ -39,11 +39,12 @@ class MyTwit(QtGui.QDialog):
         self.link = link
         self.graphical = graphical
 
-        self.resource_dir, self.DATA_PATH = hosts.getRightDirs()
+        self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
-
-        # Get the logger of the parent window or create one
-        self.l = getattr(parent, 'l', MyLog(self.DATA_PATH + "/activity.log"))
+        if parent is None:
+            self.l = MyLog("activity.log")
+        else:
+            self.l = self.parent.l
 
         self.CONSUMER_KEY = 'IaTVXKtZ7uBjzcVWzsVmMYKtP'
         self.CONSUMER_SECRET = '8hsz0Zj3CupFfvJMAhpG3UjMLs7HZjGywRsjRJI8IcjIA4NrEk'
@@ -67,7 +68,9 @@ class MyTwit(QtGui.QDialog):
         keys into a local file. The user won't have to do the dance each
         time he wants to tweet"""
 
-        twitter = Twitter(auth=OAuth('', '', self.CONSUMER_KEY, self.CONSUMER_SECRET), format='', api_version=None)
+        twitter = Twitter(auth=OAuth('', '', self.CONSUMER_KEY,
+                                     self.CONSUMER_SECRET),
+                          format='', api_version=None)
 
         token, token_secret = self.parseOauthTokens(twitter.oauth.request_token(oauth_callback="oob"))
 
@@ -86,17 +89,19 @@ class MyTwit(QtGui.QDialog):
             if not r:
                 raise Exception()
         except Exception as e:
-            QtGui.QMessageBox.critical(self, "Authentication", "ChemBrows could not open a web page.\nVisit oauth_url to get the PIN code",
-                                       QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(self, "Authentication", "ChemBrows could not open a web page.\nVisit oauth_url to get the PIN code",
+                                           QtWidgets.QMessageBox.Ok, defaultButton=QtWidgets.QMessageBox.Ok)
             self.l.error("Authentication URL not opened")
             self.l.error("openAuthPage: {}".format(e), exc_info=True)
 
 
-        pin = QtGui.QInputDialog.getText(self, "PIN verification", "Enter the PIN to authenticate yourself")
+        pin = QtWidgets.QInputDialog.getText(self, "PIN verification", "Enter the PIN to authenticate yourself")
 
         oauth_verifier = pin[0]
 
-        twitter = Twitter(auth=OAuth(token, token_secret, self.CONSUMER_KEY, self.CONSUMER_SECRET), format='', api_version=None)
+        twitter = Twitter(auth=OAuth(token, token_secret, self.CONSUMER_KEY,
+                                     self.CONSUMER_SECRET),
+                          format='', api_version=None)
 
         oauth_token, oauth_secret = self.parseOauthTokens(twitter.oauth.access_token(oauth_verifier=oauth_verifier))
 
@@ -157,7 +162,9 @@ class MyTwit(QtGui.QDialog):
         try:
             if self.check_graphical.checkState() == 2:
                 t_up = Twitter(domain='upload.twitter.com',
-                               auth=OAuth(oauth_token, oauth_secret, self.CONSUMER_KEY, self.CONSUMER_SECRET))
+                               auth=OAuth(oauth_token, oauth_secret,
+                                          self.CONSUMER_KEY,
+                                          self.CONSUMER_SECRET))
 
                 with open(self.DATA_PATH + "/graphical_abstracts/{}".format(self.graphical), "rb") as image:
                     imagedata = image.read()
@@ -180,15 +187,15 @@ class MyTwit(QtGui.QDialog):
             try:
                 twitter.statuses.update(status=text)
             except Exception as e:
-                QtGui.QMessageBox.critical(self, "Twitter error", "ChemBrows could not tweet that.\nYour tweet is probably too long: {} chara.".format(len(text)),
-                                           QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, "Twitter error", "ChemBrows could not tweet that.\nYour tweet is probably too long: {} chara.".format(len(text)),
+                                           QtWidgets.QMessageBox.Ok, defaultButton=QtWidgets.QMessageBox.Ok)
                 self.l.error('postTweet: {}'.format(e), exc_info=True)
         else:
             try:
                 twitter.statuses.update(status=text, media_ids=id_img)
             except Exception as e:
-                QtGui.QMessageBox.critical(self, "Twitter error", "ChemBrows could not tweet that.\nYour tweet is probably too long: {} chara.".format(len(text)),
-                                           QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, "Twitter error", "ChemBrows could not tweet that.\nYour tweet is probably too long: {} chara.".format(len(text)),
+                                           QtWidgets.QMessageBox.Ok, defaultButton=QtWidgets.QMessageBox.Ok)
                 self.l.error("postTweet: {}".format(e), exc_info=True)
 
         self.close()
@@ -209,18 +216,18 @@ class MyTwit(QtGui.QDialog):
 
         """Handles the display"""
 
-        self.text_tweet = QtGui.QTextEdit()
+        self.text_tweet = QtWidgets.QTextEdit()
 
-        self.cancel_button = QtGui.QPushButton("Cancel", self)
-        self.ok_button = QtGui.QPushButton("Tweet me !", self)
+        self.cancel_button = QtWidgets.QPushButton("Cancel", self)
+        self.ok_button = QtWidgets.QPushButton("Tweet me !", self)
 
-        self.hbox_buttons = QtGui.QHBoxLayout()
-        self.vbox_global = QtGui.QVBoxLayout()
+        self.hbox_buttons = QtWidgets.QHBoxLayout()
+        self.vbox_global = QtWidgets.QVBoxLayout()
 
         # Display a check box to let the user choose
         # if he wants the graphical abstract to be displayed
         if self.graphical is not None:
-            self.check_graphical = QtGui.QCheckBox("Include graphical abstract")
+            self.check_graphical = QtWidgets.QCheckBox("Include graphical abstract")
             self.check_graphical.setCheckState(2)
             self.check_graphical.stateChanged.connect(self.setTweetText)
             self.hbox_buttons.addWidget(self.check_graphical)
@@ -236,9 +243,7 @@ class MyTwit(QtGui.QDialog):
 
 if __name__ == '__main__':
 
-    app = QtGui.QApplication(sys.argv)
-    parent = QtGui.QWidget()
-    parent.DATA_PATH = '.'
+    app = QtWidgets.QApplication(sys.argv)
     # obj = MyTwit(parent, "Mesoporous Ni<small><sub>60</sub></small>Fe<small><sub>30</sub></small>Mn<small><sub>10</sub></small>-alloy based metal/metal oxide composite thick films as highly active and robust oxygen evolution catalysts", "http://pubs.rsc.org/en/Content/ArticleLanding/2016/EE/C5EE02509E", "http pubs rsc org services images rscpubs eplatform service freecontent imageservice svc imageservice image ga id c5ee02509e")
-    obj = MyTwit(parent, "<span class=\"hlFld-Title\">Molecular Rift: Virtual Reality for Drug Designers</span>", "http://dx.doi.org/10.1021/acs.jcim.5b00544", "http pubs acs org appl literatum publisher achs journals content jcisd8 0 jcisd8 ahead of print acs jcim 5b00544 20151111 images medium ci 2015 00544d_0015 gif")
+    obj = MyTwit("<span class=\"hlFld-Title\">Molecular Rift: Virtual Reality for Drug Designers</span>", "http://dx.doi.org/10.1021/acs.jcim.5b00544", "http pubs acs org appl literatum publisher achs journals content jcisd8 0 jcisd8 ahead of print acs jcim 5b00544 20151111 images medium ci 2015 00544d_0015 gif")
     sys.exit(app.exec_())

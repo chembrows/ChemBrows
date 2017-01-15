@@ -90,6 +90,9 @@ class MyStyles():
 
         """Define the general style"""
 
+        # NOTE: for the zoom action to be enabled in QTextBrowser, the font
+        # can't have a fixed size
+
         stylesheet = """
             QToolBar, QScrollArea, QTabWidget, QSplitter, .QWidget
             {
@@ -102,7 +105,7 @@ class MyStyles():
                 color: white
             }
 
-            QWidget
+            QWidget:not (QTextBrowser)
             {
                 font-size: FONT_SIZEpt
             }
@@ -161,7 +164,7 @@ class MyStyles():
 
 
 if __name__ == '__main__':
-    from PyQt4 import QtGui
+    from PyQt5 import QtGui
     import sys
 
     app = QtGui.QApplication(sys.argv)

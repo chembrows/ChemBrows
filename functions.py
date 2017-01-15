@@ -6,6 +6,7 @@ import sys
 import os
 import arrow
 import re
+import constants
 
 
 def prettyDate(date):
@@ -30,10 +31,7 @@ def simpleChar(string, wildcards=True):
     # http://stackoverflow.com/questions/5574042/string-slugification-in-python
     # string = unidecodePerso(string).lower()
 
-    if getattr(sys, "frozen", False):
-        resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    else:
-        resource_dir = '.'
+    resource_dir, _ = getRightDirs()
 
     with open(os.path.join(resource_dir, 'config/data.bin'), 'rb') as f:
         _replaces = f.read().decode('utf8').split('\x00')
@@ -192,6 +190,37 @@ def removeHtml(data):
     p = re.compile(r'<.*?>')
 
     return p.sub('', data)
+
+
+def getRightDirs():
+
+    """Get the DATA_PATH and the resource_dir pathes.
+    DATA_PATH is on the user side if CB is frozen"""
+
+    if getattr(sys, "frozen", False):
+        # resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+        resource_dir = sys._MEIPASS
+        DATA_PATH = constants.DATA_PATH
+    else:
+        resource_dir = '.'
+        DATA_PATH = '.'
+
+    return resource_dir, DATA_PATH
+
+
+def getVersion():
+
+    """Get the ChemBrows' version"""
+
+    resource_dir, DATA_PATH = getRightDirs()
+
+    with open(os.path.join(resource_dir, 'config/version.txt'),
+              'r') as version_file:
+
+        version = version_file.read()
+
+    return version
+
 
 
 

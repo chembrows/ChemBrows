@@ -18,13 +18,21 @@ import random
 import arrow
 import validators
 import datetime
+from pprint import pprint
+
 
 import hosts
 from log import MyLog
 
 LENGTH_SAMPLE = 3
 
-l = MyLog("output_tests.log", mode='w')
+HEADERS = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
+           'Connection': 'close'
+           }
+
+
+
+l = MyLog("output_tests_hosts.log", mode='w')
 l.debug("---------------------- START NEW RUN OF TESTS ----------------------")
 
 
@@ -152,23 +160,32 @@ def test_getData(journalsUrls):
 
     start_time = datetime.datetime.now()
 
-    # Count Empty results
-    count_abs_empty = 0
-    count_image_empty = 0
-
     # Returns a list of the urls of the feed pages
     list_urls_feed = journalsUrls
 
-    # TODO: comment or uncomment
-    # Bypass all companies but one
-    # list_urls_feed = hosts.getJournals("Wiley")[2]
+    # # TODO: comment or uncomment
+    # # Bypass all companies but one
+    # list_urls_feed = hosts.getJournals("Elsevier")[2]
 
     # Build a dic with key: company
                      # value: journal name
     dict_journals = {}
 
+    # Build a dictionnary to store the results of the tests, by company
+    dict_res_by_company = {}
+
     for company in hosts.getCompanies():
         dict_journals[company] = hosts.getJournals(company)[0]
+
+        res = {'count_abs_empty': 0,
+               'count_image_empty': 0,
+               'count_articles_tested': 0,
+               'count_articles_untested': 0,
+               'count_journals_untested': 0,
+               'count_redirections': 0,
+               }
+
+        dict_res_by_company[company] = res
 
     s = requests.session()
 
@@ -178,13 +195,16 @@ def test_getData(journalsUrls):
         l.info("Site {} of {} \n".format(list_urls_feed.index(site) + 1,
                                          len(list_urls_feed)))
 
-        feed = feedparser.parse(site)
-
+        # Get the RSS page of the url provided
         try:
+            feed = feedparser.parse(site, timeout=20)
             journal = feed['feed']['title']
-        except KeyError:
-            l.error("Failed to get title for: {}".format(site))
-            pytest.fail("Failed to get title for: {}".format(site))
+            l.debug("RSS page successfully dled")
+        except Exception as e:
+            dict_res_by_company[company]['count_journals_untested'] += 1
+            l.error("RSS page could not be downloaded: {}".format(e),
+                    exc_info=True)
+            continue
 
         # Get the company name
         for publisher, data in dict_journals.items():
@@ -201,22 +221,21 @@ def test_getData(journalsUrls):
         # Tests LENGTH_SAMPLE entries for a journal, not all of them
         for entry in samples:
 
-            if company in ['science', 'elsevier', 'beilstein']:
+            if company in ['Science', 'Elsevier', 'Beilstein', 'PLOS']:
                 title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry)
             else:
                 url = hosts.refineUrl(company, journal, entry)
 
                 try:
-                    response = s.get(url, timeout=10)
+                    response = s.get(url, timeout=10, headers=HEADERS)
                     title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry, response)
-                except (requests.exceptions.ConnectionError,
-                        requests.exceptions.ReadTimeout) as e:
+                except Exception as e:
+                    dict_res_by_company[company]['count_articles_untested'] += 1
                     l.error("A problem occured: {}, continue to next entry".
                             format(e), exc_info=True)
-                except Exception as e:
-                    l.error("A problem occured: {}, unexepected error".
-                            format(e), exc_info=True)
-                    pytest.fail("Unexpected error, fail: {}".format(url))
+                    continue
+
+            dict_res_by_company[company]['count_articles_tested'] += 1
 
             l.info("Title: {}".format(title))
             l.info("URL: {}".format(url))
@@ -226,24 +245,27 @@ def test_getData(journalsUrls):
             # Count and try do detect suspiciously high numbers of
             # empty results
             if abstract == "Empty":
-                count_abs_empty += 1
+                dict_res_by_company[company]['count_abs_empty'] += 1
             if graphical_abstract == "Empty":
-                count_image_empty += 1
+                dict_res_by_company[company]['count_image_empty'] += 1
 
-            if response.history:
-                l.debug("\nRequest was redirected")
-                for resp in response.history:
-                    l.debug("Status code, URL: {}, {}".
-                            format(resp.status_code, resp.url))
-                l.debug("Final destination:")
-                l.debug("Status code, URL: {}, {} \n".
-                        format(resp.status_code, response.url))
-            else:
-                l.debug("Request was not redirected \n")
+            try:
+                if response.history:
+                    dict_res_by_company[company]['count_redirections'] += 1
+                    l.debug("\nRequest was redirected")
+                    for resp in response.history:
+                        l.debug("Status code, URL: {}, {}".
+                                format(resp.status_code, resp.url))
+                    l.debug("Final destination:")
+                    l.debug("Status code, URL: {}, {} \n".
+                            format(resp.status_code, response.url))
+                else:
+                    l.debug("Request was not redirected \n")
+            except UnboundLocalError:
+                pass
 
 
             # ------------------------ ASSERT SECTION -------------------------
-
 
             logAssert(type(abstract) == str and abstract,
                       "Abstract missing or not a string {}".format(abstract))
@@ -288,11 +310,38 @@ def test_getData(journalsUrls):
                           "author_simple doesn't end with space {}".
                           format(author_simple))
 
+    pprint(dict_res_by_company)
+
+    # Count results
+    count_abs_empty = 0
+    count_image_empty = 0
+    count_articles_tested = 0
+    count_articles_untested = 0
+    count_journals_untested = 0
+    count_redirections = 0
+
+    for company in dict_res_by_company:
+        count_abs_empty += dict_res_by_company[company]['count_abs_empty']
+        count_image_empty += dict_res_by_company[company]['count_image_empty']
+        count_articles_tested += dict_res_by_company[company]['count_articles_tested']
+        count_articles_untested += dict_res_by_company[company]['count_articles_untested']
+        count_journals_untested += dict_res_by_company[company]['count_journals_untested']
+        count_redirections += dict_res_by_company[company]['count_redirections']
+
+    l.debug("Number of untested jounals: {} / {}".
+            format(count_journals_untested, len(list_urls_feed)))
+
+    l.debug("Number of test/untested articles: {} / {}".
+            format(count_articles_tested, count_articles_untested))
+
     l.debug("Number of Empty abstracts: {}".
             format(count_abs_empty))
 
     l.debug("Number of Empty graphical_abstracts: {}".
             format(count_image_empty))
+
+    l.debug("Number of redirections: {}".
+            format(count_redirections))
 
     l.debug("Time spent in test_getData: {}".
             format(datetime.datetime.now() - start_time))
@@ -315,7 +364,15 @@ def test_getDoi(journalsUrls):
         dict_journals[company] = hosts.getJournals(company)[0]
 
     for site in list_sites:
-        feed = feedparser.parse(site)
+
+        try:
+            feed = feedparser.parse(site, timeout=20)
+            journal = feed['feed']['title']
+            l.debug("RSS page successfully dled")
+        except Exception as e:
+            l.error("RSS page could not be downloaded: {}".format(e),
+                    exc_info=True)
+            continue
 
         try:
             journal = feed['feed']['title']

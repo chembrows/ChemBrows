@@ -4,25 +4,29 @@
 
 import os
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import feedparser
 
 from log import MyLog
 import hosts
+import functions
 
 
-class WizardJournal(QtGui.QDialog):
+class WizardAddJournal(QtWidgets.QDialog):
 
-    def __init__(self, parent):
+    def __init__(self, parent=None):
 
-        super(WizardJournal, self).__init__(parent)
+        super(WizardAddJournal, self).__init__(parent)
+
+        self.setModal(True)
+
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.parent = parent
 
-        self.resource_dir, self.DATA_PATH = hosts.getRightDirs()
+        self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
-        if type(parent) is QtGui.QWidget:
+        if parent is None:
             self.l = MyLog("activity.log")
 
             # Dummy file for saving if testing
@@ -34,8 +38,6 @@ class WizardJournal(QtGui.QDialog):
             self.l = self.parent.l
             self.options = self.parent.options
             self.test = False
-
-        self.check_journals = []
 
         self.initUI()
         self.defineSlots()
@@ -61,27 +63,38 @@ class WizardJournal(QtGui.QDialog):
         url = self.line_url_journal.text()
         publisher = self.combo_publishers.currentText()
 
+        # Create error message if RSS page can't be downloaded
+        error_mes = "An error occured while downloading the RSS page.\
+                     Are you sure you have the right URL ?\
+                     Try again later, maybe ?"
+        error_mes = error_mes.replace("    ", "")
+
         try:
-            feed = feedparser.parse(url)
+            feed = feedparser.parse(url, timeout=60)
             self.l.info("verifyInput: RSS page successfully dled")
         except Exception as e:
-            self.l.error("verifyInput RSS page could not be downloaded",
+            self.l.error("verifyInput: RSS page could not be downloaded",
                          exc_info=True)
+            QtWidgets.QMessageBox.critical(self,
+                                           "Error while adding new journal",
+                                           error_mes, QtWidgets.QMessageBox.Ok,
+                                           defaultButton=QtWidgets.QMessageBox.Ok)
             return
 
-        mes = "The following joural will be added to your selection:\n{}"
+        mes = "The following journal will be added to your selection:\n{}"
 
         try:
             title = feed['feed']['title']
             mes = mes.format(title)
 
             # Confirmation dialog box
-            choice = QtGui.QMessageBox.information(self, "Verification", mes,
-                                                   QtGui.QMessageBox.Cancel |
-                                                   QtGui.QMessageBox.Ok,
-                                                   defaultButton=QtGui.QMessageBox.Cancel)
+            choice = QtWidgets.QMessageBox.information(self, "Verification",
+                                                       mes,
+                                                       QtWidgets.QMessageBox.Cancel |
+                                                       QtWidgets.QMessageBox.Ok,
+                                                       defaultButton=QtWidgets.QMessageBox.Cancel)
 
-            if choice == QtGui.QMessageBox.Cancel:
+            if choice == QtWidgets.QMessageBox.Cancel:
                 return
             else:
                 self.l.debug("Try to save the new journal")
@@ -90,6 +103,10 @@ class WizardJournal(QtGui.QDialog):
         except KeyError:
             self.l.critical("No title for the journal ! Aborting")
             self.l.critical(url)
+            QtWidgets.QMessageBox.critical(self,
+                                           "Error while adding new journal",
+                                           error_mes, QtWidgets.QMessageBox.Ok,
+                                           defaultButton=QtWidgets.QMessageBox.Ok)
             return
 
 
@@ -101,14 +118,15 @@ class WizardJournal(QtGui.QDialog):
         mes = """Define the abbreviation of the journal you want to add.\n\n\
         Find the URL of the RSS page of the journal you want to add.\n\n\
         Publisher: to which publisher does the new journal belong ? This\
-         choice will help ChemBrows to format the articles.
+         choice will help ChemBrows to format the articles.\n\
+        NOTE: Nature2 is for journals with a RSS feed formatted like Sci. Rep.
         """
 
         # Clean the tabs in the message (tabs are 4 spaces)
         mes = mes.replace("    ", "")
 
-        QtGui.QMessageBox.information(self, "Information", mes,
-                                      QtGui.QMessageBox.Ok)
+        QtWidgets.QMessageBox.information(self, "Information", mes,
+                                          QtWidgets.QMessageBox.Ok)
 
 
     def initUI(self):
@@ -118,21 +136,21 @@ class WizardJournal(QtGui.QDialog):
         self.setWindowTitle('Adding new journal')
 
         # Open a dialog box to explain how to add a journal
-        self.help_button = QtGui.QPushButton("Help")
+        self.help_button = QtWidgets.QPushButton("Help")
 
         # Validate. Triggers verification process
-        self.ok_button = QtGui.QPushButton("OK")
+        self.ok_button = QtWidgets.QPushButton("Add journal")
 
-        self.form_layout = QtGui.QFormLayout()
+        self.form_layout = QtWidgets.QFormLayout()
 
-        self.line_abbreviation = QtGui.QLineEdit()
+        self.line_abbreviation = QtWidgets.QLineEdit()
         self.line_abbreviation.setPlaceholderText("Ex: Chem. Commun.")
 
-        self.line_url_journal = QtGui.QLineEdit()
+        self.line_url_journal = QtWidgets.QLineEdit()
         self.line_url_journal.setPlaceholderText("http://feeds.rsc.org/rss/cc")
 
         list_publishers = sorted(hosts.getCompanies())
-        self.combo_publishers = QtGui.QComboBox()
+        self.combo_publishers = QtWidgets.QComboBox()
         self.combo_publishers.addItems(list_publishers)
 
         self.form_layout.addRow(self.help_button)
@@ -144,7 +162,7 @@ class WizardJournal(QtGui.QDialog):
 
 # ------------------------ ASSEMBLING -----------------------------------------
 
-        self.vbox_global = QtGui.QVBoxLayout()
+        self.vbox_global = QtWidgets.QVBoxLayout()
 
         self.vbox_global.addLayout(self.form_layout)
         self.vbox_global.addWidget(self.ok_button)
@@ -166,8 +184,8 @@ class WizardJournal(QtGui.QDialog):
 
             # If URL already present, display error dialog box
             if url in data_company[2]:
-                QtGui.QMessageBox.critical(self, "Error", mes,
-                                           QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, "Error", mes,
+                                               QtWidgets.QMessageBox.Ok)
                 return
 
         # If still here, write the new journal
@@ -180,7 +198,7 @@ class WizardJournal(QtGui.QDialog):
 
 if __name__ == '__main__':
 
-    app = QtGui.QApplication(sys.argv)
-    parent = QtGui.QWidget()
-    obj = WizardJournal(parent)
+    app = QtWidgets.QApplication(sys.argv)
+    # parent = QtWidgets.QWidget()
+    obj = WizardAddJournal()
     sys.exit(app.exec_())

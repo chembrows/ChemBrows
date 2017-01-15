@@ -4,24 +4,26 @@
 
 import sys
 import os
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
+import functions
 
 
-class Tuto(QtGui.QDialog):
+class Tuto(QtWidgets.QDialog):
 
     """Module to show a tutorial. It will guide the user
     trough the use of ChemBrows"""
 
-    def __init__(self, parent):
+    def __init__(self, parent=None):
 
         super(Tuto, self).__init__(parent)
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.parent = parent
-        self.resource_dir, self.DATA_PATH = hosts.getRightDirs()
+        self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
-        if type(parent) is QtGui.QWidget:
+        if parent is None:
             self.test = True
         else:
             self.test = False
@@ -47,15 +49,18 @@ class Tuto(QtGui.QDialog):
 
         self.index += increment
 
+        try:
+            tuto_run = self.parent.options.value("tuto_run", None)
+        except AttributeError:
+            tuto_run = False
+
         # Show or hide the combo_box
-        if (self.index == 1 and
-                self.parent.options.value("tuto_run", None) is None):
+        if self.index == 1 and not tuto_run:
             self.combo_choice.show()
         else:
             self.combo_choice.hide()
 
-        if (self.index == 2 and
-                self.parent.options.value("tuto_run", None) is None):
+        if self.index == 2 and not tuto_run:
             # Get the choice of field from the user
             choice = self.combo_choice.currentText()
 
@@ -92,18 +97,23 @@ class Tuto(QtGui.QDialog):
         self.text_diapo.setText(text)
 
 
-    def finnishTuto(self):
+    def finishTuto(self):
 
         """Slot called when the tuto is finnished or quitted"""
 
         # Create a bool to check if the user has already run the tuto
-        self.parent.options.setValue("tuto_run", True)
+        if not self.test:
+            self.parent.options.setValue("tuto_run", True)
 
 
     def parseSlide(self, text):
 
+        """Method to parse the content of the slides. Will automatically
+        detect images"""
+
         try:
-            path = './images/' + text.split('!!!')[1].rstrip()
+            path = os.path.join(self.resource_dir, 'images/',
+                                text.split('!!!')[1].rstrip())
             image = QtGui.QPixmap(path)
             image = image.scaledToWidth(60, QtCore.Qt.SmoothTransformation)
             self.label_image.setPixmap(image)
@@ -127,7 +137,7 @@ class Tuto(QtGui.QDialog):
 
         # Quit the tuto at any moment
         # Connect 2 slots to the quit button bc 'done' needs a return code
-        self.quit_button.clicked.connect(self.finnishTuto)
+        self.quit_button.clicked.connect(self.finishTuto)
         self.quit_button.clicked.connect(self.done)
 
 
@@ -137,11 +147,11 @@ class Tuto(QtGui.QDialog):
 
         self.setWindowTitle('Tutorial')
 
-        self.text_diapo = QtGui.QLabel()
+        self.text_diapo = QtWidgets.QLabel()
         # Clickable URLs
         self.text_diapo.setOpenExternalLinks(True)
 
-        self.label_image = QtGui.QLabel()
+        self.label_image = QtWidgets.QLabel()
         self.label_image.setAlignment(QtCore.Qt.AlignHCenter)
         self.label_image.hide()
 
@@ -150,18 +160,18 @@ class Tuto(QtGui.QDialog):
         self.text_diapo.setText(text)
 
         choices = ['All'] + sorted(os.listdir(os.path.join(self.resource_dir, 'config/fields/')))
-        self.combo_choice = QtGui.QComboBox()
+        self.combo_choice = QtWidgets.QComboBox()
         self.combo_choice.addItems(choices)
         self.combo_choice.hide()
 
-        self.quit_button = QtGui.QPushButton("Quit tuto", self)
-        self.previous_button = QtGui.QPushButton("Previous", self)
-        self.next_button = QtGui.QPushButton("Next", self)
+        self.quit_button = QtWidgets.QPushButton("Quit tuto", self)
+        self.previous_button = QtWidgets.QPushButton("Previous", self)
+        self.next_button = QtWidgets.QPushButton("Next", self)
 
         self.previous_button.setEnabled(False)
 
-        self.hbox_buttons = QtGui.QHBoxLayout()
-        self.vbox_global = QtGui.QVBoxLayout()
+        self.hbox_buttons = QtWidgets.QHBoxLayout()
+        self.vbox_global = QtWidgets.QVBoxLayout()
 
         self.hbox_buttons.addWidget(self.quit_button)
         self.hbox_buttons.addWidget(self.previous_button)
@@ -178,7 +188,6 @@ class Tuto(QtGui.QDialog):
 
 if __name__ == '__main__':
 
-    app = QtGui.QApplication(sys.argv)
-    parent = QtGui.QWidget()
-    obj = Tuto(parent)
+    app = QtWidgets.QApplication(sys.argv)
+    obj = Tuto()
     sys.exit(app.exec_())
