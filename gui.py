@@ -1210,13 +1210,13 @@ class MyWindow(QtWidgets.QMainWindow):
         """Slot to perform some actions when the current tab is changed.
         Mainly sets the tab query to the saved query"""
 
-        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
-        # table.updateHeight()
-
         # Submit the changes on the model.
-        # Otherwise, a bug appears: one changing an article, the changes are visible
-        # (trough the proxy) on all the articles at the same place in all tabs
+        # Otherwise, a bug appears: one changing an article, the changes are
+        # visible (trough the proxy) on all the articles at the same place
+        # in all tabs
         self.model.submitAll()
+
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
         self.searchByButton()
 
@@ -1228,6 +1228,10 @@ class MyWindow(QtWidgets.QMainWindow):
         # Update the size of the columns of the view if the central
         # splitter moved
         self.updateCellSize()
+
+        # Fix a display bug if toread list empty
+        if not self.waiting_list.articles:
+            table.initUI()
 
 
     def createToRead(self, searches_saved):
@@ -1828,6 +1832,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.model.setQuery(self.query)
             proxy.setSourceModel(self.model)
             table.setModel(proxy)
+        # self.query doesn't exist
         except AttributeError:
             self.l.debug("updateView, AttributeError")
             self.model.setQuery(self.refineBaseQuery(table.base_query,
