@@ -766,13 +766,14 @@ def getDoi(company, journal, entry):
     return doi
 
 
-def getJournals(company):
+def getJournals(company, user=False):
 
     """Function to get the informations about all the journals of
     a company. Returns the names, the URLs, the abbreviations, and also
     a boolean to set the download of the graphical abstracts. If for a
     journal this boolean is False, the Worker object will not try to dl
-    the picture"""
+    the picture. If user is true, returns only the journals on the user's
+    side"""
 
     names = []
     abb = []
@@ -781,31 +782,32 @@ def getJournals(company):
 
     resource_dir, DATA_PATH = functions.getRightDirs()
 
-    with open(os.path.join(resource_dir, 'journals/{0}.ini'.
-              format(company)), 'r') as config:
-        for line in config:
-            names.append(line.split(" : ")[0])
-            abb.append(line.split(" : ")[1].rstrip())
-            urls.append(line.split(" : ")[2].rstrip())
+    if not user:
+        with open(os.path.join(resource_dir, 'journals', '{}.ini'.
+                  format(company)), 'r') as config:
+            for line in config:
+                names.append(line.split(" : ")[0])
+                abb.append(line.split(" : ")[1].rstrip())
+                urls.append(line.split(" : ")[2].rstrip())
 
-            # Get a bool: care about the image when refreshing
-            try:
-                care = line.split(" : ")[3].rstrip()
-                if care == "False":
-                    cares_image.append(False)
-                else:
+                # Get a bool: care about the image when refreshing
+                try:
+                    care = line.split(" : ")[3].rstrip()
+                    if care == "False":
+                        cares_image.append(False)
+                    else:
+                        cares_image.append(True)
+                except IndexError:
                     cares_image.append(True)
-            except IndexError:
-                cares_image.append(True)
 
     # If the user didn't add a journal from this company, the file
     # won't exist, so exit
-    if not os.path.exists(os.path.join(DATA_PATH, 'journals/{0}.ini'.
-                                                  format(company))):
+    if not os.path.exists(os.path.join(DATA_PATH, 'journals', '{}.ini'.
+                                       format(company))):
         return names, abb, urls, cares_image
 
-    with open(os.path.join(DATA_PATH, 'journals/{0}.ini'.
-              format(company)), 'r') as config:
+    with open(os.path.join(DATA_PATH, 'journals', '{}.ini'.
+                           format(company)), 'r') as config:
 
         for line in config:
             url = line.split(" : ")[2].rstrip()
@@ -828,27 +830,31 @@ def getJournals(company):
     return names, abb, urls, cares_image
 
 
-def getCompanies():
+def getCompanies(user=False):
 
-    """Get a list of all the companies. Will return a list of
-    publishers, without .ini at the end"""
+    """Get a list of all the companies. Will return a list of publishers,
+    without .ini at the end. If user is true, returns companies on the user's
+    side"""
 
     resource_dir, DATA_PATH = functions.getRightDirs()
 
-    list_companies = []
+    cb_companies = []
+    user_companies = []
 
     # List companies on the program side
     for company in os.listdir(os.path.join(resource_dir, 'journals')):
         company = company.split('.')[0]
-        list_companies.append(company)
+        cb_companies.append(company)
 
     # List companies on the user side
     for company in os.listdir(os.path.join(DATA_PATH, 'journals')):
         company = company.split('.')[0]
-        if company not in list_companies:
-            list_companies.append(company)
+        user_companies.append(company)
 
-    return list_companies
+    if not user:
+        return list(set(cb_companies + user_companies))
+    else:
+        return list(set(cb_companies + user_companies))
 
 
 

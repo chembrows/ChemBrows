@@ -7,7 +7,8 @@ import os
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 from log import MyLog
-from wizard_journal import WizardJournal
+from wizard_add_journal import WizardAddJournal
+from wizard_del_journal import WizardDelJournal
 import hosts
 import functions
 
@@ -42,6 +43,7 @@ class Settings(QtWidgets.QDialog):
             self.options = self.parent.options
             self.test = False
 
+        # Store the checkboxes of the window
         self.check_journals = []
 
         self.initUI()
@@ -76,7 +78,7 @@ class Settings(QtWidgets.QDialog):
         # Checkbox to select/unselect all the journals
         self.box_select_all.stateChanged.connect(self.selectUnselectAll)
 
-        self.button_wizard_journal.clicked.connect(self.dialogManageJournals)
+        self.button_manage_journals.clicked.connect(self.dialogManageJournals)
 
         # Button "clean database" (erase the unintersting journals from the db)
         # connected to the method of the main window class
@@ -85,7 +87,7 @@ class Settings(QtWidgets.QDialog):
             self.button_clean_db.clicked.connect(self.parent.cleanDb)
             self.button_reset_db.clicked.connect(self.parent.resetDb)
             self.button_erase_db.clicked.connect(self.parent.eraseDb)
-            self.button_wizard_journal.clicked.connect(self.close)
+            self.button_manage_journals.clicked.connect(self.close)
 
 
     def dialogManageJournals(self):
@@ -102,9 +104,10 @@ class Settings(QtWidgets.QDialog):
         button_del = QtWidgets.QPushButton("Delete a journal")
 
         button_add.clicked.connect(dial.accept)
-        button_add.clicked.connect(lambda: WizardJournal(self))
+        button_add.clicked.connect(lambda: WizardAddJournal(self))
 
         button_del.clicked.connect(dial.accept)
+        button_del.clicked.connect(lambda: WizardDelJournal(self))
 
         hbox_dial = QtWidgets.QHBoxLayout()
         hbox_dial.addWidget(button_add)
@@ -145,8 +148,8 @@ class Settings(QtWidgets.QDialog):
         self.vbox_check_journals = QtWidgets.QVBoxLayout()
         self.scrolling_check_journals.setLayout(self.vbox_check_journals)
 
-        self.button_wizard_journal = QtWidgets.QPushButton("Manage journals")
-        self.vbox_check_journals.addWidget(self.button_wizard_journal)
+        self.button_manage_journals = QtWidgets.QPushButton("Manage journals")
+        self.vbox_check_journals.addWidget(self.button_manage_journals)
 
         labels_checkboxes = []
 
@@ -161,7 +164,7 @@ class Settings(QtWidgets.QDialog):
         self.vbox_check_journals.addWidget(self.box_select_all)
 
         # Build the checkboxes, and put them in a layout
-        for index, label in enumerate(labels_checkboxes):
+        for label in labels_checkboxes:
             check_box = QtWidgets.QCheckBox(label)
             check_box.setCheckState(2)
             self.check_journals.append(check_box)
@@ -227,9 +230,8 @@ class Settings(QtWidgets.QDialog):
         journals_to_parse = []
 
         for box in self.check_journals:
-            if box.text() != "Select all":
-                if box.checkState() == 2:
-                    journals_to_parse.append(box.text())
+            if box.checkState() == 2:
+                journals_to_parse.append(box.text())
 
         if journals_to_parse:
             self.options.remove("journals_to_parse")

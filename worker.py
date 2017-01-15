@@ -96,14 +96,14 @@ class Worker(QtCore.QThread):
         feed = self._getFeed(timeout=self.TIMEOUT)
 
         if feed is None:
-            self.l.debug("Exiting worker, problem w/ the feed")
+            self.l.error("Exiting worker, problem w/ the feed")
             return
 
         # Get the journal name
         journal = feed['feed']['title']
 
 
-        self.l.info("{0}: {1}".format(journal, len(feed.entries)))
+        self.l.debug("{0}: {1}".format(journal, len(feed.entries)))
 
         # Lists to check if the post is in the db, and if
         # it has all the infos

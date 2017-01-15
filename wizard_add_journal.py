@@ -12,11 +12,11 @@ import hosts
 import functions
 
 
-class WizardJournal(QtWidgets.QDialog):
+class WizardAddJournal(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
 
-        super(WizardJournal, self).__init__(parent)
+        super(WizardAddJournal, self).__init__(parent)
 
         self.setModal(True)
 
@@ -38,8 +38,6 @@ class WizardJournal(QtWidgets.QDialog):
             self.l = self.parent.l
             self.options = self.parent.options
             self.test = False
-
-        self.check_journals = []
 
         self.initUI()
         self.defineSlots()
@@ -77,9 +75,10 @@ class WizardJournal(QtWidgets.QDialog):
         except Exception as e:
             self.l.error("verifyInput: RSS page could not be downloaded",
                          exc_info=True)
-            QtWidgets.QMessageBox.critical(self, "Error while adding new journal",
-                                       error_mes, QtWidgets.QMessageBox.Ok,
-                                       defaultButton=QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(self,
+                                           "Error while adding new journal",
+                                           error_mes, QtWidgets.QMessageBox.Ok,
+                                           defaultButton=QtWidgets.QMessageBox.Ok)
             return
 
         mes = "The following journal will be added to your selection:\n{}"
@@ -89,10 +88,11 @@ class WizardJournal(QtWidgets.QDialog):
             mes = mes.format(title)
 
             # Confirmation dialog box
-            choice = QtWidgets.QMessageBox.information(self, "Verification", mes,
-                                                   QtWidgets.QMessageBox.Cancel |
-                                                   QtWidgets.QMessageBox.Ok,
-                                                   defaultButton=QtWidgets.QMessageBox.Cancel)
+            choice = QtWidgets.QMessageBox.information(self, "Verification",
+                                                       mes,
+                                                       QtWidgets.QMessageBox.Cancel |
+                                                       QtWidgets.QMessageBox.Ok,
+                                                       defaultButton=QtWidgets.QMessageBox.Cancel)
 
             if choice == QtWidgets.QMessageBox.Cancel:
                 return
@@ -103,9 +103,10 @@ class WizardJournal(QtWidgets.QDialog):
         except KeyError:
             self.l.critical("No title for the journal ! Aborting")
             self.l.critical(url)
-            QtWidgets.QMessageBox.critical(self, "Error while adding new journal",
-                                       error_mes, QtWidgets.QMessageBox.Ok,
-                                       defaultButton=QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(self,
+                                           "Error while adding new journal",
+                                           error_mes, QtWidgets.QMessageBox.Ok,
+                                           defaultButton=QtWidgets.QMessageBox.Ok)
             return
 
 
@@ -124,7 +125,7 @@ class WizardJournal(QtWidgets.QDialog):
         mes = mes.replace("    ", "")
 
         QtWidgets.QMessageBox.information(self, "Information", mes,
-                                      QtWidgets.QMessageBox.Ok)
+                                          QtWidgets.QMessageBox.Ok)
 
 
     def initUI(self):
@@ -183,7 +184,7 @@ class WizardJournal(QtWidgets.QDialog):
             # If URL already present, display error dialog box
             if url in data_company[2]:
                 QtWidgets.QMessageBox.critical(self, "Error", mes,
-                                           QtWidgets.QMessageBox.Ok)
+                                               QtWidgets.QMessageBox.Ok)
                 return
 
         # If still here, write the new journal
@@ -198,5 +199,5 @@ if __name__ == '__main__':
 
     app = QtWidgets.QApplication(sys.argv)
     # parent = QtWidgets.QWidget()
-    obj = WizardJournal()
+    obj = WizardAddJournal()
     sys.exit(app.exec_())

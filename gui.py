@@ -12,6 +12,7 @@ import requests
 import platform
 import validators
 import collections as collec
+import logging
 
 # Personal modules
 from log import MyLog
@@ -80,7 +81,10 @@ class MyWindow(QtWidgets.QMainWindow):
             self.l.info("This version of ChemBrows is NOT frozen")
             self.l.info("You are in debug mod")
 
-        self.l.debug('Resources dir: {}'.format(self.resource_dir))
+        # Set the logging level
+        self.l.setLevel(logging.INFO)
+
+        self.l.info('Resources dir: {}'.format(self.resource_dir))
         # self.l.setLevel(20)
         self.l.info(QtWidgets.QApplication.libraryPaths())
         self.l.info('Running {} {}'.format(platform.system(),
@@ -502,7 +506,7 @@ class MyWindow(QtWidgets.QMainWindow):
                 del worker
 
         # Display the nbr of finished threads
-        self.l.info("Done: {}/{}".format(self.count_threads, self.urls_max))
+        self.l.debug("Done: {}/{}".format(self.count_threads, self.urls_max))
 
         # # Display the progress of the parsing w/ the progress bar
         percent = self.count_threads * 100 / self.urls_max
@@ -1942,7 +1946,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def eraseDb(self):
 
-        """Method to completely erase the database. Will also vacuum it."""
+        """Method to completely erase the database. Will also vacuum it"""
 
         mes = """
         You are about to completely erase your database. ALL the data regarding
