@@ -97,11 +97,11 @@ class Worker(QtCore.QThread):
 
         if feed is None:
             self.l.error("Exiting worker, problem w/ the feed")
+            self.parent.list_failed_rss.append(self.url_feed)
             return
 
         # Get the journal name
         journal = feed['feed']['title']
-
 
         self.l.debug("{0}: {1}".format(journal, len(feed.entries)))
 
@@ -128,9 +128,7 @@ class Worker(QtCore.QThread):
             self.dico_doi = self.listDoi(journal_abb)
         except UnboundLocalError:
             self.l.error("Journal not recognized ! Aborting")
-
-            # Tell the parent the RSS page was not downloaded
-            self.parent.counter_journals_failed += 1
+            self.parent.list_failed_rss.append(self.url_feed)
             return
 
         # Create a list for the journals which a dl of the article

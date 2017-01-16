@@ -462,10 +462,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.counter_updates = 0
         self.counter_rejected = 0
         self.counter_articles_failed = 0
-        self.counter_journals_failed = 0
         self.counter_images_failed = 0
 
         self.browsing_session = requests.session()
+
+        # List of failed dl of RSS feeds
+        self.list_failed_rss = []
 
         # List to store the threads.
         # The list is cleared when the method is started
@@ -523,10 +525,15 @@ class MyWindow(QtWidgets.QMainWindow):
                         format(self.counter_added))
             self.l.info("{} entries rejected".
                         format(self.counter_rejected))
-            self.l.info("{} attempts to update entries".
+            self.l.info("{} attempts to update entries\n".
                         format(self.counter_updates))
-            self.l.info("{} RSS feeds were not downloaded".
-                        format(self.counter_journals_failed))
+
+            self.l.info("{} RSS feeds were not downloaded:".
+                        format(len(self.list_failed_rss)))
+            for feed in self.list_failed_rss:
+                self.l.debug(feed)
+            self.l.debug("\n")
+
             self.l.info("{} articles failed".
                         format(self.counter_articles_failed))
             self.l.info("{} images failed".
