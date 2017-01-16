@@ -79,6 +79,7 @@ class Settings(QtWidgets.QDialog):
         self.box_select_all.stateChanged.connect(self.selectUnselectAll)
 
         self.button_manage_journals.clicked.connect(self.dialogManageJournals)
+        # self.button_manage_journals.clicked.connect(self.close)
 
         # Button "clean database" (erase the unintersting journals from the db)
         # connected to the method of the main window class
@@ -87,14 +88,12 @@ class Settings(QtWidgets.QDialog):
             self.button_clean_db.clicked.connect(self.parent.cleanDb)
             self.button_reset_db.clicked.connect(self.parent.resetDb)
             self.button_erase_db.clicked.connect(self.parent.eraseDb)
-            self.button_manage_journals.clicked.connect(self.close)
 
 
     def dialogManageJournals(self):
 
         """Opens a dialog, let the user choose between deleting and adding
         journals"""
-
 
         dial = QtWidgets.QDialog(self)
 
