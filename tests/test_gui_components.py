@@ -15,7 +15,8 @@ import pytest
 
 from log import MyLog
 from advanced_search import AdvancedSearch
-from wizard_journal import WizardJournal
+from wizard_add_journal import WizardAddJournal
+from wizard_del_journal import WizardDelJournal
 
 
 l = MyLog("output_tests_gui_components.log", mode='w')
@@ -40,5 +41,5 @@ def logAssert(test, msg):
 
 
 
-if __name__ == "__main__":
-    test_WizardJournal()
+# if __name__ == "__main__":
+    # test_WizardJournal()
