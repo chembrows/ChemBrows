@@ -110,9 +110,9 @@ class Worker(QtCore.QThread):
         self.session_images = FuturesSession(max_workers=self.MAX_WORKERS,
             session=self.parent.browsing_session)
 
-        # Get the company and the journal_abb by scrolling the dictionnary
+        # Get the company and the journal_abb by scrolling the dictionary
         # containing all the data regarding the journals implemented in the
-        # program. This dictionnary is built in gui.py, to avoid multiple calls
+        # program. This dictionary is built in gui.py, to avoid multiple calls
         # to hosts.getJournals
         # care_image determines if the Worker will try to dl the graphical
         # abstracts

@@ -48,6 +48,10 @@ class MyWindow(QtWidgets.QMainWindow):
     # def __init__(self, logger):
     def __init__(self):
 
+        # Call processEvents regularly for the splash screen
+        start_time = datetime.datetime.now()
+        diff_time = start_time
+
         super(MyWindow, self).__init__()
 
         self.resource_dir, self.DATA_PATH = functions.getRightDirs()
@@ -123,10 +127,11 @@ class MyWindow(QtWidgets.QMainWindow):
         self.list_tables_in_tabs = []
         self.list_proxies_in_tabs = []
 
-        # Call processEvents regularly for the splash screen
-        start_time = datetime.datetime.now()
 
-        diff_time = start_time
+        # Object to store options and preferences
+        self.options = QtCore.QSettings(os.path.join(self.DATA_PATH, 'config',
+                                                     'options.ini'),
+                                        QtCore.QSettings.IniFormat)
 
         # Look for updates
         QtWidgets.qApp.processEvents()
@@ -134,11 +139,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.l.debug("bootCheckList took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
-
-        # Object to store options and preferences
-        self.options = QtCore.QSettings(os.path.join(self.DATA_PATH, 'config',
-                                                     'options.ini'),
-                                        QtCore.QSettings.IniFormat)
 
         QtWidgets.qApp.processEvents()
 
@@ -148,6 +148,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.logConnection()
         self.l.debug("connectionBdd, defineActions & logConnection took {}"
                      .format(datetime.datetime.now() - diff_time))
+        diff_time = datetime.datetime.now()
+
+        QtWidgets.qApp.processEvents()
+        self.correctionVersion()
+        self.l.debug("correctionVersion took {}".
+                     format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         # Create the GUI
@@ -306,6 +312,47 @@ class MyWindow(QtWidgets.QMainWindow):
             self.l.error("The user_id was wrong. Set it to None")
 
 
+    def correctionVersion(self):
+
+        """Called during boot, to correct problems between versions"""
+
+        # Get articles in ToRead list, old option
+        ids_waited = self.options.value("ids_waited", [])
+
+        if ids_waited:
+            articles = {}
+
+            query = QtSql.QSqlQuery(self.bdd)
+
+            requete = "SELECT * FROM papers WHERE id IN ("
+
+            # Building the query
+            for each_id in ids_waited:
+                if each_id != ids_waited[-1]:
+                    requete = requete + str(each_id) + ", "
+                else:
+                    requete = requete + str(each_id) + ")"
+
+            query.exec_(requete)
+
+            while query.next():
+                record = query.record()
+                articles[record.value('id')] = record.value('new')
+
+            searches_saved = QtCore.QSettings(os.path.join(self.DATA_PATH,
+                                                           "config",
+                                                           "searches.ini"),
+                                              QtCore.QSettings.IniFormat)
+
+            # Store the articles and their read states in a dictionary
+            searches_saved.setValue("ToRead/articles", articles)
+
+            self.options.remove('ids_waited')
+
+        # Remove bool for dark background. Removed in version 0.9.9
+        self.options.remove('Window/dark')
+
+
     def finishBoot(self):
 
         """Method to register a new user. When it is done,
@@ -317,8 +364,6 @@ class MyWindow(QtWidgets.QMainWindow):
         os.makedirs(os.path.join(self.DATA_PATH, 'graphical_abstracts'),
                     exist_ok=True)
 
-        # Create the journals folder in the user's space
-        os.makedirs(os.path.join(self.DATA_PATH, 'journals'), exist_ok=True)
 
         # Check if there is a user_id. If not, register the user
         if self.options.value("user_id", None) is None:
@@ -428,7 +473,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
         journals_to_parse = self.getJournalsToParse()
 
-        # Create a dictionnary w/ all the data concerning the journals
+        # Create a dictionary w/ all the data concerning the journals
         # implemented in the program: names, abbreviations, urls.
         # Create a list of urls to parse data
         self.urls = []

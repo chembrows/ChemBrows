@@ -420,6 +420,5 @@ class AdvancedSearch(QtWidgets.QDialog):
 if __name__ == '__main__':
 
     app = QtWidgets.QApplication(sys.argv)
-    parent = QtWidgets.QWidget()
-    obj = AdvancedSearch(parent)
+    obj = AdvancedSearch()
     sys.exit(app.exec_())

@@ -923,7 +923,7 @@ if __name__ == "__main__":
         # if "Density Functional" not in entry.title:
             # continue
 
-        # print(entry)
+        print(entry)
 
         # if "cross reactive" not in title:
             # continue
