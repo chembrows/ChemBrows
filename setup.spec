@@ -34,7 +34,6 @@ imports = ['packaging', 'packaging.version', 'packaging.specifiers',
 
 excludes = ['pyi_rth_pkgres', 'pyi_rth_qt5plugins', 'lib2to3', 'runpy',
             'xmlrpc', 'doctest', 'tty', 'getopt']
-# excludes = []
 
 a = Analysis(PATH_EXE,
              pathex=[DIR_PATH] * 2,
@@ -48,18 +47,17 @@ a = Analysis(PATH_EXE,
              win_private_assemblies=False,
              cipher=block_cipher)
 
-# rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
-           # 'libQt3Support', 'libwebp', 'libXss', 'libXft', 'libcrypto',
-           # 'libtcl', 'libtk', 'libX11', 'libgstreamer', 'libgcrypt',
-           # 'libQtOpenGL.so', 'libfbclient', 'libfreetype', 'libgcc_s',
-           # 'libsqlite3', 'libQtDBus', 'libsystemd', 'libgstvideo', 'liborc',
-           # 'libharfbuzz', 'libpcre', 'libmng', 'bncursesw', 'libgstbase',
-           # 'libgstaudio', 'liblcms2', 'libQtSvg', 'liblapack', 'libatlas',
-           # 'libgobject', 'libquadmath', 'libgsttag', 'libmpdec',
-           # 'libgstpbutils', 'libxcb-glx', 'libICE', 'libQtXml',
-           # 'libfontconfig', 'libglapi', 'libgraphite2', 'libexpat',
-           # 'libXext', 'liblz4']
-rm_bins = []
+rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
+           'libQt3Support', 'libwebp', 'libXss', 'libXft', 'libcrypto',
+           'libtcl', 'libtk', 'libX11', 'libgstreamer', 'libgcrypt',
+           'libQtOpenGL.so', 'libfbclient', 'libfreetype', 'libgcc_s',
+           'libsqlite3', 'libQtDBus', 'libsystemd', 'libgstvideo', 'liborc',
+           'libharfbuzz', 'libpcre', 'libmng', 'bncursesw', 'libgstbase',
+           'libgstaudio', 'liblcms2', 'libQtSvg', 'liblapack', 'libatlas',
+           'libgobject', 'libquadmath', 'libgsttag', 'libmpdec',
+           'libgstpbutils', 'libxcb-glx', 'libICE', 'libQtXml',
+           'libfontconfig', 'libglapi', 'libgraphite2', 'libexpat',
+           'libXext', 'liblz4']
 
 full_tuples = []
 for each_bin in a.binaries:
