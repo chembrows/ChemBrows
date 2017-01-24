@@ -60,7 +60,7 @@ else:
 if bundle:
     subprocess.call("pyupdater build --app-version {} setup.spec".format(version),
                     shell=True)
-    subprocess.call("pyupdater pkg --process --sign", shell=True)
+    # subprocess.call("pyupdater pkg --process --sign", shell=True)
 
     print('done freezing')
 
