@@ -21,10 +21,10 @@ from shutil import copyfile
 import tarfile
 
 app_name = 'ChemBrows'
-create_installer = False
+create_installer = True
 
 # Start the program after compiling/extraction
-play = True
+play = False
 
 # Freeze/bundle the program
 bundle = True
