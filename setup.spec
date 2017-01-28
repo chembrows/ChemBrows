@@ -14,6 +14,10 @@ if COMPILING_PLATFORM == 'win-amd64':
 elif COMPILING_PLATFORM == 'linux-x86_64':
     platform = 'nix64'
     hookspath = ['/home/djipey/.local/share/virtualenvs/cb/lib/python3.5/site-packages/pyupdater/hooks']
+elif "macosx" and "x86_64" in COMPILING_PLATFORM:
+    hookspath = ['/Users/djipey/anaconda3/lib/python3.5/site-packages/pyupdater/hooks']
+    platform = 'mac'
+
 
 
 block_cipher = None

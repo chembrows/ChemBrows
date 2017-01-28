@@ -48,6 +48,9 @@ elif compiling_platform == 'linux-x86_64':
     platform = 'nix64'
     extension = '.tar.gz'
 
+elif "macosx" and "x86_64" in compiling_platform:
+    platform = 'mac'
+
 else:
     print("Platform not recognized, EXITING NOW !")
     sys.exit()
@@ -97,22 +100,22 @@ if platform == 'nix64':
                         shell=True)
 
 
-# Change permissions to allow execution
-if platform == 'win':
-    pass
-elif sys.platform == 'darwin':
+# # Change permissions to allow execution
+# if platform == 'win':
+    # pass
+# elif sys.platform == 'darwin':
 
-    os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
-    os.chmod('dist/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
+    # os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
+    # os.chmod('dist/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
 
-    # Get the path where the changes will be made
-    path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
+    # # Get the path where the changes will be made
+    # path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
 
-    # To fix issue #104 of Esky. Copy some files stored in deploy. It should be
-    # temporary, and it's not optimized yet (not all the modules in python35.zip are
-    # required)
-    copyfile('deploy/OSX_extras/zlib.so', path_fixes + 'Resources/lib/python3.5/lib-dynload/zlib.so')
-    copyfile('deploy/OSX_extras/python35.zip', path_fixes + 'Resources/lib/python35.zip')
+    # # To fix issue #104 of Esky. Copy some files stored in deploy. It should be
+    # # temporary, and it's not optimized yet (not all the modules in python35.zip are
+    # # required)
+    # copyfile('deploy/OSX_extras/zlib.so', path_fixes + 'Resources/lib/python3.5/lib-dynload/zlib.so')
+    # copyfile('deploy/OSX_extras/python35.zip', path_fixes + 'Resources/lib/python35.zip')
 
     # # Modify CFBundleExecutable in the Info.plist of the bundle.app
     # with open(path_fixes + 'Info.plist', 'r+') as info_plist:
@@ -174,32 +177,32 @@ if create_installer and platform == 'win':
                                      installerName)
          )
 
-elif create_installer and sys.platform == 'darwin':
+# elif create_installer and sys.platform == 'darwin':
 
-    print('Creating a .pkg for Mac OS...')
+    # print('Creating a .pkg for Mac OS...')
 
-    with open('deploy/OSX_extras/template.packproj', 'r') as template:
-        text = template.read()
+    # with open('deploy/OSX_extras/template.packproj', 'r') as template:
+        # text = template.read()
 
-        simplified_version = version.split('.')[:-1]
-        simplified_version = '.'.join(simplified_version)
-        text = text.replace('LICENSE_PATH', os.path.abspath('LICENSE.txt'))
-        text = text.replace('VERSION_DESCRIPTION', simplified_version)
-        text = text.replace('INFO_STRING', 'ChemBrows {} Copyrights © 2015 ChemBrows'.format(simplified_version))
-        text = text.replace('ICON_FILE', os.path.abspath('images/icon.icns'))
-        text = text.replace('VERSION_SIMPLE', simplified_version)
-        text = text.replace('MAJOR_VERSION', version.split('.')[0])
-        text = text.replace('MINOR_VERSION', version.split('.')[1])
-        text = text.replace('APP_PATH', os.path.abspath('dist/{}/{}.app'.format(filename, app_name)))
-        text = text.replace('POST_INSTALL_PATH', os.path.abspath('deploy/OSX_extras/post_install.sh'))
+        # simplified_version = version.split('.')[:-1]
+        # simplified_version = '.'.join(simplified_version)
+        # text = text.replace('LICENSE_PATH', os.path.abspath('LICENSE.txt'))
+        # text = text.replace('VERSION_DESCRIPTION', simplified_version)
+        # text = text.replace('INFO_STRING', 'ChemBrows {} Copyrights © 2015 ChemBrows'.format(simplified_version))
+        # text = text.replace('ICON_FILE', os.path.abspath('images/icon.icns'))
+        # text = text.replace('VERSION_SIMPLE', simplified_version)
+        # text = text.replace('MAJOR_VERSION', version.split('.')[0])
+        # text = text.replace('MINOR_VERSION', version.split('.')[1])
+        # text = text.replace('APP_PATH', os.path.abspath('dist/{}/{}.app'.format(filename, app_name)))
+        # text = text.replace('POST_INSTALL_PATH', os.path.abspath('deploy/OSX_extras/post_install.sh'))
 
-        with open('dist/chembrows.packproj', 'w') as packproj:
-            packproj.write(text)
+        # with open('dist/chembrows.packproj', 'w') as packproj:
+            # packproj.write(text)
 
-    subprocess.call('freeze dist/chembrows.packproj -d dist/', shell=True)
+    # subprocess.call('freeze dist/chembrows.packproj -d dist/', shell=True)
 
-    # Make the post-install script (called postflight by Iceberg) executable
-    # !!!!!!!! For now, I have to do it manually on Linux, and also compress
-    # the pkg on Linux
-    os.chmod('dist/build/ChemBrows.pkg/Contents/Resources/postflight', 0o777)
-    print('Done creating a .pkg for Mac OS...')
+    # # Make the post-install script (called postflight by Iceberg) executable
+    # # !!!!!!!! For now, I have to do it manually on Linux, and also compress
+    # # the pkg on Linux
+    # os.chmod('dist/build/ChemBrows.pkg/Contents/Resources/postflight', 0o777)
+    # print('Done creating a .pkg for Mac OS...')
