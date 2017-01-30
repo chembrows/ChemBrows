@@ -152,6 +152,8 @@ class Worker(QtCore.QThread):
                 except Exception as e:
                     self.l.error("getDoi failed for: {}".
                                  format(journal), exc_info=True)
+                    self.counter_futures_urls += 1
+                    print(self.counter_futures_urls)
                     continue
 
                 try:
@@ -159,6 +161,7 @@ class Worker(QtCore.QThread):
                 except Exception as e:
                     self.l.error("refineUrl failed for: {}".
                                  format(journal), exc_info=True)
+                    self.counter_futures_urls += 1
                     continue
 
                 # Reject crappy entries: corrigendum, erratum, etc
@@ -313,6 +316,7 @@ class Worker(QtCore.QThread):
                 except Exception as e:
                     self.l.error("getDoi failed for: {}".
                                  format(journal), exc_info=True)
+                    self.counter_futures_urls += 1
                     continue
 
                 try:
@@ -320,6 +324,7 @@ class Worker(QtCore.QThread):
                 except Exception as e:
                     self.l.error("refineUrl failed for: {}".
                                  format(journal), exc_info=True)
+                    self.counter_futures_urls += 1
                     continue
 
                 # Reject crappy entries: corrigendum, erratum, etc
