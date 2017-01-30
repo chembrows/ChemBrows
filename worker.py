@@ -147,8 +147,19 @@ class Worker(QtCore.QThread):
             for entry in feed.entries:
 
                 # Get the DOI, a unique number for a publication
-                doi = hosts.getDoi(company, journal, entry)
-                url = hosts.refineUrl(company, journal, entry)
+                try:
+                    doi = hosts.getDoi(company, journal, entry)
+                except Exception as e:
+                    self.l.error("getDoi failed for: {}".
+                                 format(journal), exc_info=True)
+                    continue
+
+                try:
+                    url = hosts.refineUrl(company, journal, entry)
+                except Exception as e:
+                    self.l.error("refineUrl failed for: {}".
+                                 format(journal), exc_info=True)
+                    continue
 
                 # Reject crappy entries: corrigendum, erratum, etc
                 if hosts.reject(entry.title):
@@ -296,8 +307,20 @@ class Worker(QtCore.QThread):
 
             for entry in feed.entries:
 
-                doi = hosts.getDoi(company, journal, entry)
-                url = hosts.refineUrl(company, journal, entry)
+                # Get the DOI, a unique number for a publication
+                try:
+                    doi = hosts.getDoi(company, journal, entry)
+                except Exception as e:
+                    self.l.error("getDoi failed for: {}".
+                                 format(journal), exc_info=True)
+                    continue
+
+                try:
+                    url = hosts.refineUrl(company, journal, entry)
+                except Exception as e:
+                    self.l.error("refineUrl failed for: {}".
+                                 format(journal), exc_info=True)
+                    continue
 
                 # Reject crappy entries: corrigendum, erratum, etc
                 if hosts.reject(entry.title):

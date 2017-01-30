@@ -869,7 +869,7 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Nature", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry, response)
         # print("\n")
         # print(abstract)
         print(date)
@@ -882,7 +882,7 @@ if __name__ == "__main__":
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
-    urls_test = ["http://feeds.nature.com/nprot/rss/current"]
+    urls_test = ["https://www.journals.elsevier.com/european-journal-of-pharmaceutical-sciences/rss"]
 
     session = FuturesSession(max_workers=20)
 
@@ -900,11 +900,15 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries[2:]:
+    for entry in feed.entries:
 
         # pprint(entry)
 
-        url = refineUrl("Nature", journal, entry)
+        url = refineUrl("Elsevier", journal, entry)
+        try:
+            doi = getDoi("Elsevier", journal, entry)
+        except AttributeError:
+            continue
         # print(url)
 
         # webbrowser.open(url, new=0, autoraise=True)
@@ -931,9 +935,6 @@ if __name__ == "__main__":
         # print(title)
         # pprint(entry)
         # print(url)
-        # getDoi(journal, entry)
 
         future = session.get(url, headers=headers, timeout=20)
         future.add_done_callback(functools.partial(print_result, journal, entry))
-
-        break
