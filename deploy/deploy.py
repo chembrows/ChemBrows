@@ -61,8 +61,8 @@ else:
 
 # Freeze !!!
 if bundle:
-    subprocess.call("pyupdater build --app-version {} setup.spec".format(version),
-                    shell=True)
+    subprocess.call("pyupdater build --app-version {} setup.spec".
+                    format(version), shell=True)
     # subprocess.call("pyupdater pkg --process --sign", shell=True)
 
     print('done freezing')
@@ -73,12 +73,12 @@ print('unzipping')
 # Build the name of the archive
 # Ex: ChemBrows-nix64-0.9.8.tar.gz
 filename = '{}-{}-{}'.format(app_name, platform, version)
-path_archive = os.path.join('.', 'pyu-data', 'deploy', filename)
+path_archive = os.path.join('.', 'pyu-data', 'new', filename)
 
 if platform == 'win':
     # Exctract the zip file
     with zipfile.ZipFile(path_archive + extension) as zf:
-        zf.extractall(os.path.join('.', 'pyu-data', 'deploy', filename))
+        zf.extractall(os.path.join('.', 'pyu-data', 'new', filename))
 
     print('unzipping done')
 
@@ -90,7 +90,7 @@ if platform == 'win':
 if platform == 'nix64':
     # Extract the tar.gz file
     with tarfile.open(path_archive + extension, "r:gz") as tf:
-        tf.extractall(os.path.join('.', 'pyu-data', 'deploy', filename))
+        tf.extractall(os.path.join('.', 'pyu-data', 'new', filename))
 
     print('unzipping done')
 
