@@ -34,7 +34,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 
-Source: "C:\Users\djipey\Desktop\ChemBrows\pyu-data\deploy\{#AppName}-win-{#Version}\ChemBrows.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\djipey\Desktop\ChemBrows\pyu-data\new\{#AppName}-win-{#Version}\ChemBrows.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 ; Put the icon in the app folder, will be used for the desktop icon
 Source: "C:\Users\djipey\Desktop\ChemBrows\images\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
