@@ -144,10 +144,10 @@ if platform == 'nix64':
 
     # print('Mac OS fixes applied')
 
-    print('Starting copying icons')
-    copyfile('images/icon.icns', path_fixes + 'Resources/PythonApplet.icns')
-    copyfile('images/icon.icns', 'dist/{}/{}.app/{}/{}.app/Contents/Resources/PythonApplet.icns'.format(filename, app_name, filename, app_name))
-    print('Done copying icons')
+    # print('Starting copying icons')
+    # copyfile('images/icon.icns', path_fixes + 'Resources/PythonApplet.icns')
+    # copyfile('images/icon.icns', 'dist/{}/{}.app/{}/{}.app/Contents/Resources/PythonApplet.icns'.format(filename, app_name, filename, app_name))
+    # print('Done copying icons')
 
 
 else:

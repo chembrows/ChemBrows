@@ -1,5 +1,5 @@
 class ClientConfig(object):
-    PUBLIC_KEY = 'xWkxdPtvoXrhgecEAcvegs6K2KDabE9qL6/jtWoPs5A'
+    PUBLIC_KEY = 'wz5LviLGswW6AWhjHUWbUC28AxqVBbHYxOtsuvC5DBQ'
     APP_NAME = 'ChemBrows'
     COMPANY_NAME = 'ChemBrows'
     UPDATE_URLS = ['http://www.chembrows.com/downloads/']
