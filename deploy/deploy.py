@@ -127,52 +127,11 @@ elif platform == 'mac':
 
     print("Files copied")
 
-    # os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
-    # os.chmod('dist/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
     os.chmod('./pyu-data/new/ChemBrows.app/Contents/MacOS/ChemBrows', 0o777)
 
     print("Permissions changed")
+    print('Mac OS fixes applied')
 
-    # # Get the path where the changes will be made
-    # path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
-
-    # # To fix issue #104 of Esky. Copy some files stored in deploy. It should be
-    # # temporary, and it's not optimized yet (not all the modules in python35.zip are
-    # # required)
-    # copyfile('deploy/OSX_extras/zlib.so', path_fixes + 'Resources/lib/python3.5/lib-dynload/zlib.so')
-    # copyfile('deploy/OSX_extras/python35.zip', path_fixes + 'Resources/lib/python35.zip')
-
-    # # Modify CFBundleExecutable in the Info.plist of the bundle.app
-    # with open(path_fixes + 'Info.plist', 'r+') as info_plist:
-        # text = info_plist.read()
-
-        # # # Modify the executable
-        # # text = text.replace('<string>gui</string>', '<string>launcher</string>')
-
-        # # Set LSUIElement to 1 to avoid double icons
-        # text = text.replace('<dict>\n\t<key>CFBundleDevelopmentRegion</key>',
-                            # '<dict>\n\t<key>LSUIElement</key>\n\t<string>1</string>\n\t<key>CFBundleDevelopmentRegion</key>')
-
-        # info_plist.seek(0)
-        # info_plist.write(text)
-        # info_plist.truncate()
-
-    # with open(path_fixes + 'MacOS/launcher', 'w+') as launcher:
-        # text = "#!/usr/bin/env bash"
-        # text += "\n"
-        # text += "cd \"${0%/*}\""
-        # text += "\n"
-        # text += "open ../../{}/{}.app".format(filename, app_name)
-        # launcher.write(text)
-
-    # os.chmod(path_fixes + 'MacOS/launcher', 0o777)
-
-    # print('Mac OS fixes applied')
-
-    # print('Starting copying icons')
-    # copyfile('images/icon.icns', path_fixes + 'Resources/PythonApplet.icns')
-    # copyfile('images/icon.icns', 'dist/{}/{}.app/{}/{}.app/Contents/Resources/PythonApplet.icns'.format(filename, app_name, filename, app_name))
-    # print('Done copying icons')
 
 elif platform == 'nix64':
     # copyfile('deploy/Linux_extras/README', 'dist/{}/README'.format(filename))
@@ -218,7 +177,7 @@ elif create_installer and platform == 'mac':
         text = text.replace('MAJOR_VERSION', version.split('.')[0])
         text = text.replace('MINOR_VERSION', version.split('.')[1])
         text = text.replace('APP_PATH', os.path.abspath('pyu-data/new/ChemBrows.app'))
-        # text = text.replace('POST_INSTALL_PATH', os.path.abspath('deploy/OSX_extras/post_install.sh'))
+        text = text.replace('POST_INSTALL_PATH', os.path.abspath('deploy/OSX_extras/post_install.sh'))
 
         with open('pyu-data/new/chembrows.packproj', 'w') as packproj:
             packproj.write(text)
@@ -227,8 +186,8 @@ elif create_installer and platform == 'mac':
 
     subprocess.call('freeze pyu-data/new/chembrows.packproj -d pyu-data/new/', shell=True)
 
-    # # Make the post-install script (called postflight by Iceberg) executable
-    # # !!!!!!!! For now, I have to do it manually on Linux, and also compress
-    # # the pkg on Linux
-    # os.chmod('dist/build/ChemBrows.pkg/Contents/Resources/postflight', 0o777)
-    # print('Done creating a .pkg for Mac OS...')
+    # Make the post-install script (called postflight by Iceberg) executable
+    # !!!!!!!! For now, I have to do it manually on Linux, and also compress
+    # the pkg on Linux
+    os.chmod('pyu-data/new/build/ChemBrows.pkg/Contents/Resources/postflight', 0o777)
+    print('Done creating a .pkg for Mac OS...')
