@@ -50,7 +50,7 @@ elif compiling_platform == 'linux-x86_64':
 
 elif "macosx" and "x86_64" in compiling_platform:
     platform = 'mac'
-
+    extension = '.tar.gz'
 else:
     print("Platform not recognized, EXITING NOW !")
     sys.exit()
