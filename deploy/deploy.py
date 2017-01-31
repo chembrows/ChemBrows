@@ -18,6 +18,7 @@ import subprocess
 import distutils.util
 import zipfile
 from shutil import copyfile
+from shutil import rmtree
 import tarfile
 
 app_name = 'ChemBrows'
@@ -27,7 +28,7 @@ create_installer = True
 play = False
 
 # Freeze/bundle the program
-bundle = True
+bundle = False
 
 # Get the current platform and print it
 compiling_platform = distutils.util.get_platform()
@@ -51,6 +52,7 @@ elif compiling_platform == 'linux-x86_64':
 elif "macosx" and "x86_64" in compiling_platform:
     platform = 'mac'
     extension = '.tar.gz'
+
 else:
     print("Platform not recognized, EXITING NOW !")
     sys.exit()
@@ -104,21 +106,32 @@ if platform == 'nix64' or platform == 'mac':
 if platform == 'win':
     pass
 
-elif sys.platform == 'mac':
+elif platform == 'mac':
 
-    os.makedirs('./pyu-data/new/ChemBrows.app')
-    os.makedirs('./pyu-data/new/ChemBrows.app/Contents')
-    os.makedirs('./pyu-data/new/ChemBrows.app/Contents/MacOS')
-    os.makedirs('./pyu-data/new/ChemBrows.app/Contents/Resources')
+    # Clean the dir first
+    try:
+        rmtree('./pyu-data/new/ChemBrows.app')
+    except FileNotFoundError:
+        print("No previous ChemBrows.app")
 
-    copyfile('deploy/OSX_extras/Info.plist', './pyu-data/new/ChemBrows.app/Contents/')
+    os.makedirs('./pyu-data/new/ChemBrows.app', exist_ok=True)
+    os.makedirs('./pyu-data/new/ChemBrows.app/Contents', exist_ok=True)
+    os.makedirs('./pyu-data/new/ChemBrows.app/Contents/MacOS', exist_ok=True)
+    os.makedirs('./pyu-data/new/ChemBrows.app/Contents/Resources', exist_ok=True)
 
+    print("App architecture created")
+
+    copyfile('deploy/OSX_extras/Info.plist', './pyu-data/new/ChemBrows.app/Contents/Info.plist')
     copyfile('images/icon.icns', './pyu-data/new/ChemBrows.app/Contents/Resources/PythonApplet.icns')
+    copyfile("{}/ChemBrows".format(path_archive), './pyu-data/new/ChemBrows.app/Contents/MacOS/ChemBrows')
 
-    copyfile("{}/ChemBrows".format(path_archive), './pyu-data/new/ChemBrows.app/Contents/MacOS')
+    print("Files copied")
 
     # os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
     # os.chmod('dist/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
+    os.chmod('./pyu-data/new/ChemBrows.app/Contents/MacOS/ChemBrows', 0o777)
+
+    print("Permissions changed")
 
     # # Get the path where the changes will be made
     # path_fixes = 'dist/{}/{}.app/Contents/'.format(filename, app_name)
@@ -188,29 +201,31 @@ if create_installer and platform == 'win':
                                      installerName)
          )
 
-# elif create_installer and sys.platform == 'darwin':
+elif create_installer and platform == 'mac':
 
-    # print('Creating a .pkg for Mac OS...')
+    print('Creating a .pkg for Mac OS...')
 
-    # with open('deploy/OSX_extras/template.packproj', 'r') as template:
-        # text = template.read()
+    with open('deploy/OSX_extras/template.packproj', 'r') as template:
+        text = template.read()
 
-        # simplified_version = version.split('.')[:-1]
-        # simplified_version = '.'.join(simplified_version)
-        # text = text.replace('LICENSE_PATH', os.path.abspath('LICENSE.txt'))
-        # text = text.replace('VERSION_DESCRIPTION', simplified_version)
-        # text = text.replace('INFO_STRING', 'ChemBrows {} Copyrights © 2015 ChemBrows'.format(simplified_version))
-        # text = text.replace('ICON_FILE', os.path.abspath('images/icon.icns'))
-        # text = text.replace('VERSION_SIMPLE', simplified_version)
-        # text = text.replace('MAJOR_VERSION', version.split('.')[0])
-        # text = text.replace('MINOR_VERSION', version.split('.')[1])
-        # text = text.replace('APP_PATH', os.path.abspath('dist/{}/{}.app'.format(filename, app_name)))
+        simplified_version = version.split('.')[:-1]
+        simplified_version = '.'.join(simplified_version)
+        text = text.replace('LICENSE_PATH', os.path.abspath('LICENSE.txt'))
+        text = text.replace('VERSION_DESCRIPTION', simplified_version)
+        text = text.replace('INFO_STRING', 'ChemBrows {} Copyrights © 2015 ChemBrows'.format(simplified_version))
+        text = text.replace('ICON_FILE', os.path.abspath('images/icon.icns'))
+        text = text.replace('VERSION_SIMPLE', simplified_version)
+        text = text.replace('MAJOR_VERSION', version.split('.')[0])
+        text = text.replace('MINOR_VERSION', version.split('.')[1])
+        text = text.replace('APP_PATH', os.path.abspath('pyu-data/new/ChemBrows.app'))
         # text = text.replace('POST_INSTALL_PATH', os.path.abspath('deploy/OSX_extras/post_install.sh'))
 
-        # with open('dist/chembrows.packproj', 'w') as packproj:
-            # packproj.write(text)
+        with open('pyu-data/new/chembrows.packproj', 'w') as packproj:
+            packproj.write(text)
 
-    # subprocess.call('freeze dist/chembrows.packproj -d dist/', shell=True)
+    # os.rename("path/to/current/file.foo", "path/to/new/desination/for/file.foo")
+
+    subprocess.call('freeze pyu-data/new/chembrows.packproj -d pyu-data/new/', shell=True)
 
     # # Make the post-install script (called postflight by Iceberg) executable
     # # !!!!!!!! For now, I have to do it manually on Linux, and also compress
