@@ -70,6 +70,8 @@ if bundle:
 # Unzip file
 print('unzipping')
 
+
+# Extract the archive
 # Build the name of the archive
 # Ex: ChemBrows-nix64-0.9.8.tar.gz
 filename = '{}-{}-{}'.format(app_name, platform, version)
@@ -86,8 +88,7 @@ if platform == 'win':
     if play:
         subprocess.call("{}\\ChemBrows.exe".format(path_archive),
                         shell=True)
-
-if platform == 'nix64':
+if platform == 'nix64' or platform == 'mac':
     # Extract the tar.gz file
     with tarfile.open(path_archive + extension, "r:gz") as tf:
         tf.extractall(os.path.join('.', 'pyu-data', 'new', filename))
@@ -100,10 +101,21 @@ if platform == 'nix64':
                         shell=True)
 
 
-# # Change permissions to allow execution
-# if platform == 'win':
-    # pass
-# elif sys.platform == 'darwin':
+if platform == 'win':
+    pass
+
+elif sys.platform == 'mac':
+
+    os.makedirs('./pyu-data/new/ChemBrows.app')
+    os.makedirs('./pyu-data/new/ChemBrows.app/Contents')
+    os.makedirs('./pyu-data/new/ChemBrows.app/Contents/MacOS')
+    os.makedirs('./pyu-data/new/ChemBrows.app/Contents/Resources')
+
+    copyfile('deploy/OSX_extras/Info.plist', './pyu-data/new/ChemBrows.app/Contents/')
+
+    copyfile('images/icon.icns', './pyu-data/new/ChemBrows.app/Contents/Resources/PythonApplet.icns')
+
+    copyfile("{}/ChemBrows".format(path_archive), './pyu-data/new/ChemBrows.app/Contents/MacOS')
 
     # os.chmod('dist/{}/{}.app/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
     # os.chmod('dist/{}/{}.app/Contents/MacOS/gui'.format(filename, app_name, filename, app_name), 0o777)
@@ -149,8 +161,7 @@ if platform == 'nix64':
     # copyfile('images/icon.icns', 'dist/{}/{}.app/{}/{}.app/Contents/Resources/PythonApplet.icns'.format(filename, app_name, filename, app_name))
     # print('Done copying icons')
 
-
-else:
+elif platform == 'nix64':
     # copyfile('deploy/Linux_extras/README', 'dist/{}/README'.format(filename))
     # os.chmod('./dist/{}/gui'.format(filename), 0o777)
     # os.chmod('./dist/{}/{}/gui'.format(filename, filename), 0o777)
