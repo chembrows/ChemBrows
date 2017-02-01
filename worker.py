@@ -47,7 +47,7 @@ class Worker(QtCore.QThread):
 
         # Define a path attribute to easily change it
         # for the tests
-        self.DATA_PATH = self.parent.DATA_PATH + "/graphical_abstracts/"
+        self.PATH = self.parent.DATA_PATH + "/graphical_abstracts/"
 
         # Set the timeout for the futures
         # W/ a large timeout, less chances to get en exception
@@ -206,7 +206,7 @@ class Worker(QtCore.QThread):
 
                         graphical_abstract = data['graphical_abstract']
 
-                        if os.path.exists(self.DATA_PATH +
+                        if os.path.exists(self.PATH +
                                           functions.simpleChar(
                                               graphical_abstract)):
                             self.counter_futures_images += 1
@@ -265,7 +265,7 @@ class Worker(QtCore.QThread):
                     query.exec_()
 
                     if graphical_abstract == "Empty" or os.path.exists(
-                            self.DATA_PATH +
+                            self.PATH +
                             functions.simpleChar(graphical_abstract)):
 
                         self.counter_futures_images += 1
@@ -273,7 +273,7 @@ class Worker(QtCore.QThread):
                         # This block is executed when you delete the db, but
                         # not the images. Allows to update the
                         # graphical_abstract in db accordingly
-                        if os.path.exists(self.DATA_PATH +
+                        if os.path.exists(self.PATH +
                                           functions.simpleChar(
                                               graphical_abstract)):
 
@@ -388,7 +388,7 @@ class Worker(QtCore.QThread):
 
                         graphical_abstract = data['graphical_abstract']
 
-                        if os.path.exists(self.DATA_PATH +
+                        if os.path.exists(self.PATH +
                                           functions.simpleChar(
                                               graphical_abstract)):
                             self.counter_futures_images += 1
@@ -523,14 +523,14 @@ class Worker(QtCore.QThread):
         # Don't try to dl the image if its url is 'Empty', or if the image
         # already exists
         if (graphical_abstract == "Empty" or
-                os.path.exists(self.DATA_PATH +
+                os.path.exists(self.PATH +
                                functions.simpleChar(graphical_abstract))):
             self.counter_futures_images += 1
             self.l.debug("Image already dled or Empty")
 
             # This block is executed when you delete the db, but not the
             # images. Allows to update the graphical_abstract in db accordingly
-            if os.path.exists(self.DATA_PATH +
+            if os.path.exists(self.PATH +
                               functions.simpleChar(graphical_abstract)):
                 query.prepare("UPDATE papers SET graphical_abstract=? WHERE \
                               doi=?")
@@ -579,7 +579,7 @@ class Worker(QtCore.QThread):
                     # Save the page
                     io = BytesIO(response.content)
                     Image.open(io).convert('RGB').save(
-                        self.DATA_PATH + functions.simpleChar(response.url),
+                        self.PATH + functions.simpleChar(response.url),
                         format='JPEG')
                     self.l.debug("Image ok")
                 except Exception as e:

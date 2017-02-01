@@ -90,6 +90,8 @@ class MyWindow(QtWidgets.QMainWindow):
         self.l.setLevel(logging.DEBUG)
 
         self.l.info('Resources dir: {}'.format(self.resource_dir))
+        self.l.info('Data dir: {}'.format(self.DATA_PATH))
+        self.l.debug('Working dir: {}'.format(os.getcwd()))
         # self.l.setLevel(20)
         self.l.info(QtWidgets.QApplication.libraryPaths())
         self.l.info('Running {} {}'.format(platform.system(),
