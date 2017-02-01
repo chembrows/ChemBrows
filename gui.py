@@ -56,10 +56,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
-        # Change the working directory to DATA_PATH.
-        # Necessary bc of OSX dock
-        os.chdir(self.DATA_PATH)
-
         # Check if the running ChemBrows is a frozen app
         if getattr(sys, "frozen", False):
             # The program is NOT in debug mod if it's frozen
