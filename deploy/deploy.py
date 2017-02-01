@@ -162,6 +162,12 @@ if create_installer and platform == 'win':
 
 elif create_installer and platform == 'mac':
 
+    # Clean the dir first
+    try:
+        rmtree('./pyu-data/new/build/')
+    except FileNotFoundError:
+        print("No previous build directory")
+
     print('Creating a .pkg for Mac OS...')
 
     with open('deploy/OSX_extras/template.packproj', 'r') as template:
