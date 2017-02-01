@@ -28,7 +28,7 @@ create_installer = True
 play = False
 
 # Freeze/bundle the program
-bundle = False
+bundle = True
 
 # Get the current platform and print it
 compiling_platform = distutils.util.get_platform()
