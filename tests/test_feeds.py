@@ -72,7 +72,8 @@ def test_ACSFeeds():
             dic_journals[url] = name
 
     logAssert(len(dic_journals) == NBR_ACS_JOURNALS,
-              "Wrong number of ACS journals")
+              "Wrong number of ACS journals:\n{}".
+              format(dic_journals.values()))
 
 
 if __name__ == "__main__":
