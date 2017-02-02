@@ -83,3 +83,8 @@ exe = EXE(pyz,
           strip=True,
           upx=True,
           console=False)
+
+app = BUNDLE(exe,
+             name='myscript.app',
+             icon=None,
+             bundle_identifier=None)
