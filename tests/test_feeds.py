@@ -18,8 +18,8 @@ from bs4 import BeautifulSoup, SoupStrainer
 
 from log import MyLog
 
-# 52 ACS journals for now
-NBR_ACS_JOURNALS = 52
+# Nbr of ACS journals registered
+NBR_ACS_JOURNALS = 53
 
 
 l = MyLog("output_tests_feeds.log", mode='w')
