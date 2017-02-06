@@ -32,7 +32,7 @@ class Tuto(QtWidgets.QDialog):
 
         # Get the text of the slides from config files
         with open(os.path.join(self.resource_dir, 'config/tuto.txt'),
-                  'r') as f:
+                  'r', encoding='utf-8') as f:
             content = f.read()
             self.list_slides = content.split('--')
 
@@ -69,7 +69,8 @@ class Tuto(QtWidgets.QDialog):
                     self.parent.options.remove("journals_to_parse")
                 else:
                     # Set the journals to parse options of the parent
-                    with open(os.path.join(self.resource_dir, 'config/fields/{0}'.format(choice)), 'r') as config:
+                    with open(os.path.join(self.resource_dir, 'config/fields/{0}'.format(choice)),
+                              'r', encoding='utf-8') as config:
                         self.parent.options.setValue("journals_to_parse",
                                                       [line.rstrip() for line in config])
 

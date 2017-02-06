@@ -190,7 +190,7 @@ class WizardAddJournal(QtWidgets.QDialog):
 
         # If still here, write the new journal
         with open(os.path.join(self.DATA_PATH, "journals/{}.ini".
-                  format(publisher)), 'a') as out:
+                  format(publisher)), 'a', encoding='utf-8') as out:
             out.write("{} : {} : {}".format(title, abb, url))
 
         self.close()

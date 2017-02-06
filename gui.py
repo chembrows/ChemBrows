@@ -240,7 +240,7 @@ class MyWindow(QtWidgets.QMainWindow):
                     QtWidgets.QMessageBox.information(self, "ChemBrows update", message, QtWidgets.QMessageBox.Ok)
 
                     with open(os.path.join(self.resource_dir,
-                              'config/whatsnew.txt'), 'r') as f:
+                              'config/whatsnew.txt'), 'r', encoding='utf-8') as f:
                         message = f.read()
 
                     QtWidgets.QMessageBox.information(self, "What is new ?",
@@ -270,7 +270,9 @@ class MyWindow(QtWidgets.QMainWindow):
         if user_id is None:
             return
 
-        with open(os.path.join(self.resource_dir, 'config/version.txt'), 'r') as version_file:
+        with open(os.path.join(self.resource_dir, 'config/version.txt'), 'r',
+                  encoding='utf-8') as version_file:
+
             version = version_file.read()
 
         count_query = QtSql.QSqlQuery(self.bdd)
@@ -531,6 +533,7 @@ class MyWindow(QtWidgets.QMainWindow):
                 worker.start()
                 QtWidgets.qApp.processEvents()
             except IndexError:
+                self.l.debug("parse, self.urls, IndexError")
                 break
 
 

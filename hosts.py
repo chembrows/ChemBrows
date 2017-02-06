@@ -27,7 +27,7 @@ def reject(entry_title):
     # resource_dir = os.path.dirname(os.path.dirname(sys.executable))
     # Load the regex stored in a config file, as filters
     with open(os.path.join(resource_dir, 'config/regex.txt'),
-              'r') as filters_file:
+              'r', encoding='utf-8') as filters_file:
         filters = filters_file.read().splitlines()
 
     # Try to match the filters against the title entry
@@ -784,7 +784,7 @@ def getJournals(company, user=False):
 
     if not user:
         with open(os.path.join(resource_dir, 'journals', '{}.ini'.
-                  format(company)), 'r') as config:
+                  format(company)), 'r', encoding='utf-8') as config:
             for line in config:
                 names.append(line.split(" : ")[0])
                 abb.append(line.split(" : ")[1].rstrip())
@@ -807,7 +807,7 @@ def getJournals(company, user=False):
         return names, abb, urls, cares_image
 
     with open(os.path.join(DATA_PATH, 'journals', '{}.ini'.
-                           format(company)), 'r') as config:
+                           format(company)), 'r', encoding='utf-8') as config:
 
         for line in config:
             url = line.split(" : ")[2].rstrip()

@@ -158,14 +158,14 @@ class WizardDelJournal(QtWidgets.QDialog):
         for company in os.listdir(os.path.join(self.DATA_PATH, 'journals')):
 
             with open(os.path.join(self.DATA_PATH, 'journals', company),
-                      'r') as config:
+                      'r', encoding='utf-8') as config:
 
                 lines = config.readlines()
 
             lines = [l for l in lines if not any(j in l for j in j_to_del)]
 
             with open(os.path.join(self.DATA_PATH, 'journals', company),
-                      'w') as config:
+                      'w', encoding='utf-8') as config:
 
                 for line in lines:
                     config.write(line)

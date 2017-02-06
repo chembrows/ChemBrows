@@ -59,7 +59,8 @@ class Predictor(QtCore.QThread):
 
         resource_dir, _ = functions.getRightDirs()
 
-        with open(os.path.join(resource_dir, 'config/stop_words.txt'), 'r') as config:
+        with open(os.path.join(resource_dir, 'config/stop_words.txt'), 'r',
+                  encoding='utf-8') as config:
             for word in config.readlines():
                 my_additional_stop_words.append(word.rstrip())
 
