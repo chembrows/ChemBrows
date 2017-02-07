@@ -201,61 +201,104 @@ class MyWindow(QtWidgets.QMainWindow):
         self.finishBoot()
 
 
+    def updateProgress(self, pourcent):
+
+        """Callback to display a percentage progress bar when updating"""
+
+        self.progress.show()
+
+        self.progress.setValue(pourcent)
+
+        if pourcent >= 100:
+            self.progress.reset()
+
+        QtCore.QCoreApplication.processEvents()
+
+
     def autoUpdate(self):
 
         """Performs some startup checks"""
 
         # Check if the running ChemBrows is a frozen app
-        if not self.debug_mod:
+        if self.debug_mod:
+            return
 
-            updater = Updater(self.l)
+        # If no whatsnew key in options.ini, display whatsnew.
+        whatsnew = self.options.value("whatsnew", True, bool)
+        if whatsnew:
+            with open(os.path.join(self.resource_dir,
+                      'config/whatsnew.txt'), 'r', encoding='utf-8') as f:
+                message = f.read()
 
-            if not updater.update_available:
-                return
+            QtWidgets.QMessageBox.information(self, "What is new ?",
+                                              message,
+                                              QtWidgets.QMessageBox.Ok)
+            self.options.setValue("whatsnew", False)
 
-            # If still here, ask the user if he wants to update immediately
+        updater = Updater(self.l, self.updateProgress)
 
-            # Hide the splash screen if there is an update.
-            # On windows, the message box was hidden by the splash
-            self.splash.finish(self)
+        # If no update available, exit
+        if not updater.update_available:
+            return
 
-            mes = "A new version of ChemBrows is available. Upgrade now ?"
-            choice = QtWidgets.QMessageBox.question(self, "Update of ChemBrows", mes,
-                                                QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ok,
+        # If still here, ask the user if he wants to update immediately
+
+        # Hide the splash screen if there is an update.
+        # On windows, the message box was hidden by the splash
+        self.splash.finish(self)
+
+        mes = "A new version of ChemBrows is available. Upgrade now ?"
+        choice = QtWidgets.QMessageBox.question(self, "Update of ChemBrows",
+                                                mes,
+                                                QtWidgets.QMessageBox.Cancel |
+                                                QtWidgets.QMessageBox.Ok,
                                                 defaultButton=QtWidgets.QMessageBox.Ok)
 
-            # If the user says yes, start the update
-            if choice == QtWidgets.QMessageBox.Ok:
-                self.l.info("Starting update")
+        # If the user says yes, start the update
+        if choice == QtWidgets.QMessageBox.Ok:
+            self.l.info("Starting update")
 
-                def whenDone():
+            def whenDone():
 
-                    """Slot called when the update is finished"""
+                """Slot called when the update is finished"""
 
-                    self.l.info("Update finished")
-                    self.progress.reset()
+                self.l.info("Update finished")
+                self.progress.reset()
 
-                    # Display a dialog box to tell the user to restart the program
-                    message = "ChemBrows is now up-to-date. Restart it to use the latest version"
-                    QtWidgets.QMessageBox.information(self, "ChemBrows update", message, QtWidgets.QMessageBox.Ok)
+                # Set whatsnew key to display whatsnew at next boot
+                self.options.setValue("whatsnew", True)
 
-                    with open(os.path.join(self.resource_dir,
-                              'config/whatsnew.txt'), 'r', encoding='utf-8') as f:
-                        message = f.read()
-
-                    QtWidgets.QMessageBox.information(self, "What is new ?",
+                # Display a dialog box to tell the user to restart the program
+                message = "ChemBrows is now up-to-date. Restart it to use the latest version"
+                QtWidgets.QMessageBox.information(self, "ChemBrows update",
                                                   message,
                                                   QtWidgets.QMessageBox.Ok)
 
-                # Display a QProgressBar while updating
-                QtWidgets.qApp.processEvents()
-                self.progress = QtWidgets.QProgressDialog("Updating ChemBrows...", None, 0, 0, self)
-                self.progress.setWindowTitle("Updating")
-                self.progress.show()
-                QtWidgets.qApp.processEvents()
+                # Ensure file dled successfully
+                if updater.app.is_downloaded():
 
-                updater.finished.connect(whenDone)
-                updater.start()
+                    self.l.info("Starting extract/overwrite")
+
+                    # Extract and overwrite current application
+                    try:
+                        updater.app.extract_overwrite()
+                        self.l.info("New version installed. Should restart")
+                        updater.app.cleanup()
+                        self.l.info("APP UPDATE cleaned up")
+                    except Exception as e:
+                        self.l.critical("ERROR OVERWRITING APP: {}".format(e),
+                                        exc_info=True)
+
+            # Display a QProgressBar while updating
+            QtWidgets.qApp.processEvents()
+            self.progress = QtWidgets.QProgressDialog("Updating ChemBrows...",
+                                                      None, 0, 100, self)
+            self.progress.setWindowTitle("Updating")
+            self.progress.show()
+            QtWidgets.qApp.processEvents()
+
+            updater.finished.connect(whenDone)
+            updater.start()
 
 
     def logConnection(self):

@@ -23,9 +23,11 @@ class Updater(QtCore.QThread):
     overwrite the current app. Inherits from QThread to perform the update
     while displaying a QProgressBar"""
 
-    def __init__(self, logger):
+    def __init__(self, logger, callback=None):
 
         QtCore.QThread.__init__(self)
+
+        self.callback = callback
 
         self.l = logger
 
@@ -51,9 +53,11 @@ class Updater(QtCore.QThread):
             self.update_available = False
 
 
-    def _printStatus(info):
+    def _printStatus(self, info):
 
-        # TODO: does this function print anything at all ?
+        """Print the numbers of bytes dled for the new version.
+        Also calls a callback to display a percentage progress bar during
+        dl"""
 
         total = info.get(u'total')
 
@@ -61,7 +65,13 @@ class Updater(QtCore.QThread):
 
         status = info.get(u'status')
 
-        print(downloaded, total, status)
+        percent = downloaded * 100 / total
+
+        self.l.info("{}/{}, {}".format(downloaded, total, status))
+
+        if self.callback is not None:
+            # send the percentage dled to callback
+            self.callback(percent)
 
 
     def run(self):
@@ -74,21 +84,14 @@ class Updater(QtCore.QThread):
         # Check if a new version is available
         if self.app is not None:
             self.l.info("A new version of ChemBrows is available")
+
+            self.l.debug("Starting dl of new version")
             try:
-                self.l.debug("Starting dl of new version")
                 # First, download the new version
                 self.app.download()
-
-                # Ensure file dled successfully
-                if self.app.is_downloaded():
-                    self.l.info("New version dled. Starting extract/overwrite")
-
-                    # Extract and overwrite current application
-                    self.app.extract_overwrite()
-                    self.l.info("New version installed. You should restart")
-
+                self.l.info("New version dled")
             except Exception as e:
-                self.l.critical("ERROR UPDATING APP: {}".format(e),
+                self.l.critical("ERROR DOWNLOADING NEW VERSION: {}".format(e),
                                 exc_info=True)
 
 

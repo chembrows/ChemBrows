@@ -86,20 +86,6 @@ class WizardAddJournal(QtWidgets.QDialog):
         try:
             title = feed['feed']['title']
             mes = mes.format(title)
-
-            # Confirmation dialog box
-            choice = QtWidgets.QMessageBox.information(self, "Verification",
-                                                       mes,
-                                                       QtWidgets.QMessageBox.Cancel |
-                                                       QtWidgets.QMessageBox.Ok,
-                                                       defaultButton=QtWidgets.QMessageBox.Cancel)
-
-            if choice == QtWidgets.QMessageBox.Cancel:
-                return
-            else:
-                self.l.debug("Try to save the new journal")
-                self.saveJournal(title, abb, url, publisher)
-
         except KeyError:
             self.l.critical("No title for the journal ! Aborting")
             self.l.critical(url)
@@ -108,6 +94,27 @@ class WizardAddJournal(QtWidgets.QDialog):
                                            error_mes, QtWidgets.QMessageBox.Ok,
                                            defaultButton=QtWidgets.QMessageBox.Ok)
             return
+
+        except Exception as e:
+            self.l.error("verifyInput, unknown error: {}".format(e),
+                         exc_info=True)
+            return
+
+        self.l.debug("New journal {} about to be added".format(title))
+
+        # Confirmation dialog box
+        choice = QtWidgets.QMessageBox.information(self, "Verification",
+                                                   mes,
+                                                   QtWidgets.QMessageBox.Cancel |
+                                                   QtWidgets.QMessageBox.Ok,
+                                                   defaultButton=QtWidgets.QMessageBox.Cancel)
+
+        if choice == QtWidgets.QMessageBox.Cancel:
+            return
+        else:
+            self.l.debug("Try to save the new journal")
+            self.saveJournal(title, abb, url, publisher)
+            self.l.info("{} added to the catalog".format(title))
 
 
     def showHelp(self):
@@ -186,13 +193,22 @@ class WizardAddJournal(QtWidgets.QDialog):
             if url in data_company[2]:
                 QtWidgets.QMessageBox.critical(self, "Error", mes,
                                                QtWidgets.QMessageBox.Ok)
+                self.l.debug("URL {} already in catalog".format(url))
                 return
 
-        # If still here, write the new journal
-        with open(os.path.join(self.DATA_PATH, "journals/{}.ini".
-                  format(publisher)), 'a', encoding='utf-8') as out:
-            out.write("{} : {} : {}".format(title, abb, url))
+        try:
+            # If still here, write the new journal
+            with open(os.path.join(self.DATA_PATH, "journals/{}.ini".
+                      format(publisher)), 'a', encoding='utf-8') as out:
+                out.write("{} : {} : {}".format(title, abb, url))
+            self.l.debug("New journal written user side")
+        except Exception as e:
+            self.l.error("saveJournal, error writing journal: {}".format(e),
+                         exc_info=True)
+            return
 
+        # Refresh parent check boxes and close
+        self.parent.displayJournals()
         self.close()
 
 

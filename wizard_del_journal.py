@@ -170,6 +170,8 @@ class WizardDelJournal(QtWidgets.QDialog):
                 for line in lines:
                     config.write(line)
 
+        # Refresh parent check boxes and close
+        self.parent.displayJournals()
         self.close()
 
 

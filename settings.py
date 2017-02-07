@@ -75,11 +75,6 @@ class Settings(QtWidgets.QDialog):
         # To close the window and save the settings
         self.ok_button.clicked.connect(self.saveSettings)
 
-        # Checkbox to select/unselect all the journals
-        self.box_select_all.stateChanged.connect(self.selectUnselectAll)
-
-        self.button_manage_journals.clicked.connect(self.dialogManageJournals)
-        # self.button_manage_journals.clicked.connect(self.close)
 
         # Button "clean database" (erase the unintersting journals from the db)
         # connected to the method of the main window class
@@ -129,6 +124,68 @@ class Settings(QtWidgets.QDialog):
             box.setCheckState(state)
 
 
+    def clearLayout(self, layout):
+
+        """Method to erase the widgets from a layout"""
+
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+
+                    QtWidgets.qApp.processEvents()
+                else:
+                    self.clearLayout(item.layout())
+
+
+    def displayJournals(self):
+
+        """Display the checkboxes of the journals"""
+
+        self.clearLayout(self.vbox_check_journals)
+
+        self.check_journals = []
+
+        self.button_manage_journals = QtWidgets.QPushButton("Manage journals")
+        self.vbox_check_journals.addWidget(self.button_manage_journals)
+        self.button_manage_journals.clicked.connect(self.dialogManageJournals)
+
+        labels_checkboxes = []
+
+        # Get labels of the future check boxes of the journals to be parsed
+        for company in hosts.getCompanies():
+            labels_checkboxes += hosts.getJournals(company)[1]
+
+        labels_checkboxes.sort()
+
+        self.box_select_all = QtWidgets.QCheckBox("Select all")
+        self.box_select_all.setCheckState(0)
+        self.vbox_check_journals.addWidget(self.box_select_all)
+
+        # Checkbox to select/unselect all the journals
+        self.box_select_all.stateChanged.connect(self.selectUnselectAll)
+
+        # Build the checkboxes, and put them in a layout
+        for label in labels_checkboxes:
+            check_box = QtWidgets.QCheckBox(label)
+            check_box.setCheckState(2)
+            self.check_journals.append(check_box)
+            self.vbox_check_journals.addWidget(check_box)
+
+        # Restore check boxes states
+        journals_to_parse = self.options.value("journals_to_parse", [])
+        if not journals_to_parse:
+            return
+        else:
+            for box in self.check_journals:
+                if box.text() in journals_to_parse:
+                    box.setCheckState(2)
+                else:
+                    box.setCheckState(0)
+
+
     def initUI(self):
 
         """Handles the display"""
@@ -147,28 +204,8 @@ class Settings(QtWidgets.QDialog):
         self.vbox_check_journals = QtWidgets.QVBoxLayout()
         self.scrolling_check_journals.setLayout(self.vbox_check_journals)
 
-        self.button_manage_journals = QtWidgets.QPushButton("Manage journals")
-        self.vbox_check_journals.addWidget(self.button_manage_journals)
-
-        labels_checkboxes = []
-
-        # Get labels of the future check boxes of the journals to be parsed
-        for company in hosts.getCompanies():
-            labels_checkboxes += hosts.getJournals(company)[1]
-
-        labels_checkboxes.sort()
-
-        self.box_select_all = QtWidgets.QCheckBox("Select all")
-        self.box_select_all.setCheckState(0)
-        self.vbox_check_journals.addWidget(self.box_select_all)
-
-        # Build the checkboxes, and put them in a layout
-        for label in labels_checkboxes:
-            check_box = QtWidgets.QCheckBox(label)
-            check_box.setCheckState(2)
-            self.check_journals.append(check_box)
-            self.vbox_check_journals.addWidget(check_box)
-
+        # Add the check boxes for all the journals
+        self.displayJournals()
 
         self.scroll_check_journals.setWidget(self.scrolling_check_journals)
 
