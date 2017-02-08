@@ -109,10 +109,10 @@ if platform == 'win':
 elif platform == 'mac':
 
     # Clean the dir first
-    try:
-        rmtree('./pyu-data/new/ChemBrows.app')
-    except FileNotFoundError:
-        print("No previous ChemBrows.app")
+    # try:
+        # rmtree('./pyu-data/new/ChemBrows.app')
+    # except FileNotFoundError:
+        # print("No previous ChemBrows.app")
 
     # os.makedirs('./pyu-data/new/ChemBrows.app', exist_ok=True)
     # os.makedirs('./pyu-data/new/ChemBrows.app/Contents', exist_ok=True)
@@ -121,7 +121,7 @@ elif platform == 'mac':
 
     # print("App architecture created")
 
-    # copyfile('deploy/OSX_extras/Info.plist', './pyu-data/new/ChemBrows.app/Contents/Info.plist')
+    copyfile('deploy/OSX_extras/Info.plist', './pyu-data/new/ChemBrows.app/Contents/Info.plist')
     copyfile('images/icon.icns', './pyu-data/new/ChemBrows.app/Contents/Resources/PythonApplet.icns')
     # copyfile("{}/ChemBrows".format(path_archive), './pyu-data/new/ChemBrows.app/Contents/MacOS/ChemBrows')
 
