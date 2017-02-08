@@ -11,12 +11,15 @@ PATH_EXE = [os.path.join(DIR_PATH, 'gui.py')]
 if COMPILING_PLATFORM == 'win-amd64':
     platform = 'win'
     hookspath = ['C:\\Users\\djipey\\AppData\Local\\Programs\\Python\\Python35\\Lib\\site-packages\\pyupdater\\hooks']
+    strip = False
 elif COMPILING_PLATFORM == 'linux-x86_64':
     platform = 'nix64'
     hookspath = ['/home/djipey/.local/share/virtualenvs/cb/lib/python3.5/site-packages/pyupdater/hooks']
+    strip = True
 elif "macosx" and "x86_64" in COMPILING_PLATFORM:
     hookspath = ['/Users/djipey/anaconda3/lib/python3.5/site-packages/pyupdater/hooks']
     platform = 'mac'
+    strip = True
 
 
 
@@ -80,6 +83,6 @@ exe = EXE(pyz,
           a.datas,
           name=platform,
           debug=False,
-          strip=True,
+          strip=strip,
           upx=True,
           console=False)
