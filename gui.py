@@ -265,8 +265,6 @@ class MyWindow(QtWidgets.QMainWindow):
                 self.l.info("Update finished")
                 self.progress.reset()
 
-                # Set whatsnew key to display whatsnew at next boot
-                self.options.setValue("whatsnew", True)
 
                 # Display a dialog box to tell the user to restart the program
                 message = "ChemBrows is now up-to-date. Restart it to use the latest version"
@@ -276,6 +274,9 @@ class MyWindow(QtWidgets.QMainWindow):
 
                 # Ensure file dled successfully
                 if updater.app.is_downloaded():
+
+                    # Set whatsnew key to display whatsnew at next boot
+                    self.options.setValue("whatsnew", True)
 
                     self.l.info("Starting extract/overwrite")
 

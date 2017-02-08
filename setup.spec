@@ -86,3 +86,9 @@ exe = EXE(pyz,
           strip=strip,
           upx=True,
           console=False)
+
+if platform == 'mac':
+    app = BUNDLE(exe,
+                 name='ChemBrows.app',
+                 icon=None,
+                 bundle_identifier=None)

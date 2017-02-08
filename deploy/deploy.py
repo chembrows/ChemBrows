@@ -114,22 +114,22 @@ elif platform == 'mac':
     except FileNotFoundError:
         print("No previous ChemBrows.app")
 
-    os.makedirs('./pyu-data/new/ChemBrows.app', exist_ok=True)
-    os.makedirs('./pyu-data/new/ChemBrows.app/Contents', exist_ok=True)
-    os.makedirs('./pyu-data/new/ChemBrows.app/Contents/MacOS', exist_ok=True)
-    os.makedirs('./pyu-data/new/ChemBrows.app/Contents/Resources', exist_ok=True)
+    # os.makedirs('./pyu-data/new/ChemBrows.app', exist_ok=True)
+    # os.makedirs('./pyu-data/new/ChemBrows.app/Contents', exist_ok=True)
+    # os.makedirs('./pyu-data/new/ChemBrows.app/Contents/MacOS', exist_ok=True)
+    # os.makedirs('./pyu-data/new/ChemBrows.app/Contents/Resources', exist_ok=True)
 
-    print("App architecture created")
+    # print("App architecture created")
 
-    copyfile('deploy/OSX_extras/Info.plist', './pyu-data/new/ChemBrows.app/Contents/Info.plist')
+    # copyfile('deploy/OSX_extras/Info.plist', './pyu-data/new/ChemBrows.app/Contents/Info.plist')
     copyfile('images/icon.icns', './pyu-data/new/ChemBrows.app/Contents/Resources/PythonApplet.icns')
-    copyfile("{}/ChemBrows".format(path_archive), './pyu-data/new/ChemBrows.app/Contents/MacOS/ChemBrows')
+    # copyfile("{}/ChemBrows".format(path_archive), './pyu-data/new/ChemBrows.app/Contents/MacOS/ChemBrows')
 
     print("Files copied")
 
-    os.chmod('./pyu-data/new/ChemBrows.app/Contents/MacOS/ChemBrows', 0o777)
+    # os.chmod('./pyu-data/new/ChemBrows.app/Contents/MacOS/ChemBrows', 0o777)
 
-    print("Permissions changed")
+    # print("Permissions changed")
     print('Mac OS fixes applied')
 
 
