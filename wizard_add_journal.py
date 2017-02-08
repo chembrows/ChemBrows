@@ -63,6 +63,9 @@ class WizardAddJournal(QtWidgets.QDialog):
         url = self.line_url_journal.text()
         publisher = self.combo_publishers.currentText()
 
+        self.l.debug("Starting verifyInput: {}, {}, {}".
+                     format(abb, url, publisher))
+
         # Create error message if RSS page can't be downloaded
         error_mes = "An error occured while downloading the RSS page.\
                      Are you sure you have the right URL ?\
@@ -87,8 +90,8 @@ class WizardAddJournal(QtWidgets.QDialog):
             title = feed['feed']['title']
             mes = mes.format(title)
         except KeyError:
-            self.l.critical("No title for the journal ! Aborting")
-            self.l.critical(url)
+            self.l.critical("No title for the journal {} ! Aborting".
+                            format(url))
             QtWidgets.QMessageBox.critical(self,
                                            "Error while adding new journal",
                                            error_mes, QtWidgets.QMessageBox.Ok,
@@ -202,6 +205,7 @@ class WizardAddJournal(QtWidgets.QDialog):
                       format(publisher)), 'a', encoding='utf-8') as out:
                 out.write("{} : {} : {}".format(title, abb, url))
             self.l.debug("New journal written user side")
+            self.l.debug("{} : {} : {}".format(title, abb, url))
         except Exception as e:
             self.l.error("saveJournal, error writing journal: {}".format(e),
                          exc_info=True)
