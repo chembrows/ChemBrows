@@ -882,7 +882,7 @@ if __name__ == "__main__":
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
-    urls_test = ["https://www.journals.elsevier.com/european-journal-of-pharmaceutical-sciences/rss"]
+    urls_test = ["http://rss.sciencedirect.com/publication/science/13675931"]
 
     session = FuturesSession(max_workers=20)
 
@@ -900,16 +900,16 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries:
+    for entry in feed.entries[2:]:
 
-        # pprint(entry)
+        pprint(entry)
 
-        url = refineUrl("Elsevier", journal, entry)
-        try:
-            doi = getDoi("Elsevier", journal, entry)
-        except AttributeError:
-            continue
-        # print(url)
+        # url = refineUrl("Elsevier", journal, entry)
+        # try:
+            # doi = getDoi("Elsevier", journal, entry)
+        # except AttributeError:
+            # continue
+        # # print(url)
 
         # webbrowser.open(url, new=0, autoraise=True)
 
@@ -936,5 +936,7 @@ if __name__ == "__main__":
         # pprint(entry)
         # print(url)
 
-        future = session.get(url, headers=headers, timeout=20)
-        future.add_done_callback(functools.partial(print_result, journal, entry))
+        # future = session.get(url, headers=headers, timeout=20)
+        # future.add_done_callback(functools.partial(print_result, journal, entry))
+
+        break

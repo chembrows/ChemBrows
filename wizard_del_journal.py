@@ -171,7 +171,9 @@ class WizardDelJournal(QtWidgets.QDialog):
                     config.write(line)
 
         # Refresh parent check boxes and close
-        self.parent.displayJournals()
+        if self.parent is not None:
+            self.parent.displayJournals()
+
         self.close()
 
 

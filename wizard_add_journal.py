@@ -6,6 +6,7 @@ import os
 import sys
 from PyQt5 import QtGui, QtCore, QtWidgets
 import feedparser
+import validators
 
 from log import MyLog
 import hosts
@@ -17,6 +18,8 @@ class WizardAddJournal(QtWidgets.QDialog):
     def __init__(self, parent=None):
 
         super(WizardAddJournal, self).__init__(parent)
+
+        self.TIMEOUT = 60
 
         self.setModal(True)
 
@@ -54,54 +57,109 @@ class WizardAddJournal(QtWidgets.QDialog):
         self.help_button.clicked.connect(self.showHelp)
 
 
+    def _checkIsFeed(self, url: str, company: str,
+                     feed: feedparser.util.FeedParserDict) -> bool:
+
+        self.l.debug("Entering _checkIsFeed")
+
+        # Check if the feed has a title
+        try:
+            journal = feed['feed']['title']
+        except Exception as e:
+            self.l.critical("verifyInput, can't access title {}".
+                            format(url), exc_info=True)
+            return False
+
+        nbr_ok = 0
+        for entry in feed.entries:
+
+            try:
+                doi = hosts.getDoi(company, journal, entry)
+                url = hosts.refineUrl(company, journal, entry)
+                self.l.debug("{}, {}".format(doi, url))
+            except Exception as e:
+                self.l.error("verifyInput, entry has no doi or no url".
+                             format(url), exc_info=True)
+                continue
+
+            # Check if DOI and URL can be obtained
+            if (doi.startswith('10.') and validators.url(url) or
+                    validators.url(doi) and validators.url(url)):
+                nbr_ok += 1
+
+            # If 3 entries are OK, the feed is considered valid
+            if nbr_ok == 3:
+                self.l.debug("3 entries ok, valid feed")
+                return True
+
+        # If still here, the feed is NOT considered valid
+        return False
+
+
+    def _getFeed(self, url: str, timeout: int) -> feedparser.util.FeedParserDict:
+
+        self.l.debug("Entering _getFeed")
+
+        # Try to dl the RSS feed page
+        try:
+            # Get the RSS page of the url provided
+            feed = feedparser.parse(url, timeout=timeout)
+
+            self.l.debug("Add journal, RSS page successfully dled")
+
+            return feed
+
+        except Exception as e:
+            self.l.error("Add journal feed {} could not be downloaded: {}".
+                         format(url, e), exc_info=True)
+            return None
+
+
     def verifyInput(self):
 
         """Verify the input. Dl the RSS page and check it belongs to a journal.
         Then, call the method to save the journal"""
 
-        abb = self.line_abbreviation.text()
-        url = self.line_url_journal.text()
-        publisher = self.combo_publishers.currentText()
+        abb = self.line_abbreviation.text().strip()
+        url = self.line_url_journal.text().strip()
+        company = self.combo_publishers.currentText()
 
         self.l.debug("Starting verifyInput: {}, {}, {}".
-                     format(abb, url, publisher))
+                     format(abb, url, company))
 
-        # Create error message if RSS page can't be downloaded
-        error_mes = "An error occured while downloading the RSS page.\
-                     Are you sure you have the right URL ?\
-                     Try again later, maybe ?"
-        error_mes = error_mes.replace("    ", "")
+        feed = self._getFeed(url, timeout=self.TIMEOUT)
 
-        try:
-            feed = feedparser.parse(url, timeout=60)
-            self.l.info("verifyInput: RSS page successfully dled")
-        except Exception as e:
-            self.l.error("verifyInput: RSS page could not be downloaded",
-                         exc_info=True)
+        if feed is None:
+            self.l.critical("verifyInput, feed is None")
+
+            # Create error message if RSS page can't be downloaded
+            error_mes = "An error occured while downloading the RSS page.\
+                         Are you sure you have the right URL ?\
+                         Try again later, maybe ?"
+            error_mes = error_mes.replace("    ", "")
+            QtWidgets.QMessageBox.critical(self,
+                                           "Error while adding new journal",
+                                           error_mes, QtWidgets.QMessageBox.Ok,
+                                           defaultButton=QtWidgets.QMessageBox.Ok)
+
+        is_feed = self._checkIsFeed(url, company, feed)
+
+        if not is_feed:
+            self.l.critical("verifyInput, not a valid feed")
+
+            # Create error message if RSS page can't be downloaded
+            error_mes = "The URL you provided does not match a valid RSS feed.\
+                         Are you sure you have the right URL ?"
+            error_mes = error_mes.replace("    ", "")
             QtWidgets.QMessageBox.critical(self,
                                            "Error while adding new journal",
                                            error_mes, QtWidgets.QMessageBox.Ok,
                                            defaultButton=QtWidgets.QMessageBox.Ok)
             return
 
+        title = feed['feed']['title']
         mes = "The following journal will be added to your selection:\n{}"
-
-        try:
-            title = feed['feed']['title']
-            mes = mes.format(title)
-        except KeyError:
-            self.l.critical("No title for the journal {} ! Aborting".
-                            format(url))
-            QtWidgets.QMessageBox.critical(self,
-                                           "Error while adding new journal",
-                                           error_mes, QtWidgets.QMessageBox.Ok,
-                                           defaultButton=QtWidgets.QMessageBox.Ok)
-            return
-
-        except Exception as e:
-            self.l.error("verifyInput, unknown error: {}".format(e),
-                         exc_info=True)
-            return
+        mes = mes.format(title)
 
         self.l.debug("New journal {} about to be added".format(title))
 
@@ -116,8 +174,7 @@ class WizardAddJournal(QtWidgets.QDialog):
             return
         else:
             self.l.debug("Try to save the new journal")
-            self.saveJournal(title, abb, url, publisher)
-            self.l.info("{} added to the catalog".format(title))
+            self.saveJournal(title, abb, url, company)
 
 
     def showHelp(self):
@@ -181,14 +238,14 @@ class WizardAddJournal(QtWidgets.QDialog):
         self.show()
 
 
-    def saveJournal(self, title, abb, url, publisher):
+    def saveJournal(self, title, abb, url, company):
 
-        """Will save the new journal, in file publisher.ini located in
+        """Will save the new journal, in file company.ini located in
         the user directory"""
 
         mes = "Journal already in the catalog"
 
-        # Check if the RSS page's URL is not present in any publisher file
+        # Check if the RSS page's URL is not present in any company file
         for company in hosts.getCompanies():
             data_company = hosts.getJournals(company)
 
@@ -202,17 +259,20 @@ class WizardAddJournal(QtWidgets.QDialog):
         try:
             # If still here, write the new journal
             with open(os.path.join(self.DATA_PATH, "journals/{}.ini".
-                      format(publisher)), 'a', encoding='utf-8') as out:
+                      format(company)), 'a', encoding='utf-8') as out:
                 out.write("{} : {} : {}".format(title, abb, url))
             self.l.debug("New journal written user side")
             self.l.debug("{} : {} : {}".format(title, abb, url))
+            self.l.info("{} added to the catalog".format(title))
         except Exception as e:
             self.l.error("saveJournal, error writing journal: {}".format(e),
                          exc_info=True)
             return
 
         # Refresh parent check boxes and close
-        self.parent.displayJournals()
+        if self.parent is not None:
+            self.parent.displayJournals()
+
         self.close()
 
 

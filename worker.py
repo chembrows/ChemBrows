@@ -234,7 +234,7 @@ class Worker(QtCore.QThread):
                         self.l.error("Problem with getData: {}".
                                      format(journal), exc_info=True)
                         self.counter_futures_images += 1
-                        self.counter_articles_failed += 1
+                        self.parent.counter_articles_failed += 1
                         return
 
                     # Rejecting article if no author
