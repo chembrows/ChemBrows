@@ -235,7 +235,7 @@ class MyWindow(QtWidgets.QMainWindow):
                                               QtWidgets.QMessageBox.Ok)
             self.options.setValue("whatsnew", False)
 
-        updater = Updater(self.l, self.updateProgress)
+        updater = Updater(self, self.updateProgress)
 
         # If no update available, exit
         if not updater.update_available:

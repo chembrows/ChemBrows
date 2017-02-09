@@ -23,13 +23,15 @@ class Updater(QtCore.QThread):
     overwrite the current app. Inherits from QThread to perform the update
     while displaying a QProgressBar"""
 
-    def __init__(self, logger, callback=None):
+    def __init__(self, parent, callback=None):
 
-        QtCore.QThread.__init__(self)
+        super(Updater, self).__init__(parent)
 
         self.callback = callback
 
-        self.l = logger
+        self.l = parent.l
+
+        self.parent = parent
 
         # Get the current version
         version = functions.getVersion()
