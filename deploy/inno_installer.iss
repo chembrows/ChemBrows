@@ -17,7 +17,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={localappdata}\{#AppName}
+DefaultDirName={pf}\{#AppName}
 DefaultGroupName={#AppName}
 OutputDir=C:\Users\djipey\Desktop
 OutputBaseFilename={#OutputBaseFilename}
@@ -35,6 +35,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 
 Source: "C:\Users\djipey\Desktop\ChemBrows\dist\{#AppName}-{#Version}-win\ChemBrows.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\djipey\Desktop\ChemBrows\dist\{#AppName}-{#Version}-win\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Put the icon in the app folder, will be used for the desktop icon
 Source: "C:\Users\djipey\Desktop\ChemBrows\images\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
