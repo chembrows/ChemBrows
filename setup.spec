@@ -10,17 +10,13 @@ PATH_EXE = [os.path.join(DIR_PATH, 'gui.py')]
 
 if COMPILING_PLATFORM == 'win-amd64':
     platform = 'win'
-    hookspath = ['C:\\Users\\djipey\\AppData\Local\\Programs\\Python\\Python35\\Lib\\site-packages\\pyupdater\\hooks']
-    strip = False
+    STRIP = False
 elif COMPILING_PLATFORM == 'linux-x86_64':
     platform = 'nix64'
-    hookspath = ['/home/djipey/.local/share/virtualenvs/cb/lib/python3.5/site-packages/pyupdater/hooks']
-    strip = True
+    STRIP = True
 elif "macosx" and "x86_64" in COMPILING_PLATFORM:
-    hookspath = ['/Users/djipey/anaconda3/lib/python3.5/site-packages/pyupdater/hooks']
     platform = 'mac'
-    strip = True
-
+    STRIP = True
 
 
 block_cipher = None
@@ -40,30 +36,38 @@ imports = ['packaging', 'packaging.version', 'packaging.specifiers',
            'packaging.requirements', 'sklearn.neighbors.typedefs']
 
 excludes = ['pyi_rth_pkgres', 'pyi_rth_qt5plugins', 'lib2to3', 'runpy',
-            'xmlrpc', 'doctest', 'tty', 'getopt']
+            'xmlrpc', 'doctest', 'tty', 'getopt', 'tcl', 'certifi', 'tkinter']
 
-a = Analysis(PATH_EXE,
-             pathex=[DIR_PATH] * 2,
+
+a = Analysis(['gui.py'],
+             pathex=PATH_EXE,
              binaries=None,
              datas=added_files,
              hiddenimports=imports,
-             hookspath=hookspath,
+             hookspath=[],
              runtime_hooks=[],
              excludes=excludes,
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher)
 
+pyz = PYZ(a.pure, a.zipped_data,
+          cipher=block_cipher)
+
 rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
-           'libQt3Support', 'libwebp', 'libXss', 'libXft', 'libtcl',
-           'libtk', 'libX11', 'libgstreamer', 'libgcrypt', 'libQtOpenGL',
-           'libfbclient', 'libfreetype', 'libgcc_s', 'libsqlite3',
-           'libQtDBus', 'libsystemd', 'libgstvideo', 'liborc', 'libharfbuzz',
-           'libmng', 'bncursesw', 'libgstbase', 'libgstaudio', 'liblcms2',
-           'libQtSvg', 'libatlas', 'libgobject', 'libquadmath', 'libgsttag',
-           'libmpdec', 'libgstpbutils', 'libxcb-glx', 'libICE', 'libQtXml',
-           'libfontconfig', 'libglapi', 'libgraphite2', 'libexpat', 'libXext',
-           'liblz4']
+           'libQt3Support', 'libwebp', 'libXss', 'libXft', 'libcrypto',
+           'libtcl', 'libtk', 'libX11', 'libgstreamer', 'libgcrypt',
+           'libQtOpenGL.so', 'libfbclient', 'libfreetype', 'libgcc_s',
+           'libsqlite3', 'libQtDBus', 'libsystemd', 'libgstvideo', 'liborc',
+           'libharfbuzz', 'libpcre', 'libmng', 'bncursesw', 'libgstbase',
+           'libgstaudio', 'liblcms2', 'libQtSvg', 'liblapack', 'libatlas',
+           'libgobject', 'libquadmath', 'libgsttag', 'libmpdec',
+           'libgstpbutils', 'libxcb-glx', 'libICE', 'libQtXml',
+           'libfontconfig', 'libglapi', 'libgraphite2', 'libexpat',
+           'libXext', 'liblz4', 'libqdds', 'libqgif', 'libqjp2', 'libqsvg',
+           'libqtga', 'libqwbmp', 'libqwebp', 'libqtiff', 'libQt5PrintSupport',
+           'libunistring', 'libgnutls', 'libglib-2.0', 'libkrb5', 'libgmp',
+           'libcups', 'libstdc++', '_cffi_backend']
 
 full_tuples = []
 for each_bin in a.binaries:
@@ -73,19 +77,22 @@ for each_bin in a.binaries:
 
 a.binaries = a.binaries - TOC(full_tuples)
 
-pyz = PYZ(a.pure, a.zipped_data,
-          cipher=block_cipher)
-
 exe = EXE(pyz,
           a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
-          name=platform,
+          exclude_binaries=True,
+          name='ChemBrows',
           debug=False,
-          strip=strip,
+          strip=STRIP,
           upx=True,
           console=False)
+
+coll = COLLECT(exe,
+               a.binaries,
+               a.zipfiles,
+               a.datas,
+               strip=STRIP,
+               upx=True,
+               name='ChemBrows')
 
 if platform == 'mac':
     app = BUNDLE(exe,

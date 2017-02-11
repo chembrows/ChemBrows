@@ -217,7 +217,7 @@ def getVersion():
     with open(os.path.join(resource_dir, 'config/version.txt'),
               'r', encoding='utf-8') as version_file:
 
-        version = version_file.read()
+        version = version_file.read().strip()
 
     return version
 

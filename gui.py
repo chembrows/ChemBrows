@@ -26,7 +26,6 @@ from advanced_search import AdvancedSearch
 from tab import TabPerso
 import functions
 import hosts
-from updater import Updater
 from line_icon import ButtonLineIcon
 from signing import Signing
 from tuto import Tuto
@@ -45,7 +44,6 @@ from textbrowser import TextBrowserPerso
 
 class MyWindow(QtWidgets.QMainWindow):
 
-    # def __init__(self, logger):
     def __init__(self):
 
         # Call processEvents regularly for the splash screen
@@ -137,7 +135,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
         # Look for updates
         QtWidgets.qApp.processEvents()
-        self.autoUpdate()
+        self.upgrade()
         self.l.debug("bootCheckList took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
@@ -147,8 +145,7 @@ class MyWindow(QtWidgets.QMainWindow):
         # Connect to the database & log the connection
         self.connectionBdd()
         self.defineActions()
-        self.logConnection()
-        self.l.debug("connectionBdd, defineActions & logConnection took {}"
+        self.l.debug("connectionBdd & defineActions took {}"
                      .format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
@@ -201,21 +198,42 @@ class MyWindow(QtWidgets.QMainWindow):
         self.finishBoot()
 
 
-    def updateProgress(self, pourcent):
+    def justUpgraded(self):
 
-        """Callback to display a percentage progress bar when updating"""
+        """Check if CB was just updated"""
 
-        self.progress.show()
+        version_pkg = functions.getVersion()
 
-        self.progress.setValue(pourcent)
+        # If no whatsnew key in options.ini, display whatsnew.
+        version = self.options.value("version", version_pkg, str)
+        version = version
 
-        if pourcent >= 100:
-            self.progress.reset()
+        self.options.setValue("version", version_pkg)
 
-        QtCore.QCoreApplication.processEvents()
+        if version < version_pkg:
+            return True
+        else:
+            return False
 
 
-    def autoUpdate(self):
+    def availableUpgrade(self):
+
+        """Check on the server if an upgrade is available"""
+
+        local_ver = functions.getVersion()
+
+        try:
+            r = requests.get("http://localhost:8000/version.txt")
+        except Exception as e:
+            self.l.error("availableUpgrade: {}".format(e), exc_info=True)
+            return False
+
+        remote_ver = r.text.strip()
+
+        return local_ver < remote_ver
+
+
+    def upgrade(self):
 
         """Performs some startup checks"""
 
@@ -223,9 +241,21 @@ class MyWindow(QtWidgets.QMainWindow):
         if self.debug_mod:
             return
 
-        # If no whatsnew key in options.ini, display whatsnew.
-        whatsnew = self.options.value("whatsnew", True, bool)
-        if whatsnew:
+        mes = """
+        A new version of ChemBrows is available.<br/>
+        You can download it from
+        <a href='http://www.chembrows.com/website/index.php?static2/downloads'>
+        www.chembrows.com</a>
+        """.replace('    ', '')
+
+        if self.availableUpgrade():
+
+            QtWidgets.QMessageBox.information(self, "New version available",
+                                              mes,
+                                              QtWidgets.QMessageBox.Ok)
+
+        if self.justUpgraded():
+
             with open(os.path.join(self.resource_dir,
                       'config/whatsnew.txt'), 'r', encoding='utf-8') as f:
                 message = f.read()
@@ -233,73 +263,6 @@ class MyWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.information(self, "What is new ?",
                                               message,
                                               QtWidgets.QMessageBox.Ok)
-            self.options.setValue("whatsnew", False)
-
-        updater = Updater(self.l, self.updateProgress)
-
-        # If no update available, exit
-        if not updater.update_available:
-            return
-
-        # If still here, ask the user if he wants to update immediately
-
-        # Hide the splash screen if there is an update.
-        # On windows, the message box was hidden by the splash
-        self.splash.finish(self)
-
-        mes = "A new version of ChemBrows is available. Upgrade now ?"
-        choice = QtWidgets.QMessageBox.question(self, "Update of ChemBrows",
-                                                mes,
-                                                QtWidgets.QMessageBox.Cancel |
-                                                QtWidgets.QMessageBox.Ok,
-                                                defaultButton=QtWidgets.QMessageBox.Ok)
-
-        # If the user says yes, start the update
-        if choice == QtWidgets.QMessageBox.Ok:
-            self.l.info("Starting update")
-
-            def whenDone():
-
-                """Slot called when the update is finished"""
-
-                self.l.info("Update finished")
-                self.progress.reset()
-
-
-                # Display a dialog box to tell the user to restart the program
-                message = "ChemBrows is now up-to-date. Restart it to use the latest version"
-                QtWidgets.QMessageBox.information(self, "ChemBrows update",
-                                                  message,
-                                                  QtWidgets.QMessageBox.Ok)
-
-                # Ensure file dled successfully
-                if updater.app.is_downloaded():
-
-                    # Set whatsnew key to display whatsnew at next boot
-                    self.options.setValue("whatsnew", True)
-
-                    self.l.info("Starting extract/overwrite")
-
-                    # Extract and overwrite current application
-                    try:
-                        updater.app.extract_overwrite()
-                        self.l.info("New version installed. Should restart")
-                        updater.app.cleanup()
-                        self.l.info("APP UPDATE cleaned up")
-                    except Exception as e:
-                        self.l.critical("ERROR OVERWRITING APP: {}".format(e),
-                                        exc_info=True)
-
-            # Display a QProgressBar while updating
-            QtWidgets.qApp.processEvents()
-            self.progress = QtWidgets.QProgressDialog("Updating ChemBrows...",
-                                                      None, 0, 100, self)
-            self.progress.setWindowTitle("Updating")
-            self.progress.show()
-            QtWidgets.qApp.processEvents()
-
-            updater.finished.connect(whenDone)
-            updater.start()
 
 
     def logConnection(self):
@@ -325,15 +288,6 @@ class MyWindow(QtWidgets.QMainWindow):
         count_query.first()
         nbr_entries = count_query.record().value(0)
         self.l.info("Nbr of entries: {}".format(nbr_entries))
-
-        count_query.exec_("SELECT MAX(id) FROM papers")
-        count_query.first()
-        self.max_id_for_new = count_query.record().value(0)
-
-        if type(self.max_id_for_new) is not int:
-            self.max_id_for_new = 0
-
-        self.l.info("Max id for new: {}".format(self.max_id_for_new))
 
         payload = {'nbr_entries': nbr_entries,
                    'journals': self.getJournalsToParse(),
@@ -486,6 +440,22 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.model.setTable("papers")
         self.model.select()
+
+        count_query = QtSql.QSqlQuery(self.bdd)
+
+        count_query.exec_("SELECT COUNT(id) FROM papers")
+        count_query.first()
+        nbr_entries = count_query.record().value(0)
+        self.l.info("Nbr of entries: {}".format(nbr_entries))
+
+        count_query.exec_("SELECT MAX(id) FROM papers")
+        count_query.first()
+        max_id_for_new = count_query.record().value(0)
+
+        if type(max_id_for_new) is not int:
+            max_id_for_new = 0
+
+        self.l.info("Max id for new: {}".format(max_id_for_new))
 
 
     def getJournalsToParse(self):
@@ -904,6 +874,9 @@ class MyWindow(QtWidgets.QMainWindow):
 
         # http://stackoverflow.com/questions/9249500/
         # pyside-pyqt-detect-if-user-trying-to-close-window
+
+        # Log connection
+        self.logConnection()
 
         # Record the window state and appearance
         self.options.beginGroup("Window")
