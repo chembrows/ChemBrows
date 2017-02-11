@@ -12,6 +12,7 @@ class ViewPerso(QtWidgets.QTableView):
     main window"""
 
     def __init__(self, parent=None):
+
         super(ViewPerso, self).__init__(parent)
 
         self.parent = parent

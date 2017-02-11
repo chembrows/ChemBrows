@@ -90,7 +90,7 @@ if platform == 'win':
 
 elif platform == 'mac':
 
-    # # Clean the dir first
+    # Clean the dir first
     # try:
         # rmtree('./pyu-data/new/ChemBrows.app')
     # except FileNotFoundError:
