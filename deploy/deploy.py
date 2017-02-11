@@ -16,10 +16,8 @@ import sys
 import os
 import subprocess
 import distutils.util
-import zipfile
 from shutil import copyfile
 from shutil import rmtree
-import tarfile
 
 app_name = 'ChemBrows'
 create_installer = True
@@ -57,15 +55,10 @@ else:
     print("Platform not recognized, EXITING NOW !")
     sys.exit()
 
-# get_platform returns a different string than the one used by py2app
-# if sys.platform == 'darwin':
-    # platform = distutils.util.get_platform().replace('.', '_')
 
 # Freeze !!!
 if bundle:
-    subprocess.call("pyupdater build --app-version {} setup.spec".
-                    format(version), shell=True)
-    # subprocess.call("pyupdater pkg --process --sign", shell=True)
+    subprocess.call("pyinstaller setup.spec", shell=True)
 
     print('done freezing')
 
@@ -76,27 +69,16 @@ print('unzipping')
 # Extract the archive
 # Build the name of the archive
 # Ex: ChemBrows-nix64-0.9.8.tar.gz
-filename = '{}-{}-{}'.format(app_name, platform, version)
+filename = '{}-{}-{}'.format(app_name, version, platform)
 path_archive = os.path.join('.', 'pyu-data', 'new', filename)
 
 if platform == 'win':
-    # Exctract the zip file
-    with zipfile.ZipFile(path_archive + extension) as zf:
-        zf.extractall(os.path.join('.', 'pyu-data', 'new', filename))
-
-    print('unzipping done')
-
     # Run ChemBrows
     if play:
         subprocess.call("{}\\ChemBrows.exe".format(path_archive),
                         shell=True)
+
 if platform == 'nix64' or platform == 'mac':
-    # Extract the tar.gz file
-    with tarfile.open(path_archive + extension, "r:gz") as tf:
-        tf.extractall(os.path.join('.', 'pyu-data', 'new', filename))
-
-    print('unzipping done')
-
     # Run ChemBrows
     if play:
         subprocess.call("{}/ChemBrows".format(path_archive),
@@ -108,11 +90,11 @@ if platform == 'win':
 
 elif platform == 'mac':
 
-    # Clean the dir first
-    try:
-        rmtree('./pyu-data/new/ChemBrows.app')
-    except FileNotFoundError:
-        print("No previous ChemBrows.app")
+    # # Clean the dir first
+    # try:
+        # rmtree('./pyu-data/new/ChemBrows.app')
+    # except FileNotFoundError:
+        # print("No previous ChemBrows.app")
 
     # os.makedirs('./pyu-data/new/ChemBrows.app', exist_ok=True)
     # os.makedirs('./pyu-data/new/ChemBrows.app/Contents', exist_ok=True)
@@ -122,7 +104,7 @@ elif platform == 'mac':
     # print("App architecture created")
 
     # copyfile('deploy/OSX_extras/Info.plist', './pyu-data/new/ChemBrows.app/Contents/Info.plist')
-    copyfile('images/icon.icns', './pyu-data/new/ChemBrows.app/Contents/Resources/PythonApplet.icns')
+    # copyfile('images/icon.icns', './pyu-data/new/ChemBrows.app/Contents/Resources/PythonApplet.icns')
     # copyfile("{}/ChemBrows".format(path_archive), './pyu-data/new/ChemBrows.app/Contents/MacOS/ChemBrows')
 
     print("Files copied")

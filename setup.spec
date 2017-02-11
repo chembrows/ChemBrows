@@ -8,6 +8,9 @@ COMPILING_PLATFORM = distutils.util.get_platform()
 
 PATH_EXE = [os.path.join(DIR_PATH, 'gui.py')]
 
+with open('config/version.txt', 'r', encoding='utf-8') as version_file:
+    version = version_file.read().strip()
+
 if COMPILING_PLATFORM == 'win-amd64':
     platform = 'win'
     STRIP = False
@@ -67,7 +70,8 @@ rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
            'libXext', 'liblz4', 'libqdds', 'libqgif', 'libqjp2', 'libqsvg',
            'libqtga', 'libqwbmp', 'libqwebp', 'libqtiff', 'libQt5PrintSupport',
            'libunistring', 'libgnutls', 'libglib-2.0', 'libkrb5', 'libgmp',
-           'libcups', 'libstdc++', '_cffi_backend']
+           'libcups', 'libstdc++', '_cffi_backend', 'libQt5Svg', 'libssl',
+           '_decimal']
 
 full_tuples = []
 for each_bin in a.binaries:
@@ -92,10 +96,10 @@ coll = COLLECT(exe,
                a.datas,
                strip=STRIP,
                upx=True,
-               name='ChemBrows')
+               name='ChemBrows-{}-{}'.format(version, platform))
 
 if platform == 'mac':
     app = BUNDLE(exe,
-                 name='ChemBrows.app',
+                 name='ChemBrows-{}-{}.app'.format(version, platform),
                  icon=None,
                  bundle_identifier=None)

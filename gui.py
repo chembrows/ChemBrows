@@ -13,6 +13,7 @@ import platform
 import validators
 import collections as collec
 import logging
+import distutils.util
 
 # Personal modules
 from log import MyLog
@@ -203,10 +204,12 @@ class MyWindow(QtWidgets.QMainWindow):
         """Check if CB was just updated"""
 
         version_pkg = functions.getVersion()
+        self.l.debug("Version pkg: {}".format(version_pkg))
 
         # If no whatsnew key in options.ini, display whatsnew.
         version = self.options.value("version", version_pkg, str)
-        version = version
+
+        self.l.debug("Stored version: {}".format(version))
 
         self.options.setValue("version", version_pkg)
 
@@ -221,14 +224,34 @@ class MyWindow(QtWidgets.QMainWindow):
         """Check on the server if an upgrade is available"""
 
         local_ver = functions.getVersion()
+        self.l.debug("Local version: {}".format(local_ver))
 
         try:
-            r = requests.get("http://localhost:8000/version.txt")
+            r = requests.get("http://chembrows.com/downloads/version.txt")
         except Exception as e:
             self.l.error("availableUpgrade: {}".format(e), exc_info=True)
             return False
 
-        remote_ver = r.text.strip()
+        os_name = distutils.util.get_platform()
+        self.l.debug("OS name: {}".format(os_name))
+
+        if os_name == 'win-amd64':
+            platform = 'win'
+        elif os_name == 'linux-x86_64':
+            platform = 'nix'
+        elif "macosx" and "x86_64" in os_name:
+            platform = 'mac'
+        else:
+            self.l.error("availableUpgrade, unindentified platform")
+            return False
+
+        self.l.debug("Platform: {}".format(platform))
+
+        for line in r.text.split("\n"):
+            if platform in line:
+                remote_ver = line.split(':')[1].strip()
+
+        self.l.error("Remote version: {}".format(remote_ver))
 
         return local_ver < remote_ver
 
