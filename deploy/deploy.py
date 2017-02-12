@@ -164,7 +164,7 @@ elif create_installer and platform == 'mac':
         text = text.replace('VERSION_SIMPLE', simplified_version)
         text = text.replace('MAJOR_VERSION', version.split('.')[0])
         text = text.replace('MINOR_VERSION', version.split('.')[1])
-        text = text.replace('APP_PATH', os.path.abspath('pyu-data/new/ChemBrows.app'))
+        text = text.replace('APP_PATH', os.path.abspath('dist/ChemBrows.app'))
         text = text.replace('POST_INSTALL_PATH', os.path.abspath('deploy/OSX_extras/post_install.sh'))
 
         with open('pyu-data/new/chembrows.packproj', 'w') as packproj:
@@ -177,6 +177,6 @@ elif create_installer and platform == 'mac':
     # Make the post-install script (called postflight by Iceberg) executable
     # !!!!!!!! For now, I have to do it manually on Linux, and also compress
     # the pkg on Linux
-    os.chmod('pyu-data/new/build/ChemBrows.pkg/Contents/Resources/postflight', 0o777)
-    os.rename("pyu-data/new/build/ChemBrows.pkg", "pyu-data/new/build/ChemBrows-{}.pkg".format(version))
+    os.chmod('dist/ChemBrows.pkg/Contents/Resources/postflight', 0o777)
+    os.rename("dist/ChemBrows.pkg", "pyu-data/new/build/ChemBrows-{}.pkg".format(version))
     print('Done creating a .pkg for Mac OS...')
