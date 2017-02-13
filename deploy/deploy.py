@@ -40,7 +40,7 @@ with open('config/version.txt', 'r') as version_file:
 
 if compiling_platform == 'win-amd64':
     # Name of Windows installer, architecture dependent
-    installerName = 'setup {0} {1} (64bit)'.format(app_name, version)
+    installerName = 'setup_{0}_{1}_(64bit)'.format(app_name, version)
     platform = 'win'
     extension = '.zip'
 
@@ -71,7 +71,7 @@ print('unzipping')
 # Build the name of the archive
 # Ex: ChemBrows-nix64-0.9.8.tar.gz
 filename = '{}-{}-{}'.format(app_name, version, platform)
-path_archive = os.path.join('.', 'pyu-data', 'new', filename)
+path_archive = os.path.join('.', 'dist', filename)
 
 if platform == 'win':
     # Run ChemBrows
@@ -91,23 +91,9 @@ if platform == 'win':
 
 elif platform == 'mac':
 
-    # Clean the dir first
-    # try:
-        # rmtree('./pyu-data/new/ChemBrows.app')
-    # except FileNotFoundError:
-        # print("No previous ChemBrows.app")
-
-    # os.makedirs('./pyu-data/new/ChemBrows.app', exist_ok=True)
-    # os.makedirs('./pyu-data/new/ChemBrows.app/Contents', exist_ok=True)
-    # os.makedirs('./pyu-data/new/ChemBrows.app/Contents/MacOS', exist_ok=True)
-    # os.makedirs('./pyu-data/new/ChemBrows.app/Contents/Resources', exist_ok=True)
-
-    # print("App architecture created")
-
     copyfile('deploy/OSX_extras/Info.plist', './dist/ChemBrows.app/Contents/Info.plist')
     copyfile('images/icon.icns', './dist/ChemBrows.app/Contents/Resources/PythonApplet.icns')
-    # copyfile("{}/ChemBrows".format(path_archive), './pyu-data/new/ChemBrows.app/Contents/MacOS/ChemBrows')
-    copy_tree('dist/ChemBrows-{}-{}'.format(version, platform), 'dist/ChemBrows.app/Contents/MacOS/')
+    copy_tree('dist/{}'.format(filename), 'dist/ChemBrows.app/Contents/MacOS/')
 
     print("Files copied")
 
@@ -118,10 +104,8 @@ elif platform == 'mac':
 
 
 elif platform == 'nix64':
-    # copyfile('deploy/Linux_extras/README', 'dist/{}/README'.format(filename))
-    # os.chmod('./dist/{}/gui'.format(filename), 0o777)
-    # os.chmod('./dist/{}/{}/gui'.format(filename, filename), 0o777)
-    pass
+    copyfile('deploy/Linux_extras/README', 'dist/{}/README'.format(filename))
+    os.chmod('./dist/{}/ChemBrows'.format(filename), 0o777)
 
 
 # Create installer for windows
@@ -171,8 +155,6 @@ elif create_installer and platform == 'mac':
 
         with open('dist/chembrows.packproj', 'w') as packproj:
             packproj.write(text)
-
-    # os.rename("path/to/current/file.foo", "path/to/new/desination/for/file.foo")
 
     subprocess.call('freeze dist/chembrows.packproj -d pyu-data/new/', shell=True)
 
