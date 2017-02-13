@@ -16,6 +16,7 @@ import sys
 import os
 import subprocess
 import distutils.util
+from distutils.dir_util import copy_tree
 from shutil import copyfile
 from shutil import rmtree
 
@@ -103,9 +104,10 @@ elif platform == 'mac':
 
     # print("App architecture created")
 
-    # copyfile('deploy/OSX_extras/Info.plist', './pyu-data/new/ChemBrows.app/Contents/Info.plist')
-    # copyfile('images/icon.icns', './pyu-data/new/ChemBrows.app/Contents/Resources/PythonApplet.icns')
+    copyfile('deploy/OSX_extras/Info.plist', './dist/ChemBrows.app/Contents/Info.plist')
+    copyfile('images/icon.icns', './dist/ChemBrows.app/Contents/Resources/PythonApplet.icns')
     # copyfile("{}/ChemBrows".format(path_archive), './pyu-data/new/ChemBrows.app/Contents/MacOS/ChemBrows')
+    copy_tree('dist/ChemBrows-{}-{}'.format(version, platform), 'dist/ChemBrows.app/Contents/MacOS/')
 
     print("Files copied")
 
@@ -146,7 +148,7 @@ elif create_installer and platform == 'mac':
 
     # Clean the dir first
     try:
-        rmtree('./pyu-data/new/build/')
+        rmtree('dist/build/')
     except FileNotFoundError:
         print("No previous build directory")
 
@@ -167,16 +169,16 @@ elif create_installer and platform == 'mac':
         text = text.replace('APP_PATH', os.path.abspath('dist/ChemBrows.app'))
         text = text.replace('POST_INSTALL_PATH', os.path.abspath('deploy/OSX_extras/post_install.sh'))
 
-        with open('pyu-data/new/chembrows.packproj', 'w') as packproj:
+        with open('dist/chembrows.packproj', 'w') as packproj:
             packproj.write(text)
 
     # os.rename("path/to/current/file.foo", "path/to/new/desination/for/file.foo")
 
-    subprocess.call('freeze pyu-data/new/chembrows.packproj -d pyu-data/new/', shell=True)
+    subprocess.call('freeze dist/chembrows.packproj -d pyu-data/new/', shell=True)
 
     # Make the post-install script (called postflight by Iceberg) executable
     # !!!!!!!! For now, I have to do it manually on Linux, and also compress
     # the pkg on Linux
-    os.chmod('dist/ChemBrows.pkg/Contents/Resources/postflight', 0o777)
-    os.rename("dist/ChemBrows.pkg", "pyu-data/new/build/ChemBrows-{}.pkg".format(version))
+    os.chmod('dist/build/ChemBrows.pkg/Contents/Resources/postflight', 0o777)
+    os.rename("dist/build/ChemBrows.pkg", "dist/build/ChemBrows-{}.pkg".format(version))
     print('Done creating a .pkg for Mac OS...')

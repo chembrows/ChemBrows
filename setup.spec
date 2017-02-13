@@ -100,6 +100,6 @@ coll = COLLECT(exe,
 
 if platform == 'mac':
     app = BUNDLE(exe,
-                 name='ChemBrows-{}-{}.app'.format(version, platform),
+                 name='ChemBrows.app',
                  icon=None,
                  bundle_identifier=None)
