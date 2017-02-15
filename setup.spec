@@ -70,8 +70,7 @@ rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
            'libXext', 'liblz4', 'libqdds', 'libqgif', 'libqjp2', 'libqsvg',
            'libqtga', 'libqwbmp', 'libqwebp', 'libqtiff', 'libQt5PrintSupport',
            'libunistring', 'libgnutls', 'libglib-2.0', 'libkrb5', 'libgmp',
-           'libcups', 'libstdc++', '_cffi_backend', 'libQt5Svg', 'libssl',
-           '_decimal']
+           'libcups', 'libstdc++', '_cffi_backend', 'libQt5Svg', '_decimal']
 
 full_tuples = []
 for each_bin in a.binaries:
