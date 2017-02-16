@@ -63,14 +63,14 @@ rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
            'libfbclient', 'libfreetype', 'libgcc_s', 'libsqlite3',
            'libQtDBus', 'libsystemd', 'libgstvideo', 'liborc', 'libharfbuzz',
            'libpcre', 'libmng', 'bncursesw', 'libgstbase', 'libgstaudio',
-           'liblcms2', 'libQtSvg', 'liblapack', 'libatlas', 'libgobject',
-           'libquadmath', 'libgsttag', 'libmpdec', 'libgstpbutils',
-           'libxcb-glx', 'libICE', 'libQtXml', 'libfontconfig', 'libglapi',
-           'libgraphite2', 'libexpat', 'libXext', 'liblz4', 'libqdds',
-           'libqgif', 'libqjp2', 'libqsvg', 'libqtga', 'libqwbmp', 'libqwebp',
-           'libqtiff', 'libQt5PrintSupport', 'libunistring', 'libgnutls',
-           'libglib-2.0', 'libkrb5', 'libgmp', 'libcups', 'libstdc++',
-           '_cffi_backend', 'libQt5Svg', '_decimal']
+           'liblcms2', 'libQtSvg', 'libatlas', 'libgobject', 'libquadmath',
+           'libgsttag', 'libmpdec', 'libgstpbutils', 'libxcb-glx',
+           'libICE', 'libQtXml', 'libfontconfig', 'libglapi', 'libgraphite2',
+           'libexpat', 'libXext', 'liblz4', 'libqdds', 'libqgif', 'libqjp2',
+           'libqsvg', 'libqtga', 'libqwbmp', 'libqwebp', 'libqtiff',
+           'libQt5PrintSupport', 'libunistring', 'libgnutls', 'libglib-2.0',
+           'libkrb5', 'libgmp', 'libcups', 'libstdc++', '_cffi_backend',
+           'libQt5Svg', '_decimal']
 
 full_tuples = []
 for each_bin in a.binaries:
