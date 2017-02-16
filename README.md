@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/chembrows/ChemBrows.svg?branch=update)](https://travis-ci.org/chembrows/ChemBrows)  
 ![screenshot](http://i.imgur.com/6yE72c5.jpg?1)
 
 

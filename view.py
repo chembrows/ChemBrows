@@ -2,20 +2,17 @@
 # coding: utf-8
 
 
-from PyQt4 import QtGui, QtCore
-
-# Personal
-# TEST
-import constants
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 
-class ViewPerso(QtGui.QTableView):
+class ViewPerso(QtWidgets.QTableView):
 
     """New class to modify the view. Basically reimplements some methods.
     Generates a personnal table view, which will be used for each tab in the
     main window"""
 
     def __init__(self, parent=None):
+
         super(ViewPerso, self).__init__(parent)
 
         self.parent = parent
@@ -26,13 +23,12 @@ class ViewPerso(QtGui.QTableView):
         self.topic_entries = None
         self.author_entries = None
         self.radio_states = None
-        self.list_new_ids = []
-        self.list_id_articles = []
+        self.articles = {}
 
-        self.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 
         # Scroll per "pixel". Gives a better impression when scrolling
-        self.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)
+        self.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
 
 
     def defineSlots(self):
@@ -110,27 +106,9 @@ class ViewPerso(QtGui.QTableView):
         Allows to resize the columns of the table to optimize space.
         new_size is the width of the central splitter of the parent"""
 
-        row_height = self.rowHeight(0)
-        nbr_rows = self.model().rowCount()
-
-        if row_height * nbr_rows > self.height():
-            scroll_bar_visible = True
-        else:
-            scroll_bar_visible = False
-
         # The thumbnail's size is set to 30 % of the view's width
-        size_thumbnail = new_size * 0.3
-
-        # If the scrollbar is not visible (not enough posts), its width
-        # is set to 100 px. Weird. So if the scrollBar is not visible,
-        # don't substract its size
-        if scroll_bar_visible:
-            size_title = new_size - size_thumbnail - self.verticalScrollBar().sizeHint().width()
-        else:
-            size_title = new_size - size_thumbnail
-
-        self.setColumnWidth(8, size_thumbnail)
-        self.setColumnWidth(3, size_title)
+        # The rest is filled with the stretchable title
+        self.setColumnWidth(8, new_size * 0.3)
 
 
     def initUI(self):
@@ -152,6 +130,10 @@ class ViewPerso(QtGui.QTableView):
         self.hideColumn(12)  # Hide topic_simple
         self.hideColumn(13)  # Hide author_simple
 
+        # Stretch the title into the remaining space
+        self.horizontalHeader().setSectionResizeMode(3,
+            QtWidgets.QHeaderView.Stretch)
+
         # Move the graphical abstract to first
         self.horizontalHeader().moveSection(8, 0)
 
@@ -159,7 +141,7 @@ class ViewPerso(QtGui.QTableView):
         self.horizontalHeader().setVisible(False)
 
         # No cell editing
-        self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
 
     def keyboardSearch(self, search):
@@ -173,6 +155,8 @@ class ViewPerso(QtGui.QTableView):
 
         """Reimplementation to propagate the event to the parent
         widget. Also, defines some special behaviors"""
+
+        # super(ViewPerso, self).keyPressEvent(e)
 
         key = e.key()
 
@@ -199,6 +183,7 @@ class ViewPerso(QtGui.QTableView):
                     self.clicked.emit(current_index)
 
         if key == QtCore.Qt.Key_Up:
+            print("up")
             current_index = self.selectionModel().currentIndex()
             new_index = current_index.sibling(current_index.row() - 1, current_index.column())
 

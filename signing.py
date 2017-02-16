@@ -3,34 +3,41 @@
 
 
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import re
 import os
 import requests
 from io import BytesIO
 import base64
 from PIL import Image
-import traceback
+import platform
 
 from line_icon import ButtonLineIcon
+from log import MyLog
+import functions
 
 
-class Signing(QtGui.QDialog):
+class Signing(QtWidgets.QDialog):
 
     """Module to log the user and assign to him a user_id
-    the first he starts the programm"""
+    the first time he starts the programm"""
 
-    def __init__(self, parent):
+    def __init__(self, parent=None):
 
         super(Signing, self).__init__(parent)
 
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
         self.parent = parent
 
-        if type(parent) is QtGui.QWidget:
+        self.resource_dir, self.DATA_PATH = functions.getRightDirs()
+
+
+        if parent is None:
+            self.logger = MyLog("activity.log")
             self.test = True
-            self.parent.DATA_PATH = '.'
-            self.parent.resource_dir = '.'
         else:
+            self.logger = self.parent.l
             self.test = False
 
         # Attribute to check if the login was valid
@@ -52,7 +59,7 @@ class Signing(QtGui.QDialog):
 
         # Close the app if the user does not signin
         if not self.validated and not self.test:
-            self.parent.l.critical("The user did not sign in")
+            self.logger.critical("The user did not sign in")
             self.parent.closeEvent(event)
 
 
@@ -69,8 +76,8 @@ class Signing(QtGui.QDialog):
         # Clean the tabs in the message (tabs are 4 spaces)
         mes = mes.replace("    ", "")
 
-        QtGui.QMessageBox.information(self, "Information", mes,
-                                      QtGui.QMessageBox.Ok)
+        QtWidgets.QMessageBox.information(self, "Information", mes,
+                                      QtWidgets.QMessageBox.Ok)
 
 
     def getCaptcha(self):
@@ -86,10 +93,10 @@ class Signing(QtGui.QDialog):
         text = r.text.split('\n')[1]
 
         io = BytesIO(base64.b64decode(text))
-        Image.open(io).save(os.path.join(self.parent.DATA_PATH,
+        Image.open(io).save(os.path.join(self.DATA_PATH,
                                          'captcha.png'), format='PNG')
 
-        image = QtGui.QPixmap(os.path.join(self.parent.DATA_PATH,
+        image = QtGui.QPixmap(os.path.join(self.DATA_PATH,
                                            'captcha.png'))
         self.label_image.setPixmap(image)
 
@@ -140,27 +147,28 @@ class Signing(QtGui.QDialog):
                        'email': self.line_email.text(),
                        'user_input': self.line_captcha.text(),
                        'captcha_id': self.captcha_id,
-                       'platform': sys.platform,
+                       'platform': platform.platform(),
                        }
 
             try:
                 r = requests.post("http://chembrows.com/cgi-bin/sign.py",
-                                  data=payload)
+                                  data=payload, timeout=20)
                 # r = requests.post("http://127.0.0.1:8000/cgi-bin/sign.py",
                                   # data=payload)
 
-            except requests.exceptions.ReadTimeout:
+            except (requests.exceptions.ReadTimeout,
+                    requests.exceptions.Timeout):
 
                 mes = """
                 A time out error occured while contacting the server. \
                 Please check you are connected to the internet, or contact us.
                 """.replace('    ', '')
 
-                QtGui.QMessageBox.critical(self, "Signing up error", mes,
-                                           QtGui.QMessageBox.Ok,
-                                           defaultButton=QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, "Signing up error", mes,
+                                           QtWidgets.QMessageBox.Ok,
+                                           defaultButton=QtWidgets.QMessageBox.Ok)
 
-                self.parent.l.critical("ReadTimeout while signing up")
+                self.logger.critical("ReadTimeout while signing up")
                 return
 
             except requests.exceptions.ConnectionError:
@@ -170,11 +178,11 @@ class Signing(QtGui.QDialog):
                 you are connected to the internet, or contact us.
                 """.replace('    ', '')
 
-                QtGui.QMessageBox.critical(self, "Signing up error", mes,
-                                           QtGui.QMessageBox.Ok,
-                                           defaultButton=QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, "Signing up error", mes,
+                                           QtWidgets.QMessageBox.Ok,
+                                           defaultButton=QtWidgets.QMessageBox.Ok)
 
-                self.parent.l.critical("ConnectionError while signing up")
+                self.logger.critical("ConnectionError while signing up")
                 return
 
             except Exception as e:
@@ -183,27 +191,28 @@ class Signing(QtGui.QDialog):
                 check you are connected to the internet, or contact us. {}
                 """.replace('    ', '').format(e)
 
-                QtGui.QMessageBox.critical(self, "Signing up error", mes,
-                                           QtGui.QMessageBox.Ok,
-                                           defaultButton=QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, "Signing up error", mes,
+                                           QtWidgets.QMessageBox.Ok,
+                                           defaultButton=QtWidgets.QMessageBox.Ok)
 
-                self.parent.l.critical("{} while signing up {}".format(e))
-                self.parent.l.critical(traceback.format_exc())
+                self.logger.critical("validateForm: {}".format(e),
+                                       exc_info=True)
                 return
 
             # Get the response from the server and log it
-            self.parent.l.debug(r.text)
+            self.logger.debug("Response from the server: {}".format(r.text))
             response = [part for part in r.text.split("\n") if part != '']
 
             # The server responded an user_id
             if 'user_id' in response[-1]:
-                self.parent.options.setValue('user_id',
-                                             response[-1].split(':')[-1])
+                if not self.test:
+                    self.parent.options.setValue('user_id',
+                                                 response[-1].split(':')[-1])
                 self.accept()
                 self.validated = True
 
                 # Delete the captcha file
-                os.remove(os.path.join(self.parent.DATA_PATH, "captcha.png"))
+                os.remove(os.path.join(self.DATA_PATH, "captcha.png"))
 
             # user_id already in db on the server
             elif response[-1] == 'A user with this email already exists':
@@ -212,9 +221,9 @@ class Signing(QtGui.QDialog):
                 A user with the same email already exists. Please use another
                 email.""".replace('    ', '')
 
-                QtGui.QMessageBox.critical(self, "Signing up error", mes,
-                                           QtGui.QMessageBox.Ok,
-                                           defaultButton=QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, "Signing up error", mes,
+                                           QtWidgets.QMessageBox.Ok,
+                                           defaultButton=QtWidgets.QMessageBox.Ok)
 
                 self.line_email.setStyleSheet('QLineEdit \
                                               {background-color: #FFA07A}')
@@ -226,9 +235,9 @@ class Signing(QtGui.QDialog):
                 The input for the captcha is incorrect. Please try again.
                 """.replace('    ', '')
 
-                QtGui.QMessageBox.critical(self, "Signing up error", mes,
-                                           QtGui.QMessageBox.Ok,
-                                           defaultButton=QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, "Signing up error", mes,
+                                           QtWidgets.QMessageBox.Ok,
+                                           defaultButton=QtWidgets.QMessageBox.Ok)
 
                 self.line_captcha.setStyleSheet('QLineEdit \
                                                 {background-color: #FFA07A}')
@@ -239,16 +248,16 @@ class Signing(QtGui.QDialog):
                 Unknown error. Please retry and/or contact us.
                 """.replace('    ', '')
 
-                QtGui.QMessageBox.critical(self, "Signing up error", mes,
-                                           QtGui.QMessageBox.Ok,
-                                           defaultButton=QtGui.QMessageBox.Ok)
+                QtWidgets.QMessageBox.critical(self, "Signing up error", mes,
+                                           QtWidgets.QMessageBox.Ok,
+                                           defaultButton=QtWidgets.QMessageBox.Ok)
 
 
     def initUI(self):
 
         """Handles the display"""
 
-        self.combo_status = QtGui.QComboBox()
+        self.combo_status = QtWidgets.QComboBox()
         self.combo_status.addItem(None)
         self.combo_status.addItem("Student")
         self.combo_status.addItem("PhD student")
@@ -257,33 +266,33 @@ class Signing(QtGui.QDialog):
         self.combo_status.addItem("Professor")
         self.combo_status.addItem("Obi Wan Kenobi")
 
-        self.form_sign = QtGui.QFormLayout()
+        self.form_sign = QtWidgets.QFormLayout()
 
         self.form_sign.addRow("Who are you? :", self.combo_status)
 
         # LineEdit for the email, with an icon opening an info box
         # info box about data privacy
-        self.line_email = ButtonLineIcon(os.path.join(self.parent.resource_dir,
+        self.line_email = ButtonLineIcon(os.path.join(self.resource_dir,
                                                       'images/info'))
         self.line_email.buttonClicked.connect(self.showInfo)
 
         self.form_sign.addRow("Email :", self.line_email)
 
         # Label image for the captcha
-        self.label_image = QtGui.QLabel()
+        self.label_image = QtWidgets.QLabel()
         self.label_image.setAlignment(QtCore.Qt.AlignHCenter)
 
         self.form_sign.addRow(None, self.label_image)
 
-        self.line_captcha = QtGui.QLineEdit()
+        self.line_captcha = QtWidgets.QLineEdit()
         self.line_captcha.setPlaceholderText("I'm not a robot !")
         self.form_sign.addRow("Enter the captcha :", self.line_captcha)
 
-        self.ok_button = QtGui.QPushButton("OK", self)
-        self.cancel_button = QtGui.QPushButton("Cancel", self)
+        self.ok_button = QtWidgets.QPushButton("OK", self)
+        self.cancel_button = QtWidgets.QPushButton("Cancel", self)
 
-        self.hbox_buttons = QtGui.QHBoxLayout()
-        self.vbox_global = QtGui.QVBoxLayout()
+        self.hbox_buttons = QtWidgets.QHBoxLayout()
+        self.vbox_global = QtWidgets.QVBoxLayout()
 
         self.hbox_buttons.addWidget(self.cancel_button)
         self.hbox_buttons.addWidget(self.ok_button)
@@ -296,7 +305,6 @@ class Signing(QtGui.QDialog):
 
 if __name__ == '__main__':
 
-    app = QtGui.QApplication(sys.argv)
-    parent = QtGui.QWidget()
-    obj = Signing(parent)
+    app = QtWidgets.QApplication(sys.argv)
+    obj = Signing()
     sys.exit(app.exec_())

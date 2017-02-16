@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # coding: utf-8
 
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 
 
 class LittleThread(QtCore.QThread):
@@ -19,13 +19,6 @@ class LittleThread(QtCore.QThread):
         self.function = function
         self.args = args
         self.kwargs = kwargs
-
-
-    def __del__(self):
-
-        """Method to destroy the thread properly"""
-
-        self.wait()
 
 
     def run(self):

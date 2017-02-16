@@ -2,7 +2,7 @@
 # coding: utf-8
 
 
-from PyQt4 import QtSql, QtCore
+from PyQt5 import QtSql, QtCore
 
 import sys
 import os
@@ -11,14 +11,14 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction import text
 from sklearn.svm import LinearSVC
-import traceback
 import datetime
 
-# DEBUG
+# # DEBUG
 # from memory_profiler import profile
 
 # Personal
 from log import MyLog
+import functions
 
 
 class Predictor(QtCore.QThread):
@@ -50,14 +50,6 @@ class Predictor(QtCore.QThread):
         self.calculated_something = False
 
 
-    def __del__(self):
-
-        """Method to destroy the thread properly"""
-
-        self.wait()
-        self.l.debug("Deleting thread")
-
-
     def getStopWords(self):
 
         """Method to get english stop words
@@ -65,12 +57,10 @@ class Predictor(QtCore.QThread):
 
         my_additional_stop_words = []
 
-        if getattr(sys, "frozen", False):
-            resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-        else:
-            resource_dir = '.'
+        resource_dir, _ = functions.getRightDirs()
 
-        with open(os.path.join(resource_dir, 'config/stop_words.txt'), 'r') as config:
+        with open(os.path.join(resource_dir, 'config/stop_words.txt'), 'r',
+                  encoding='utf-8') as config:
             for word in config.readlines():
                 my_additional_stop_words.append(word.rstrip())
 
@@ -114,7 +104,7 @@ class Predictor(QtCore.QThread):
         if (not self.x_train or 0 not in self.y_train or
                 1 not in self.y_train):
             self.l.error("Not enough data yet to feed the classifier")
-            return
+            return None
 
         self.classifier = Pipeline([
             ('vectorizer', CountVectorizer(stop_words=self.stop_words)),
@@ -125,7 +115,7 @@ class Predictor(QtCore.QThread):
             self.classifier.fit(self.x_train, self.y_train)
         except ValueError:
             self.l.error("Not enough data yet to train the classifier")
-            return
+            return None
 
         elapsed_time = datetime.datetime.now() - start_time
         self.l.debug("Initializing classifier in {0}".format(elapsed_time))
@@ -145,6 +135,8 @@ class Predictor(QtCore.QThread):
 
         query = QtSql.QSqlQuery(self.bdd)
 
+        # topic_simple also contains the title of the abstract
+        # the calculations will be performed on the topic and title
         query.exec_("SELECT id, topic_simple FROM papers")
 
         list_id = []
@@ -162,7 +154,8 @@ class Predictor(QtCore.QThread):
             x_test = self.classifier.decision_function(x_test)
 
             elapsed_time = datetime.datetime.now() - start_time
-            self.l.debug("Classifier predicted proba in {}".format(elapsed_time))
+            self.l.debug("Classifier predicted proba in {}".
+                         format(elapsed_time))
             diff_time = datetime.datetime.now()
 
             maximum = max(x_test)
@@ -176,8 +169,7 @@ class Predictor(QtCore.QThread):
             self.l.error("Not enough data yet to predict probability")
             return
         except Exception as e:
-            self.l.error("predictor: {}".format(e))
-            self.l.error(traceback.format_exc())
+            self.l.error("predictor: {}".format(e), exc_info=True)
             return
 
         self.bdd.transaction()
@@ -196,21 +188,18 @@ class Predictor(QtCore.QThread):
 
             query.exec_()
 
-        # # Set the percentage_match to 0 if the abstact is 'Empty' or empty
-        # query.prepare("UPDATE papers SET percentage_match = 0 WHERE abstract = 'Empty' OR abstract = ''")
-        # query.exec_()
-
         if not self.bdd.commit():
             self.l.critical("Percentages match not correctly written in db")
         else:
             elapsed_time = datetime.datetime.now() - start_time
-            self.l.info("Done calculating match percentages in {0} s".format(elapsed_time))
+            self.l.info("Done calculating match percentages in {0} s".
+                        format(elapsed_time))
 
         self.calculated_something = True
 
 
 if __name__ == "__main__":
     logger = MyLog("test.log")
-    predictor = Predictor(logger)
+    predictor = Predictor(logger, [])
     predictor.initializePipeline()
     predictor.calculatePercentageMatch()

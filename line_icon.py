@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # coding: utf-8
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 
 
-class ButtonLineIcon(QtGui.QLineEdit):
+class ButtonLineIcon(QtWidgets.QLineEdit):
     # http://stackoverflow.com/questions/12462562/how-to-do-inside-in-qlineedit-insert-the-button-pyqt4
 
     buttonClicked = QtCore.pyqtSignal(bool)
@@ -14,7 +14,7 @@ class ButtonLineIcon(QtGui.QLineEdit):
         super(ButtonLineIcon, self).__init__(parent)
 
         # Create a button and connect it to the clear method
-        self.button = QtGui.QToolButton(self)
+        self.button = QtWidgets.QToolButton(self)
         self.button.clicked.connect(self.buttonClicked.emit)
         self.button.setCursor(QtCore.Qt.PointingHandCursor)
 
@@ -24,7 +24,7 @@ class ButtonLineIcon(QtGui.QLineEdit):
         # # Remove the elements of a button: border, background
         self.button.setStyleSheet("background: transparent; border: none;")
 
-        layout = QtGui.QHBoxLayout(self)
+        layout = QtWidgets.QHBoxLayout(self)
         layout.addWidget(self.button, 0, QtCore.Qt.AlignRight)
         self.setTextMargins(0, 0, self.button.sizeHint().width(), 0)
-        layout.setMargin(5)
+        # layout.setMargin(5)

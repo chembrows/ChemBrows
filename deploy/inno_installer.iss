@@ -3,7 +3,7 @@
 
 #define MyAppPublisher "ChemBrows"
 #define MyAppURL "http://www.chembrows.com/"
-#define MyAppExeName "gui.exe"
+#define MyAppExeName "ChemBrows.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -17,7 +17,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={localappdata}\{#AppName}
+DefaultDirName={pf}\{#AppName}
 DefaultGroupName={#AppName}
 OutputDir=C:\Users\djipey\Desktop
 OutputBaseFilename={#OutputBaseFilename}
@@ -33,21 +33,19 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; Source: "C:\Users\djipey\Desktop\ChemBrows_freeze\dist\ChemBrows-0.7.0.win32\gui.exe"; DestDir: "{app}"; Flags: ignoreversion
-; Source: "C:\Users\djipey\Desktop\ChemBrows_freeze\dist\ChemBrows-0.7.0.win32\python34.dll"; DestDir: "{app}"; Flags: ignoreversion
-; Source: "C:\Users\djipey\Desktop\ChemBrows_freeze\dist\ChemBrows-0.7.0.win32\ChemBrows-0.7.0.win32\*"; DestDir: "{app}\ChemBrows-0.7.0.win32"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-Source: "C:\Users\djipey\Desktop\ChemBrows_freeze\dist\{#AppName}-{#Version}.{#Architecture}\gui.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\djipey\Desktop\ChemBrows_freeze\dist\{#AppName}-{#Version}.{#Architecture}\python*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\djipey\Desktop\ChemBrows_freeze\dist\{#AppName}-{#Version}.{#Architecture}\{#AppName}-{#Version}.{#Architecture}\*"; DestDir: "{app}\{#AppName}-{#Version}.{#Architecture}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+Source: "C:\Users\djipey\Desktop\ChemBrows\dist\{#AppName}-{#Version}-win\ChemBrows.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\djipey\Desktop\ChemBrows\dist\{#AppName}-{#Version}-win\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+; Put the icon in the app folder, will be used for the desktop icon
+Source: "C:\Users\djipey\Desktop\ChemBrows\images\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\{#AppName}-{#Version}.{#Architecture}\images\icon.ico"
-Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\{#AppName}-{#Version}.{#Architecture}\images\icon.ico"; Tasks: desktopicon
+Name: "{group}\{#AppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"
+Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon
 Name: "{group}\{cm:ProgramOnTheWeb,{#AppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 
 [Run]
 Filename: {app}\{#MyAppExeName}; Description: {cm:LaunchProgram,{#AppName}}; Flags: nowait postinstall skipifsilent
-

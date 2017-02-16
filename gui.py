@@ -1,27 +1,24 @@
 #!/usr/bin/python
 # coding: utf-8
 
-
 import sys
 import os
-from PyQt4 import QtGui, QtSql, QtCore
+from PyQt5 import QtGui, QtSql, QtCore, QtWidgets
 import datetime
 import urllib
 import fnmatch
 import webbrowser
 import requests
 import platform
-import traceback
 import validators
-
-# To package and distribute the program
-import esky
+import collections as collec
+import logging
+import distutils.util
 
 # Personal modules
 from log import MyLog
 from model import ModelPerso
 from view import ViewPerso
-from web_view import WebViewPerso
 from view_delegate import ViewDelegate
 from worker import Worker
 from predictor import Predictor
@@ -30,71 +27,91 @@ from advanced_search import AdvancedSearch
 from tab import TabPerso
 import functions
 import hosts
-from updater import Updater
 from line_icon import ButtonLineIcon
 from signing import Signing
 from tuto import Tuto
 from my_twit import MyTwit
-import constants
 from styles import MyStyles
 from little_thread import LittleThread
+from textbrowser import TextBrowserPerso
 
 # To debug and profile. Comment for prod
 # from memory_profiler import profile
 
+# # DEBUG: do not show deprecation warningmport warningss
+# import warnings
+# warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-class Fenetre(QtGui.QMainWindow):
 
-    # def __init__(self, logger):
+class MyWindow(QtWidgets.QMainWindow):
+
     def __init__(self):
 
-        super(Fenetre, self).__init__()
+        # Call processEvents regularly for the splash screen
+        start_time = datetime.datetime.now()
+        diff_time = start_time
+
+        super(MyWindow, self).__init__()
+
+        self.resource_dir, self.DATA_PATH = functions.getRightDirs()
 
         # Check if the running ChemBrows is a frozen app
         if getattr(sys, "frozen", False):
             # The program is NOT in debug mod if it's frozen
             self.debug_mod = False
-            self.DATA_PATH = constants.DATA_PATH
 
             # http://stackoverflow.com/questions/10293808/how-to-get-the-path-of-the-executing-frozen-script
-            self.resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-            QtGui.QApplication.addLibraryPath(self.resource_dir)
+            # self.resource_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
 
             # Create the user directory if it doesn't exist
             os.makedirs(self.DATA_PATH, exist_ok=True)
+
+            # Create the 'journals' directory, user side
+            os.makedirs(os.path.join(self.DATA_PATH, 'journals/'),
+                        exist_ok=True)
+
+            # Create the logger w/ the appropriate size
+            self.l = MyLog(os.path.join(self.DATA_PATH, "activity.log"))
+            self.l.info("This version of ChemBrows is frozen")
+            self.l.info("You are NOT in debug mode")
         else:
             # The program is in debug mod if it's not frozen
             self.debug_mod = True
-            self.DATA_PATH = "."
-            self.resource_dir = self.DATA_PATH
 
-        app.setWindowIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/icon_main.png')))
+            # Create the logger w/ the appropriate size
+            self.l = MyLog(os.path.join(self.DATA_PATH, "activity.log"),
+                           size=100000000)
+            self.l.info("This version of ChemBrows is NOT frozen")
+            self.l.info("You are in debug mod")
+
+        # Set the logging level
+        # self.l.setLevel(logging.INFO)
+        self.l.setLevel(logging.DEBUG)
+
+        self.l.info('Resources dir: {}'.format(self.resource_dir))
+        self.l.info('Data dir: {}'.format(self.DATA_PATH))
+        self.l.debug('Working dir: {}'.format(os.getcwd()))
+        # self.l.setLevel(20)
+        self.l.info(QtWidgets.QApplication.libraryPaths())
+        self.l.info('Running {} {}'.format(platform.system(),
+                                           platform.release()))
+        self.l.info('Starting the program')
+
+        QtWidgets.qApp.setWindowIcon(QtGui.QIcon(
+            os.path.join(self.resource_dir, 'images', 'icon_main.png')))
 
         # Display a splash screen when booting
         # http://eli.thegreenplace.net/2009/05/09/creating-splash-screens-in-pyqt
         # CAREFUL, there is a bug with the splash screen
         # https://bugreports.qt.io/browse/QTBUG-24910
-        splash_pix = QtGui.QPixmap(os.path.join(self.resource_dir, 'images/splash.png'))
-        self.splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+        splash_pix = QtGui.QPixmap(os.path.join(self.resource_dir, 'images',
+                                                'splash.png'))
+        self.splash = QtWidgets.QSplashScreen(splash_pix,
+                                              QtCore.Qt.WindowStaysOnTopHint)
         self.splash.show()
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
 
-        # Create the logger
-        self.l = MyLog(self.DATA_PATH + "/activity.log")
-        self.l.debug('Resources dir: {}'.format(self.resource_dir))
-        # self.l.setLevel(20)
-        self.l.info('Starting the program')
-        self.l.info(QtGui.QApplication.libraryPaths())
-        self.l.info('Running {} {}'.format(platform.system(),
-                                           platform.release()))
-
-        if self.debug_mod:
-            self.l.info("You are running ChemBrows in debug mode")
-            self.l.info("This version of ChemBrows is NOT a frozen version")
-        else:
-            self.l.info("This version of ChemBrows is a frozen version")
-
-        self.styles = MyStyles(app)
+        self.styles = MyStyles(QtWidgets.qApp)
 
         # Bool to check if the program is collecting data
         self.parsing = False
@@ -102,7 +119,7 @@ class Fenetre(QtGui.QMainWindow):
         # Bool to check if the ui is locked for the user
         self.blocking_ui = False
 
-        QtGui.qApp.installEventFilter(self)
+        QtWidgets.qApp.installEventFilter(self)
 
         # List to store the tags checked
         self.tags_selected = []
@@ -111,67 +128,63 @@ class Fenetre(QtGui.QMainWindow):
         self.list_tables_in_tabs = []
         self.list_proxies_in_tabs = []
 
-        # Call processEvents regularly for the splash screen
-        start_time = datetime.datetime.now()
 
-        diff_time = start_time
+        # Object to store options and preferences
+        self.options = QtCore.QSettings(os.path.join(self.DATA_PATH, 'config',
+                                                     'options.ini'),
+                                        QtCore.QSettings.IniFormat)
 
-        # Look for updates and create files
-        app.processEvents()
-        self.bootCheckList()
+        # Look for updates
+        QtWidgets.qApp.processEvents()
+        self.upgrade()
         self.l.debug("bootCheckList took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
-        # Object to store options and preferences
-        self.options = QtCore.QSettings(self.DATA_PATH + "/config/options.ini", QtCore.QSettings.IniFormat)
-
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
 
         # Connect to the database & log the connection
         self.connectionBdd()
         self.defineActions()
-        self.logConnection()
-        self.l.debug("connectionBdd, defineActions & logConnection took {}"
+        self.l.debug("connectionBdd & defineActions took {}"
                      .format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
+        QtWidgets.qApp.processEvents()
+        self.correctionVersion()
+        self.l.debug("correctionVersion took {}".
+                     format(datetime.datetime.now() - diff_time))
+        diff_time = datetime.datetime.now()
+
         # Create the GUI
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
         self.initUI()
         self.l.debug("initUI took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         # Define the slots
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
         self.defineSlots()
         self.l.debug("defineSlots took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         # Creates the journals buttons
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
         self.displayTags()
         self.l.debug("displayTags took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
         # Restore the settings
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
         self.restoreSettings()
         self.l.debug("restoreSettings took {}".
                      format(datetime.datetime.now() - diff_time))
         diff_time = datetime.datetime.now()
 
-        # Load the notifications
-        app.processEvents()
-        self.loadNotifications()
-        self.l.debug("loadNotifications took {}".
-                     format(datetime.datetime.now() - diff_time))
-        diff_time = datetime.datetime.now()
-
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
 
         # Show the window
         self.show()
@@ -182,69 +195,97 @@ class Fenetre(QtGui.QMainWindow):
         self.l.info("Boot took {}".
                     format(datetime.datetime.now() - start_time))
 
+        # Check if user_id present, and create some directories
         self.finishBoot()
 
 
-    def bootCheckList(self):
+    def justUpgraded(self):
+
+        """Check if CB was just updated"""
+
+        version_pkg = functions.getVersion()
+        self.l.debug("Version pkg: {}".format(version_pkg))
+
+        # If no whatsnew key in options.ini, display whatsnew.
+        version = self.options.value("version", version_pkg, str)
+
+        self.l.debug("Stored version: {}".format(version))
+
+        self.options.setValue("version", version_pkg)
+
+        if version < version_pkg:
+            return True
+        else:
+            return False
+
+
+    def availableUpgrade(self):
+
+        """Check on the server if an upgrade is available"""
+
+        local_ver = functions.getVersion()
+        self.l.debug("Local version: {}".format(local_ver))
+
+        try:
+            r = requests.get("http://chembrows.com/downloads/version.txt")
+        except Exception as e:
+            self.l.error("availableUpgrade: {}".format(e), exc_info=True)
+            return False
+
+        os_name = distutils.util.get_platform()
+        self.l.debug("OS name: {}".format(os_name))
+
+        if os_name == 'win-amd64':
+            platform = 'win'
+        elif os_name == 'linux-x86_64':
+            platform = 'nix'
+        elif "macosx" and "x86_64" in os_name:
+            platform = 'mac'
+        else:
+            self.l.error("availableUpgrade, unindentified platform")
+            return False
+
+        self.l.debug("Platform: {}".format(platform))
+
+        for line in r.text.split("\n"):
+            if platform in line:
+                remote_ver = line.split(':')[1].strip()
+
+        self.l.error("Remote version: {}".format(remote_ver))
+
+        return local_ver < remote_ver
+
+
+    def upgrade(self):
 
         """Performs some startup checks"""
 
-        # Create the folder to store the graphical_abstracts if
-        # it doesn't exist
-        # http://stackoverflow.com/questions/12517451/python-automatically-creating-directories-with-file-output
-        os.makedirs(self.DATA_PATH + '/graphical_abstracts', exist_ok=True)
-
         # Check if the running ChemBrows is a frozen app
-        if not self.debug_mod:
+        if self.debug_mod:
+            return
 
-            # # IMPORTANT: for now, disable remote updates
-            # # TODO: make the update process work
-            # return
+        mes = """
+        A new version of ChemBrows is available.<br/>
+        You can download it from
+        <a href='http://www.chembrows.com/website/index.php?static2/downloads'>
+        www.chembrows.com</a>
+        """.replace('    ', '')
 
-            self.updater = Updater(self.l)
+        if self.availableUpgrade():
 
-            if self.updater is None:
-                return
+            QtWidgets.QMessageBox.information(self, "New version available",
+                                              mes,
+                                              QtWidgets.QMessageBox.Ok)
 
-            # If an update is available, ask the user if he wants to
-            # update immediately
-            if self.updater.update_available:
+        if self.justUpgraded():
 
-                # Hide the splash screen if there is an update.
-                # On windows, the message box was hidden by the splash
-                self.splash.finish(self)
+            with open(os.path.join(self.resource_dir,
+                      'config/whatsnew.txt'), 'r', encoding='utf-8') as f:
+                message = f.read()
 
-                mes = "A new version of ChemBrows is available. Upgrade now ?"
-                choice = QtGui.QMessageBox.question(self, "Update of ChemBrows", mes,
-                                                    QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok,
-                                                    defaultButton=QtGui.QMessageBox.Ok)
-
-                # If the user says yes, start the update
-                if choice == QtGui.QMessageBox.Ok:
-                    self.l.info("Starting update")
-
-                    def whenDone():
-
-                        """Slot called when the update id finished"""
-
-                        self.l.info("Update finished")
-                        self.progress.reset()
-
-                        # Display a dialog box to tell the user to restart the program
-                        message = "ChemBrows is now up-to-date. Restart it to use the latest version"
-                        QtGui.QMessageBox.information(self, "ChemBrows update", message, QtGui.QMessageBox.Ok)
-
-                        del self.updater
-
-                    # Display a QProgressBar while updating
-                    app.processEvents()
-                    self.progress = QtGui.QProgressDialog("Updating ChemBrows...", None, 0, 0, self)
-                    self.progress.setWindowTitle("Updating")
-                    self.progress.show()
-                    app.processEvents()
-
-                    self.updater.finished.connect(whenDone)
-                    self.updater.start()
+            QtWidgets.QMessageBox.information(self, "What is new ?",
+                                              message,
+                                              QtWidgets.QMessageBox.Ok)
 
 
     def logConnection(self):
@@ -259,7 +300,9 @@ class Fenetre(QtGui.QMainWindow):
         if user_id is None:
             return
 
-        with open(os.path.join(self.resource_dir, 'config/version.txt'), 'r') as version_file:
+        with open(os.path.join(self.resource_dir, 'config/version.txt'), 'r',
+                  encoding='utf-8') as version_file:
+
             version = version_file.read()
 
         count_query = QtSql.QSqlQuery(self.bdd)
@@ -269,38 +312,24 @@ class Fenetre(QtGui.QMainWindow):
         nbr_entries = count_query.record().value(0)
         self.l.info("Nbr of entries: {}".format(nbr_entries))
 
-        count_query.exec_("SELECT MAX(id) FROM papers")
-        count_query.first()
-        self.max_id_for_new = count_query.record().value(0)
-
-        if type(self.max_id_for_new) is not int:
-            self.max_id_for_new = 0
-
-        self.l.info("Max id for new: {}".format(self.max_id_for_new))
-
         payload = {'nbr_entries': nbr_entries,
-                   'journals': self.getJournalsToCare(),
+                   'journals': self.getJournalsToParse(),
                    'user_id': user_id,
                    'version': version,
-                  }
+                   }
 
         try:
             if self.debug_mod:
-                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=1)
+                req = requests.post('http://chembrows.com/cgi-bin/log.py',
+                                    params=payload, timeout=1)
             else:
-                req = requests.post('http://chembrows.com/cgi-bin/log.py', params=payload, timeout=5)
+                req = requests.post('http://chembrows.com/cgi-bin/log.py',
+                                    params=payload, timeout=5)
 
             self.l.info('Server response: {}'.format(req.text))
 
-        except requests.exceptions.ReadTimeout:
-            self.l.error("logConnection. ReadTimeout while contacting the server")
-            return
-        except requests.exceptions.ConnectTimeout:
-            self.l.error("logConnection. ConnectionTimeout while contacting the server")
-            return
         except Exception as e:
-            self.l.critical("logConnection: cannot reach server. {}".format(e))
-            self.l.critical(traceback.format_exc())
+            self.l.error("logConnection: {}".format(e), exc_info=True)
             return
 
         if "user_id unregistered" in req.text:
@@ -308,10 +337,58 @@ class Fenetre(QtGui.QMainWindow):
             self.l.error("The user_id was wrong. Set it to None")
 
 
+    def correctionVersion(self):
+
+        """Called during boot, to correct problems between versions"""
+
+        # Get articles in ToRead list, old option
+        ids_waited = self.options.value("ids_waited", [])
+
+        if ids_waited:
+            articles = {}
+
+            query = QtSql.QSqlQuery(self.bdd)
+
+            requete = "SELECT * FROM papers WHERE id IN ("
+
+            # Building the query
+            for each_id in ids_waited:
+                if each_id != ids_waited[-1]:
+                    requete = requete + str(each_id) + ", "
+                else:
+                    requete = requete + str(each_id) + ")"
+
+            query.exec_(requete)
+
+            while query.next():
+                record = query.record()
+                articles[record.value('id')] = record.value('new')
+
+            searches_saved = QtCore.QSettings(os.path.join(self.DATA_PATH,
+                                                           "config",
+                                                           "searches.ini"),
+                                              QtCore.QSettings.IniFormat)
+
+            # Store the articles and their read states in a dictionary
+            searches_saved.setValue("ToRead/articles", articles)
+
+            self.options.remove('ids_waited')
+
+        # Remove bool for dark background. Removed in version 0.9.9
+        self.options.remove('Window/dark')
+
+
     def finishBoot(self):
 
         """Method to register a new user. When it is done,
         start the tutorial"""
+
+        # Create the folder to store the graphical_abstracts if
+        # it doesn't exist
+        # http://stackoverflow.com/questions/12517451/python-automatically-creating-directories-with-file-output
+        os.makedirs(os.path.join(self.DATA_PATH, 'graphical_abstracts'),
+                    exist_ok=True)
+
 
         # Check if there is a user_id. If not, register the user
         if self.options.value("user_id", None) is None:
@@ -326,9 +403,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Shows a dialogBox w/ the version number"""
 
-        with open(os.path.join(self.resource_dir,
-                  'config/version.txt'), 'r') as version_file:
-            version = version_file.read()
+        version = functions.getVersion()
 
         mes = """
         You are using ChemBrows {}<br/><br/>
@@ -345,7 +420,8 @@ class Fenetre(QtGui.QMainWindow):
         """.replace('    ', '').format(version)
 
         # Use this complicated messageBox to get clickable URLs
-        box = QtGui.QMessageBox(QtGui.QMessageBox.Information, 'About ChemBrows', mes)
+        box = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information,
+                                'About ChemBrows', mes)
         box.setTextFormat(QtCore.Qt.RichText)
         box.setText(mes)
         box.exec()
@@ -356,20 +432,26 @@ class Fenetre(QtGui.QMainWindow):
         """Method to connect to the database. Creates it
         if it does not exist"""
 
+        if not os.path.exists(os.path.join(self.DATA_PATH, "fichiers.sqlite")):
+            self.l.info("db doesn't exist. Creating.")
+
         # Set the database
         self.bdd = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-        self.bdd.setDatabaseName(self.DATA_PATH + "/fichiers.sqlite")
+        self.bdd.setDatabaseName(os.path.join(self.DATA_PATH,
+                                              "fichiers.sqlite"))
 
         self.bdd.open()
 
         query = QtSql.QSqlQuery(self.bdd)
-        query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY AUTOINCREMENT, percentage_match REAL, \
-                     doi TEXT, title TEXT, date TEXT, journal TEXT, authors TEXT, abstract TEXT, graphical_abstract TEXT, \
-                     liked INTEGER, url TEXT, new INTEGER, topic_simple TEXT, author_simple TEXT)")
+        query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY\
+                    AUTOINCREMENT, percentage_match REAL, doi TEXT, title\
+                    TEXT, date TEXT, journal TEXT, authors TEXT, abstract\
+                    TEXT, graphical_abstract TEXT, liked INTEGER, url TEXT,\
+                    new INTEGER, topic_simple TEXT, author_simple TEXT)")
 
         if self.debug_mod:
-            query.exec_("CREATE TABLE IF NOT EXISTS debug \
-                        (id INTEGER PRIMARY KEY AUTOINCREMENT, doi TEXT, \
+            query.exec_("CREATE TABLE IF NOT EXISTS debug\
+                        (id INTEGER PRIMARY KEY AUTOINCREMENT, doi TEXT,\
                         title TEXT, journal TEXT, url TEXT)")
 
         # Create the model for the new tab
@@ -382,74 +464,74 @@ class Fenetre(QtGui.QMainWindow):
         self.model.setTable("papers")
         self.model.select()
 
+        count_query = QtSql.QSqlQuery(self.bdd)
 
-    def getJournalsToCare(self):
+        count_query.exec_("SELECT COUNT(id) FROM papers")
+        count_query.first()
+        nbr_entries = count_query.record().value(0)
+        self.l.info("Nbr of entries: {}".format(nbr_entries))
+
+        count_query.exec_("SELECT MAX(id) FROM papers")
+        count_query.first()
+        max_id_for_new = count_query.record().value(0)
+
+        if type(max_id_for_new) is not int:
+            max_id_for_new = 0
+
+        self.l.info("Max id for new: {}".format(max_id_for_new))
+
+
+    def getJournalsToParse(self):
 
         """Get the journals checked in the settings window"""
 
-        # Create a list to store the journals checked in the settings window
-        journals = self.options.value("journals_to_parse", [])
-
-        # If no journals to care in the settings,
-        # take them all. So build a journals_to_care list
+        # If no journals to parse in the settings,
+        # parse them all. So build a journals_to_parse list
         # with all the journals
+        journals = self.options.value("journals_to_parse", [])
         if not journals:
-            # self.journals_to_care = []
-            for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
-                with open(os.path.join(self.resource_dir, 'journals/{0}'.format(company)), 'r') as config:
-                    for line in config:
-                        # Take the abbreviation
-                        journals.append(line.split(" : ")[1])
+            journals = []
+            for company in hosts.getCompanies():
+                journals += hosts.getJournals(company)[1]
+
+            self.options.remove("journals_to_parse")
+            self.options.setValue("journals_to_parse", journals)
 
         return journals
 
 
     def parse(self):
 
-        """Method to start the parsing of the data"""
+        """Method to start parsing the data"""
+
+        self.start_time = datetime.datetime.now()
 
         self.parsing = True
         self.blocking_ui = True
 
-        self.journals_to_parse = self.options.value("journals_to_parse", [])
-
-        # If no journals to parse in the settings,
-        # parse them all. So build a journals_to_parse list
-        # with all the journals
-        if not self.journals_to_parse:
-            self.journals_to_parse = []
-            for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
-                with open(os.path.join(self.resource_dir, 'journals/{0}'.format(company)), 'r') as config:
-                    for line in config:
-                        self.journals_to_parse.append(line.split(" : ")[1])
-
-            self.options.remove("journals_to_parse")
-            self.options.setValue("journals_to_parse", self.journals_to_parse)
-
-        self.urls = []
-        for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
-            with open(os.path.join(self.resource_dir, 'journals/{0}'.format(company)), 'r') as config:
-                for line in config:
-                    if line.split(" : ")[1] in self.journals_to_parse:
-                        line = line.split(" : ")[2]
-                        line = line.strip()
-                        self.urls.append(line)
-
-        # Create a dictionnary w/ all the data concerning the journals
-        # implemented in the program: names, abbreviations, urls
-        self.dict_journals = {}
-        for company in os.listdir(os.path.join(self.resource_dir, 'journals')):
-            company = company.split('.')[0]
-            self.dict_journals[company] = hosts.getJournals(company)
-
-        # Disabling the parse action to avoid double start
+        # Disables the parse action to avoid double start
         self.parseAction.setEnabled(False)
 
-        self.start_time = datetime.datetime.now()
+        journals_to_parse = self.getJournalsToParse()
+
+        # Create a dictionary w/ all the data concerning the journals
+        # implemented in the program: names, abbreviations, urls.
+        # Create a list of urls to parse data
+        self.urls = []
+        self.dict_journals = {}
+        for company in hosts.getCompanies():
+            data_company = hosts.getJournals(company)
+            self.dict_journals[company] = data_company
+
+            for abb, url in zip(data_company[1], data_company[2]):
+                if abb in journals_to_parse:
+                    self.urls.append(url)
 
         # Display a progress dialog box
-        self.progress = QtGui.QProgressDialog("Collecting in progress", "Cancel", 0, 100, self)
+        self.progress = QtWidgets.QProgressDialog("Collecting in progress",
+                                                  "Cancel", 0, 100, self)
         self.progress.setWindowTitle("Collecting articles")
+        self.progress.setModal(True)
         self.progress.canceled.connect(self.cancelRefresh)
         self.progress.show()
 
@@ -461,30 +543,34 @@ class Fenetre(QtGui.QMainWindow):
         self.l.debug("IdealThreadCount: {}".format(max_nbr_threads))
         # max_nbr_threads = 1
 
-        # # Start a sql transaction here. Will commit all the bdd
-        # # changes when the parsing is finished
-        # self.bdd.transaction()
-
         # Counter to count the new entries in the database
-        self.counter = 0
+        self.counter_added = 0
         self.counter_updates = 0
         self.counter_rejected = 0
+        self.counter_articles_failed = 0
+        self.counter_images_failed = 0
 
-        # # List to store the threads.
-        # # The list is cleared when the method is started
+        self.browsing_session = requests.session()
+
+        # List of failed dl of RSS feeds
+        self.list_failed_rss = []
+
+        # List to store the threads.
+        # The list is cleared when the method is started
         self.list_threads = []
         self.count_threads = 0
         for i in range(max_nbr_threads):
             try:
                 url = self.urls[i]
-                worker = Worker(self.l, self.bdd, self)
-                worker.setUrl(url)
+                worker = Worker(self)
+                worker.url_feed = url
                 worker.finished.connect(self.checkThreads)
                 self.urls.remove(url)
                 self.list_threads.append(worker)
                 worker.start()
-                app.processEvents()
+                QtWidgets.qApp.processEvents()
             except IndexError:
+                self.l.debug("parse, self.urls, IndexError")
                 break
 
 
@@ -510,7 +596,7 @@ class Fenetre(QtGui.QMainWindow):
                 del worker
 
         # Display the nbr of finished threads
-        self.l.info("Done: {}/{}".format(self.count_threads, self.urls_max))
+        self.l.debug("Done: {}/{}".format(self.count_threads, self.urls_max))
 
         # # Display the progress of the parsing w/ the progress bar
         percent = self.count_threads * 100 / self.urls_max
@@ -518,15 +604,41 @@ class Fenetre(QtGui.QMainWindow):
         self.progress.setValue(round(percent, 0))
         if percent >= 100:
             self.progress.reset()
-            app.processEvents()
+            QtWidgets.qApp.processEvents()
 
         if self.count_threads == self.urls_max:
 
-            self.l.info("{} new entries added to the database".format(self.counter))
-            self.l.info("{} entries rejected".format(self.counter_rejected))
-            self.l.info("{} attempts to update entries".format(self.counter_updates))
+            self.l.info("{} new entries added to the database".
+                        format(self.counter_added))
+            self.l.info("{} entries rejected".
+                        format(self.counter_rejected))
+            self.l.info("{} attempts to update entries\n".
+                        format(self.counter_updates))
+
+            self.l.info("{} RSS feeds were not downloaded:".
+                        format(len(self.list_failed_rss)))
+            for feed in self.list_failed_rss:
+                self.l.debug(feed)
+            self.l.debug("\n")
+
+            self.l.info("{} articles failed".
+                        format(self.counter_articles_failed))
+            self.l.info("{} images failed".
+                        format(self.counter_images_failed))
+
+            total_time = datetime.datetime.now() - self.start_time
+            self.l.debug("Total refresh time: {}".
+                         format(total_time))
+
+            # # TODO: checker cette instruction, should crash
+            if self.counter_added > 0:
+                self.l.debug("Time per paper: {} seconds".
+                             format(total_time.seconds / (self.counter_added + self.counter_updates)))
+            else:
+                self.l.debug("Time per paper: irrelevant, 0 paper added")
 
             self.calculatePercentageMatch()
+
             self.parseAction.setEnabled(True)
             self.l.info("Parsing data finished. Enabling parseAction")
 
@@ -541,13 +653,13 @@ class Fenetre(QtGui.QMainWindow):
         else:
             if self.urls:
                 self.l.debug("STARTING NEW THREAD")
-                worker = Worker(self.l, self.bdd, self)
-                worker.setUrl(self.urls[0])
+                worker = Worker(self)
+                worker.url_feed = self.urls[0]
                 worker.finished.connect(self.checkThreads)
                 self.urls.remove(worker.url_feed)
                 self.list_threads.append(worker)
                 worker.start()
-                app.processEvents()
+                QtWidgets.qApp.processEvents()
 
 
     def cancelRefresh(self):
@@ -560,30 +672,31 @@ class Fenetre(QtGui.QMainWindow):
         # Cancel all the futures of each worker
         for worker in self.list_threads:
             for future in worker.list_futures:
-                app.processEvents()
+                QtWidgets.qApp.processEvents()
                 if type(future) is not bool:
                     future.cancel()
             self.l.debug("Killed all the futures for this worker")
 
         # Display a smooth progress bar
-        self.progress = QtGui.QProgressDialog("Canceling...", None, 0, 0, self)
-        self.progress.setWindowTitle("Canceling refresh")
+        self.progress = QtWidgets.QProgressDialog("Cancelling...", None, 0, 0, self)
+        self.progress.setWindowTitle("Cancelling refresh")
         self.progress.show()
 
         while False in [worker.isFinished() for worker in self.list_threads]:
-            app.processEvents()
+            QtWidgets.qApp.processEvents()
 
         self.progress.setLabelText("Loading notifications...")
 
         # Start loadNotifications in a thread (CPU consumming),
         # and display a smooth progressBar while in the function
         # But only if some articles were collected
-        if self.counter > 0:
+        if self.counter_added > 0:
             worker = LittleThread(self.loadNotifications)
             worker.start()
 
             while worker.isRunning():
-                app.processEvents()
+                QtWidgets.qApp.processEvents()
+                worker.sleep(0.5)
 
         self.updateCellSize()
         self.progress.reset()
@@ -598,84 +711,82 @@ class Fenetre(QtGui.QMainWindow):
         appelée à la création de la classe"""
 
         # Action to quit
-        self.exitAction = QtGui.QAction('&Quit', self)
+        self.exitAction = QtWidgets.QAction('&Quit', self)
         self.exitAction.setShortcut('Ctrl+Q')
         self.exitAction.setStatusTip("Quit")
         self.exitAction.triggered.connect(self.closeEvent)
 
         # Action to refresh the posts
-        self.parseAction = QtGui.QAction('&Refresh', self)
+        self.parseAction = QtWidgets.QAction('&Refresh', self)
         self.parseAction.setShortcut('F5')
         self.parseAction.setToolTip("Refresh: download new posts")
         self.parseAction.triggered.connect(self.parse)
 
         # Action to calculate the percentages of match
-        self.calculatePercentageMatchAction = QtGui.QAction('&Percentages', self)
+        self.calculatePercentageMatchAction = QtWidgets.QAction('&Percentages', self)
         self.calculatePercentageMatchAction.setShortcut('F6')
         self.calculatePercentageMatchAction.setToolTip("Re-calculate Hot Paperness")
         self.calculatePercentageMatchAction.triggered.connect(lambda: self.calculatePercentageMatch(True))
 
         # Action to like a post
-        self.toggleLikeAction = QtGui.QAction('Toggle like', self)
+        self.toggleLikeAction = QtWidgets.QAction('Toggle like', self)
         self.toggleLikeAction.setShortcut('L')
         self.toggleLikeAction.triggered.connect(self.toggleLike)
 
         # Action to open the post in browser
-        self.openInBrowserAction = QtGui.QAction('Open post in browser', self)
+        self.openInBrowserAction = QtWidgets.QAction('Open post in browser', self)
         self.openInBrowserAction.triggered.connect(self.openInBrowser)
         self.openInBrowserAction.setShortcut('Ctrl+W')
 
-        # Action to update the model. For TEST
-        # self.updateAction = QtGui.QAction('Update model', self)
-        # self.updateAction.triggered.connect(self.updateModel)
-        # self.updateAction.setShortcut('F7')
-
         # Action to show a settings window
-        self.settingsAction = QtGui.QAction('Preferences', self)
+        self.settingsAction = QtWidgets.QAction('Preferences', self)
         self.settingsAction.triggered.connect(lambda: Settings(self))
 
-        self.tutoAction = QtGui.QAction('Tutorial', self)
+        self.tutoAction = QtWidgets.QAction('Tutorial', self)
         self.tutoAction.triggered.connect(lambda: Tuto(self))
 
         # Action to show a settings window
-        self.showAboutAction = QtGui.QAction('About', self)
+        self.showAboutAction = QtWidgets.QAction('About', self)
         self.showAboutAction.triggered.connect(self.showAbout)
 
         # # Action so show new articles
-        # self.searchNewAction = QtGui.QAction('View unread', self)
+        # self.searchNewAction = QtWidgets.QAction('View unread', self)
         # self.searchNewAction.setToolTip("Display unread articles")
         # self.searchNewAction.triggered.connect(self.searchNew)
 
         # Action to toggle the read state of an article
-        self.toggleReadAction = QtGui.QAction('Toggle read', self)
+        self.toggleReadAction = QtWidgets.QAction('Toggle read', self)
         self.toggleReadAction.setShortcut('M')
         self.toggleReadAction.triggered.connect(self.toggleRead)
 
         # Action to change the sorting method of the views. In the menu
-        self.sortingPercentageAction = QtGui.QAction('By Hot Paperness', self, checkable=True)
+        self.sortingPercentageAction = QtWidgets.QAction('By Hot Paperness', self, checkable=True)
         self.sortingPercentageAction.triggered.connect(lambda: self.changeSortingMethod(0))
 
         # Action to change the sorting method of the views. In the menu
-        self.sortingDateAction = QtGui.QAction('By date', self, checkable=True)
+        self.sortingDateAction = QtWidgets.QAction('By date', self, checkable=True)
         self.sortingDateAction.triggered.connect(lambda: self.changeSortingMethod(1))
 
         # Action to change the sorting method of the views, reverse the results. In the menu
-        self.sortingReversedAction = QtGui.QAction('Reverse order', self, checkable=True)
+        self.sortingReversedAction = QtWidgets.QAction('Reverse order', self, checkable=True)
         self.sortingReversedAction.triggered.connect(lambda: self.changeSortingMethod(self.sorting_method, True))
 
         # Action to change the sorting method of the views, reverse the results. In the menu
-        self.emptyWaitAction = QtGui.QAction('Empty to-read list', self)
+        self.emptyWaitAction = QtWidgets.QAction('Empty to-read list', self)
         self.emptyWaitAction.triggered.connect(self.emptyWait)
 
         # Action add/remove a post of the to-read list. For the right click
-        self.toggleWaitAction = QtGui.QAction('Add/remove to to-read list', self)
+        self.toggleWaitAction = QtWidgets.QAction('Add/remove to to-read list', self)
         self.toggleWaitAction.triggered.connect(self.toggleWait)
 
-        self.showLikesAction = QtGui.QAction('Show liked articles', self)
+        self.showLikesAction = QtWidgets.QAction('Show liked articles', self)
         self.showLikesAction.triggered.connect(self.showLikes)
 
+        self.showReadAction = QtWidgets.QAction('Show read articles', self)
+        self.showReadAction.triggered.connect(self.showRead)
+
         # Action to serve use as a separator
-        self.separatorAction = QtGui.QAction(self)
+        self.separatorAction = QtWidgets.QAction(self)
         self.separatorAction.setSeparator(True)
 
 
@@ -747,13 +858,35 @@ class Fenetre(QtGui.QMainWindow):
         table.selectionModel().clearSelection()
 
 
-    def updateModel(self):
+    def showRead(self):
 
-        """Debug function, allows to update a model
-        with a button, at any time. Will not be used by
-        the final user"""
+        """
+        Show read (new) articles
+        new=1, which means unread
+        This method works exactly like showLikes()
+        """
 
-        self.updateView()
+        # Use the proxy to filter the column 'new'
+        proxy = self.list_proxies_in_tabs[self.onglets.currentIndex()]
+        proxy.setFilterRegExp(QtCore.QRegExp("[0]"))
+        proxy.setFilterKeyColumn(11)
+
+        # Get the maximum nbr of unread articles
+        count_read_max = QtSql.QSqlQuery(self.bdd)
+        count_read_max.exec_("SELECT COUNT(id) FROM papers WHERE new=0")
+        count_read_max.first()
+        nbr_read = count_read_max.record().value(0)
+
+        while (proxy.canFetchMore(QtCore.QModelIndex()) and
+               proxy.rowCount() < nbr_read):
+
+            proxy.fetchMore(QtCore.QModelIndex())
+
+        self.updateCellSize()
+
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
+        table.verticalScrollBar().setSliderPosition(0)
+        table.selectionModel().clearSelection()
 
 
     # @profile
@@ -765,11 +898,8 @@ class Fenetre(QtGui.QMainWindow):
         # http://stackoverflow.com/questions/9249500/
         # pyside-pyqt-detect-if-user-trying-to-close-window
 
-        # Save the to-read list
-        if self.waiting_list.list_id_articles:
-            self.options.setValue("ids_waited", self.waiting_list.list_id_articles)
-        else:
-            self.options.remove("ids_waited")
+        # Log connection
+        self.logConnection()
 
         # Record the window state and appearance
         self.options.beginGroup("Window")
@@ -781,9 +911,6 @@ class Fenetre(QtGui.QMainWindow):
         self.options.setValue("window_geometry", self.saveGeometry())
         self.options.setValue("window_state", self.saveState())
 
-        for index, each_table in enumerate(self.list_tables_in_tabs):
-            self.options.setValue("header_state{0}".format(index), each_table.horizontalHeader().saveState())
-
         # Save the state of the window's splitter
         self.options.setValue("final_splitter", self.splitter2.saveState())
 
@@ -791,13 +918,37 @@ class Fenetre(QtGui.QMainWindow):
         self.options.setValue("sorting_method", self.sorting_method)
         self.options.setValue("sorting_reversed", self.sorting_reversed)
 
-        self.options.setValue("dark", self.dark)
+        # TODO
+        # self.options.setValue("dark", self.dark)
+
+        for index, each_table in enumerate(self.list_tables_in_tabs):
+            self.options.setValue("header_state{0}".format(index),
+                                  each_table.horizontalHeader().saveState())
 
         self.options.endGroup()
 
-        # Be sure self.options finished its tasks.
+        searches_saved = QtCore.QSettings(os.path.join(self.DATA_PATH,
+                                                       "config",
+                                                       "searches.ini"),
+                                          QtCore.QSettings.IniFormat)
+
+        # Save the to-read list
+        if self.waiting_list.articles:
+            searches_saved.setValue("ToRead/articles",
+                                    list(self.waiting_list.articles.keys()))
+        else:
+            searches_saved.remove("ToRead/articles")
+
+        for index, each_table in enumerate(self.list_tables_in_tabs):
+            tab_title = self.onglets.tabText(index)
+            if tab_title != 'All articles':
+                searches_saved.setValue("{}/articles".format(tab_title),
+                                        each_table.articles)
+
+        # Be sure ini files finished their tasks
         # Correct a bug
         self.options.sync()
+        searches_saved.sync()
 
         self.model.submitAll()
 
@@ -805,7 +956,7 @@ class Fenetre(QtGui.QMainWindow):
         self.bdd.removeDatabase(self.DATA_PATH + "/fichiers.sqlite")
         self.bdd.close()
 
-        QtGui.qApp.quit()
+        QtWidgets.qApp.quit()
 
         self.l.info("Closing the program")
 
@@ -822,8 +973,6 @@ class Fenetre(QtGui.QMainWindow):
 
         self.l.debug("Starting loadNotifications")
 
-        start_time = datetime.datetime.now()
-
         count_query = QtSql.QSqlQuery(self.bdd)
         count_query.setForwardOnly(True)
 
@@ -835,15 +984,8 @@ class Fenetre(QtGui.QMainWindow):
             if tab_number is not None and self.list_tables_in_tabs.index(table) != tab_number:
                 continue
 
-            # Empty these lists, because when loadNotifications is called
-            # several times during the use, the nbr of unread articles is
-            # added to the nbr of notifications
-            table.list_new_ids = []
-            table.list_id_articles = []
-
-            # Try to speed things up
-            append_new = table.list_new_ids.append
-            append_articles = table.list_id_articles.append
+            # Reset the articles dictionary, in any case
+            table.articles = {}
 
             req_str = self.refineBaseQuery(table.base_query,
                                            table.topic_entries,
@@ -851,46 +993,54 @@ class Fenetre(QtGui.QMainWindow):
                                            table.radio_states)
             count_query.exec_(req_str)
 
-            id_index = count_query.record().indexOf('id')
-            new_index = count_query.record().indexOf('new')
+            id_bdd = count_query.record().indexOf('id')
+            new = count_query.record().indexOf('new')
 
             while count_query.next():
                 record = count_query.record()
-                id_value = record.value(id_index)
-                append_articles(id_value)
+                table.articles[record.value(id_bdd)] = record.value(new)
 
-                if record.value(new_index) == 1:
-                    append_new(id_value)
+        # # Set the notifications for each tab
+        for index in range(1, self.onglets.count()):
+            table = self.onglets.widget(index)
+            notifs = collec.Counter(table.articles.values())[1]
+            self.onglets.setNotifications(index, notifs)
 
-            # Set the notifications for each tab
-            for index in range(1, self.onglets.count()):
-                notifs = len(self.onglets.widget(index).list_new_ids)
-                self.onglets.setNotifications(index, notifs)
-
-        self.l.debug("loadNotifications took {}".
-                     format(datetime.datetime.now() - start_time))
+        self.l.debug("loadNotifications terminated")
 
 
     def restoreSettings(self):
 
         """Restore the prefs of the window"""
 
-        # Restore the to-read list
-        ids_waited = self.options.value("ids_waited", [])
-        self.createToRead(ids_waited)
+        searches_saved = QtCore.QSettings(self.DATA_PATH +
+                                          "/config/searches.ini",
+                                          QtCore.QSettings.IniFormat)
 
-        searches_saved = QtCore.QSettings(self.DATA_PATH + "/config/searches.ini", QtCore.QSettings.IniFormat)
+        # # Restore the to-read list
+        self.createToRead(searches_saved)
 
         # Restore the saved searches
         for search_name in searches_saved.childGroups():
+
+            # By pass the to-read list, already restored
+            if search_name == "ToRead":
+                continue
+
             query = searches_saved.value("{0}/sql_query".format(search_name))
             topic_entries = searches_saved.value("{0}/topic_entries".format(search_name), None)
             author_entries = searches_saved.value("{0}/author_entries".format(search_name), None)
             radio_states = searches_saved.value("{0}/radio_states".format(search_name), None)
-            self.createSearchTab(search_name, query,
-                                 topic_options=topic_entries,
-                                 author_options=author_entries,
-                                 radio_states=radio_states)
+            table = self.createSearchTab(search_name, query,
+                                         topic_options=topic_entries,
+                                         author_options=author_entries,
+                                         radio_states=radio_states)
+            table.articles = searches_saved.value("{0}/articles".format(search_name), {})
+
+            tab_index = self.list_tables_in_tabs.index(table)
+
+            notifs = collec.Counter(table.articles.values())[1]
+            self.onglets.setNotifications(tab_index, notifs)
 
         # If windows settings are available, import and use them
         if "Window" in self.options.childGroups():
@@ -898,10 +1048,10 @@ class Fenetre(QtGui.QMainWindow):
             self.restoreGeometry(self.options.value("Window/window_geometry"))
             self.restoreState(self.options.value("Window/window_state"))
 
-            for index, each_table in enumerate(self.list_tables_in_tabs):
-                header_state = self.options.value("Window/header_state{0}".format(index))
-                if header_state is not None:
-                    each_table.horizontalHeader().restoreState(self.options.value("Window/header_state{0}".format(index)))
+            # for index, each_table in enumerate(self.list_tables_in_tabs):
+                # header_state = self.options.value("Window/header_state{0}".format(index))
+                # if header_state is not None:
+                    # each_table.horizontalHeader().restoreState(self.options.value("Window/header_state{0}".format(index)))
 
             self.splitter2.restoreState(self.options.value("Window/final_splitter"))
 
@@ -915,7 +1065,7 @@ class Fenetre(QtGui.QMainWindow):
 
             # Restore the journals selected (buttons pushed)
             self.tags_selected = self.options.value("Window/tags_selected", [])
-            if self.tags_selected == self.getJournalsToCare():
+            if self.tags_selected == self.getJournalsToParse():
                 self.tags_selected = []
             if self.tags_selected:
                 for button in self.list_buttons_tags:
@@ -929,37 +1079,21 @@ class Fenetre(QtGui.QMainWindow):
 
         self.changeSortingMethod(self.sorting_method, self.sorting_reversed)
 
-        self.getJournalsToCare()
+        self.getJournalsToParse()
 
         # Timer to get the dimensions of the window right.
         # If the window is displayed too fast, I can't get the dimensions right
         QtCore.QTimer.singleShot(50, self.updateCellSize)
 
 
-    def eventFilter(self, source, event):
+    def eventFilter(self, source, event) -> bool:
 
         """Sublclassing of this method allows to hide/show
         the journals filters on the left, through a mouse hover event.
         It also blocks the user interactions with the UI while parsing"""
 
         # do not hide menubar when menu shown
-        if QtGui.qApp.activePopupWidget() is None:
-            # If parsing running, block some user inputs
-            if self.blocking_ui:
-                if (type(source) == QtGui.QPushButton and
-                        source.text() == 'Cancel'):
-                    forbidden = []
-                else:
-                    forbidden = [QtCore.QEvent.KeyPress,
-                                 QtCore.QEvent.KeyRelease,
-                                 QtCore.QEvent.MouseButtonPress,
-                                 QtCore.QEvent.MouseButtonDblClick,
-                                 QtCore.QEvent.MouseMove, QtCore.QEvent.Wheel]
-                if event.type() == QtCore.QEvent.Close:
-                    self.progress.reset()
-                    return False
-                elif event.type() in forbidden:
-                    return True
+        if QtWidgets.qApp.activePopupWidget() is None:
             if event.type() == QtCore.QEvent.MouseMove:
                 try:
                     if self.scroll_tags.isHidden():
@@ -976,7 +1110,8 @@ class Fenetre(QtGui.QMainWindow):
                         rect.setWidth(25)
                         rect.setTop(table_y)
 
-                        if rect.contains(event.globalPos()):
+                        if (rect.contains(event.globalPos()) and
+                                not self.blocking_ui):
                             self.scroll_tags.show()
                     else:
                         width_layout = self.hbox_central.getContentsMargins()[2]
@@ -996,7 +1131,7 @@ class Fenetre(QtGui.QMainWindow):
                 self.scroll_tags.hide()
                 self.updateCellSize()
 
-        return QtGui.QMainWindow.eventFilter(self, source, event)
+        return QtWidgets.QMainWindow.eventFilter(self, source, event)
 
 
     def resizeEvent(self, event):
@@ -1005,7 +1140,7 @@ class Fenetre(QtGui.QMainWindow):
         Reimplemented to resize the cell when the window
         is resized"""
 
-        super(Fenetre, self).resizeEvent(event)
+        super(MyWindow, self).resizeEvent(event)
 
         QtCore.QTimer.singleShot(30, self.updateCellSize)
 
@@ -1025,7 +1160,7 @@ class Fenetre(QtGui.QMainWindow):
         new_pos = QtCore.QPoint(pos.x() + 10, pos.y() + 107)
 
         # Create the right-click menu and add the actions
-        menu = QtGui.QMenu()
+        menu = QtWidgets.QMenu()
         menu.addAction(self.toggleLikeAction)
         menu.addAction(self.toggleReadAction)
         menu.addAction(self.openInBrowserAction)
@@ -1068,10 +1203,7 @@ class Fenetre(QtGui.QMainWindow):
         self.button_advanced_search.clicked.connect(lambda: AdvancedSearch(self))
 
         self.button_zoom_more.clicked.connect(lambda: self.text_abstract.zoom(True))
-
         self.button_zoom_less.clicked.connect(lambda: self.text_abstract.zoom(False))
-
-        self.button_color_read.clicked.connect(self.text_abstract.darkAndLight)
 
         self.button_search_new.clicked.connect(self.searchNew)
 
@@ -1089,9 +1221,6 @@ class Fenetre(QtGui.QMainWindow):
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         table.resizeCells(new_size)
         table.updateHeight()
-
-        # for table in self.list_tables_in_tabs:
-            # table.verticalHeader().setDefaultSectionSize(table.height() * 0.2)
 
 
     def displayInfos(self):
@@ -1117,20 +1246,36 @@ class Fenetre(QtGui.QMainWindow):
         abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 7).data()
 
         try:
-            # Checkings on the graphical abstract. Add the path of the picture to
-            # the abstract if ok
+            # Checkings on the graphical abstract. Add the path of the picture
+            # to the abstract if ok
             graphical_abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 8).data()
+
             if type(graphical_abstract) is str and graphical_abstract != "Empty":
+
+                path = os.path.abspath(self.DATA_PATH +
+                                       "/graphical_abstracts/" +
+                                       graphical_abstract)
+
+                # Get picture's width
+                width = QtGui.QPixmap(path).width()
+
+                # Set text_abstract initial width attribute
+                self.text_abstract.ini_width = width
+
                 # Get the path of the graphical abstract
-                base = "<br/><br/><p align='center'><img src='file:///{}' align='center' /></p>"
-                base = base.format(os.path.abspath(self.DATA_PATH + "/graphical_abstracts/" + graphical_abstract))
+                base = "<br/><br/><p align='center'><img width={} src='file:///{}' align='center' /></p>"
+
+                base = base.format(width, path)
                 abstract += base
+
         except TypeError:
             self.l.debug("No graphical abstract for this post, displayInfos()")
 
+        # Reset text_abstract's zoom
+        self.text_abstract.resetZoom()
+
         self.button_zoom_less.show()
         self.button_zoom_more.show()
-        self.button_color_read.show()
         self.button_twitter.show()
         self.button_share_mail.show()
 
@@ -1162,13 +1307,13 @@ class Fenetre(QtGui.QMainWindow):
         """Slot to perform some actions when the current tab is changed.
         Mainly sets the tab query to the saved query"""
 
-        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
-        table.updateHeight()
-
         # Submit the changes on the model.
-        # Otherwise, a bug appears: one changing an article, the changes are visible
-        # (trough the proxy) on all the articles at the same place in all tabs
+        # Otherwise, a bug appears: one changing an article, the changes are
+        # visible (trough the proxy) on all the articles at the same place
+        # in all tabs
         self.model.submitAll()
+
+        table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
         self.searchByButton()
 
@@ -1181,10 +1326,21 @@ class Fenetre(QtGui.QMainWindow):
         # splitter moved
         self.updateCellSize()
 
+        # Fix a display bug if toread list empty
+        if not self.waiting_list.articles:
+            table.initUI()
 
-    def createToRead(self, list_ids):
 
-        proxy = QtGui.QSortFilterProxyModel()
+    def createToRead(self, searches_saved):
+
+        """Method to restore the ToRead list.
+        Might be useless, I think it could be done in restoreSettings()"""
+
+        proxy = QtCore.QSortFilterProxyModel()
+
+        # Don't "refresh" the proxy immediately, so when just unread articles
+        # are shown, a click on an article doesn't make it disappear
+        proxy.setDynamicSortFilter(False)
 
         proxy.setSourceModel(self.model)
         self.list_proxies_in_tabs.append(proxy)
@@ -1193,7 +1349,11 @@ class Fenetre(QtGui.QMainWindow):
         tableau = ViewPerso(self)
         tableau.name_search = "ToRead"
 
-        requete = "SELECT * FROM papers WHERE id IN("
+        tableau.articles = searches_saved.value("ToRead/articles", {})
+
+        requete = "SELECT * FROM papers WHERE id IN ("
+
+        list_ids = list(tableau.articles.keys())
 
         # Building the query
         for each_id in list_ids:
@@ -1212,10 +1372,13 @@ class Fenetre(QtGui.QMainWindow):
 
         self.list_tables_in_tabs.append(tableau)
 
+        notifs = collec.Counter(tableau.articles.values())[1]
+
         # Define an attribute for the to read list
         self.waiting_list = tableau
 
         self.onglets.addTab(tableau, "ToRead")
+        self.onglets.setNotifications(1, notifs)
 
 
     def createSearchTab(self, name_search, query, topic_options=None,
@@ -1244,7 +1407,11 @@ class Fenetre(QtGui.QMainWindow):
 
             return
 
-        proxy = QtGui.QSortFilterProxyModel()
+        proxy = QtCore.QSortFilterProxyModel()
+
+        # Don't "refresh" the proxy immediately, so when just unread articles
+        # are shown, a click on an article doesn't make it disappear
+        proxy.setDynamicSortFilter(False)
 
         proxy.setSourceModel(self.model)
         self.list_proxies_in_tabs.append(proxy)
@@ -1266,6 +1433,8 @@ class Fenetre(QtGui.QMainWindow):
 
         self.onglets.addTab(tableau, name_search)
 
+        return tableau
+
 
     def displayTags(self):
 
@@ -1281,7 +1450,7 @@ class Fenetre(QtGui.QMainWindow):
 
         self.list_buttons_tags = []
 
-        journals_to_care = self.getJournalsToCare()
+        journals_to_care = self.getJournalsToParse()
 
         if not journals_to_care:
             return
@@ -1290,7 +1459,7 @@ class Fenetre(QtGui.QMainWindow):
 
         for journal in journals_to_care:
 
-            button = QtGui.QPushButton(journal)
+            button = QtWidgets.QPushButton(journal)
             button.setAccessibleName("button_text_left")
             button.setCheckable(True)
             button.adjustSize()
@@ -1312,7 +1481,7 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to check the journals push buttons"""
 
-        if self.tags_selected == self.getJournalsToCare():
+        if self.tags_selected == self.getJournalsToParse():
             self.tags_selected = []
 
         # Get the button pressed
@@ -1336,15 +1505,16 @@ class Fenetre(QtGui.QMainWindow):
 
         # When last button is uncheck, select all the journals
         if not self.tags_selected:
-            self.tags_selected = self.getJournalsToCare()
+            self.tags_selected = self.getJournalsToParse()
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
         # Update the base query of the to-read list
         if table is self.waiting_list:
-            requete = "SELECT * FROM papers WHERE id IN("
-            for each_id in table.list_id_articles:
-                if each_id != table.list_id_articles[-1]:
+            requete = "SELECT * FROM papers WHERE id IN ("
+            keys = list(table.articles.keys())
+            for each_id in keys:
+                if each_id != keys[-1]:
                     requete = requete + str(each_id) + ", "
                 else:
                     requete = requete + str(each_id) + ")"
@@ -1436,7 +1606,7 @@ class Fenetre(QtGui.QMainWindow):
         while query.next():
             record = query.record()
 
-            # Normalize the authors string of the item
+            # Normalize the authors string of the items
             authors = record.value('authors').split(', ')
             authors = [element.lower() for element in authors]
 
@@ -1468,6 +1638,7 @@ class Fenetre(QtGui.QMainWindow):
                             matching = fnmatch.filter(authors, person)
                             if matching:
                                 list_adding_or.append(True)
+                                continue
                             else:
                                 list_adding_or.append(False)
                         else:
@@ -1476,6 +1647,7 @@ class Fenetre(QtGui.QMainWindow):
                             # if any(person in element for element in authors):
                             if person in authors:
                                 list_adding_or.append(True)
+                                continue
                             else:
                                 list_adding_or.append(False)
 
@@ -1502,6 +1674,7 @@ class Fenetre(QtGui.QMainWindow):
 
         if not list_ids:
             requete = "SELECT * FROM papers WHERE id IN ()"
+
             return requete
         else:
             requete = "SELECT * FROM papers WHERE id IN ("
@@ -1521,6 +1694,8 @@ class Fenetre(QtGui.QMainWindow):
 
         """Slot to search on title and abstract.
         The search can be performed on a particular tab"""
+
+        self.model.submitAll()
 
         # If it's not the main tab, filter through the already-filtered
         # results of a particular tab
@@ -1576,7 +1751,7 @@ class Fenetre(QtGui.QMainWindow):
                 if widget is not None:
                     widget.deleteLater()
 
-                    QtGui.QApplication.processEvents()
+                    QtWidgets.qApp.processEvents()
                 else:
                     self.clearLayout(item.layout())
 
@@ -1603,7 +1778,7 @@ class Fenetre(QtGui.QMainWindow):
             proxy.setFilterRegExp(QtCore.QRegExp('[01]'))
             proxy.setFilterKeyColumn(11)
 
-        self.tags_selected = self.getJournalsToCare()
+        self.tags_selected = self.getJournalsToParse()
         self.searchByButton()
 
         # Clear the search bar
@@ -1611,7 +1786,6 @@ class Fenetre(QtGui.QMainWindow):
 
         self.button_zoom_less.hide()
         self.button_zoom_more.hide()
-        self.button_color_read.hide()
         self.button_twitter.hide()
         self.button_share_mail.hide()
 
@@ -1639,14 +1813,15 @@ class Fenetre(QtGui.QMainWindow):
         for index in range(1, self.onglets.count()):
 
             # remove the id of the list of the new articles
-            if id_bdd in self.onglets.widget(index).list_new_ids and remove:
-                self.onglets.widget(index).list_new_ids.remove(id_bdd)
+            if id_bdd in self.onglets.widget(index).articles and remove:
+                self.onglets.widget(index).articles[id_bdd] = 0
 
             # Add the id to the list of new articles
-            elif id_bdd in self.onglets.widget(index).list_id_articles and not remove:
-                self.onglets.widget(index).list_new_ids.append(id_bdd)
+            elif id_bdd in self.onglets.widget(index).articles and not remove:
+                self.onglets.widget(index).articles[id_bdd] = 1
 
-            notifs = len(self.onglets.widget(index).list_new_ids)
+            table = self.onglets.widget(index)
+            notifs = collec.Counter(table.articles.values())[1]
             self.onglets.setNotifications(index, notifs)
 
 
@@ -1681,23 +1856,19 @@ class Fenetre(QtGui.QMainWindow):
 
     def toggleWait(self):
 
-        """Method to put/unput an article in the To-read list"""
+        """Method to add/remove an article in the To-read list"""
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
         line = table.selectionModel().currentIndex().row()
         id_bdd = table.model().index(line, 0).data()
         new = table.model().index(line, 11).data()
-        waited = id_bdd in self.waiting_list.list_id_articles
+        waited = id_bdd in self.waiting_list.articles
 
         # Check if the to read list is empty
-        empty = self.waiting_list.list_id_articles == []
+        empty = self.waiting_list.articles == {}
 
         if waited:
-            self.waiting_list.list_id_articles.remove(id_bdd)
-
-            # The post is not a new post in the to read list anymore
-            if id_bdd in self.waiting_list.list_new_ids:
-                self.waiting_list.list_new_ids.remove(id_bdd)
+            del self.waiting_list.articles[id_bdd]
 
             # Immediately visually remove the post from the to read list
             # if the to read list is displayed
@@ -1713,31 +1884,19 @@ class Fenetre(QtGui.QMainWindow):
 
             self.updateNotifications(id_bdd)
         else:
-            self.waiting_list.list_id_articles.append(id_bdd)
-
-            if new == 1:
-                self.waiting_list.list_new_ids.append(id_bdd)
+            if new:
+                self.waiting_list.articles[id_bdd] = 1
+            else:
+                self.waiting_list.articles[id_bdd] = 0
 
         # Update the notifications of the to-read list
-        index = self.list_tables_in_tabs.index(self.waiting_list)
-        self.onglets.setNotifications(index, len(self.waiting_list.list_new_ids))
+        notifs = collec.Counter(self.waiting_list.articles.values())[1]
+        self.onglets.setNotifications(1, notifs)
 
         # If the to read list was empty and is not anymore, fix the
         # header of the to read list
-        if empty and len(self.waiting_list.list_id_articles) == 1:
-            self.waiting_list.hideColumn(0)  # Hide id
-            self.waiting_list.hideColumn(1)  # Hide percentage match
-            self.waiting_list.hideColumn(2)  # Hide doi
-            self.waiting_list.hideColumn(4)  # Hide date
-            self.waiting_list.hideColumn(5)  # Hide journals
-            self.waiting_list.hideColumn(6)  # Hide authors
-            self.waiting_list.hideColumn(7)  # Hide abstracts
-            self.waiting_list.hideColumn(9)  # Hide like
-            self.waiting_list.hideColumn(10)  # Hide urls
-            self.waiting_list.hideColumn(11)  # Hide new
-            self.waiting_list.hideColumn(12)  # Hide topic_simple
-            self.waiting_list.hideColumn(13)  # Hide author_simple
-            self.waiting_list.horizontalHeader().moveSection(8, 0)
+        if empty and len(self.waiting_list.articles) == 1:
+            self.waiting_list.initUI()
 
 
     def emptyWait(self):
@@ -1746,8 +1905,7 @@ class Fenetre(QtGui.QMainWindow):
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
-        self.waiting_list.list_id_articles = []
-        self.waiting_list.list_new_ids = []
+        self.waiting_list.articles = {}
 
         # Update the notifications of the to-read list
         index = self.list_tables_in_tabs.index(self.waiting_list)
@@ -1771,6 +1929,7 @@ class Fenetre(QtGui.QMainWindow):
             self.model.setQuery(self.query)
             proxy.setSourceModel(self.model)
             table.setModel(proxy)
+        # self.query doesn't exist
         except AttributeError:
             self.l.debug("updateView, AttributeError")
             self.model.setQuery(self.refineBaseQuery(table.base_query,
@@ -1816,82 +1975,174 @@ class Fenetre(QtGui.QMainWindow):
         table.selectRow(line)
 
 
+    def resetDb(self):
+
+        """Method to reset the db. Will set the 'new' field of every entry
+        to 1, and the liked field to 0"""
+
+        mes = """
+        You are about to reset your database. All the articles will be marked
+         as new, and all liked articles will be unliked. Use this feature if
+         you want to start fresh without loosing collected articles. If you
+         click OK, the process will start.
+        """
+
+        # Clean the tabs in the message (tabs are 4 spaces)
+        mes = mes.replace("    ", "")
+        mes = mes.replace("\n", "")
+
+        choice = QtWidgets.QMessageBox.critical(self, "Resetting database", mes,
+                                            QtWidgets.QMessageBox.Cancel |
+                                            QtWidgets.QMessageBox.Ok,
+                                            defaultButton=QtWidgets.QMessageBox.Cancel)
+
+        if choice == QtWidgets.QMessageBox.Cancel:
+            return
+
+        progress = QtWidgets.QProgressDialog("Resetting database...",
+                                         None, 0, 0, self)
+        progress.setWindowTitle("resetting database")
+        progress.show()
+        QtWidgets.qApp.processEvents()
+
+        # Perform the db modifications in a thread
+        def internalReset():
+
+            """Internal function, will be executed in a thread"""
+
+            query = QtSql.QSqlQuery(self.bdd)
+            query.exec_("UPDATE papers SET liked=0, new=1, percentage_match=0")
+            self.l.info("Reset db")
+
+            self.loadNotifications()
+            self.searchByButton()
+            self.updateCellSize()
+
+        worker = LittleThread(internalReset)
+        worker.start()
+
+        while worker.isRunning():
+            QtWidgets.qApp.processEvents()
+            worker.sleep(0.5)
+
+        progress.reset()
+        self.l.info("resetDb completed")
+
+
+    def eraseDb(self):
+
+        """Method to completely erase the database. Will also vacuum it"""
+
+        mes = """
+        You are about to completely erase your database. ALL the data regarding
+         articles will be lost. If you click OK, the process will start.
+        """
+
+        # Clean the tabs in the message (tabs are 4 spaces)
+        mes = mes.replace("    ", "")
+        mes = mes.replace("\n", "")
+
+        choice = QtWidgets.QMessageBox.critical(self, "Erasing database", mes,
+                                            QtWidgets.QMessageBox.Cancel |
+                                            QtWidgets.QMessageBox.Ok,
+                                            defaultButton=QtWidgets.QMessageBox.Cancel)
+
+        if choice == QtWidgets.QMessageBox.Cancel:
+            return
+
+        progress = QtWidgets.QProgressDialog("Erasing database...",
+                                         None, 0, 0, self)
+        progress.setWindowTitle("Erasing database")
+        progress.show()
+        QtWidgets.qApp.processEvents()
+
+        def internalErase():
+
+            """Internal function, will be executed in a thread"""
+
+            query = QtSql.QSqlQuery(self.bdd)
+            query.exec_("DELETE FROM papers")
+            self.l.info("All articles deleted")
+
+            self.bdd.close()
+            self.bdd.open()
+            query = QtSql.QSqlQuery(self.bdd)
+
+            # Vacuum the db. Removes free space from db
+            query.prepare("VACUUM papers")
+            query.exec_()
+            self.l.info("Data base vacuumed")
+
+            self.loadNotifications()
+
+            self.searchByButton()
+            self.updateCellSize()
+
+        worker = LittleThread(internalErase)
+        worker.start()
+
+        while worker.isRunning():
+            QtWidgets.qApp.processEvents()
+            worker.sleep(0.5)
+
+        progress.reset()
+        self.l.info("eraseDb completed")
+
+
     def cleanDb(self):
 
-        """Slot to clean the database. Called from
-        the window settings, but better to be here. Also
-        deletes the unused pictures present in the
-        graphical_abstracts folder"""
+        """
+        Slot to clean the database. Called from the window settings, but
+        better to be here. Deletes the orphan pictures in the
+        graphical_abstracts folder. Clean misformatted fields. Deletes
+        incomplete articles.
+        """
 
         mes = """
         You are about to clean your database, and you might loose data.
-        If you do not know what you are doing, you should cancel now.
+        The process will erase articles from unselected journals.
+        The process will erase orphan graphical abstracts.
+        The process will erase incomplete articles.
+        The process will clean misformatted fields in your database.
+        It might be a good idea to use this feature after an update.
         If you click OK, the cleaning process will start
         """
 
         # Clean the tabs in the message (tabs are 4 spaces)
         mes = mes.replace("    ", "")
 
-        choice = QtGui.QMessageBox.critical(self, "Cleaning database", mes,
-                                            QtGui.QMessageBox.Cancel | QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Cancel)
+        choice = QtWidgets.QMessageBox.critical(self, "Cleaning database", mes,
+                                            QtWidgets.QMessageBox.Cancel |
+                                            QtWidgets.QMessageBox.Ok,
+                                            defaultButton=QtWidgets.QMessageBox.Cancel)
 
-        if choice == QtGui.QMessageBox.Cancel:
+        if choice == QtWidgets.QMessageBox.Cancel:
             return
 
-        progress = QtGui.QProgressDialog("Cleaning author field (could be long)", None, 0, 100, self)
-        progress.setWindowTitle("Cleaning author field")
-        progress.show()
-        app.processEvents()
-
-        # Add the column author_simple to the bdd if it does not exist.
-        # If it exists, the function returns nothing, no error.
-        # Could be dangerous
-        self.l.info("Adding a column author_simple to the db if not present")
-        query = QtSql.QSqlQuery(self.bdd)
-        query.exec_("ALTER TABLE papers ADD COLUMN author_simple TEXT")
-
-        query.exec_("SELECT * FROM papers")
-
-        self.bdd.transaction()
-        query_temp = QtSql.QSqlQuery(self.bdd)
-        query_temp.prepare("UPDATE papers SET author_simple = ? WHERE id = ?")
-
-        self.l.info("Starting updating the author_simple field")
-        while query.next():
-            record = query.record()
-            id_bdd = record.value('id')
-            authors = record.value('authors')
-            self.l.debug("Cleaning author_simple field: {}".format(id_bdd))
-
-            if type(authors) is QtCore.QPyNullVariant:
-                continue
-
-            author_simple = " " + functions.simpleChar(authors) + " "
-
-            query_temp.addBindValue(author_simple)
-            query_temp.addBindValue(id_bdd)
-            query_temp.exec_()
-
-        if not self.bdd.commit():
-            self.l.critical("Cleaning author_simple did not work")
-
-        self.l.info("Updating author_simple field done")
-
-        progress.setLabelText("Deleting articles from unfollowed journals")
+        # Display a progress bar
+        progress = QtWidgets.QProgressDialog("Deleting articles from unfollowed journals", None, 0, 100, self)
         progress.setWindowTitle("Cleaning database")
         progress.show()
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
 
+        # Create a query and start a transaction, more efficient
         query = QtSql.QSqlQuery(self.bdd)
-
         self.bdd.transaction()
 
-        requete = "DELETE FROM papers WHERE journal NOT IN ("
+        # Clean authors field for misformatting
+        query.exec_("UPDATE papers SET authors=replace(authors, '  ', ' ' ) WHERE \
+                     authors LIKE '%  %'")
+        query.exec_("UPDATE papers SET authors=replace(authors, ' ,', ',' ) WHERE \
+                     authors LIKE '%  %'")
+        query.exec_("UPDATE papers SET author_simple=replace(author_simple, '  ', \
+                     ' ' ) WHERE author_simple LIKE '%  %'")
 
-        journals_to_care = self.getJournalsToCare()
+        # Delete all the articles of unselected journals
+        requete = "DELETE FROM papers WHERE journal NOT IN ("
+        journals_to_care = self.getJournalsToParse()
 
         # Building the query
-        for each_journal in self.getJournalsToCare():
+        for each_journal in self.getJournalsToParse():
             if each_journal != journals_to_care[-1]:
                 requete = requete + "\"" + str(each_journal) + "\"" + ", "
             # Close the query if last
@@ -1907,7 +2158,7 @@ class Fenetre(QtGui.QMainWindow):
 
         progress.setLabelText("Deleting articles with empty abstracts")
         progress.setValue(20)
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
 
         query.exec_("DELETE FROM papers WHERE abstract=''")
 
@@ -1918,7 +2169,7 @@ class Fenetre(QtGui.QMainWindow):
 
         progress.setLabelText("Deleting useless images")
         progress.setValue(40)
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
 
         query.exec_("SELECT graphical_abstract FROM papers WHERE graphical_abstract != 'Empty'")
 
@@ -1926,18 +2177,22 @@ class Fenetre(QtGui.QMainWindow):
         while query.next():
             images_path.append(query.record().value('graphical_abstract'))
 
-        # Delete all the images which are not in the database (so not
-        # corresponding to any article)
-        for directory in os.walk(self.DATA_PATH + "/graphical_abstracts/"):
-            for fichier in directory[2]:
-                if fichier not in images_path:
-                    os.remove(os.path.abspath(self.DATA_PATH + "/graphical_abstracts/{0}".format(fichier)))
+        list_pics = os.listdir(self.DATA_PATH + "/graphical_abstracts/")
+
+        pics_to_remove = list(set(list_pics) - set(images_path))
+
+        self.l.debug("{} images to remove".format(len(pics_to_remove)))
+
+        for pic in pics_to_remove:
+            os.remove(os.path.abspath(self.DATA_PATH +
+                "/graphical_abstracts/{0}".format(pic)))
+            self.l.debug("removing {}".format(pic))
 
         self.l.debug("Deleted all the useless images")
 
         progress.setLabelText("Building list of filtered articles")
         progress.setValue(60)
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
 
         query.exec_("SELECT id, doi, title, journal, url FROM papers")
 
@@ -1957,11 +2212,12 @@ class Fenetre(QtGui.QMainWindow):
                 # Tuple representing an article
                 articles_to_reject.append((id, doi, title, journal, url))
 
-        self.l.info("{} entries rejected will be deleted".format(len(articles_to_reject)))
+        self.l.info("{} entries rejected will be deleted".
+                    format(len(articles_to_reject)))
 
         progress.setLabelText("Deleting filtered articles")
         progress.setValue(80)
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
 
         requete = "DELETE FROM papers WHERE id IN ("
 
@@ -1977,12 +2233,12 @@ class Fenetre(QtGui.QMainWindow):
 
         self.l.info("Rejected entries deleted from the database")
 
-        app.processEvents()
+        QtWidgets.qApp.processEvents()
 
         if self.debug_mod:
             progress.setLabelText("Building list of filtered articles")
             progress.setValue(85)
-            app.processEvents()
+            QtWidgets.qApp.processEvents()
 
             # Build a list of DOIs to avoid duplicate in debug table
             list_doi = []
@@ -1992,7 +2248,7 @@ class Fenetre(QtGui.QMainWindow):
 
             progress.setLabelText("Inserting filtered articles in debug db")
             progress.setValue(90)
-            app.processEvents()
+            QtWidgets.qApp.processEvents()
 
             # Insert all the rejected articles in the debug table
             self.bdd.transaction()
@@ -2018,11 +2274,16 @@ class Fenetre(QtGui.QMainWindow):
         query.exec_()
         self.l.info("Data base vacuumed")
 
-        progress.setValue(100)
-        app.processEvents()
-        progress.reset()
+        progress.setLabelText("Loading notifications")
+        progress.setValue(95)
+        QtWidgets.qApp.processEvents()
 
         self.loadNotifications()
+
+        progress.setValue(100)
+        QtWidgets.qApp.processEvents()
+        progress.reset()
+
         self.searchByButton()
         self.updateCellSize()
 
@@ -2063,9 +2324,9 @@ class Fenetre(QtGui.QMainWindow):
         graphical_abstract = table.model().index(table.selectionModel().selection().indexes()[0].row(), 8).data()
 
         if type(graphical_abstract) is str and graphical_abstract != "Empty":
-            MyTwit(self, title, link, graphical_abstract)
+            MyTwit(title, link, graphical_abstract, self)
         else:
-            MyTwit(self, title, link)
+            MyTwit(title, link, self)
 
 
     def shareByEmail(self):
@@ -2093,14 +2354,6 @@ class Fenetre(QtGui.QMainWindow):
         # Create a simple title, by removing html tags (tags are not accepted in a mail subject)
         simple_title = functions.removeHtml(title) + " : spotted by ChemBrows"
 
-        # Conctsruct the body structure
-        # body = "<span style='font-weight:bold'>{}</span></br> \
-                # <span style='font-weight:bold'>Authors : </span>{}</br> \
-                # <span style='font-weight:bold'>Journal : </span>{}</br></br> \
-                # <span style='font-weight:bold'>Abstract : </span></br></br>{}</br></br> \
-                # Click on this link to see the article on the editor's website: <a href=\"{}\">editor's website</a></br></br> \
-                # This article was spotted with chemBrows.</br> Learn more about chemBrows : notre site web"
-
         body = "Click on this link to see the article on the editor's website: {}\n\nThis article was spotted by ChemBrows: www.chembrows.com"
         body = body.format(link)
 
@@ -2127,9 +2380,14 @@ class Fenetre(QtGui.QMainWindow):
         """Slot to calculate the match percentage.
         alone=True means the user started the calculations only"""
 
+        # Block user input. This bool could be True if parse() was started,
+        # but it could also be False if the user refreshes the paperness
+        self.blocking_ui = True
+
         self.model.submitAll()
 
-        self.predictor = Predictor(self.l, self.waiting_list.list_id_articles,
+        self.predictor = Predictor(self.l,
+                                   list(self.waiting_list.articles.keys()),
                                    self.bdd)
 
         mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
@@ -2138,12 +2396,11 @@ class Fenetre(QtGui.QMainWindow):
         # Display a message if the classifier is not trained yet
         if self.predictor.initializePipeline() is None:
             self.blocking_ui = False
-            QtGui.QMessageBox.information(self, "Feed ChemBrows", mes,
-                                          QtGui.QMessageBox.Ok)
+            QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
+                                          QtWidgets.QMessageBox.Ok)
 
             # Re-sort otherwise the display looks messy
             self.searchByButton()
-            return
 
         def whenDone():
 
@@ -2155,14 +2412,16 @@ class Fenetre(QtGui.QMainWindow):
             # If parsing, load the notifications
             # load the notifications only if some articles were collected
             try:
-                if self.counter > 0:
+                if self.counter_added > 0:
                     self.progress.setWindowTitle("Loading notifications")
                     self.progress.setLabelText("Loading notifications...")
                     worker = LittleThread(self.loadNotifications)
                     worker.start()
 
                     while worker.isRunning():
-                        app.processEvents()
+                        QtWidgets.qApp.processEvents()
+                        worker.sleep(0.5)
+
             except AttributeError:
                 self.l.debug("No entries added, skipping loadNotifications")
 
@@ -2175,37 +2434,40 @@ class Fenetre(QtGui.QMainWindow):
             self.progress.reset()
 
             # Display a message if the classifier is not trained yet
-            if not self.predictor.calculated_something:
-                QtGui.QMessageBox.information(self, "Feed ChemBrows", mes,
-                                              QtGui.QMessageBox.Ok)
-                app.processEvents()
+            if (self.predictor.initializePipeline() is not None and
+                    not self.predictor.calculated_something):
+
+                QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
+                                                  QtWidgets.QMessageBox.Ok)
+                QtWidgets.qApp.processEvents()
 
             if not alone:
                 # Display the number of articles added
                 mes = "{} new articles were added to your database !"
-                mes = mes.format(self.counter)
-                QtGui.QMessageBox.information(self, "New articles", mes,
-                                              QtGui.QMessageBox.Ok)
+                mes = mes.format(self.counter_added)
+                QtWidgets.QMessageBox.information(self, "New articles", mes,
+                                              QtWidgets.QMessageBox.Ok)
 
             del self.predictor
 
-        self.blocking_ui = True
-
-        self.predictor.finished.connect(whenDone)
-        self.predictor.start()
 
         # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
         # If the range is set to 0, get a busy progress bar,
         # without percentage
-        self.progress = QtGui.QProgressDialog("Calculating Hot Paperness...",
+        self.progress = QtWidgets.QProgressDialog("Calculating Hot Paperness...",
                                               None, 0, 0, self)
         self.progress.setWindowTitle("Hot Paperness calculation")
+        self.progress.setModal(True)
         self.progress.show()
+
+        self.predictor.finished.connect(whenDone)
+        self.predictor.start()
 
         # While calculating, display a smooth progress bar
         try:
             while not self.predictor.isFinished():
-                app.processEvents()
+                QtWidgets.qApp.processEvents()
+                self.predictor.sleep(0.5)
         except AttributeError:
             self.l.debug("Predictor deleted while processEvents ?")
             pass
@@ -2240,14 +2502,13 @@ class Fenetre(QtGui.QMainWindow):
 
         """Build the program's interface"""
 
-        # self.setGeometry(0, 25, 1900 , 1020)
-        # self.showMaximized()
         self.setWindowTitle('ChemBrows')
 
         font = QtGui.QFont()
+        font.setStyleHint(QtGui.QFont.System)
         font.setPointSize(self.styles.FONT_SIZE)
         font.setStyleStrategy(QtGui.QFont.PreferAntialias)
-        app.setFont(font)
+        QtWidgets.qApp.setFont(font)
 
         self.l.debug('Font: {}'.format(font.family()))
         self.l.debug('Font size: {}pt'.format(self.styles.FONT_SIZE))
@@ -2261,8 +2522,6 @@ class Fenetre(QtGui.QMainWindow):
         self.fileMenu.addAction(self.settingsAction)
         self.fileMenu.addAction(self.exitAction)
 
-        # Building edition menu
-        # self.editMenu = self.menubar.addMenu("&Edition")
         # Building tools menu
         self.toolMenu = self.menubar.addMenu("&Tools")
         self.toolMenu.addAction(self.parseAction)
@@ -2280,6 +2539,7 @@ class Fenetre(QtGui.QMainWindow):
         self.sortMenu.addAction(self.separatorAction)
         self.sortMenu.addAction(self.sortingReversedAction)
         self.viewMenu.addAction(self.showLikesAction)
+        self.viewMenu.addAction(self.showReadAction)
 
         self.helpMenu = self.menubar.addMenu("&Help")
         self.helpMenu.addAction(self.tutoAction)
@@ -2294,26 +2554,26 @@ class Fenetre(QtGui.QMainWindow):
 
         # Refresh button. I use buttons and not actions because I want to
         # set their style
-        self.button_refresh = QtGui.QPushButton()
+        self.button_refresh = QtWidgets.QPushButton()
         self.button_refresh.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/refresh.png")))
         self.button_refresh.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_refresh.setToolTip("Refresh: download new posts")
         self.button_refresh.setAccessibleName('toolbar_round_button')
 
         # Percentage calculation button
-        self.button_calculate_percentage = QtGui.QPushButton()
+        self.button_calculate_percentage = QtWidgets.QPushButton()
         self.button_calculate_percentage.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/stats.png")))
         self.button_calculate_percentage.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_calculate_percentage.setToolTip("Re-calculate Hot Paperness")
         self.button_calculate_percentage.setAccessibleName('toolbar_round_button')
 
         # Button to display new articles, or view them all
-        self.button_search_new = QtGui.QPushButton('View unread')
+        self.button_search_new = QtWidgets.QPushButton('View unread')
         self.button_search_new.setToolTip("Display unread or all articles")
         self.button_search_new.setAccessibleName('toolbar_text_button')
 
         # Button to change the sorting method of the articles
-        self.button_sort_by = QtGui.QPushButton()
+        self.button_sort_by = QtWidgets.QPushButton()
         self.button_sort_by.setToolTip("Sort articles by date or Hot Paperness")
         self.button_sort_by.clicked.connect(lambda: self.changeSortingMethod(None, self.sortingReversedAction.isChecked()))
         self.button_sort_by.setAccessibleName('toolbar_text_button')
@@ -2325,21 +2585,22 @@ class Fenetre(QtGui.QMainWindow):
         self.line_research.setFixedSize(self.line_research.sizeHint().width(), self.line_research.sizeHint().height() * 1.3)
 
         # Advanced search button
-        self.button_advanced_search = QtGui.QPushButton()
+        self.button_advanced_search = QtWidgets.QPushButton()
         self.button_advanced_search.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/advanced_search.png")))
         self.button_advanced_search.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_advanced_search.setToolTip("Create filters")
         self.button_advanced_search.setAccessibleName('toolbar_round_button')
 
-        self.button_settings = QtGui.QPushButton()
+        self.button_settings = QtWidgets.QPushButton()
         self.button_settings.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, "images/settings.png")))
         self.button_settings.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_BIG, self.styles.ICON_SIZE_BIG))
         self.button_settings.setToolTip("Preferences, settings")
         self.button_settings.setAccessibleName('toolbar_round_button')
 
         # Empty widget acting like a spacer
-        self.empty_widget = QtGui.QWidget()
-        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred);
+        self.empty_widget = QtWidgets.QWidget()
+        self.empty_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                                        QtWidgets.QSizePolicy.Preferred)
 
         self.toolbar.addWidget(self.button_refresh)
         self.toolbar.addWidget(self.button_calculate_percentage)
@@ -2356,7 +2617,7 @@ class Fenetre(QtGui.QMainWindow):
         # ------------------------- LEFT AREA --------------------------------
 
         # Create scrollarea to put the journals buttons
-        self.scroll_tags = QtGui.QScrollArea()
+        self.scroll_tags = QtWidgets.QScrollArea()
 
         # Always disable the horizontal scroll bar of the left dock
         self.scroll_tags.setHorizontalScrollBarPolicy(
@@ -2364,9 +2625,9 @@ class Fenetre(QtGui.QMainWindow):
 
         # Create scrolling zone
         # http://www.mattmurrayanimation.com/archives/tag/how-do-i-use-a-qscrollarea-in-pyqt
-        self.scrolling_tags = QtGui.QWidget()
+        self.scrolling_tags = QtWidgets.QWidget()
 
-        self.vbox_all_tags = QtGui.QVBoxLayout()
+        self.vbox_all_tags = QtWidgets.QVBoxLayout()
         self.scrolling_tags.setLayout(self.vbox_all_tags)
 
         self.scroll_tags.hide()
@@ -2374,85 +2635,79 @@ class Fenetre(QtGui.QMainWindow):
         # ------------------------- RIGHT TOP AREA ---------------------------
 
         # Creation of a gridLayout to handle the top right area
-        self.area_right_top = QtGui.QWidget()
-        self.grid_area_right_top = QtGui.QGridLayout()
+        self.area_right_top = QtWidgets.QWidget()
+        self.grid_area_right_top = QtWidgets.QGridLayout()
         self.grid_area_right_top.setContentsMargins(10, 0, 0, 0)
         self.area_right_top.setLayout(self.grid_area_right_top)
 
         # Here I set a prelabel: a label w/ just "Title: " to label the title.
         # I set the sizePolicy of this prelabel to the minimum. It will stretch
         # to the minimum. Makes the display better with the grid
-        prelabel_title = QtGui.QLabel("Title: ")
-        prelabel_title.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
-        self.label_title = QtGui.QLabel()
+        prelabel_title = QtWidgets.QLabel("Title: ")
+        prelabel_title.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
+        self.label_title = QtWidgets.QLabel()
         self.label_title.setTextInteractionFlags(
             QtCore.Qt.TextSelectableByMouse)
         self.label_title.setWordWrap(True)
-        self.label_title.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_title.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
-        prelabel_author = QtGui.QLabel("Author(s): ")
-        prelabel_author.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
-        self.label_author = QtGui.QLabel()
+        prelabel_author = QtWidgets.QLabel("Author(s): ")
+        prelabel_author.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
+        self.label_author = QtWidgets.QLabel()
         self.label_author.setTextInteractionFlags(
             QtCore.Qt.TextSelectableByMouse)
         self.label_author.setWordWrap(True)
-        self.label_author.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_author.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
-        prelabel_journal = QtGui.QLabel("Journal: ")
-        prelabel_journal.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
-        self.label_journal = QtGui.QLabel()
+        prelabel_journal = QtWidgets.QLabel("Journal: ")
+        prelabel_journal.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
+        self.label_journal = QtWidgets.QLabel()
         self.label_journal.setTextInteractionFlags(
             QtCore.Qt.TextSelectableByMouse)
         self.label_journal.setWordWrap(True)
-        self.label_journal.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_journal.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
-        prelabel_date = QtGui.QLabel("Date: ")
-        prelabel_date.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum))
-        self.label_date = QtGui.QLabel()
+        prelabel_date = QtWidgets.QLabel("Date: ")
+        prelabel_date.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
+        self.label_date = QtWidgets.QLabel()
         self.label_date.setTextInteractionFlags(
             QtCore.Qt.TextSelectableByMouse)
         self.label_date.setWordWrap(True)
-        self.label_date.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_date.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
-        prelabel_doi = QtGui.QLabel("DOI: ")
-        prelabel_doi.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum,
-                                   QtGui.QSizePolicy.Minimum))
-        self.label_doi = QtGui.QLabel()
+        prelabel_doi = QtWidgets.QLabel("DOI: ")
+        prelabel_doi.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum,
+                                   QtWidgets.QSizePolicy.Minimum))
+        self.label_doi = QtWidgets.QLabel()
         self.label_doi.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         self.label_doi.setWordWrap(True)
-        self.label_doi.setSizePolicy(QtGui.QSizePolicy(
-            QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
+        self.label_doi.setSizePolicy(QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
         # Buttons for the display of the article: zoom & dark background
-        self.button_zoom_less = QtGui.QPushButton()
+        self.button_zoom_less = QtWidgets.QPushButton()
         self.button_zoom_less.setToolTip("Zoom out")
         self.button_zoom_less.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/zoom_out.png')))
         self.button_zoom_less.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_zoom_less.setAccessibleName('round_button_article')
         self.button_zoom_less.hide()
-        self.button_zoom_more = QtGui.QPushButton()
+        self.button_zoom_more = QtWidgets.QPushButton()
         self.button_zoom_more.setToolTip("Zoom in")
         self.button_zoom_more.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/zoom_in.png')))
         self.button_zoom_more.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_zoom_more.setAccessibleName('round_button_article')
         self.button_zoom_more.hide()
-        self.button_color_read = QtGui.QPushButton()
-        self.button_color_read.setToolTip("Change background color")
-        self.button_color_read.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/black_text.png')))
-        self.button_color_read.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
-        self.button_color_read.setAccessibleName('round_button_article')
-        self.button_color_read.hide()
 
         # Button to share on twitter
-        self.button_twitter = QtGui.QPushButton()
+        self.button_twitter = QtWidgets.QPushButton()
         self.button_twitter.setToolTip("Tweet this article")
         self.button_twitter.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/twitter.png')))
         self.button_twitter.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
@@ -2460,15 +2715,16 @@ class Fenetre(QtGui.QMainWindow):
         self.button_twitter.hide()
 
         # Button to share by email
-        self.button_share_mail = QtGui.QPushButton()
+        self.button_share_mail = QtWidgets.QPushButton()
         self.button_share_mail.setToolTip("Share by mail")
         self.button_share_mail.setIcon(QtGui.QIcon(os.path.join(self.resource_dir, 'images/email.png')))
         self.button_share_mail.setIconSize(QtCore.QSize(self.styles.ICON_SIZE_SMALL, self.styles.ICON_SIZE_SMALL))
         self.button_share_mail.setAccessibleName('round_button_article')
         self.button_share_mail.hide()
 
-        # A QWebView to render the sometimes rich text of the abstracts
-        self.text_abstract = WebViewPerso(self)
+        # A personal QTextBrowser to render the sometimes rich text of the
+        # abstracts
+        self.text_abstract = TextBrowserPerso(self)
 
         # Building the grid
         self.grid_area_right_top.addWidget(prelabel_title, 0, 0, 1, 4)
@@ -2483,14 +2739,13 @@ class Fenetre(QtGui.QMainWindow):
         self.grid_area_right_top.addWidget(self.label_doi, 4, 1, 1, 4)
 
         # An empty widget, acts as spacer
-        self.empty_widget = QtGui.QWidget()
-        self.empty_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred);
+        self.empty_widget = QtWidgets.QWidget()
+        self.empty_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
 
         # A HBoxLayout to store the article "toolbar"
-        self.hbox_toolbar_article = QtGui.QHBoxLayout()
+        self.hbox_toolbar_article = QtWidgets.QHBoxLayout()
         self.hbox_toolbar_article.addWidget(self.button_zoom_less, alignment=QtCore.Qt.AlignLeft)
         self.hbox_toolbar_article.addWidget(self.button_zoom_more, alignment=QtCore.Qt.AlignLeft)
-        self.hbox_toolbar_article.addWidget(self.button_color_read, alignment=QtCore.Qt.AlignLeft)
         self.hbox_toolbar_article.addWidget(self.empty_widget)
         self.hbox_toolbar_article.addWidget(self.button_twitter, alignment=QtCore.Qt.AlignRight)
         self.hbox_toolbar_article.addWidget(self.button_share_mail, alignment=QtCore.Qt.AlignRight)
@@ -2507,13 +2762,13 @@ class Fenetre(QtGui.QMainWindow):
         # Allows to create other tabs
         self.onglets = TabPerso(self)
 
-        self.central_widget = QtGui.QWidget()
-        self.hbox_central = QtGui.QHBoxLayout()
+        self.central_widget = QtWidgets.QWidget()
+        self.hbox_central = QtWidgets.QHBoxLayout()
         # (int left, int top, int right, int bottom) getContentsMargins (self)
         self.hbox_central.setContentsMargins(0, 5, 0, 5)
         self.central_widget.setLayout(self.hbox_central)
 
-        self.splitter2 = QtGui.QSplitter(QtCore.Qt.Horizontal)
+        self.splitter2 = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
         self.splitter2.addWidget(self.onglets)
         self.splitter2.addWidget(self.area_right_top)
 
@@ -2547,38 +2802,14 @@ class Fenetre(QtGui.QMainWindow):
         self.button_share_mail.setStyleSheet(stylesheet)
         self.button_zoom_less.setStyleSheet(stylesheet)
         self.button_zoom_more.setStyleSheet(stylesheet)
-        self.button_color_read.setStyleSheet(stylesheet)
 
 
 if __name__ == '__main__':
     # logger = MyLog()
     # try:
+    app = QtWidgets.QApplication(sys.argv)
 
-    app = QtGui.QApplication(sys.argv)
     # ex = Fenetre(logger)
-    ex = Fenetre()
+    ex = MyWindow()
     app.processEvents()
     sys.exit(app.exec_())
-
-    # except Exception as e:
-        # exc_type, exc_obj, exc_tb = sys.exc_info()
-        # exc_type = type(e).__name__
-        # fname = exc_tb.tb_frame.f_code.co_filename
-        # logger.warning("File {0}, line {1}".format(fname, exc_tb.tb_lineno))
-        # logger.warning("{0}: {1}".format(exc_type, e))
-    # finally:
-        # # Try to kill all the threads
-    # try:
-        # for worker in ex.list_threads:
-            # worker.terminate()
-
-            # logger.debug("Starting killing the futures")
-            # to_cancel = worker.list_futures_urls + worker.list_futures_images
-            # for future in to_cancel:
-                # if type(future) is not bool:
-                    # future.cancel()
-            # logger.debug("Done killing the futures")
-
-        # logger.info("Quitting the program, killing all the threads")
-    # except AttributeError:
-        # logger.info("Quitting the program, no threads")
