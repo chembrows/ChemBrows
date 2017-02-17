@@ -67,7 +67,7 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
         return soup.renderContents().decode()
 
 
-    def zoom(self, more_or_less):
+    def zoom(self, more_or_less: bool):
 
         """Zoom in or out when the user clicks the buttons in the
         article toolbar"""
@@ -103,6 +103,30 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
                 self.times -= 1
                 content = self._zoomImage(False)
 
+            # Reset the content the image can be updated.
+            # https://bugreports.qt.io/browse/QTBUG-54375
+            self.setHtml("")
             self.setHtml(content)
         else:
             super(TextBrowserPerso, self).wheelEvent(event)
+
+
+    def loadResource(self, type: int, name: QtCore.QUrl):
+
+        """Reimplemented to load graphical abstracts w/ good quality"""
+
+        soup = BeautifulSoup(self.toHtml())
+
+        try:
+            # Find the current width of the image
+            width = float(soup.findAll('img')[-1]['width'])
+        except IndexError:
+            return
+
+        # Load image w/ SmoothTransformation
+        image = QtGui.QPixmap(name.path())
+        image = image.scaledToWidth(width,
+                                    QtCore.Qt.SmoothTransformation)
+
+        self.document().addResource(QtGui.QTextDocument.ImageResource, name,
+                                    image)
