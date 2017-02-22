@@ -44,7 +44,7 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
 
         """Zoom the grphical abstract"""
 
-        soup = BeautifulSoup(self.toHtml())
+        soup = BeautifulSoup(self.toHtml(), "html.parser")
 
         try:
             # Find the current width of the image
@@ -117,7 +117,7 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
         http://forum.qtfr.org/discussion/2211/qt4-afficher-un-qimage-dans-qtextbrowser
         """
 
-        soup = BeautifulSoup(self.toHtml())
+        soup = BeautifulSoup(self.toHtml(), "html.parser")
 
         try:
             # Find the current width of the image
