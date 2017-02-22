@@ -113,20 +113,22 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
 
     def loadResource(self, type: int, name: QtCore.QUrl):
 
-        """Reimplemented to load graphical abstracts w/ good quality"""
+        """Reimplemented to load graphical abstracts w/ good quality
+        http://forum.qtfr.org/discussion/2211/qt4-afficher-un-qimage-dans-qtextbrowser
+        """
 
         soup = BeautifulSoup(self.toHtml())
 
         try:
             # Find the current width of the image
             width = float(soup.findAll('img')[-1]['width'])
-        except IndexError:
-            return
+            # Load image w/ SmoothTransformation
+            image = QtGui.QPixmap(name.path())
+            image = image.scaledToWidth(width,
+                                        QtCore.Qt.SmoothTransformation)
 
-        # Load image w/ SmoothTransformation
-        image = QtGui.QPixmap(name.path())
-        image = image.scaledToWidth(width,
-                                    QtCore.Qt.SmoothTransformation)
-
-        self.document().addResource(QtGui.QTextDocument.ImageResource, name,
-                                    image)
+            self.document().addResource(QtGui.QTextDocument.ImageResource,
+                                        name, image)
+        except Exception as e:
+            # self.parent.l.debug("loadResource: {}".format(e), exc_info=True)
+            super(TextBrowserPerso, self).loadResource(type, name)

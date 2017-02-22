@@ -479,11 +479,13 @@ def getData(company, journal, entry, response=None):
                 soup = BeautifulSoup(response.text, parse_only=strainer)
                 abstract = soup.section
 
+                # Clean the abstract from unecessary tags
                 abstract("div", attrs={"class": "articleFunctions"})[0].extract()
                 [tag.extract() for tag in abstract("a", attrs={"name": True})]
                 [tag.extract() for tag in abstract("h3")]
                 [tag.extract() for tag in abstract("ul", attrs={"class": "linkList"})]
                 [tag.extract() for tag in abstract("a", attrs={"class": "gotolink"})]
+                [tag.extract() for tag in abstract("img")]
 
                 try:
                     abstract("div", attrs={"class": "articleKeywords"})[0].extract()
