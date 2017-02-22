@@ -2436,8 +2436,11 @@ class MyWindow(QtWidgets.QMainWindow):
 
             del self.predictor
 
-            # Reset nbr of added articles
-            self.counter_added = 0
+            try:
+                # Reset nbr of added articles
+                self.counter_added = 0
+            except AttributeError:
+                self.l.debug("calculatePercentageMatch, no counter_added")
 
         # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
         # If the range is set to 0, get a busy progress bar,
