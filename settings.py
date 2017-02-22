@@ -160,7 +160,7 @@ class Settings(QtWidgets.QDialog):
 
         labels_checkboxes.sort()
 
-        self.box_select_all = QtWidgets.QCheckBox("Select all")
+        self.box_select_all = QtWidgets.QCheckBox("(Un)Select all")
         self.box_select_all.setCheckState(0)
         self.vbox_check_journals.addWidget(self.box_select_all)
 

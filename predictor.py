@@ -47,6 +47,10 @@ class Predictor(QtCore.QThread):
 
         self.getStopWords()
 
+        # To check if initializePipeline completed
+        self.initiated = False
+
+        # To check if match percentages were calculated
         self.calculated_something = False
 
 
@@ -120,7 +124,7 @@ class Predictor(QtCore.QThread):
         elapsed_time = datetime.datetime.now() - start_time
         self.l.debug("Initializing classifier in {0}".format(elapsed_time))
 
-        return True
+        self.initiated = True
 
 
     # @profile
@@ -129,6 +133,10 @@ class Predictor(QtCore.QThread):
 
         """Calculate the match percentage for each article,
         based on the abstract text and the liked articles"""
+
+        if not self.initiated:
+            self.l.debug("NOT starting calculations, not initiated")
+            return
 
         self.l.debug("Starting calculations of match percentages")
         start_time = datetime.datetime.now()

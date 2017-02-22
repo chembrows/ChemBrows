@@ -117,6 +117,9 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
         http://forum.qtfr.org/discussion/2211/qt4-afficher-un-qimage-dans-qtextbrowser
         """
 
+        if type != QtGui.QTextDocument.ImageResource:
+            return
+
         soup = BeautifulSoup(self.toHtml(), "html.parser")
 
         try:
@@ -130,5 +133,12 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
             self.document().addResource(QtGui.QTextDocument.ImageResource,
                                         name, image)
         except Exception as e:
-            # self.parent.l.debug("loadResource: {}".format(e), exc_info=True)
-            super(TextBrowserPerso, self).loadResource(type, name)
+            self.parent.l.debug("loadResource: {}, likely not a good image".
+                                format(e))
+
+
+    def setSource(self, name: QtCore.QUrl):
+
+        """Reimplemented to disable links in the abstract"""
+
+        return

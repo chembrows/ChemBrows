@@ -2390,18 +2390,6 @@ class MyWindow(QtWidgets.QMainWindow):
                                    list(self.waiting_list.articles.keys()),
                                    self.bdd)
 
-        mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
-        mes += "Feed it more !"
-
-        # Display a message if the classifier is not trained yet
-        if self.predictor.initializePipeline() is None:
-            self.blocking_ui = False
-            QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
-                                          QtWidgets.QMessageBox.Ok)
-
-            # Re-sort otherwise the display looks messy
-            self.searchByButton()
-
         def whenDone():
 
             """Internal function called when the thread for percentages
@@ -2434,8 +2422,7 @@ class MyWindow(QtWidgets.QMainWindow):
             self.progress.reset()
 
             # Display a message if the classifier is not trained yet
-            if (self.predictor.initializePipeline() is not None and
-                    not self.predictor.calculated_something):
+            if not self.predictor.initiated or not self.predictor.calculated_something:
 
                 QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
                                                   QtWidgets.QMessageBox.Ok)
@@ -2460,6 +2447,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.progress.setModal(True)
         self.progress.show()
 
+        self.predictor.initializePipeline()
         self.predictor.finished.connect(whenDone)
         self.predictor.start()
 
