@@ -2428,7 +2428,6 @@ class MyWindow(QtWidgets.QMainWindow):
                                                   QtWidgets.QMessageBox.Ok)
                 QtWidgets.qApp.processEvents()
 
-            if not alone:
                 # Display the number of articles added
                 mes = "{} new articles were added to your database !"
                 mes = mes.format(self.counter_added)
