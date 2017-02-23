@@ -39,6 +39,11 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
 
         self.times = 0
 
+        # Reset the content so the image can be updated.
+        content = self.toHtml()
+        self.setHtml("")
+        self.setHtml(content)
+
 
     def _zoomImage(self, more_or_less: bool):
 
@@ -81,6 +86,8 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
 
         content = self._zoomImage(more_or_less)
 
+        # Reset the content so the image can be updated.
+        self.setHtml("")
         self.setHtml(content)
 
 
@@ -103,7 +110,7 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
                 self.times -= 1
                 content = self._zoomImage(False)
 
-            # Reset the content the image can be updated.
+            # Reset the content so the image can be updated.
             # https://bugreports.qt.io/browse/QTBUG-54375
             self.setHtml("")
             self.setHtml(content)
