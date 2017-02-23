@@ -2375,6 +2375,58 @@ class MyWindow(QtWidgets.QMainWindow):
             webbrowser.open(url)
 
 
+    def calculationsDone(self):
+
+        """Function called when the thread for percentages calculations
+        is finished"""
+
+        self.searchByButton()
+
+        # load notifications only if some articles were collected
+        try:
+            if self.counter_added > 0:
+                self.progress.setWindowTitle("Loading notifications")
+                self.progress.setLabelText("Loading notifications...")
+                worker = LittleThread(self.loadNotifications)
+                worker.start()
+
+                while worker.isRunning():
+                    QtWidgets.qApp.processEvents()
+                    worker.sleep(0.5)
+
+        except AttributeError:
+            self.l.debug("No entries added, skipping loadNotifications")
+
+        # Unlock the UI by setting this to False
+        self.blocking_ui = False
+
+        mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
+        mes += "Feed it more !"
+
+        self.progress.reset()
+
+        # Display a message if the classifier is not trained yet
+        if not self.predictor.initiated or not self.predictor.calculated_something:
+
+            QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
+                                              QtWidgets.QMessageBox.Ok)
+            QtWidgets.qApp.processEvents()
+
+        # Display nbr of added articles only if we're parsing
+        mes = "{} new articles were added to your database !"
+        if self.parsing:
+            mes = mes.format(self.counter_added)
+            QtWidgets.QMessageBox.information(self, "New articles",
+                                              mes,
+                                              QtWidgets.QMessageBox.Ok)
+
+        del self.predictor
+
+        # If we were parsin, we're not anymore.
+        # If we weren't parsing, we're still not parsing
+        self.parsing = False
+
+
     def calculatePercentageMatch(self, alone=False):
 
         """Slot to calculate the match percentage.
@@ -2384,75 +2436,26 @@ class MyWindow(QtWidgets.QMainWindow):
         # but it could also be False if the user refreshes the paperness
         self.blocking_ui = True
 
+        # Submit the changes to the db before calculations
         self.model.submitAll()
 
+        # Create a Predictor object
         self.predictor = Predictor(self.l,
                                    list(self.waiting_list.articles.keys()),
                                    self.bdd)
-
-        def whenDone():
-
-            """Internal function called when the thread for percentages
-            calculations is finished"""
-
-            self.searchByButton()
-
-            # If parsing, load the notifications
-            # load the notifications only if some articles were collected
-            try:
-                if self.counter_added > 0:
-                    self.progress.setWindowTitle("Loading notifications")
-                    self.progress.setLabelText("Loading notifications...")
-                    worker = LittleThread(self.loadNotifications)
-                    worker.start()
-
-                    while worker.isRunning():
-                        QtWidgets.qApp.processEvents()
-                        worker.sleep(0.5)
-
-            except AttributeError:
-                self.l.debug("No entries added, skipping loadNotifications")
-
-            # Unlock the UI by setting this to False
-            self.blocking_ui = False
-
-            mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
-            mes += "Feed it more !"
-
-            self.progress.reset()
-
-            # Display a message if the classifier is not trained yet
-            if not self.predictor.initiated or not self.predictor.calculated_something:
-
-                QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
-                                                  QtWidgets.QMessageBox.Ok)
-                QtWidgets.qApp.processEvents()
-
-                # Display the number of articles added
-                mes = "{} new articles were added to your database !"
-                mes = mes.format(self.counter_added)
-                QtWidgets.QMessageBox.information(self, "New articles", mes,
-                                              QtWidgets.QMessageBox.Ok)
-
-            del self.predictor
-
-            try:
-                # Reset nbr of added articles
-                self.counter_added = 0
-            except AttributeError:
-                self.l.debug("calculatePercentageMatch, no counter_added")
 
         # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
         # If the range is set to 0, get a busy progress bar,
         # without percentage
         self.progress = QtWidgets.QProgressDialog("Calculating Hot Paperness...",
-                                              None, 0, 0, self)
+                                                  None, 0, 0, self)
         self.progress.setWindowTitle("Hot Paperness calculation")
         self.progress.setModal(True)
         self.progress.show()
 
+        # Initiate, connect and start the predictor
         self.predictor.initializePipeline()
-        self.predictor.finished.connect(whenDone)
+        self.predictor.finished.connect(self.calculationsDone)
         self.predictor.start()
 
         # While calculating, display a smooth progress bar
@@ -2467,7 +2470,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def toggleLike(self):
 
-        """Slot to mark a post liked"""
+        """Slot to toggle the liked state of an article"""
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 
