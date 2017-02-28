@@ -4,7 +4,6 @@
 
 from PyQt5 import QtSql, QtCore
 
-import sys
 import os
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import CountVectorizer
@@ -12,9 +11,6 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction import text
 from sklearn.svm import LinearSVC
 import datetime
-
-# # DEBUG
-# from memory_profiler import profile
 
 # Personal
 from log import MyLog
@@ -122,13 +118,11 @@ class Predictor(QtCore.QThread):
             return None
 
         elapsed_time = datetime.datetime.now() - start_time
-        self.l.debug("Initializing classifier in {0}".format(elapsed_time))
+        self.l.debug("Training classifier in {0}".format(elapsed_time))
 
         self.initiated = True
 
 
-    # @profile
-    # def calculatePercentageMatch(self):
     def run(self):
 
         """Calculate the match percentage for each article,
@@ -161,9 +155,8 @@ class Predictor(QtCore.QThread):
             # http://stackoverflow.com/questions/929103/convert-a-number-range-to-another-range-maintaining-ratio
             x_test = self.classifier.decision_function(x_test)
 
-            elapsed_time = datetime.datetime.now() - start_time
             self.l.debug("Classifier predicted proba in {}".
-                         format(elapsed_time))
+                         format(datetime.datetime.now() - start_time))
             diff_time = datetime.datetime.now()
 
             maximum = max(x_test)
@@ -179,6 +172,8 @@ class Predictor(QtCore.QThread):
         except Exception as e:
             self.l.error("predictor: {}".format(e), exc_info=True)
             return
+
+        diff_time = datetime.datetime.now()
 
         self.bdd.transaction()
         query = QtSql.QSqlQuery(self.bdd)
@@ -199,9 +194,11 @@ class Predictor(QtCore.QThread):
         if not self.bdd.commit():
             self.l.critical("Percentages match not correctly written in db")
         else:
-            elapsed_time = datetime.datetime.now() - start_time
-            self.l.info("Done calculating match percentages in {0} s".
-                        format(elapsed_time))
+            self.l.debug("Percentages written to db in {}".
+                         format(datetime.datetime.now() - diff_time))
+
+            self.l.debug("Done calculating match percentages in {}".
+                         format(datetime.datetime.now() - start_time))
 
         self.calculated_something = True
 
