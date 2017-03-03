@@ -710,8 +710,6 @@ def getData(company, journal, entry, response=None):
             if r is not None:
                 abstract = r.renderContents().decode()
 
-            print(abstract)
-
             r = soup.find_all("img")
             if r:
                 base = "http://www.tandfonline.com{}"
