@@ -691,16 +691,26 @@ def getData(company, journal, entry, response=None):
             strainer = SoupStrainer("div", attrs={"class": "col-md-2-3 "})
             soup = BeautifulSoup(response.text, "html.parser",
                                  parse_only=strainer)
-            r = soup.h1
+            r = soup.span
             if r is not None:
+                # Remove all tags attributes
+                for tag in r.findAll(True):
+                    tag.attrs = None
                 title = r.renderContents().decode()
 
             strainer = SoupStrainer("div", attrs={"class": "abstractSection abstractInFull"})
             soup = BeautifulSoup(response.text, "html.parser",
                                  parse_only=strainer)
+
+            # Erase the title 'Abstract', useless
+            if soup("p")[0].text == "Abstract":
+                soup("p")[0].extract()
+
             r = soup.p
             if r is not None:
                 abstract = r.renderContents().decode()
+
+            print(abstract)
 
             r = soup.find_all("img")
             if r:
@@ -893,20 +903,21 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Taylor", journal, entry, response)
         # print("\n")
         # print(abstract)
-        print(date)
+        # print(date)
         # print("\n")
-        print(title)
-        print(authors)
+        # print(title)
+        # print(authors)
         # print("\n")
         # print("\n")
-        print(graphical_abstract)
+        # print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
-    urls_test = ["http://rss.sciencedirect.com/publication/science/13675931"]
+    # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
+    urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=ilab20"]
 
     session = FuturesSession(max_workers=20)
 
@@ -924,9 +935,9 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries[2:]:
+    for entry in feed.entries[5:]:
 
-        pprint(entry)
+        # pprint(entry)
 
         # url = refineUrl("Elsevier", journal, entry)
         # try:
@@ -937,7 +948,7 @@ if __name__ == "__main__":
 
         # webbrowser.open(url, new=0, autoraise=True)
 
-        # url = entry.link
+        url = entry.link
         # title = entry.title
 
         # title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry)
@@ -960,7 +971,7 @@ if __name__ == "__main__":
         # pprint(entry)
         # print(url)
 
-        # future = session.get(url, headers=headers, timeout=20)
-        # future.add_done_callback(functools.partial(print_result, journal, entry))
+        future = session.get(url, headers=headers, timeout=20)
+        future.add_done_callback(functools.partial(print_result, journal, entry))
 
         break
