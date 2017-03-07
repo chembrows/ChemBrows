@@ -54,8 +54,13 @@ class MyTwit(QtWidgets.QDialog):
         self.initUI()
         self.defineSlots()
 
+        # If no credentials, try to get them
         if not os.path.exists(self.MY_TWITTER_CREDS):
-            self.openAuthPage()
+            authentified = self.openAuthPage()
+
+        # No credentials obtained, exit
+        if not authentified:
+            return
 
         self.setTweetText()
         self.show()
@@ -89,27 +94,40 @@ class MyTwit(QtWidgets.QDialog):
             if not r:
                 raise Exception()
         except Exception as e:
-            QtWidgets.QMessageBox.critical(self, "Authentication", "ChemBrows could not open a web page.\nVisit oauth_url to get the PIN code",
-                                           QtWidgets.QMessageBox.Ok, defaultButton=QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.critical(self, "Authentication", "ChemBrows could not open a web page.\nVisit {} to get the PIN code".format(oauth_url),
+                                           QtWidgets.QMessageBox.Ok,defaultButton=QtWidgets.QMessageBox.Ok)
             self.l.error("Authentication URL not opened")
             self.l.error("openAuthPage: {}".format(e), exc_info=True)
+            return False
 
 
-        pin = QtWidgets.QInputDialog.getText(self, "PIN verification", "Enter the PIN to authenticate yourself")
+        pin = QtWidgets.QInputDialog.getText(self, "PIN verification","Enter the PIN to authenticate yourself")
+
+        # If OK wasn't pressed, exit
+        if not pin[1]:
+            return False
 
         oauth_verifier = pin[0]
-
         twitter = Twitter(auth=OAuth(token, token_secret, self.CONSUMER_KEY,
                                      self.CONSUMER_SECRET),
                           format='', api_version=None)
 
-        oauth_token, oauth_secret = self.parseOauthTokens(twitter.oauth.access_token(oauth_verifier=oauth_verifier))
+        try:
+            oauth_token, oauth_secret = self.parseOauthTokens(twitter.oauth.access_token(oauth_verifier=oauth_verifier))
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Authentication", "Impossible to obtain tokens",
+                                           QtWidgets.QMessageBox.Ok, defaultButton=QtWidgets.QMessageBox.Ok)
+            self.l.error("openAuthPage, no tokens : {}".format(e),
+                         exc_info=True)
+            return False
 
         self.l.debug("Writing authentication file")
         write_token_file(self.MY_TWITTER_CREDS, oauth_token, oauth_secret)
 
         self.twitter = Twitter(auth=OAuth(oauth_token, oauth_secret,
                                self.CONSUMER_KEY, self.CONSUMER_SECRET))
+
+        return True
 
 
     def parseOauthTokens(self, result):
@@ -246,4 +264,3 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     # obj = MyTwit(parent, "Mesoporous Ni<small><sub>60</sub></small>Fe<small><sub>30</sub></small>Mn<small><sub>10</sub></small>-alloy based metal/metal oxide composite thick films as highly active and robust oxygen evolution catalysts", "http://pubs.rsc.org/en/Content/ArticleLanding/2016/EE/C5EE02509E", "http pubs rsc org services images rscpubs eplatform service freecontent imageservice svc imageservice image ga id c5ee02509e")
     obj = MyTwit("<span class=\"hlFld-Title\">Molecular Rift: Virtual Reality for Drug Designers</span>", "http://dx.doi.org/10.1021/acs.jcim.5b00544", "http pubs acs org appl literatum publisher achs journals content jcisd8 0 jcisd8 ahead of print acs jcim 5b00544 20151111 images medium ci 2015 00544d_0015 gif")
-    sys.exit(app.exec_())
