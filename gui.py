@@ -2351,31 +2351,25 @@ class MyWindow(QtWidgets.QMainWindow):
         title = table.model().index(table.selectionModel().selection().indexes()[0].row(), 3).data()
         link = table.model().index(table.selectionModel().selection().indexes()[0].row(), 10).data()
 
-        import urllib.parse
-
         # Create a simple title, by removing html tags (tags are not accepted in a mail subject)
         simple_title = functions.removeHtml(title) + " : spotted by ChemBrows"
 
         body = "Click on this link to see the article on the editor's website: {}\n\nThis article was spotted by ChemBrows: www.chembrows.com"
-
-        print(body)
+        body = body.format(link)
 
         url = "mailto:?subject={}&body={}"
 
         # if sys.platform=='win32':
-        # if sys.platform in ['win32', 'cygwin', 'win64']:
-            # body = body.format(link)
-            # body = urllib.parse.quote(body)
-            # url = url.format(simple_title, body)
-            # webbrowser.open(url)
+        if sys.platform in ['win32', 'cygwin', 'win64']:
+            body = urllib.parse.quote(body)
+            url = url.format(simple_title, body)
+            webbrowser.open(url)
 
-        if sys.platform == 'darwin':
-            body = body.format(urllib.parse.quote(link))
+        elif sys.platform == 'darwin':
             url = url.format(simple_title, body)
             webbrowser.open(url)
         else:
             # Create an url to be opened with a mail client
-            body = body.format(link)
             body = urllib.parse.quote(body)
             url = url.format(simple_title, body)
             webbrowser.open(url)
