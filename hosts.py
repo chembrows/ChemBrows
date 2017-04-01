@@ -188,7 +188,7 @@ def getData(company, journal, entry, response=None):
             # # Get the title (w/ html)
             # Strainer: get a soup with only the interesting part.
             # Don't load the complete tree in memory. Saves RAM
-            strainer = SoupStrainer("h2", attrs={"class": "alpH1"})
+            strainer = SoupStrainer("h2", attrs={"class": "capsule__title fixpadv--m"})
             soup = BeautifulSoup(response.text, "html.parser",
                                  parse_only=strainer)
             title = soup.h2
@@ -196,7 +196,7 @@ def getData(company, journal, entry, response=None):
             if title is not None:
                 title = title.renderContents().decode().strip()
 
-            # # Get the abstrat (w/ html)
+            # Get the abstrat (w/ html)
             strainer = SoupStrainer("p", xmlns="http://www.rsc.org/schema/rscart38")
             soup = BeautifulSoup(response.text, "html.parser",
                                  parse_only=strainer)
@@ -901,21 +901,21 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Taylor", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("RSC", journal, entry, response)
+        print("\n")
+        print(abstract)
+        print(date)
+        print("\n")
+        print(title)
+        print(authors)
         # print("\n")
-        # print(abstract)
-        # print(date)
         # print("\n")
-        # print(title)
-        # print(authors)
-        # print("\n")
-        # print("\n")
-        # print(graphical_abstract)
+        print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=ilab20"]
+    urls_test = ["http://feeds.rsc.org/rss/sc"]
 
     session = FuturesSession(max_workers=20)
 
@@ -933,7 +933,7 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries[5:]:
+    for entry in feed.entries:
 
         # pprint(entry)
 
@@ -957,8 +957,8 @@ if __name__ == "__main__":
 
         # print(abstract)
 
-        # if "Density Functional" not in entry.title:
-            # continue
+        if "Two-photon" not in entry.title:
+            continue
 
         # print(entry)
 

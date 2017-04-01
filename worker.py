@@ -153,7 +153,6 @@ class Worker(QtCore.QThread):
                     self.l.error("getDoi failed for: {}".
                                  format(journal), exc_info=True)
                     self.counter_futures_urls += 1
-                    print(self.counter_futures_urls)
                     continue
 
                 try:
@@ -479,7 +478,8 @@ class Worker(QtCore.QThread):
         try:
             title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry, response)
         except TypeError:
-            self.l.error("getData returned None for {}".format(journal))
+            self.l.error("getData returned None for {}".format(journal),
+                         exc_info=True)
             self.counter_futures_images += 1
             self.parent.counter_articles_failed += 1
             return
