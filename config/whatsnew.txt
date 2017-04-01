@@ -1,3 +1,7 @@
+Version 0.9.32:
+- Bug fix: collecting RSC journals
+
+Version 0.9.31:
 - It is now possible to add you own journals !
 - Performance improvements
 - New journals added to the base catalogue
