@@ -1,3 +1,6 @@
+Version 0.9.33:
+- Bug fix: Collecting new articles from Science
+
 Version 0.9.32:
 - Bug fix: collecting RSC journals
 
