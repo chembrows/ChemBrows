@@ -561,6 +561,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.count_threads = 0
         for i in range(max_nbr_threads):
             try:
+                print(self.urls)
                 url = self.urls[i]
                 worker = Worker(self)
                 worker.url_feed = url
@@ -1296,7 +1297,7 @@ class MyWindow(QtWidgets.QMainWindow):
         # Some articles have an URL instead of a DOI (the publisher
         # does not provide the DOI in the abstract), so check and display
         # only the DOI
-        if not validators.url(doi):
+        if not validators.url(doi) and '10.1' in doi:
             self.label_doi.setText(doi)
         else:
             self.label_doi.setText("DOI unavailable")

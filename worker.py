@@ -125,6 +125,8 @@ class Worker(QtCore.QThread):
                 break
 
         try:
+            print("journal abb:")
+            print(journal_abb)
             self.dico_doi = self.listDoi(journal_abb)
         except UnboundLocalError:
             self.l.error("Journal not recognized ! Aborting")

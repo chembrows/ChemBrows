@@ -365,24 +365,15 @@ def getData(company, journal, entry, response=None):
         date = entry.date
 
         graphical_abstract = None
-        author = None
+
+        if entry.author:
+            author = entry.author
+        else:
+            author = None
 
         abstract = entry.summary
-
         if not abstract:
             abstract = None
-        else:
-            if "Author:" in entry.summary:
-                abstract = entry.summary.split("Author: ")[0]
-
-                try:
-                    author = entry.summary.split("Author: ")[1]
-                except IndexError:
-                    pass
-            elif "Authors:" in entry.summary:
-                abstract = entry.summary.split("Authors: ")[0]
-                author = entry.summary.split("Authors: ")[1].split(", ")
-                author = ", ".join(author)  # To comment if formatName
 
 
     elif company == 'PNAS':
@@ -901,7 +892,7 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("RSC", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Science", journal, entry, response)
         print("\n")
         print(abstract)
         print(date)
@@ -915,7 +906,7 @@ if __name__ == "__main__":
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["http://feeds.rsc.org/rss/sc"]
+    urls_test = ["http://science.sciencemag.org/rss/current.xml"]
 
     session = FuturesSession(max_workers=20)
 
@@ -935,7 +926,7 @@ if __name__ == "__main__":
 
     for entry in feed.entries:
 
-        # pprint(entry)
+        pprint(entry)
 
         # url = refineUrl("Elsevier", journal, entry)
         # try:
@@ -957,8 +948,8 @@ if __name__ == "__main__":
 
         # print(abstract)
 
-        if "Two-photon" not in entry.title:
-            continue
+        # if "Two-photon" not in entry.title:
+            # continue
 
         # print(entry)
 
