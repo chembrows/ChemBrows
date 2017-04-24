@@ -58,9 +58,9 @@ class MyTwit(QtWidgets.QDialog):
         if not os.path.exists(self.MY_TWITTER_CREDS):
             authentified = self.openAuthPage()
 
-        # No credentials obtained, exit
-        if not authentified:
-            return
+            # No credentials obtained, exit
+            if not authentified:
+                return
 
         self.setTweetText()
         self.show()
