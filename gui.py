@@ -85,8 +85,8 @@ class MyWindow(QtWidgets.QMainWindow):
             self.l.info("You are in debug mod")
 
         # Set the logging level
-        # self.l.setLevel(logging.INFO)
-        self.l.setLevel(logging.DEBUG)
+        self.l.setLevel(logging.INFO)
+        # self.l.setLevel(logging.DEBUG)
 
         self.l.info('Resources dir: {}'.format(self.resource_dir))
         self.l.info('Data dir: {}'.format(self.DATA_PATH))
@@ -561,7 +561,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.count_threads = 0
         for i in range(max_nbr_threads):
             try:
-                print(self.urls)
                 url = self.urls[i]
                 worker = Worker(self)
                 worker.url_feed = url
@@ -597,7 +596,8 @@ class MyWindow(QtWidgets.QMainWindow):
                 del worker
 
         # Display the nbr of finished threads
-        self.l.debug("Done: {}/{}".format(self.count_threads, self.urls_max))
+        self.l.info("Done: {}/{}".format(self.count_threads, self.urls_max))
+        self.l.info("\n")
 
         # # Display the progress of the parsing w/ the progress bar
         percent = self.count_threads * 100 / self.urls_max
@@ -619,8 +619,8 @@ class MyWindow(QtWidgets.QMainWindow):
             self.l.info("{} RSS feeds were not downloaded:".
                         format(len(self.list_failed_rss)))
             for feed in self.list_failed_rss:
-                self.l.debug(feed)
-            self.l.debug("\n")
+                self.l.info(feed)
+            self.l.info("\n")
 
             self.l.info("{} articles failed".
                         format(self.counter_articles_failed))
@@ -628,15 +628,15 @@ class MyWindow(QtWidgets.QMainWindow):
                         format(self.counter_images_failed))
 
             total_time = datetime.datetime.now() - self.start_time
-            self.l.debug("Total refresh time: {}".
+            self.l.info("Total refresh time: {}".
                          format(total_time))
 
             # # TODO: checker cette instruction, should crash
             if self.counter_added > 0:
-                self.l.debug("Time per paper: {} seconds".
+                self.l.info("Time per paper: {} seconds".
                              format(total_time.seconds / (self.counter_added + self.counter_updates)))
             else:
-                self.l.debug("Time per paper: irrelevant, 0 paper added")
+                self.l.info("Time per paper: irrelevant, 0 paper added")
 
             self.calculatePercentageMatch()
 

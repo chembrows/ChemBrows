@@ -103,7 +103,7 @@ class Worker(QtCore.QThread):
         # Get the journal name
         journal = feed['feed']['title']
 
-        self.l.debug("{0}: {1}".format(journal, len(feed.entries)))
+        self.l.info("{0}: {1}".format(journal, len(feed.entries)))
 
         # Lists to check if the post is in the db, and if
         # it has all the infos
@@ -125,8 +125,6 @@ class Worker(QtCore.QThread):
                 break
 
         try:
-            print("journal abb:")
-            print(journal_abb)
             self.dico_doi = self.listDoi(journal_abb)
         except UnboundLocalError:
             self.l.error("Journal not recognized ! Aborting")
