@@ -669,12 +669,12 @@ def getData(company, journal, entry, response=None):
         author = None
         abstract = None
 
-        if entry.authors:
+        try:
             author = []
             for element in entry.authors:
                 author.append(element['name'])
             author = ", ".join(author)
-        else:
+        except AttributeError:
             author = None
 
         if response.status_code is requests.codes.ok:
@@ -694,7 +694,7 @@ def getData(company, journal, entry, response=None):
                                  parse_only=strainer)
 
             # Erase the title 'Abstract', useless
-            if soup("p")[0].text == "Abstract":
+            if soup("p") and soup("p")[0].text == "Abstract":
                 soup("p")[0].extract()
 
             r = soup.p
