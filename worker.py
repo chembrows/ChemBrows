@@ -103,10 +103,10 @@ class Worker(QtCore.QThread):
         # Get the journal name
         journal = feed['feed']['title']
 
-        self.l.info("{0}: {1}".format(journal, len(feed.entries)))
+        self.l.info("{}: {}".format(journal, len(feed.entries)))
 
         # Lists to check if the post is in the db, and if
-        # it has all the infos
+        # it has all the info
         self.session_images = FuturesSession(max_workers=self.MAX_WORKERS,
             session=self.parent.browsing_session)
 
@@ -247,15 +247,15 @@ class Worker(QtCore.QThread):
                     query.prepare("INSERT INTO papers (doi, title, date, \
                                   journal, authors, abstract, \
                                   graphical_abstract, url, new, topic_simple, \
-                                  author_simple) \
-                                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                                  author_simple, url_image) \
+                                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
                     # Set new to 1 and not to true
                     params = (doi, title, date, journal_abb, authors, abstract,
                               graphical_abstract, url, 1, topic_simple,
-                              author_simple)
+                              author_simple, graphical_abstract)
 
-                    self.l.debug("Adding {0} to the database".format(doi))
+                    self.l.debug("Adding {} to the database".format(doi))
                     self.parent.counter_added += 1
                     self.new_entries_worker += 1
 
@@ -263,6 +263,8 @@ class Worker(QtCore.QThread):
                         query.addBindValue(value)
                     query.exec_()
 
+                    # If article has no graphical abstract of if it has been
+                    # dled
                     if graphical_abstract == "Empty" or os.path.exists(
                             self.PATH +
                             functions.simpleChar(graphical_abstract)):
@@ -293,9 +295,11 @@ class Worker(QtCore.QThread):
                         future_image = self.session_images.get(
                             graphical_abstract, headers=headers,
                             timeout=self.TIMEOUT)
+
                         future_image.add_done_callback(
                             functools.partial(self.pictureDownloaded,
                                               doi, url))
+
                         self.list_futures.append(future_image)
 
         # The company requires to download the article's web page
@@ -504,8 +508,8 @@ class Worker(QtCore.QThread):
         if doi not in self.dico_doi:
             query.prepare("INSERT INTO papers (doi, title, date, journal, \
                           authors, abstract, graphical_abstract, url, new, \
-                          topic_simple, author_simple) VALUES(?, ?, ?, ?, ?, \
-                          ?, ?, ?, ?, ?, ?)")
+                          topic_simple, author_simple, url_image) VALUES(?, \
+                          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
             params = (doi, title, date, journal_abb, authors, abstract,
                       graphical_abstract, url, 1, topic_simple, author_simple)

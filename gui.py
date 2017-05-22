@@ -447,7 +447,7 @@ class MyWindow(QtWidgets.QMainWindow):
                     AUTOINCREMENT, percentage_match REAL, doi TEXT, title\
                     TEXT, date TEXT, journal TEXT, authors TEXT, abstract\
                     TEXT, graphical_abstract TEXT, liked INTEGER, url TEXT,\
-                    new INTEGER, topic_simple TEXT, author_simple TEXT)")
+                    new INTEGER, topic_simple TEXT, author_simple TEXT, url_image TEXT)")
 
         if self.debug_mod:
             query.exec_("CREATE TABLE IF NOT EXISTS debug\
