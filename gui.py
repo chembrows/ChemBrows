@@ -597,7 +597,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
         # Display the nbr of finished threads
         self.l.info("Done: {}/{}".format(self.count_threads, self.urls_max))
-        self.l.info("\n")
 
         # # Display the progress of the parsing w/ the progress bar
         percent = self.count_threads * 100 / self.urls_max

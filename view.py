@@ -129,6 +129,7 @@ class ViewPerso(QtWidgets.QTableView):
         self.hideColumn(11)  # Hide new
         self.hideColumn(12)  # Hide topic_simple
         self.hideColumn(13)  # Hide author_simple
+        self.hideColumn(14)  # Hide url_image
 
         # Stretch the title into the remaining space
         self.horizontalHeader().setSectionResizeMode(3,
