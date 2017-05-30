@@ -1,8 +1,7 @@
 __pycache__/
 *.swp
 *.sw*
-fichiers.sqlite*
-fichiers.sqlite-journal
+*sqlite*
 activity.log*
 *.xml
 graphical_abstracts/
