@@ -514,7 +514,7 @@ class Worker(QtCore.QThread):
             params = (doi, title, date, journal_abb, authors, abstract,
                       graphical_abstract, url, 1, topic_simple, author_simple)
 
-            self.l.debug("Adding {0} to the database".format(doi))
+            self.l.debug("Adding {} to the database".format(doi))
             self.parent.counter_added += 1
 
             for value in params:
