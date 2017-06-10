@@ -255,16 +255,19 @@ class Worker(QtCore.QThread):
                               graphical_abstract, url, 1, topic_simple,
                               author_simple, graphical_abstract)
 
-                    self.l.debug("Adding {} to the database".format(doi))
-                    self.parent.counter_added += 1
-                    self.new_entries_worker += 1
-
                     for value in params:
                         query.addBindValue(value)
 
                     # Test that query worked
                     if not query.exec_():
-                        self.l.error("SQL ERROR:{}".format(query.lastError().text()))
+                        self.l.error("SQL ERROR:{}, company_no_dl".
+                                     format(query.lastError().text()))
+                        self.parent.counter_articles_failed += 1
+                        continue
+                    else:
+                        self.l.debug("{} added to the database".format(doi))
+                        self.new_entries_worker += 1
+                        self.parent.counter_added += 1
 
                     # If article has no graphical abstract of if it has been
                     # dled
@@ -526,8 +529,10 @@ class Worker(QtCore.QThread):
             # Test that query worked
             if not query.exec_():
                 self.l.error("SQL ERROR:{}".format(query.lastError().text()))
-
-        self.new_entries_worker += 1
+                self.parent.counter_articles_failed += 1
+                return
+            else:
+                self.new_entries_worker += 1
 
         # Don't try to dl the image if its url is 'Empty', or if the image
         # already exists
