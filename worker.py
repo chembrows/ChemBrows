@@ -261,7 +261,10 @@ class Worker(QtCore.QThread):
 
                     for value in params:
                         query.addBindValue(value)
-                    query.exec_()
+
+                    # Test that query worked
+                    if not query.exec_():
+                        self.l.error("SQL ERROR:{}".format(query.lastError().text()))
 
                     # If article has no graphical abstract of if it has been
                     # dled
@@ -494,7 +497,6 @@ class Worker(QtCore.QThread):
             self.parent.counter_articles_failed += 1
             return
 
-
         # Rejecting the article if no authors
         if authors == "Empty":
             self.counter_futures_images += 1
@@ -512,15 +514,18 @@ class Worker(QtCore.QThread):
                           ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
             params = (doi, title, date, journal_abb, authors, abstract,
-                      graphical_abstract, url, 1, topic_simple, author_simple)
+                      graphical_abstract, url, 1, topic_simple, author_simple,
+                      graphical_abstract)
 
-            self.l.debug("Adding {0} to the database".format(doi))
+            self.l.debug("Adding {} to the database".format(doi))
             self.parent.counter_added += 1
 
             for value in params:
                 query.addBindValue(value)
 
-            query.exec_()
+            # Test that query worked
+            if not query.exec_():
+                self.l.error("SQL ERROR:{}".format(query.lastError().text()))
 
         self.new_entries_worker += 1
 
