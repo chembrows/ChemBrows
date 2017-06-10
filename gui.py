@@ -538,13 +538,18 @@ class MyWindow(QtWidgets.QMainWindow):
         self.urls_max = len(self.urls)
 
         # Get the optimal nbr of thread. Will vary depending
-        # on the user's computer
-        max_nbr_threads = QtCore.QThread.idealThreadCount()
+        # on the user's computer. 4 is the maximum
+        if QtCore.QThread.idealThreadCount() > 4:
+            max_nbr_threads = 4
+        else:
+            max_nbr_threads = QtCore.QThread.idealThreadCount()
+
         self.l.debug("IdealThreadCount: {}".format(max_nbr_threads))
         # max_nbr_threads = 1
 
         # Counter to count the new entries in the database
         self.counter_added = 0
+        self.l.debug("counter_added: {}".format(self.counter_added))
         self.counter_updates = 0
         self.counter_rejected = 0
         self.counter_articles_failed = 0
@@ -597,6 +602,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
         # Display the nbr of finished threads
         self.l.info("Done: {}/{}".format(self.count_threads, self.urls_max))
+        self.l.debug("counter_added: {}".format(self.counter_added))
 
         # # Display the progress of the parsing w/ the progress bar
         percent = self.count_threads * 100 / self.urls_max
@@ -614,6 +620,13 @@ class MyWindow(QtWidgets.QMainWindow):
                         format(self.counter_rejected))
             self.l.info("{} attempts to update entries\n".
                         format(self.counter_updates))
+
+            # Display current nbr of articles in db
+            count_query = QtSql.QSqlQuery(self.bdd)
+            count_query.exec_("SELECT COUNT(id) FROM papers")
+            count_query.first()
+            nbr_entries = count_query.record().value(0)
+            self.l.info("Nbr of entries: {}".format(nbr_entries))
 
             self.l.info("{} RSS feeds were not downloaded:".
                         format(len(self.list_failed_rss)))
@@ -678,7 +691,8 @@ class MyWindow(QtWidgets.QMainWindow):
             self.l.debug("Killed all the futures for this worker")
 
         # Display a smooth progress bar
-        self.progress = QtWidgets.QProgressDialog("Cancelling...", None, 0, 0, self)
+        self.progress = QtWidgets.QProgressDialog("Cancelling...", None, 0, 0,
+                                                  self)
         self.progress.setWindowTitle("Cancelling refresh")
         self.progress.show()
 
