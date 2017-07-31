@@ -323,19 +323,31 @@ class Worker(QtCore.QThread):
                     self.l.error("getDoi failed for: {}".
                                  format(journal), exc_info=True)
                     self.counter_futures_urls += 1
+                    self.counter_futures_images += 1
                     continue
 
+                # Try to refine the url
                 try:
                     url = hosts.refineUrl(company, journal, entry)
                 except Exception as e:
                     self.l.error("refineUrl failed for: {}".
                                  format(journal), exc_info=True)
                     self.counter_futures_urls += 1
+                    self.counter_futures_images += 1
+                    continue
+
+                # Make sure the entry has a title
+                try:
+                    title = entry.title
+                except AttributeError:
+                    self.l.error("No title for {}".
+                                 format(doi), exc_info=True)
+                    self.counter_futures_urls += 1
+                    self.counter_futures_images += 1
                     continue
 
                 # Reject crappy entries: corrigendum, erratum, etc
-                if hosts.reject(entry.title):
-                    title = entry.title
+                if hosts.reject(title):
                     self.counter_futures_images += 1
                     self.counter_futures_urls += 1
                     self.parent.counter_rejected += 1

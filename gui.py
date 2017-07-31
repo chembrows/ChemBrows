@@ -85,8 +85,8 @@ class MyWindow(QtWidgets.QMainWindow):
             self.l.info("You are in debug mod")
 
         # Set the logging level
-        self.l.setLevel(logging.INFO)
-        # self.l.setLevel(logging.DEBUG)
+        # self.l.setLevel(logging.INFO)
+        self.l.setLevel(logging.DEBUG)
 
         self.l.info('Resources dir: {}'.format(self.resource_dir))
         self.l.info('Data dir: {}'.format(self.DATA_PATH))
