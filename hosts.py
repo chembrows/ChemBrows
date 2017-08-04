@@ -906,7 +906,7 @@ if __name__ == "__main__":
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["http://science.sciencemag.org/rss/current.xml"]
+    urls_test = ["https://www.nature.com/nmat.rss"]
 
     session = FuturesSession(max_workers=20)
 
