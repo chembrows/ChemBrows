@@ -252,7 +252,7 @@ def test_getData(journalsUrls):
             try:
                 if response.history:
                     dict_res_by_company[company]['count_redirections'] += 1
-                    l.debug("\nRequest was redirected")
+                    l.debug("Request was redirected")
                     for resp in response.history:
                         l.debug("Status code, URL: {}, {}".
                                 format(resp.status_code, resp.url))
