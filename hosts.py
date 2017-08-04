@@ -759,7 +759,7 @@ def getDoi(company, journal, entry):
         doi = entry.id.split("dx.doi.org/")[1]
 
     elif company == 'Science':
-        doi = entry.dc_identifier
+        doi = "10.1126/science." + entry.prism_endingpage[1:]
 
     elif company == 'PNAS':
         base = entry.dc_identifier
@@ -893,20 +893,20 @@ if __name__ == "__main__":
     def print_result(journal, entry, future):
         response = future.result()
         title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Science", journal, entry, response)
-        print("\n")
-        print(abstract)
-        print(date)
-        print("\n")
-        print(title)
-        print(authors)
+        # print("\n")
+        # print(abstract)
+        # print(date)
+        # print("\n")
+        # print(title)
+        # print(authors)
         # print("\n")
         # print("\n")
-        print(graphical_abstract)
+        # print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["https://www.nature.com/nmat.rss"]
+    urls_test = ["http://science.sciencemag.org/rss/current.xml"]
 
     session = FuturesSession(max_workers=20)
 
@@ -924,13 +924,15 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries:
+    for entry in feed.entries[1:]:
 
         pprint(entry)
 
         # url = refineUrl("Elsevier", journal, entry)
         # try:
-            # doi = getDoi("Elsevier", journal, entry)
+        doi = getDoi("Science", journal, entry)
+
+        print(doi)
         # except AttributeError:
             # continue
         # # print(url)
