@@ -352,8 +352,12 @@ def getData(company, journal, entry, response=None):
             soup = BeautifulSoup(response.text, "html.parser",
                                  parse_only=strainer)
             r = soup.find_all("img")
+
             if r:
-                graphical_abstract = "http://www.nature.com" + r[0]["src"]
+                # Additional verification to correctly forge the URL
+                graphical_abstract = r[0]["src"]
+                if "nature.com" not in graphical_abstract:
+                    graphical_abstract = "http://www.nature.com" + graphical_abstract
 
                 if "carousel" in graphical_abstract:
                     graphical_abstract = graphical_abstract.replace("carousel", "images_article")
@@ -892,7 +896,7 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Science", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Nature", journal, entry, response)
         # print("\n")
         # print(abstract)
         # print(date)
@@ -901,12 +905,12 @@ if __name__ == "__main__":
         # print(authors)
         # print("\n")
         # print("\n")
-        # print(graphical_abstract)
+        print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["http://science.sciencemag.org/rss/current.xml"]
+    urls_test = ["https://www.nature.com/nmat/journal/vaop/ncurrent/rss.rdf"]
 
     session = FuturesSession(max_workers=20)
 
@@ -924,15 +928,15 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries[1:]:
+    for entry in feed.entries[5:]:
 
-        pprint(entry)
+        # pprint(entry)
 
         # url = refineUrl("Elsevier", journal, entry)
         # try:
-        doi = getDoi("Science", journal, entry)
+        doi = getDoi("Nature", journal, entry)
 
-        print(doi)
+        # print(doi)
         # except AttributeError:
             # continue
         # # print(url)
@@ -965,4 +969,4 @@ if __name__ == "__main__":
         future = session.get(url, headers=headers, timeout=20)
         future.add_done_callback(functools.partial(print_result, journal, entry))
 
-        break
+        # break
