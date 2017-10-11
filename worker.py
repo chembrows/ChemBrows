@@ -247,20 +247,20 @@ class Worker(QtCore.QThread):
                     query.prepare("INSERT INTO papers (doi, title, date, \
                                   journal, authors, abstract, \
                                   graphical_abstract, url, new, topic_simple, \
-                                  author_simple, url_image) \
-                                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                                  author_simple) \
+                                  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
                     # Set new to 1 and not to true
                     params = (doi, title, date, journal_abb, authors, abstract,
                               graphical_abstract, url, 1, topic_simple,
-                              author_simple, graphical_abstract)
+                              author_simple)
 
                     for value in params:
                         query.addBindValue(value)
 
                     # Test that query worked
                     if not query.exec_():
-                        self.l.error("SQL ERROR:{}, company_no_dl".
+                        self.l.error("SQL ERROR in run(): {}, company_no_dl".
                                      format(query.lastError().text()))
                         self.parent.counter_articles_failed += 1
                         continue
@@ -525,12 +525,11 @@ class Worker(QtCore.QThread):
         if doi not in self.dico_doi:
             query.prepare("INSERT INTO papers (doi, title, date, journal, \
                           authors, abstract, graphical_abstract, url, new, \
-                          topic_simple, author_simple, url_image) VALUES(?, \
-                          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                          topic_simple, author_simple) VALUES(?, \
+                          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
             params = (doi, title, date, journal_abb, authors, abstract,
-                      graphical_abstract, url, 1, topic_simple, author_simple,
-                      graphical_abstract)
+                      graphical_abstract, url, 1, topic_simple, author_simple)
 
             self.l.debug("Adding {} to the database".format(doi))
             self.parent.counter_added += 1
@@ -540,7 +539,8 @@ class Worker(QtCore.QThread):
 
             # Test that query worked
             if not query.exec_():
-                self.l.error("SQL ERROR:{}".format(query.lastError().text()))
+                self.l.error("SQL ERROR in completeData(): {}".
+                             format(query.lastError().text()))
                 self.parent.counter_articles_failed += 1
                 return
             else:
