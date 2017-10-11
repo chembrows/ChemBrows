@@ -182,8 +182,6 @@ class Predictor(QtCore.QThread):
 
         for id_bdd, percentage in zip(list_id, list_percentages):
 
-            print(id_bdd, percentage)
-
             # Convert the percentage to a float, because the number is
             # probably a type used by numpy. MANDATORY
             params = (float(percentage), id_bdd)
