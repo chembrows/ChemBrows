@@ -4,7 +4,8 @@ __pycache__/
 *sqlite*
 activity.log*
 *.xml
-graphical_abstracts/
+graphical_abstracts_save
+graphical_abstracts
 images_stock/
 options.ini
 *_save
