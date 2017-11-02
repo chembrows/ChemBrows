@@ -49,7 +49,7 @@ def test_ACSFeeds():
     # Strainer: get a soup with only the interesting part.
     # Don't load the complete tree in memory. Saves RAM
     strainer = SoupStrainer("ul", attrs={"class": "feeds"})
-    soup = BeautifulSoup(page.text, parse_only=strainer)
+    soup = BeautifulSoup(page.text, "html.parser", parse_only=strainer)
     r = soup.find_all("li")
 
     dic_journals = {}

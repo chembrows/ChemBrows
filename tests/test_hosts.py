@@ -165,7 +165,7 @@ def test_getData(journalsUrls):
 
     # # TODO: comment or uncomment
     # # Bypass all companies but one
-    # list_urls_feed = hosts.getJournals("Elsevier")[2]
+    # list_urls_feed = hosts.getJournals("Nature")[2]
 
     # Build a dic with key: company
                      # value: journal name
@@ -252,7 +252,7 @@ def test_getData(journalsUrls):
             try:
                 if response.history:
                     dict_res_by_company[company]['count_redirections'] += 1
-                    l.debug("\nRequest was redirected")
+                    l.debug("Request was redirected")
                     for resp in response.history:
                         l.debug("Status code, URL: {}, {}".
                                 format(resp.status_code, resp.url))

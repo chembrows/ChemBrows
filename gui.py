@@ -538,13 +538,18 @@ class MyWindow(QtWidgets.QMainWindow):
         self.urls_max = len(self.urls)
 
         # Get the optimal nbr of thread. Will vary depending
-        # on the user's computer
-        max_nbr_threads = QtCore.QThread.idealThreadCount()
+        # on the user's computer. 4 is the maximum
+        if QtCore.QThread.idealThreadCount() > 4:
+            max_nbr_threads = 4
+        else:
+            max_nbr_threads = QtCore.QThread.idealThreadCount()
+
         self.l.debug("IdealThreadCount: {}".format(max_nbr_threads))
         # max_nbr_threads = 1
 
         # Counter to count the new entries in the database
         self.counter_added = 0
+        self.l.debug("counter_added: {}".format(self.counter_added))
         self.counter_updates = 0
         self.counter_rejected = 0
         self.counter_articles_failed = 0
@@ -596,7 +601,8 @@ class MyWindow(QtWidgets.QMainWindow):
                 del worker
 
         # Display the nbr of finished threads
-        self.l.debug("Done: {}/{}".format(self.count_threads, self.urls_max))
+        self.l.info("Done: {}/{}".format(self.count_threads, self.urls_max))
+        self.l.debug("counter_added: {}".format(self.counter_added))
 
         # # Display the progress of the parsing w/ the progress bar
         percent = self.count_threads * 100 / self.urls_max
@@ -615,11 +621,18 @@ class MyWindow(QtWidgets.QMainWindow):
             self.l.info("{} attempts to update entries\n".
                         format(self.counter_updates))
 
+            # Display current nbr of articles in db
+            count_query = QtSql.QSqlQuery(self.bdd)
+            count_query.exec_("SELECT COUNT(id) FROM papers")
+            count_query.first()
+            nbr_entries = count_query.record().value(0)
+            self.l.info("Nbr of entries: {}".format(nbr_entries))
+
             self.l.info("{} RSS feeds were not downloaded:".
                         format(len(self.list_failed_rss)))
             for feed in self.list_failed_rss:
-                self.l.debug(feed)
-            self.l.debug("\n")
+                self.l.info(feed)
+            self.l.info("\n")
 
             self.l.info("{} articles failed".
                         format(self.counter_articles_failed))
@@ -627,15 +640,15 @@ class MyWindow(QtWidgets.QMainWindow):
                         format(self.counter_images_failed))
 
             total_time = datetime.datetime.now() - self.start_time
-            self.l.debug("Total refresh time: {}".
+            self.l.info("Total refresh time: {}".
                          format(total_time))
 
             # # TODO: checker cette instruction, should crash
             if self.counter_added > 0:
-                self.l.debug("Time per paper: {} seconds".
+                self.l.info("Time per paper: {} seconds".
                              format(total_time.seconds / (self.counter_added + self.counter_updates)))
             else:
-                self.l.debug("Time per paper: irrelevant, 0 paper added")
+                self.l.info("Time per paper: irrelevant, 0 paper added")
 
             self.calculatePercentageMatch()
 
@@ -678,7 +691,8 @@ class MyWindow(QtWidgets.QMainWindow):
             self.l.debug("Killed all the futures for this worker")
 
         # Display a smooth progress bar
-        self.progress = QtWidgets.QProgressDialog("Cancelling...", None, 0, 0, self)
+        self.progress = QtWidgets.QProgressDialog("Cancelling...", None, 0, 0,
+                                                  self)
         self.progress.setWindowTitle("Cancelling refresh")
         self.progress.show()
 
@@ -1296,7 +1310,7 @@ class MyWindow(QtWidgets.QMainWindow):
         # Some articles have an URL instead of a DOI (the publisher
         # does not provide the DOI in the abstract), so check and display
         # only the DOI
-        if not validators.url(doi):
+        if not validators.url(doi) and '10.1' in doi:
             self.label_doi.setText(doi)
         else:
             self.label_doi.setText("DOI unavailable")
@@ -2375,6 +2389,58 @@ class MyWindow(QtWidgets.QMainWindow):
             webbrowser.open(url)
 
 
+    def calculationsDone(self):
+
+        """Function called when the thread for percentages calculations
+        is finished"""
+
+        self.searchByButton()
+
+        # load notifications only if some articles were collected
+        try:
+            if self.counter_added > 0:
+                self.progress.setWindowTitle("Loading notifications")
+                self.progress.setLabelText("Loading notifications...")
+                worker = LittleThread(self.loadNotifications)
+                worker.start()
+
+                while worker.isRunning():
+                    QtWidgets.qApp.processEvents()
+                    worker.sleep(0.5)
+
+        except AttributeError:
+            self.l.debug("No entries added, skipping loadNotifications")
+
+        # Unlock the UI by setting this to False
+        self.blocking_ui = False
+
+        mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
+        mes += "Feed it more !"
+
+        self.progress.reset()
+
+        # Display a message if the classifier is not trained yet
+        if not self.predictor.initiated or not self.predictor.calculated_something:
+
+            QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
+                                              QtWidgets.QMessageBox.Ok)
+            QtWidgets.qApp.processEvents()
+
+        # Display nbr of added articles only if we're parsing
+        mes = "{} new articles were added to your database !"
+        if self.parsing:
+            mes = mes.format(self.counter_added)
+            QtWidgets.QMessageBox.information(self, "New articles",
+                                              mes,
+                                              QtWidgets.QMessageBox.Ok)
+
+        del self.predictor
+
+        # If we were parsin, we're not anymore.
+        # If we weren't parsing, we're still not parsing
+        self.parsing = False
+
+
     def calculatePercentageMatch(self, alone=False):
 
         """Slot to calculate the match percentage.
@@ -2384,83 +2450,26 @@ class MyWindow(QtWidgets.QMainWindow):
         # but it could also be False if the user refreshes the paperness
         self.blocking_ui = True
 
+        # Submit the changes to the db before calculations
         self.model.submitAll()
 
+        # Create a Predictor object
         self.predictor = Predictor(self.l,
                                    list(self.waiting_list.articles.keys()),
                                    self.bdd)
-
-        mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
-        mes += "Feed it more !"
-
-        # Display a message if the classifier is not trained yet
-        if self.predictor.initializePipeline() is None:
-            self.blocking_ui = False
-            QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
-                                          QtWidgets.QMessageBox.Ok)
-
-            # Re-sort otherwise the display looks messy
-            self.searchByButton()
-
-        def whenDone():
-
-            """Internal function called when the thread for percentages
-            calculations is finished"""
-
-            self.searchByButton()
-
-            # If parsing, load the notifications
-            # load the notifications only if some articles were collected
-            try:
-                if self.counter_added > 0:
-                    self.progress.setWindowTitle("Loading notifications")
-                    self.progress.setLabelText("Loading notifications...")
-                    worker = LittleThread(self.loadNotifications)
-                    worker.start()
-
-                    while worker.isRunning():
-                        QtWidgets.qApp.processEvents()
-                        worker.sleep(0.5)
-
-            except AttributeError:
-                self.l.debug("No entries added, skipping loadNotifications")
-
-            # Unlock the UI by setting this to False
-            self.blocking_ui = False
-
-            mes = "ChemBrows does not have enough data to calculate the Hot paperness yet.\n\n"
-            mes += "Feed it more !"
-
-            self.progress.reset()
-
-            # Display a message if the classifier is not trained yet
-            if (self.predictor.initializePipeline() is not None and
-                    not self.predictor.calculated_something):
-
-                QtWidgets.QMessageBox.information(self, "Feed ChemBrows", mes,
-                                                  QtWidgets.QMessageBox.Ok)
-                QtWidgets.qApp.processEvents()
-
-            if not alone:
-                # Display the number of articles added
-                mes = "{} new articles were added to your database !"
-                mes = mes.format(self.counter_added)
-                QtWidgets.QMessageBox.information(self, "New articles", mes,
-                                              QtWidgets.QMessageBox.Ok)
-
-            del self.predictor
-
 
         # https://contingencycoder.wordpress.com/2013/08/04/quick-tip-qprogressbar-as-a-busy-indicator/
         # If the range is set to 0, get a busy progress bar,
         # without percentage
         self.progress = QtWidgets.QProgressDialog("Calculating Hot Paperness...",
-                                              None, 0, 0, self)
+                                                  None, 0, 0, self)
         self.progress.setWindowTitle("Hot Paperness calculation")
         self.progress.setModal(True)
         self.progress.show()
 
-        self.predictor.finished.connect(whenDone)
+        # Initiate, connect and start the predictor
+        self.predictor.initializePipeline()
+        self.predictor.finished.connect(self.calculationsDone)
         self.predictor.start()
 
         # While calculating, display a smooth progress bar
@@ -2475,7 +2484,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def toggleLike(self):
 
-        """Slot to mark a post liked"""
+        """Slot to toggle the liked state of an article"""
 
         table = self.list_tables_in_tabs[self.onglets.currentIndex()]
 

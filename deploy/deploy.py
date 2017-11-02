@@ -48,7 +48,7 @@ elif compiling_platform == 'linux-x86_64':
     platform = 'nix64'
     extension = '.tar.gz'
 
-elif "macosx" and "x86_64" in compiling_platform:
+elif "macosx" in compiling_platform:
     platform = 'mac'
     extension = '.tar.gz'
 
