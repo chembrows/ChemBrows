@@ -165,7 +165,7 @@ def test_getData(journalsUrls):
 
     # TODO: comment or uncomment
     # Bypass all companies but one
-    list_urls_feed = hosts.getJournals("Nature")[2]
+    # list_urls_feed = hosts.getJournals("Nature")[2]
 
     # Build a dic with key: company
                      # value: journal name
