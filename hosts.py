@@ -647,6 +647,49 @@ def getData(company, journal, entry, response=None):
                 title = r.renderContents().decode()
 
 
+    elif company == 'Springer_open':
+
+        title = entry.title
+        date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
+        graphical_abstract = None
+        author = None
+
+        abstract = BS(entry.summary, "html.parser")
+
+        try:
+            _ = abstract("h3")[0].extract()
+            # Remove the graphical abstract part from the abstract
+            _ = abstract("span", attrs={"class": "a-plus-plus figure category-standard float-no id-figa"})[0].extract()
+        except IndexError:
+            pass
+
+        abstract = abstract.renderContents().decode().strip()
+
+        if response.status_code is requests.codes.ok:
+
+            strainer = SS("div", attrs={"class": "MediaObject"})
+            soup = BS(response.text, "html.parser", parse_only=strainer)
+
+            # For now, it's one shot: if the dl fails for the GA, there
+            # won't be a retry. That's bc too little articles have GA
+            r = soup.find_all("img")
+            if r:
+                graphical_abstract = r[0]['src']
+
+            strainer = SS("ul", attrs={"class": "u-listReset"})
+            soup = BS(response.text, "html.parser", parse_only=strainer)
+            r = soup.find_all("span", attrs={"class": "AuthorName"})
+            if r:
+                author = [tag.text for tag in r]
+                author = ", ".join(author)
+
+            strainer = SS("h1", attrs={"class": "ArticleTitle"})
+            soup = BS(response.text, "html.parser", parse_only=strainer)
+            r = soup.h1
+            if r is not None:
+                title = r.renderContents().decode()
+
+
     elif company == 'Taylor':
 
         title = entry.title
@@ -793,7 +836,7 @@ def getDoi(company, journal, entry):
     elif company == 'PLOS':
         doi = "10.1371/" + entry.id.split('/')[-1]
 
-    elif company == 'Springer':
+    elif company == 'Springer' or company == 'Springer_open':
         doi = "10.1007/" + entry.id.split('/')[-1]
 
     # Chemrxiv doesn't assign DOIs to articles. Use the id/url
@@ -910,7 +953,7 @@ if __name__ == "__main__":
     from pprint import pprint
     import webbrowser
 
-    COMPANY = 'Nature'
+    COMPANY = 'Springer_open'
 
     def print_result(journal, entry, future):
         response = future.result()
@@ -928,7 +971,7 @@ if __name__ == "__main__":
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["http://feeds.nature.com/nature/rss/current"]
+    urls_test = ["http://threedmedprint.springeropen.com/articles/most-recent/rss.xml"]
 
     session = FuturesSession(max_workers=20)
 
@@ -963,7 +1006,7 @@ if __name__ == "__main__":
         url = entry.link
         title = entry.title
 
-        pprint(entry)
+        # pprint(entry)
 
         # title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry)
 
