@@ -38,8 +38,8 @@ added_files = [('images/*', 'images'),
 imports = ['packaging', 'packaging.version', 'packaging.specifiers',
            'packaging.requirements', 'sklearn.neighbors.typedefs']
 
-excludes = ['pyi_rth_pkgres', 'pyi_rth_qt5plugins', 'lib2to3', 'runpy',
-            'xmlrpc', 'doctest', 'tty', 'getopt', 'tcl', 'tkinter']
+excludes = ['xmlrpc', 'doctest', 'tty', 'getopt', 'tcl', 'tkinter',
+            'pyi_rth_pkgres', 'pyi_rth_qt5plugins', 'lib2to3']
 
 
 a = Analysis(['gui.py'],
@@ -64,13 +64,13 @@ rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
            'libQtDBus', 'libsystemd', 'libgstvideo', 'liborc', 'libharfbuzz',
            'libpcre', 'libmng', 'bncursesw', 'libgstbase', 'libgstaudio',
            'liblcms2', 'libQtSvg', 'libatlas', 'libgobject', 'libquadmath',
-           'libgsttag', 'libmpdec', 'libgstpbutils', 'libxcb-glx',
-           'libICE', 'libQtXml', 'libfontconfig', 'libglapi', 'libgraphite2',
-           'libexpat', 'libXext', 'liblz4', 'libqdds', 'libqgif', 'libqjp2',
-           'libqsvg', 'libqtga', 'libqwbmp', 'libqwebp', 'libqtiff',
-           'libQt5PrintSupport', 'libunistring', 'libgnutls', 'libglib-2.0',
-           'libkrb5', 'libgmp', 'libcups', 'libstdc++', '_cffi_backend',
-           'libQt5Svg', '_decimal']
+           'libgsttag', 'libmpdec', 'libgstpbutils', 'libICE', 'libQtXml',
+           'libfontconfig', 'libglapi', 'libgraphite2', 'libexpat', 'libXext',
+           'liblz4', 'libqdds', 'libqgif', 'libqjp2', 'libqsvg', 'libqtga',
+           'libqwbmp', 'libqwebp', 'libqtiff', 'libQt5PrintSupport',
+           'libunistring', 'libgnutls', 'libglib-2.0', 'libkrb5', 'libgmp',
+           'libcups', 'libstdc++', '_cffi_backend', 'libQt5Svg', '_decimal',
+           'libxcb-glx']
 
 full_tuples = []
 for each_bin in a.binaries:
