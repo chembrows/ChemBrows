@@ -60,6 +60,7 @@ def refineUrl(company, journal, entry):
 
         url = "http://www.nature.com/{}/journal/vaop/ncurrent/abs/{}.html"
         url = url.format(prefix, id_paper)
+
     elif company == 'Nature2':
         id_paper = url.split('/')[-1].split('.')[0]
         url = "http://www.nature.com/articles/{}".format(id_paper)
@@ -632,60 +633,8 @@ def getData(company, journal, entry, response=None):
             if r:
                 graphical_abstract = r[0]['src']
 
-<<<<<<< HEAD
-            strainer = SoupStrainer("ul", attrs={"class": "test-contributor-names"})
-            soup = BeautifulSoup(response.text, "html.parser",
-                                 parse_only=strainer)
-            r = soup.find_all("span", attrs={"class": "authors__name"})
-            if r:
-                author = [tag.text for tag in r]
-                author = ", ".join(author)
-
-            strainer = SoupStrainer("h1", attrs={"class": "ArticleTitle"})
-            soup = BeautifulSoup(response.text, "html.parser",
-                                 parse_only=strainer)
-            r = soup.h1
-            if r is not None:
-                title = r.renderContents().decode()
-
-
-    elif company == 'Springer_open':
-
-        title = entry.title
-        date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
-        graphical_abstract = None
-        author = None
-
-        abstract = BeautifulSoup(entry.summary, "html.parser")
-
-        try:
-            _ = abstract("h3")[0].extract()
-            # Remove the graphical abstract part from the abstract
-            _ = abstract("span", attrs={"class": "a-plus-plus figure category-standard float-no id-figa"})[0].extract()
-        except IndexError:
-            pass
-
-        abstract = abstract.renderContents().decode().strip()
-
-        if response.status_code is requests.codes.ok:
-
-            strainer = SoupStrainer("div", attrs={"class": "MediaObject"})
-            soup = BeautifulSoup(response.text, "html.parser",
-                                 parse_only=strainer)
-
-            # For now, it's one shot: if the dl fails for the GA, there
-            # won't be a retry. That's bc too little articles have GA
-            r = soup.find_all("img")
-            if r:
-                graphical_abstract = r[0]['src']
-
-            strainer = SoupStrainer("ul", attrs={"class": "u-listReset"})
-            soup = BeautifulSoup(response.text, "html.parser",
-                                 parse_only=strainer)
-=======
             strainer = SS("ul", attrs={"class": "AuthorNames"})
             soup = BS(response.text, "html.parser", parse_only=strainer)
->>>>>>> chemarxiv
             r = soup.find_all("span", attrs={"class": "AuthorName"})
             if r:
                 author = [tag.text for tag in r]
@@ -1031,7 +980,7 @@ if __name__ == "__main__":
 
         # if "cross reactive" not in title:
             # continue
-        print(url)
+        # print(url)
         # print(title)
         # pprint(entry)
         # print(url)
