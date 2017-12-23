@@ -103,10 +103,10 @@ class Worker(QtCore.QThread):
         # Get the journal name
         journal = feed['feed']['title']
 
-        self.l.debug("{0}: {1}".format(journal, len(feed.entries)))
+        self.l.info("{}: {}".format(journal, len(feed.entries)))
 
         # Lists to check if the post is in the db, and if
-        # it has all the infos
+        # it has all the info
         self.session_images = FuturesSession(max_workers=self.MAX_WORKERS,
             session=self.parent.browsing_session)
 
@@ -153,7 +153,6 @@ class Worker(QtCore.QThread):
                     self.l.error("getDoi failed for: {}".
                                  format(journal), exc_info=True)
                     self.counter_futures_urls += 1
-                    print(self.counter_futures_urls)
                     continue
 
                 try:
@@ -249,21 +248,29 @@ class Worker(QtCore.QThread):
                                   journal, authors, abstract, \
                                   graphical_abstract, url, new, topic_simple, \
                                   author_simple) \
-                                   VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                                  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
                     # Set new to 1 and not to true
                     params = (doi, title, date, journal_abb, authors, abstract,
                               graphical_abstract, url, 1, topic_simple,
                               author_simple)
 
-                    self.l.debug("Adding {0} to the database".format(doi))
-                    self.parent.counter_added += 1
-                    self.new_entries_worker += 1
-
                     for value in params:
                         query.addBindValue(value)
-                    query.exec_()
 
+                    # Test that query worked
+                    if not query.exec_():
+                        self.l.error("SQL ERROR in run(): {}, company_no_dl".
+                                     format(query.lastError().text()))
+                        self.parent.counter_articles_failed += 1
+                        continue
+                    else:
+                        self.l.debug("{} added to the database".format(doi))
+                        self.new_entries_worker += 1
+                        self.parent.counter_added += 1
+
+                    # If article has no graphical abstract of if it has been
+                    # dled
                     if graphical_abstract == "Empty" or os.path.exists(
                             self.PATH +
                             functions.simpleChar(graphical_abstract)):
@@ -294,9 +301,11 @@ class Worker(QtCore.QThread):
                         future_image = self.session_images.get(
                             graphical_abstract, headers=headers,
                             timeout=self.TIMEOUT)
+
                         future_image.add_done_callback(
                             functools.partial(self.pictureDownloaded,
                                               doi, url))
+
                         self.list_futures.append(future_image)
 
         # The company requires to download the article's web page
@@ -317,19 +326,31 @@ class Worker(QtCore.QThread):
                     self.l.error("getDoi failed for: {}".
                                  format(journal), exc_info=True)
                     self.counter_futures_urls += 1
+                    self.counter_futures_images += 1
                     continue
 
+                # Try to refine the url
                 try:
                     url = hosts.refineUrl(company, journal, entry)
                 except Exception as e:
                     self.l.error("refineUrl failed for: {}".
                                  format(journal), exc_info=True)
                     self.counter_futures_urls += 1
+                    self.counter_futures_images += 1
+                    continue
+
+                # Make sure the entry has a title
+                try:
+                    title = entry.title
+                except AttributeError:
+                    self.l.error("No title for {}".
+                                 format(doi), exc_info=True)
+                    self.counter_futures_urls += 1
+                    self.counter_futures_images += 1
                     continue
 
                 # Reject crappy entries: corrigendum, erratum, etc
-                if hosts.reject(entry.title):
-                    title = entry.title
+                if hosts.reject(title):
                     self.counter_futures_images += 1
                     self.counter_futures_urls += 1
                     self.parent.counter_rejected += 1
@@ -479,7 +500,8 @@ class Worker(QtCore.QThread):
         try:
             title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry, response)
         except TypeError:
-            self.l.error("getData returned None for {}".format(journal))
+            self.l.error("getData returned None for {}".format(journal),
+                         exc_info=True)
             self.counter_futures_images += 1
             self.parent.counter_articles_failed += 1
             return
@@ -489,7 +511,6 @@ class Worker(QtCore.QThread):
             self.counter_futures_images += 1
             self.parent.counter_articles_failed += 1
             return
-
 
         # Rejecting the article if no authors
         if authors == "Empty":
@@ -504,21 +525,26 @@ class Worker(QtCore.QThread):
         if doi not in self.dico_doi:
             query.prepare("INSERT INTO papers (doi, title, date, journal, \
                           authors, abstract, graphical_abstract, url, new, \
-                          topic_simple, author_simple) VALUES(?, ?, ?, ?, ?, \
-                          ?, ?, ?, ?, ?, ?)")
+                          topic_simple, author_simple) VALUES(?, \
+                          ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 
             params = (doi, title, date, journal_abb, authors, abstract,
                       graphical_abstract, url, 1, topic_simple, author_simple)
 
-            self.l.debug("Adding {0} to the database".format(doi))
+            self.l.debug("Adding {} to the database".format(doi))
             self.parent.counter_added += 1
 
             for value in params:
                 query.addBindValue(value)
 
-            query.exec_()
-
-        self.new_entries_worker += 1
+            # Test that query worked
+            if not query.exec_():
+                self.l.error("SQL ERROR in completeData(): {}".
+                             format(query.lastError().text()))
+                self.parent.counter_articles_failed += 1
+                return
+            else:
+                self.new_entries_worker += 1
 
         # Don't try to dl the image if its url is 'Empty', or if the image
         # already exists

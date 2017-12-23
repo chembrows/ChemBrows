@@ -39,12 +39,17 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
 
         self.times = 0
 
+        # Reset the content so the image can be updated.
+        content = self.toHtml()
+        self.setHtml("")
+        self.setHtml(content)
+
 
     def _zoomImage(self, more_or_less: bool):
 
         """Zoom the grphical abstract"""
 
-        soup = BeautifulSoup(self.toHtml())
+        soup = BeautifulSoup(self.toHtml(), "html.parser")
 
         try:
             # Find the current width of the image
@@ -67,7 +72,7 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
         return soup.renderContents().decode()
 
 
-    def zoom(self, more_or_less):
+    def zoom(self, more_or_less: bool):
 
         """Zoom in or out when the user clicks the buttons in the
         article toolbar"""
@@ -81,6 +86,8 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
 
         content = self._zoomImage(more_or_less)
 
+        # Reset the content so the image can be updated.
+        self.setHtml("")
         self.setHtml(content)
 
 
@@ -103,6 +110,42 @@ class TextBrowserPerso(QtWidgets.QTextBrowser):
                 self.times -= 1
                 content = self._zoomImage(False)
 
+            # Reset the content so the image can be updated.
+            # https://bugreports.qt.io/browse/QTBUG-54375
+            self.setHtml("")
             self.setHtml(content)
         else:
             super(TextBrowserPerso, self).wheelEvent(event)
+
+
+    def loadResource(self, type: int, name: QtCore.QUrl):
+
+        """Reimplemented to load graphical abstracts w/ good quality
+        http://forum.qtfr.org/discussion/2211/qt4-afficher-un-qimage-dans-qtextbrowser
+        """
+
+        if type != QtGui.QTextDocument.ImageResource:
+            return
+
+        soup = BeautifulSoup(self.toHtml(), "html.parser")
+
+        try:
+            # Find the current width of the image
+            width = float(soup.findAll('img')[-1]['width'])
+            # Load image w/ SmoothTransformation
+            image = QtGui.QPixmap(name.path())
+            image = image.scaledToWidth(width,
+                                        QtCore.Qt.SmoothTransformation)
+
+            self.document().addResource(QtGui.QTextDocument.ImageResource,
+                                        name, image)
+        except Exception as e:
+            self.parent.l.debug("loadResource: {}, likely not a good image".
+                                format(e))
+
+
+    def setSource(self, name: QtCore.QUrl):
+
+        """Reimplemented to disable links in the abstract"""
+
+        return

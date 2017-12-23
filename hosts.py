@@ -59,7 +59,6 @@ def refineUrl(company, journal, entry):
 
         url = "http://www.nature.com/{}/journal/vaop/ncurrent/abs/{}.html"
         url = url.format(prefix, id_paper)
-
     elif company == 'Nature2':
         id_paper = url.split('/')[-1].split('.')[0]
         url = "http://www.nature.com/articles/{}".format(id_paper)
@@ -96,7 +95,7 @@ def updateData(company, journal, entry, care_image):
     elif company == 'RSC':
         dl_page = False
 
-        soup = BeautifulSoup(entry.summary)
+        soup = BeautifulSoup(entry.summary, "html.parser")
         r = soup("img", align="center")
         if r:
             graphical_abstract = r[0]['src']
@@ -105,7 +104,7 @@ def updateData(company, journal, entry, care_image):
     elif company == 'Wiley':
         dl_page = False
 
-        soup = BeautifulSoup(entry.summary)
+        soup = BeautifulSoup(entry.summary, "html.parser")
         r = soup("a", attrs={"class": "figZoom"})
         if r:
             graphical_abstract = r[0].extract()
@@ -115,7 +114,7 @@ def updateData(company, journal, entry, care_image):
     elif company == 'ACS':
         dl_page = False
 
-        soup = BeautifulSoup(entry.summary)
+        soup = BeautifulSoup(entry.summary, "html.parser")
         r = soup("img", alt="TOC Graphic")
         if r:
             graphical_abstract = r[0]['src']
@@ -125,7 +124,7 @@ def updateData(company, journal, entry, care_image):
         dl_page = False
 
         if entry.summary != "":
-            soup = BeautifulSoup(entry.summary)
+            soup = BeautifulSoup(entry.summary, "html.parser")
             r = soup.find_all("img")
             if r:
                 graphical_abstract = r[0]['src']
@@ -134,7 +133,7 @@ def updateData(company, journal, entry, care_image):
     elif company == 'Beilstein':
         dl_page = False
 
-        soup = BeautifulSoup(entry.summary)
+        soup = BeautifulSoup(entry.summary, "html.parser")
         r = soup.find_all("img")
         if r:
             graphical_abstract = r[0]['src']
@@ -177,7 +176,7 @@ def getData(company, journal, entry, response=None):
         graphical_abstract = None
         author = None
 
-        soup = BeautifulSoup(entry.summary)
+        soup = BeautifulSoup(entry.summary, "html.parser")
 
         r = soup("img", align="center")
         if r:
@@ -188,16 +187,18 @@ def getData(company, journal, entry, response=None):
             # # Get the title (w/ html)
             # Strainer: get a soup with only the interesting part.
             # Don't load the complete tree in memory. Saves RAM
-            strainer = SoupStrainer("h2", attrs={"class": "alpH1"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            strainer = SoupStrainer("h2", attrs={"class": "capsule__title fixpadv--m"})
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             title = soup.h2
 
             if title is not None:
                 title = title.renderContents().decode().strip()
 
-            # # Get the abstrat (w/ html)
+            # Get the abstrat (w/ html)
             strainer = SoupStrainer("p", xmlns="http://www.rsc.org/schema/rscart38")
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.p
 
             if r is not None:
@@ -206,7 +207,8 @@ def getData(company, journal, entry, response=None):
                     abstract = None
 
             strainer = SoupStrainer("meta", attrs={"name": "citation_author"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
 
             # Here, multiple tags (results) are expected, so perform
             # the search, even if the tree contains only the result
@@ -229,7 +231,7 @@ def getData(company, journal, entry, response=None):
 
         abstract = None
 
-        soup = BeautifulSoup(entry.summary)
+        soup = BeautifulSoup(entry.summary, "html.parser")
         try:
             # Remove the title "Abstract" from the abstract
             soup("h3")[0].extract()
@@ -251,7 +253,8 @@ def getData(company, journal, entry, response=None):
 
             # # Get the title (w/ html)
             strainer = SoupStrainer("span", attrs={"class": "mainTitle"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.span
             if r is not None:
                 try:
@@ -285,7 +288,7 @@ def getData(company, journal, entry, response=None):
 
         graphical_abstract = None
 
-        soup = BeautifulSoup(entry.summary)
+        soup = BeautifulSoup(entry.summary, "html.parser")
         r = soup("img", alt="TOC Graphic")
         if r:
             graphical_abstract = r[0]['src']
@@ -294,13 +297,15 @@ def getData(company, journal, entry, response=None):
         if response.status_code is requests.codes.ok:
 
             strainer = SoupStrainer("p", attrs={"class": "articleBody_abstractText"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.p
             if r is not None:
                 abstract = r.renderContents().decode()
 
             strainer = SoupStrainer("h1", attrs={"class": "articleTitle"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.h1
             if r is not None:
                 title = r.renderContents().decode()
@@ -329,22 +334,29 @@ def getData(company, journal, entry, response=None):
         if response.status_code is requests.codes.ok or response.status_code == 401:
 
             strainer = SoupStrainer("h1", attrs={"class": "article-heading"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.h1
             if r is not None:
                 title = r.renderContents().decode()
 
             strainer = SoupStrainer("div", attrs={"id": "first-paragraph"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.div
             if r is not None:
                 abstract = r.renderContents().decode()
 
             strainer = SoupStrainer("figure")
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.find_all("img")
+
             if r:
-                graphical_abstract = "http://www.nature.com" + r[0]["src"]
+                # Additional verification to correctly forge the URL
+                graphical_abstract = r[0]["src"]
+                if "nature.com" not in graphical_abstract:
+                    graphical_abstract = "http://www.nature.com" + graphical_abstract
 
                 if "carousel" in graphical_abstract:
                     graphical_abstract = graphical_abstract.replace("carousel", "images_article")
@@ -356,24 +368,15 @@ def getData(company, journal, entry, response=None):
         date = entry.date
 
         graphical_abstract = None
-        author = None
+
+        if entry.author:
+            author = entry.author
+        else:
+            author = None
 
         abstract = entry.summary
-
         if not abstract:
             abstract = None
-        else:
-            if "Author:" in entry.summary:
-                abstract = entry.summary.split("Author: ")[0]
-
-                try:
-                    author = entry.summary.split("Author: ")[1]
-                except IndexError:
-                    pass
-            elif "Authors:" in entry.summary:
-                abstract = entry.summary.split("Authors: ")[0]
-                author = entry.summary.split("Authors: ")[1].split(", ")
-                author = ", ".join(author)  # To comment if formatName
 
 
     elif company == 'PNAS':
@@ -390,23 +393,26 @@ def getData(company, journal, entry, response=None):
 
             # Get the correct title, not the one in the RSS
             strainer = SoupStrainer("h1", id="article-title-1")
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.find_all("h1", id="article-title-1")
             if r:
                 title = r[0].renderContents().decode()
 
             # Get the authors
             strainer = SoupStrainer("a", attrs={"class": "name-search"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.find_all("a", attrs={"class": "name-search"})
             if r:
                 author = [tag.text for tag in r]
                 author = ", ".join(author)
 
-            # Try to get the complete abstract. Sometimes it's available, sometimes
-            # the article only contains an extract
+            # Try to get the complete abstract. Sometimes it's available,
+            # sometimes the article only contains an extract
             strainer = SoupStrainer("div", attrs={"class": "section abstract"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             if soup.p is not None:
                 abstract = soup.p.renderContents().decode()
             else:
@@ -431,7 +437,7 @@ def getData(company, journal, entry, response=None):
             except IndexError:
                 author = None
 
-            soup = BeautifulSoup(abstract)
+            soup = BeautifulSoup(abstract, "html.parser")
 
             try:
                 # First type of abstract formatting
@@ -476,14 +482,17 @@ def getData(company, journal, entry, response=None):
 
                 # Get the abstract, and clean it
                 strainer = SoupStrainer("section", id="abstract")
-                soup = BeautifulSoup(response.text, parse_only=strainer)
+                soup = BeautifulSoup(response.text, "html.parser",
+                                     parse_only=strainer)
                 abstract = soup.section
 
+                # Clean the abstract from unecessary tags
                 abstract("div", attrs={"class": "articleFunctions"})[0].extract()
                 [tag.extract() for tag in abstract("a", attrs={"name": True})]
                 [tag.extract() for tag in abstract("h3")]
                 [tag.extract() for tag in abstract("ul", attrs={"class": "linkList"})]
                 [tag.extract() for tag in abstract("a", attrs={"class": "gotolink"})]
+                [tag.extract() for tag in abstract("img")]
 
                 try:
                     abstract("div", attrs={"class": "articleKeywords"})[0].extract()
@@ -494,7 +503,8 @@ def getData(company, journal, entry, response=None):
 
             # Get author strainer
             strainer = SoupStrainer("span", id="authorlist")
-            author = BeautifulSoup(response.text, parse_only=strainer).span
+            author = BeautifulSoup(response.text, "html.parser",
+                                   parse_only=strainer)
 
             # Clean supscripts
             [tag.extract() for tag in author("sup")]
@@ -518,7 +528,7 @@ def getData(company, journal, entry, response=None):
             author = author[0]
 
         if entry.summary != "":
-            soup = BeautifulSoup(entry.summary)
+            soup = BeautifulSoup(entry.summary, "html.parser")
             r = soup.find_all("p")
 
             if r:
@@ -555,19 +565,22 @@ def getData(company, journal, entry, response=None):
         if response.status_code is requests.codes.ok or response.status_code == 401:
 
             strainer = SoupStrainer("h1", attrs={"class": "tighten-line-height small-space-below"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.h1
             if r is not None:
                 title = r.renderContents().decode()
 
             strainer = SoupStrainer("div", attrs={"id": "abstract-content"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.p
             if r is not None:
                 abstract = r.renderContents().decode()
 
             strainer = SoupStrainer("img")
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.find_all("img", attrs={"alt": "Figure 1"})
             if r:
                 if "f1.jpg" in r[0]["src"]:
@@ -587,7 +600,7 @@ def getData(company, journal, entry, response=None):
         else:
             author = None
 
-        abstract = BeautifulSoup(entry.summary)
+        abstract = BeautifulSoup(entry.summary, "html.parser")
 
         # Clean the authors' names from the abstract
         r = abstract.find_all("p")
@@ -612,7 +625,7 @@ def getData(company, journal, entry, response=None):
         graphical_abstract = None
         author = None
 
-        abstract = BeautifulSoup(entry.summary)
+        abstract = BeautifulSoup(entry.summary, "html.parser")
 
         try:
             _ = abstract("h3")[0].extract()
@@ -626,7 +639,8 @@ def getData(company, journal, entry, response=None):
         if response.status_code is requests.codes.ok:
 
             strainer = SoupStrainer("div", attrs={"class": "MediaObject"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
 
             # For now, it's one shot: if the dl fails for the GA, there
             # won't be a retry. That's bc too little articles have GA
@@ -634,15 +648,63 @@ def getData(company, journal, entry, response=None):
             if r:
                 graphical_abstract = r[0]['src']
 
-            strainer = SoupStrainer("ul", attrs={"class": "AuthorNames"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            strainer = SoupStrainer("ul", attrs={"class": "test-contributor-names"})
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
+            r = soup.find_all("span", attrs={"class": "authors__name"})
+            if r:
+                author = [tag.text for tag in r]
+                author = ", ".join(author)
+
+            strainer = SoupStrainer("h1", attrs={"class": "ArticleTitle"})
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
+            r = soup.h1
+            if r is not None:
+                title = r.renderContents().decode()
+
+
+    elif company == 'Springer_open':
+
+        title = entry.title
+        date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
+        graphical_abstract = None
+        author = None
+
+        abstract = BeautifulSoup(entry.summary, "html.parser")
+
+        try:
+            _ = abstract("h3")[0].extract()
+            # Remove the graphical abstract part from the abstract
+            _ = abstract("span", attrs={"class": "a-plus-plus figure category-standard float-no id-figa"})[0].extract()
+        except IndexError:
+            pass
+
+        abstract = abstract.renderContents().decode().strip()
+
+        if response.status_code is requests.codes.ok:
+
+            strainer = SoupStrainer("div", attrs={"class": "MediaObject"})
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
+
+            # For now, it's one shot: if the dl fails for the GA, there
+            # won't be a retry. That's bc too little articles have GA
+            r = soup.find_all("img")
+            if r:
+                graphical_abstract = r[0]['src']
+
+            strainer = SoupStrainer("ul", attrs={"class": "u-listReset"})
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.find_all("span", attrs={"class": "AuthorName"})
             if r:
                 author = [tag.text for tag in r]
                 author = ", ".join(author)
 
             strainer = SoupStrainer("h1", attrs={"class": "ArticleTitle"})
-            soup = BeautifulSoup(response.text, parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
             r = soup.h1
             if r is not None:
                 title = r.renderContents().decode()
@@ -656,24 +718,34 @@ def getData(company, journal, entry, response=None):
         author = None
         abstract = None
 
-        if entry.authors:
+        try:
             author = []
             for element in entry.authors:
                 author.append(element['name'])
             author = ", ".join(author)
-        else:
+        except AttributeError:
             author = None
 
         if response.status_code is requests.codes.ok:
 
             strainer = SoupStrainer("div", attrs={"class": "col-md-2-3 "})
-            soup = BeautifulSoup(response.text, "html.parser", parse_only=strainer)
-            r = soup.h1
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
+            r = soup.span
             if r is not None:
+                # Remove all tags attributes
+                for tag in r.findAll(True):
+                    tag.attrs = None
                 title = r.renderContents().decode()
 
             strainer = SoupStrainer("div", attrs={"class": "abstractSection abstractInFull"})
-            soup = BeautifulSoup(response.text, "html.parser", parse_only=strainer)
+            soup = BeautifulSoup(response.text, "html.parser",
+                                 parse_only=strainer)
+
+            # Erase the title 'Abstract', useless
+            if soup("p") and soup("p")[0].text == "Abstract":
+                soup("p")[0].extract()
+
             r = soup.p
             if r is not None:
                 abstract = r.renderContents().decode()
@@ -694,7 +766,7 @@ def getData(company, journal, entry, response=None):
     if abstract is not None:
 
         topic_simple = " " + \
-                       functions.simpleChar(BeautifulSoup(abstract).text) + \
+                       functions.simpleChar(BeautifulSoup(abstract, "html.parser").text) + \
                        " " + functions.simpleChar(title) + " "
     else:
         topic_simple = " " + functions.simpleChar(title) + " "
@@ -722,7 +794,7 @@ def getDoi(company, journal, entry):
     """Get the DOI id of a post, to save time"""
 
     if company == 'RSC':
-        soup = BeautifulSoup(entry.summary)
+        soup = BeautifulSoup(entry.summary, "html.parser")
         r = soup("div")
         try:
             doi = r[0].text.split("DOI: ")[1].split(",")[0]
@@ -736,7 +808,7 @@ def getDoi(company, journal, entry):
         doi = entry.id.split("dx.doi.org/")[1]
 
     elif company == 'Science':
-        doi = entry.dc_identifier
+        doi = "10.1126/science." + entry.prism_endingpage[1:]
 
     elif company == 'PNAS':
         base = entry.dc_identifier
@@ -869,12 +941,12 @@ if __name__ == "__main__":
 
     def print_result(journal, entry, future):
         response = future.result()
-        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry, response)
+        title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Springer", journal, entry, response)
         # print("\n")
-        # print(abstract)
-        print(date)
+        print(abstract)
+        # print(date)
         # print("\n")
-        print(title)
+        # print(title)
         print(authors)
         # print("\n")
         # print("\n")
@@ -882,7 +954,8 @@ if __name__ == "__main__":
         # os.remove("graphical_abstracts/{0}".format(functions.simpleChar(graphical_abstract)))
         # print("\n")
 
-    urls_test = ["http://rss.sciencedirect.com/publication/science/13675931"]
+    # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
+    urls_test = ["https://link.springer.com/search.rss?facet-content-type=Article&facet-journal-id=11084&channel-name=Origins+of+Life+and+Evolution+of+Biospheres"]
 
     session = FuturesSession(max_workers=20)
 
@@ -900,20 +973,22 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries[2:]:
+    for entry in feed.entries[1:]:
 
-        pprint(entry)
+        # pprint(entry)
 
         # url = refineUrl("Elsevier", journal, entry)
         # try:
-            # doi = getDoi("Elsevier", journal, entry)
+        doi = getDoi("Springer", journal, entry)
+
+        # print(doi)
         # except AttributeError:
             # continue
         # # print(url)
 
         # webbrowser.open(url, new=0, autoraise=True)
 
-        # url = entry.link
+        url = entry.link
         # title = entry.title
 
         # title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry)
@@ -924,19 +999,19 @@ if __name__ == "__main__":
 
         # print(abstract)
 
-        # if "Density Functional" not in entry.title:
+        # if "Two-photon" not in entry.title:
             # continue
 
         # print(entry)
 
         # if "cross reactive" not in title:
             # continue
-        # print(url)
+        print(url)
         # print(title)
         # pprint(entry)
         # print(url)
 
-        # future = session.get(url, headers=headers, timeout=20)
-        # future.add_done_callback(functools.partial(print_result, journal, entry))
+        future = session.get(url, headers=headers, timeout=20)
+        future.add_done_callback(functools.partial(print_result, journal, entry))
 
         break

@@ -183,7 +183,6 @@ class ViewPerso(QtWidgets.QTableView):
                     self.clicked.emit(current_index)
 
         if key == QtCore.Qt.Key_Up:
-            print("up")
             current_index = self.selectionModel().currentIndex()
             new_index = current_index.sibling(current_index.row() - 1, current_index.column())
 

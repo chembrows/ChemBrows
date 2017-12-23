@@ -19,7 +19,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 from log import MyLog
 
 # Nbr of ACS journals registered
-NBR_ACS_JOURNALS = 53
+NBR_ACS_JOURNALS = 55
 
 
 l = MyLog("output_tests_feeds.log", mode='w')
@@ -48,8 +48,10 @@ def test_ACSFeeds():
 
     # Strainer: get a soup with only the interesting part.
     # Don't load the complete tree in memory. Saves RAM
-    strainer = SoupStrainer("ul", attrs={"class": "feeds"})
-    soup = BeautifulSoup(page.text, parse_only=strainer)
+    strainer = SoupStrainer("div", attrs={"id": "follow-pane-rss"})
+    soup = BeautifulSoup(page.text, "html.parser", parse_only=strainer)
+    # print("Cocuocu")
+    # print(soup)
     r = soup.find_all("li")
 
     dic_journals = {}
@@ -63,17 +65,20 @@ def test_ACSFeeds():
                ]
 
     for element in r:
+        # print(element)
 
         url = element.a['href']
 
         if 'feed' in url and url not in exclude:
             name = element.text.strip()
+            # print(name)
             # print("{} : {}".format(name, url))
             dic_journals[url] = name
 
+    print(dic_journals)
     logAssert(len(dic_journals) == NBR_ACS_JOURNALS,
-              "Wrong number of ACS journals:\n{}".
-              format(dic_journals.values()))
+              "Wrong number of ACS journals: {} instead of {}".
+              format(NBR_ACS_JOURNALS, len(dic_journals.values())))
 
 
 if __name__ == "__main__":
