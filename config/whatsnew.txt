@@ -1,5 +1,6 @@
 Version 1.0:
 - ChemArxiv added
+- Springer_open added
 - Multiple bug fixes
 
 Version 0.9.33:
