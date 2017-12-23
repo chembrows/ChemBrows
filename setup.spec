@@ -39,7 +39,7 @@ imports = ['packaging', 'packaging.version', 'packaging.specifiers',
            'packaging.requirements', 'sklearn.neighbors.typedefs']
 
 excludes = ['pyi_rth_pkgres', 'pyi_rth_qt5plugins', 'lib2to3', 'runpy',
-            'xmlrpc', 'doctest', 'tty', 'getopt', 'tcl', 'certifi', 'tkinter']
+            'xmlrpc', 'doctest', 'tty', 'getopt', 'tcl', 'tkinter']
 
 
 a = Analysis(['gui.py'],
