@@ -916,31 +916,33 @@ def getJournals(company, user=False):
     return names, abb, urls, cares_image
 
 
-def getCompanies(user=False):
+def getCompanies(user: bool=False) -> list:
 
-    """Get a list of all the companies. Will return a list of publishers,
-    without .ini at the end. If user is true, returns companies on the user's
-    side"""
+    """
+    Get a list of all the companies. Will return a list of publishers, without
+    .ini at the end. If user is true, returns companies on the user's side
+    """
 
     resource_dir, DATA_PATH = fct.getRightDirs()
 
     cb_companies = []
-    user_companies = []
 
     # List companies on the program side
     for company in os.listdir(os.path.join(resource_dir, 'journals')):
         company = company.split('.')[0]
         cb_companies.append(company)
 
+    if not user:
+        return list(set(cb_companies))
+
+    user_companies = []
+
     # List companies on the user side
     for company in os.listdir(os.path.join(DATA_PATH, 'journals')):
         company = company.split('.')[0]
         user_companies.append(company)
 
-    if not user:
-        return list(set(cb_companies + user_companies))
-    else:
-        return list(set(cb_companies + user_companies))
+    return list(set(cb_companies + user_companies))
 
 
 
