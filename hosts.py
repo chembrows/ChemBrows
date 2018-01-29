@@ -311,49 +311,47 @@ def getData(company, journal, entry, response=None):
 
         title = entry.title
         date = entry.date
-        abstract = entry.summary
+        abstract = None
         graphical_abstract = None
+        author = None
 
         try:
-            author = [dic['name'] for dic in entry.authors]
-            if author:
-                if len(author) > 1:
-                    author = ", ".join(author)
-                else:
-                    author = author[0]
-            else:
-                author = None
+            if entry.authors:
+                author = []
+                for element in entry.authors:
+                    author.append(element['name'])
+                author = ", ".join(author)
         except AttributeError:
-            author = None
+            pass
 
+        if entry.summary:
+            abstract = BS(entry.summary, "html.parser")
+
+            while abstract.find_all('p'):
+                _ = abstract.p.extract()
+
+            _ = abstract.img.extract()
+
+            abstract = abstract.renderContents().decode()
 
         if (response.status_code is requests.codes.ok or
                 response.status_code == 401):
 
-            strainer = SS("h1", attrs={"class": "article-heading"})
-            soup = BS(response.text, "html.parser", parse_only=strainer)
-            r = soup.h1
-            if r is not None:
-                title = r.renderContents().decode()
-
-            strainer = SS("div", attrs={"id": "first-paragraph"})
+            strainer = SS("div", attrs={"class": "article__body serif cleared"})
             soup = BS(response.text, "html.parser", parse_only=strainer)
             r = soup.div
-            if r is not None:
-                abstract = r.renderContents().decode()
+            try:
+                abstract = r.text
+            except AttributeError:
+                pass
 
             strainer = SS("figure")
             soup = BS(response.text, "html.parser", parse_only=strainer)
-            r = soup.find_all("img")
+            r = soup.find_all("img", attrs={"class": "figure__image"})
 
             if r:
                 # Additional verification to correctly forge the URL
-                graphical_abstract = r[0]["src"]
-                if "nature.com" not in graphical_abstract:
-                    graphical_abstract = "http://www.nature.com" + graphical_abstract
-
-                if "carousel" in graphical_abstract:
-                    graphical_abstract = graphical_abstract.replace("carousel", "images_article")
+                graphical_abstract = "http:" + r[0]["src"]
 
 
     elif company == 'Science':
@@ -946,25 +944,25 @@ if __name__ == "__main__":
     from pprint import pprint
     import webbrowser
 
-    COMPANY = 'ChemArxiv'
+    COMPANY = 'Nature'
 
     def print_result(journal, entry, future):
         response = future.result()
         title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData(COMPANY, journal, entry, response)
-        # print("\n")
-        # print("Abstract:\n", abstract)
-        # print("Date:", date)
-        # print("\n")
-        # print("Title:", title)
-        # print("Authors:", authors)
-        # print("\n")
-        # print("\n")
-        # print(graphical_abstract)
+        print("\n")
+        print("Abstract:\n", abstract)
+        print("Date:", date)
+        print("\n")
+        print("Title:", title)
+        print("Authors:", authors)
+        print("\n")
+        print("\n")
+        print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(fct.simpleChar(graphical_abstract)))
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["http://chemarxiv.org/cgi/latest_tool?output=Atom"]
+    urls_test = ["http://feeds.nature.com/nature/rss/current"]
 
     session = FuturesSession(max_workers=20)
 
@@ -982,7 +980,7 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries:
+    for entry in feed.entries[2:]:
 
         # pprint(entry)
 
@@ -1019,7 +1017,7 @@ if __name__ == "__main__":
         # print(url)
         # print(title)
         # pprint(entry)
-        # print(url)
+        print(url)
 
         future = session.get(url, headers=headers, timeout=20)
         future.add_done_callback(functools.partial(print_result, journal, entry))
