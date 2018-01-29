@@ -467,38 +467,23 @@ def getData(company, journal, entry, response=None):
         graphical_abstract = None
         author = None
 
-        if response.status_code is requests.codes.ok:
+        try:
+            if entry.authors:
+                author = []
+                for element in entry.authors:
+                    # Reverse Family name/first name
+                    field = reversed(element['name'].split(', '))
+                    name = " ".join(field)
+                    author.append(name)
+                author = ", ".join(author)
+        except AttributeError:
+            pass
 
-            if entry.summary != "":
-
-                # Get the abstract, and clean it
-                strainer = SS("section", id="abstract")
-                soup = BS(response.text, "html.parser", parse_only=strainer)
-                abstract = soup.section
-
-                # Clean the abstract from unecessary tags
-                abstract("div", attrs={"class": "articlefct"})[0].extract()
-                [tag.extract() for tag in abstract("a", attrs={"name": True})]
-                [tag.extract() for tag in abstract("h3")]
-                [tag.extract() for tag in abstract("ul", attrs={"class": "linkList"})]
-                [tag.extract() for tag in abstract("a", attrs={"class": "gotolink"})]
-                [tag.extract() for tag in abstract("img")]
-
-                try:
-                    abstract("div", attrs={"class": "articleKeywords"})[0].extract()
-                except IndexError:
-                    pass
-
-                abstract = abstract.renderContents().decode()
-
-            # Get author strainer
-            strainer = SS("span", id="authorlist")
-            author = BS(response.text, "html.parser", parse_only=strainer)
-
-            # Clean supscripts
-            [tag.extract() for tag in author("sup")]
-            author = author.renderContents().decode()
-            author = author.replace("*", "")
+        try:
+            if entry.summary:
+                abstract = entry.summary
+        except AttributeError:
+            pass
 
 
     elif company == 'Beilstein':
@@ -578,13 +563,16 @@ def getData(company, journal, entry, response=None):
         title = entry.title
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
 
-        if entry.authors:
-            author = []
-            for element in entry.authors:
-                author.append(element['name'])
-            author = ", ".join(author)
-        else:
-            author = None
+        author = None
+
+        try:
+            if entry.authors:
+                author = []
+                for element in entry.authors:
+                    author.append(element['name'])
+                author = ", ".join(author)
+        except AttributeError:
+            pass
 
         abstract = BS(entry.summary, "html.parser")
 
@@ -740,21 +728,24 @@ def getData(company, journal, entry, response=None):
         title = entry.title
         date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
         graphical_abstract = None
+        author = None
+        abstract = None
 
-        if entry.authors:
-            author = []
-            for element in entry.authors:
-                author.append(element['name'])
-            author = ", ".join(author)
-        else:
-            author = None
+        try:
+            if entry.authors:
+                author = []
+                for element in entry.authors:
+                    author.append(element['name'])
+                author = ", ".join(author)
+        except AttributeError:
+            pass
 
         try:
             abstract = entry.summary
         except AttributeError:
             # I saw once a poster conference, w/ no abstract.
             # Filter these entries if it becomes common
-            abstract = None
+            pass
 
     else:
         return None
@@ -955,7 +946,7 @@ if __name__ == "__main__":
     from pprint import pprint
     import webbrowser
 
-    COMPANY = 'Springer_open'
+    COMPANY = 'ChemArxiv'
 
     def print_result(journal, entry, future):
         response = future.result()
@@ -973,7 +964,7 @@ if __name__ == "__main__":
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["http://threedmedprint.springeropen.com/articles/most-recent/rss.xml"]
+    urls_test = ["http://chemarxiv.org/cgi/latest_tool?output=Atom"]
 
     session = FuturesSession(max_workers=20)
 
@@ -1033,4 +1024,4 @@ if __name__ == "__main__":
         future = session.get(url, headers=headers, timeout=20)
         future.add_done_callback(functools.partial(print_result, journal, entry))
 
-        break
+        # break
