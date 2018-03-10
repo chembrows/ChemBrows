@@ -49,7 +49,7 @@ def refineUrl(company, journal, entry):
 
     if company == 'ACS':
         id_paper = url.split('/')[-1]
-        url = "http://pubs.acs.org/doi/abs/10.1021/" + id_paper
+        url = "https://pubs.acs.org/doi/abs/10.1021/" + id_paper
 
     elif company == 'Nature':
         id_paper = url.split('/')[-1]
@@ -747,6 +747,32 @@ def getData(company, journal, entry, response=None):
             # Filter these entries if it becomes common
             pass
 
+
+    elif company == 'ChemRxiv':
+
+        title = entry.title
+        date = arrow.get(mktime(entry.published_parsed)).format('YYYY-MM-DD')
+        graphical_abstract = None
+        author = None
+        abstract = None
+
+        try:
+            abstract = entry.summary
+        except AttributeError:
+            # I saw once a poster conference, w/ no abstract.
+            # Filter these entries if it becomes common
+            pass
+
+        if response.status_code is requests.codes.ok:
+            pass
+
+            strainer = SS("span", attrs={"class": "authors-holder"})
+            soup = BS(response.text, "html.parser", parse_only=strainer)
+            r = soup.find_all("a", attrs={"class": "normal-link author"})
+            if r:
+                author = [tag.text.strip() for tag in r]
+                author = ", ".join(author)
+
     else:
         return None
 
@@ -833,6 +859,10 @@ def getDoi(company, journal, entry):
     # Chemrxiv doesn't assign DOIs to articles. Use the id/url
     elif company == 'ChemArxiv':
         doi = entry.id
+
+    # Chemrxiv doesn't assign DOIs to articles. Use the id/url
+    elif company == 'ChemRxiv':
+        doi = entry.link
 
     try:
         doi = doi.replace(" ", "")
@@ -946,7 +976,7 @@ if __name__ == "__main__":
     from pprint import pprint
     import webbrowser
 
-    COMPANY = 'ChemArxiv'
+    COMPANY = 'ChemRxiv'
 
     def print_result(journal, entry, future):
         response = future.result()
@@ -964,7 +994,7 @@ if __name__ == "__main__":
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["http://chemarxiv.org/cgi/latest_tool?output=Atom"]
+    urls_test = ["https://chemrxiv.org/rss/portal/chemrxiv"]
 
     session = FuturesSession(max_workers=20)
 
