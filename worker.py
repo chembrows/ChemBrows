@@ -191,6 +191,7 @@ class Worker(QtCore.QThread):
 
                 # Artice not complete, try to complete it
                 elif doi in self.dico_doi and not self.dico_doi[doi]:
+                    self.l.debug("Trying to update {}".format(doi))
 
                     # How to update the entry
                     dl_page, dl_image, data = hosts.updateData(company,
