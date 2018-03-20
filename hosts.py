@@ -330,7 +330,10 @@ def getData(company, journal, entry, response=None):
             while abstract.find_all('p'):
                 _ = abstract.p.extract()
 
-            _ = abstract.img.extract()
+            try:
+                _ = abstract.img.extract()
+            except AttributeError:
+                pass
 
             abstract = abstract.renderContents().decode()
 
@@ -974,25 +977,25 @@ if __name__ == "__main__":
     from pprint import pprint
     import webbrowser
 
-    COMPANY = 'ChemRxiv'
+    COMPANY = 'Nature'
 
     def print_result(journal, entry, future):
         response = future.result()
         title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData(COMPANY, journal, entry, response)
-        print("\n")
-        print("Abstract:\n", abstract)
-        print("Date:", date)
-        print("\n")
+        # print("\n")
+        # print("Abstract:\n", abstract)
+        # print("Date:", date)
+        # print("\n")
         print("Title:", title)
-        print("Authors:", authors)
+        # print("Authors:", authors)
+        # print("\n")
         print("\n")
-        print("\n")
-        print(graphical_abstract)
+        # print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(fct.simpleChar(graphical_abstract)))
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["https://chemrxiv.org/rss/portal/chemrxiv"]
+    urls_test = ["https://www.nature.com/nmeth.rss"]
 
     session = FuturesSession(max_workers=20)
 
@@ -1047,9 +1050,9 @@ if __name__ == "__main__":
         # print(url)
         # print(title)
         # pprint(entry)
-        print(url)
+        # print(url)
 
         future = session.get(url, headers=headers, timeout=20)
         future.add_done_callback(functools.partial(print_result, journal, entry))
 
-        # break
+        break
