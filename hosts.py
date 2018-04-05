@@ -68,7 +68,7 @@ def refineUrl(company, journal, entry):
     # Optimization for Wiley
     elif company == 'Wiley':
         doi = getDoi(company, journal, entry)
-        url = "http://onlinelibrary.wiley.com/doi/{}/abstract"
+        url = "https://onlinelibrary.wiley.com/doi/abs/{}"
         url = url.format(doi)
 
     return url
@@ -82,7 +82,7 @@ def updateData(company, journal, entry, care_image):
     the Worker will try to dl the image, w/ the URL returned by this
     function. If dl_page is True, the Worker will dl the article's page,
     AND will try to dl the image anyway, trough the futures mechanism of
-    the worker. care_image is not used right now, but might be one day"""
+    the worker."""
 
     dl_image = True
     dl_page = True
@@ -97,55 +97,61 @@ def updateData(company, journal, entry, care_image):
     elif company == 'RSC':
         dl_page = False
 
-        soup = BS(entry.summary, "html.parser")
-        r = soup("img", align="center")
-        if r:
-            graphical_abstract = r[0]['src']
+        if care_image:
+            soup = BS(entry.summary, "html.parser")
+            r = soup("img", align="center")
+            if r:
+                graphical_abstract = r[0]['src']
 
 
     elif company == 'Wiley':
         dl_page = False
 
-        soup = BS(entry.summary, "html.parser")
-        r = soup("a", attrs={"class": "figZoom"})
-        if r:
-            graphical_abstract = r[0].extract()
-            graphical_abstract = graphical_abstract['href']
+        if care_image:
+            soup = BS(entry.summary, "html.parser")
+            r = soup("a", attrs={"class": "figZoom"})
+            if r:
+                graphical_abstract = r[0].extract()
+                graphical_abstract = graphical_abstract['href']
 
 
     elif company == 'ACS':
         dl_page = False
 
-        soup = BS(entry.summary, "html.parser")
-        r = soup("img", alt="TOC Graphic")
-        if r:
-            graphical_abstract = r[0]['src']
+        if care_image:
+            soup = BS(entry.summary, "html.parser")
+            r = soup("img", alt="TOC Graphic")
+            if r:
+                graphical_abstract = r[0]['src']
 
 
     elif company == 'Elsevier':
         dl_page = False
 
-        if entry.summary != "":
+        if care_image:
+            if entry.summary != "":
+                soup = BS(entry.summary, "html.parser")
+                r = soup.find_all("img")
+                if r:
+                    graphical_abstract = r[0]['src']
+
+
+    elif company == 'Beilstein':
+        dl_page = False
+
+        if care_image:
             soup = BS(entry.summary, "html.parser")
             r = soup.find_all("img")
             if r:
                 graphical_abstract = r[0]['src']
 
 
-    elif company == 'Beilstein':
-        dl_page = False
-
-        soup = BS(entry.summary, "html.parser")
-        r = soup.find_all("img")
-        if r:
-            graphical_abstract = r[0]['src']
-
-
     elif company == 'PLOS':
         dl_page = False
 
-        base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:{}.g001"
-        graphical_abstract = base.format(getDoi(company, journal, entry))
+        if care_image:
+            base = "http://journals.plos.org/plosone/article/figure/image?size=medium&id=info:{}.g001"
+            graphical_abstract = base.format(getDoi(company, journal, entry))
 
 
     else:
@@ -219,54 +225,7 @@ def getData(company, journal, entry, response=None):
 
     elif company == 'Wiley':
 
-        """Feed compltete. Abstract w/ html. Title w/out html"""
-
-        title = entry.title
-        date = arrow.get(entry.updated).format('YYYY-MM-DD')
-
-        author = entry.author
-
-        graphical_abstract = None
-
-        abstract = None
-
-        soup = BS(entry.summary, "html.parser")
-        try:
-            # Remove the title "Abstract" from the abstract
-            soup("h3")[0].extract()
-        except IndexError:
-            pass
-        r = soup("a", attrs={"class": "figZoom"})
-        if r:
-            # Define the graphical abstract by extracting it
-            # (and deleting it) from the abstract
-            graphical_abstract = r[0].extract()
-            graphical_abstract = graphical_abstract['href']
-
-        abstract = soup.renderContents().decode()
-
-        if abstract == "":
-            abstract = None
-
-        if response.status_code is requests.codes.ok:
-
-            # # Get the title (w/ html)
-            strainer = SS("span", attrs={"class": "mainTitle"})
-            soup = BS(response.text, "html.parser", parse_only=strainer)
-            r = soup.span
-            if r is not None:
-                try:
-                    # Remove the sign for the supplementary infos
-                    r("a", href="#nss")[0].extract()
-                except IndexError:
-                    pass
-
-                # Remove the image representing a bond
-                try:
-                    r("img", alt="[BOND]")[0].replaceWith("-")
-                    title = r.renderContents().decode().strip()
-                except IndexError:
-                    title = r.renderContents().decode().strip()
+        title, date, author, abstract, graphical_abstract = parseWiley(entry, response)
 
 
     elif company == 'ACS':
@@ -799,6 +758,42 @@ def getData(company, journal, entry, response=None):
     return title, date, author, abstract, graphical_abstract, url, topic_simple, author_simple
 
 
+def parseWiley(entry: feedparser.util.FeedParserDict,
+               response: requests.models.Response):
+
+    """
+    Feed compltete, no graphical abstract. No need to parse article web page
+    """
+
+    title = entry.title
+    date = arrow.get(entry.updated).format('YYYY-MM-DD')
+    author = entry.author
+    graphical_abstract = None
+    abstract = None
+
+    if entry.summary:
+        abstract = entry.summary.strip("Abstract\n")
+        abstract = abstract.strip()
+
+    authors = list()
+
+
+    # Parsing author field, removing titles, etc
+    for name in author.split(","):
+        name = name.strip()
+        name = name.replace("\n", " ")
+        name = name.split("Dr. ")[-1]
+        name = name.split("Prof. ")[-1]
+        authors.append(name)
+
+    author = ", ".join(authors)
+
+    data = (title, date, author, abstract, graphical_abstract)
+
+    return data
+
+
+
 def forgeTopicSimple(title: str, abstract: str) -> str:
 
     """
@@ -977,25 +972,25 @@ if __name__ == "__main__":
     from pprint import pprint
     import webbrowser
 
-    COMPANY = 'Nature'
+    COMPANY = 'Wiley'
 
     def print_result(journal, entry, future):
         response = future.result()
         title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData(COMPANY, journal, entry, response)
         # print("\n")
-        # print("Abstract:\n", abstract)
-        # print("Date:", date)
+        print("Abstract:\n", abstract)
+        print("Date:", date)
         # print("\n")
         print("Title:", title)
-        # print("Authors:", authors)
+        print("Authors:", authors)
         # print("\n")
         print("\n")
-        # print(graphical_abstract)
+        print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(fct.simpleChar(graphical_abstract)))
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["https://www.nature.com/nmeth.rss"]
+    urls_test = ["https://onlinelibrary.wiley.com/action/showFeed?jc=15222683&type=etoc&feed=rss"]
 
     session = FuturesSession(max_workers=20)
 
@@ -1003,7 +998,6 @@ if __name__ == "__main__":
 
     feed = feedparser.parse(urls_test[0], timeout=20)
     # print(feed.entries)
-    # print(feed)
     journal = feed['feed']['title']
     print(journal)
 
@@ -1013,13 +1007,15 @@ if __name__ == "__main__":
     headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
                'Connection': 'close'}
 
-    for entry in feed.entries[2:]:
+    for entry in feed.entries[9:]:
 
         # pprint(entry)
 
         # url = refineUrl("Elsevier", journal, entry)
         # try:
         doi = getDoi(COMPANY, journal, entry)
+
+        print(doi)
 
         # except AttributeError:
             # continue
@@ -1032,7 +1028,10 @@ if __name__ == "__main__":
 
         # pprint(entry)
 
-        # title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Elsevier", journal, entry)
+        # title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Wiley", journal, entry)
+        data = getData("Wiley", journal, entry)
+
+        # print(data[3])
 
         # print(entry.summary)
 
@@ -1052,7 +1051,7 @@ if __name__ == "__main__":
         # pprint(entry)
         # print(url)
 
-        future = session.get(url, headers=headers, timeout=20)
-        future.add_done_callback(functools.partial(print_result, journal, entry))
+        # future = session.get(url, headers=headers, timeout=20)
+        # future.add_done_callback(functools.partial(print_result, journal, entry))
 
-        break
+        # break
