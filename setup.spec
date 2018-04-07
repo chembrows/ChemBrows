@@ -36,7 +36,8 @@ added_files = [('images/*', 'images'),
                ]
 
 imports = ['packaging', 'packaging.version', 'packaging.specifiers',
-           'packaging.requirements', 'sklearn.neighbors.typedefs']
+           'packaging.requirements', 'sklearn.neighbors.typedefs',
+           'scipy._lib.messagestream']
 
 excludes = ['xmlrpc', 'doctest', 'tty', 'getopt', 'tcl', 'tkinter',
             'pyi_rth_pkgres', 'pyi_rth_qt5plugins', 'lib2to3']
@@ -69,7 +70,11 @@ rm_bins = ['libQtWebKit', 'libQtGui', 'libQtXmlPatterns', 'libmysqlclient',
            'libqgif', 'libqjp2', 'libqsvg', 'libqtga', 'libqwbmp', 'libqwebp',
            'libqtiff', 'libQt5PrintSupport', 'libunistring', 'libgnutls',
            'libglib-2.0', 'libkrb5', 'libgmp', 'libcups', 'libstdc++',
-           '_cffi_backend', 'libQt5Svg', '_decimal', 'libxcb-glx']
+           '_cffi_backend', 'libQt5Svg', '_decimal', 'libxcb-glx',
+           'mkl_avx512_mic', 'mkl_core', 'mkl_avx512', 'mkl_avx2', 'mkl_avx',
+           'mkl_mc3', 'mkl_mc', 'mkl_def', 'mkl_intel_thread',
+           'mkl_tbb_thread', 'mkl_sequential', 'mkl_vml_avx512_mic',
+           'mkl_vml_avx', 'mkl_vml_avx512', 'svml_dispmd']
 
 full_tuples = []
 for each_bin in a.binaries:
