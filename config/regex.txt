@@ -7,6 +7,7 @@
 ^Correction:
 ^Corrigendum(\r\n|\r|\n|\s)*to
 ^Corrigendum:
+^Frontispiece:
 ^Editorial
 ^Call for Papers
 ^In This Issue
@@ -43,6 +44,8 @@
 ^Addendum:
 ^Retracted:
 ^Inside Back Cover:
+^Back Cover:
+^Inside Cover:
 ^Highlights from Faraday
 ^Cover Picture
 ^\[Letter\]

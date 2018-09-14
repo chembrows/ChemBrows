@@ -133,7 +133,8 @@ class Worker(QtCore.QThread):
 
         # Create a list for the journals which a dl of the article
         # page is not required. All the data are in the rss page
-        company_no_dl = ['Science', 'Elsevier', 'Beilstein', 'PLOS']
+        company_no_dl = ['Science', 'Elsevier', 'Beilstein', 'PLOS',
+                         'ChemArxiv', 'Wiley']
 
         query = QtSql.QSqlQuery(self.bdd)
 
@@ -191,6 +192,7 @@ class Worker(QtCore.QThread):
 
                 # Artice not complete, try to complete it
                 elif doi in self.dico_doi and not self.dico_doi[doi]:
+                    self.l.debug("Trying to update {}".format(doi))
 
                     # How to update the entry
                     dl_page, dl_image, data = hosts.updateData(company,

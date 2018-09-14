@@ -1,3 +1,15 @@
+Version 1.2:
+- Collecting articles from Wiley is fixed
+
+Version 1.1:
+- ChemArxiv becomes ChemRxiv
+- Multiple bug fixes
+
+Version 1.0:
+- ChemArxiv added
+- Springer_open added
+- Multiple bug fixes
+
 Version 0.9.33:
 - Bug fix: Collecting new articles from Science
 

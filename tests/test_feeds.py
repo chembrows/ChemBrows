@@ -50,8 +50,6 @@ def test_ACSFeeds():
     # Don't load the complete tree in memory. Saves RAM
     strainer = SoupStrainer("div", attrs={"id": "follow-pane-rss"})
     soup = BeautifulSoup(page.text, "html.parser", parse_only=strainer)
-    # print("Cocuocu")
-    # print(soup)
     r = soup.find_all("li")
 
     dic_journals = {}

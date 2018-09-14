@@ -16,5 +16,5 @@ DATA_PATH = dirs.user_config_dir
 # 'C:\\Users\\trentm\\AppData\\Local\\Acme\\ChemBrows'
 # '/home/trentm/.config/superapp
 
-# Tweets are 140 characters long
-LEN_TWEET = 140
+# Tweets are 280 characters long
+LEN_TWEET = 280
