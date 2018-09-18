@@ -22,7 +22,7 @@ olefile==0.45.1
 packaging==17.1
 pbr==4.0.1
 pefile==2017.11.5
-Pillow==5.0.0
+Pillow==5.2.0
 pluggy==0.6.0
 py==1.5.3
 pycparser==2.18
