@@ -426,11 +426,13 @@ class MyWindow(QtWidgets.QMainWindow):
         box.setText(mes)
         box.exec()
 
-
     def connectionBdd(self):
 
         """Method to connect to the database. Creates it
         if it does not exist"""
+
+        sql_driver_available = QtSql.QSqlDatabase.isDriverAvailable('QSQLITE')
+        self.l.debug(f"Sqlite driver availe: {sql_driver_available}")
 
         if not os.path.exists(os.path.join(self.DATA_PATH, "fichiers.sqlite")):
             self.l.info("db doesn't exist. Creating.")
@@ -440,7 +442,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.bdd.setDatabaseName(os.path.join(self.DATA_PATH,
                                               "fichiers.sqlite"))
 
-        self.bdd.open()
+        # Check if the DB can be accessed. If not, display error message and return
+        if self.bdd.open():
+            self.l.debug("Connection to database: SUCESS")
+        else:
+            self.l.critical("Connection to database: FAIL" + db.lastError().text())
+            return
 
         query = QtSql.QSqlQuery(self.bdd)
         query.exec_("CREATE TABLE IF NOT EXISTS papers (id INTEGER PRIMARY KEY\

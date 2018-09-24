@@ -187,7 +187,7 @@ class Worker(QtCore.QThread):
                 # Artice complete, skip it
                 elif doi in self.dico_doi and self.dico_doi[doi]:
                     self.counter_futures_images += 1
-                    self.l.debug("Skipping {}".format(doi))
+                    self.l.debug("Article complete, skipping {}".format(doi))
                     continue
 
                 # Artice not complete, try to complete it
@@ -376,7 +376,7 @@ class Worker(QtCore.QThread):
                 elif doi in self.dico_doi and self.dico_doi[doi]:
                     self.counter_futures_images += 1
                     self.counter_futures_urls += 1
-                    self.l.debug("Skipping {}".format(doi))
+                    self.l.debug("Article complete, skipping {}".format(doi))
                     continue
 
 
