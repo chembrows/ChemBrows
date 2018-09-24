@@ -1042,7 +1042,7 @@ if __name__ == "__main__":
         # if "Two-photon" not in entry.title:
             # continue
 
-        # print(entry)
+        print(entry)
 
         # if "cross reactive" not in title:
             # continue
