@@ -828,7 +828,7 @@ def getDoi(company, journal, entry):
         doi = entry.prism_doi
 
     elif company == 'ACS':
-        doi = entry.id.split("dx.doi.org/")[1]
+        doi = entry.id.split("doi.org/")[1]
 
     elif company == 'Science':
         doi = "10.1126/science." + entry.prism_endingpage[1:]
