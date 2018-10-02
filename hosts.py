@@ -51,6 +51,11 @@ def refineUrl(company, journal, entry):
         id_paper = url.split('/')[-1]
         url = "https://pubs.acs.org/doi/abs/10.1021/" + id_paper
 
+    if company in ["RSC", "Thieme", "Springer"]:
+        # https URL if not already https
+        if "https" not in url and "http" in url:
+            url = url.replace("http", "https")
+
     elif company == 'Nature':
         id_paper = url.split('/')[-1]
 
@@ -373,14 +378,23 @@ def getData(company, journal, entry, response=None):
     elif company == 'Elsevier':
 
         title = entry.title
-        date = arrow.get(mktime(entry.updated_parsed)).format('YYYY-MM-DD')
-
         graphical_abstract = None
         author = None
 
         abstract = entry.summary
 
+        # print(abstract)
+        # print("\n")
+
         if abstract:
+
+            # Get the date from the abstract, since there is no tag for it. Hack-ish.
+            try:
+                date = abstract.split("Publication date: ")[1].split("</p>")[0]
+                date = arrow.get(date, "D MMMM YYYY")
+            except arrow.parser.ParserError:
+                date = arrow.now().format("YYYY-MM-DD")
+
             try:
                 author = abstract.split("Author(s): ")[1].split("<br")[0].split("<")[0]
                 author = author.replace(" , ", ", ")
@@ -392,7 +406,7 @@ def getData(company, journal, entry, response=None):
 
             try:
                 # First type of abstract formatting
-                abstract = soup("simple-para")[0].renderContents().decode()
+                abstract = soup("div")[1].renderContents().decode()
             except IndexError:
                 try:
                     # Second type of abstract formatting
@@ -403,20 +417,6 @@ def getData(company, journal, entry, response=None):
             r = soup.find_all("img")
             if r:
                 graphical_abstract = r[0]['src']
-
-        # NOTE: javascript embedded, impossible
-        # if response.status_code is requests.codes.ok:
-            # url = response.url
-            # print(response.url)
-            # # Get the abstract
-            # soup = BS(response.text)
-
-            # Get the correct title, no the one in the RSS
-            # r = soup.find_all("li", attrs={"class": "originalArticleName"})
-            # print(r)
-            # if r:
-                # title = r[0].renderContents().decode()
-
 
     elif company == 'Thieme':
 
@@ -972,25 +972,26 @@ if __name__ == "__main__":
     from pprint import pprint
     import webbrowser
 
-    COMPANY = 'Wiley'
+    COMPANY = "Elsevier"
 
     def print_result(journal, entry, future):
         response = future.result()
         title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData(COMPANY, journal, entry, response)
         # print("\n")
+        print("url:", url)
         print("Abstract:\n", abstract)
         print("Date:", date)
         # print("\n")
         print("Title:", title)
         print("Authors:", authors)
-        # print("\n")
         print("\n")
-        print(graphical_abstract)
+        # print("\n")
+        # print(graphical_abstract)
         # os.remove("graphical_abstracts/{0}".format(fct.simpleChar(graphical_abstract)))
         # print("\n")
 
     # urls_test = ["http://www.tandfonline.com/action/showFeed?type=etoc&feed=rss&jc=gsch20"]
-    urls_test = ["https://onlinelibrary.wiley.com/action/showFeed?jc=15222683&type=etoc&feed=rss"]
+    urls_test = ["https://rss.sciencedirect.com/publication/science/00404039"]
 
     session = FuturesSession(max_workers=20)
 
@@ -999,7 +1000,7 @@ if __name__ == "__main__":
     feed = feedparser.parse(urls_test[0], timeout=20)
     # print(feed.entries)
     journal = feed['feed']['title']
-    print(journal)
+    # print(journal)
 
     # headers = {'User-agent': 'Mozilla/5.0',
                # 'Connection': 'close'}
@@ -1008,6 +1009,7 @@ if __name__ == "__main__":
                'Connection': 'close'}
 
     for entry in feed.entries[9:]:
+    # for entry in feed.entries:
 
         # pprint(entry)
 
@@ -1015,7 +1017,7 @@ if __name__ == "__main__":
         # try:
         doi = getDoi(COMPANY, journal, entry)
 
-        print(doi)
+        # print(doi)
 
         # except AttributeError:
             # continue
@@ -1027,9 +1029,10 @@ if __name__ == "__main__":
         title = entry.title
 
         # pprint(entry)
+        # print("\n")
 
         # title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = getData("Wiley", journal, entry)
-        data = getData("Wiley", journal, entry)
+        # data = getData("ACS", journal, entry)
 
         # print(data[3])
 
@@ -1042,7 +1045,7 @@ if __name__ == "__main__":
         # if "Two-photon" not in entry.title:
             # continue
 
-        print(entry)
+        # print(entry)
 
         # if "cross reactive" not in title:
             # continue
@@ -1051,7 +1054,7 @@ if __name__ == "__main__":
         # pprint(entry)
         # print(url)
 
-        # future = session.get(url, headers=headers, timeout=20)
-        # future.add_done_callback(functools.partial(print_result, journal, entry))
+        future = session.get(url, headers=headers, timeout=20)
+        future.add_done_callback(functools.partial(print_result, journal, entry))
 
         # break

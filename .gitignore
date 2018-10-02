@@ -29,3 +29,4 @@ output_tests_hosts.log
 output_tests_feeds.log
 packages/
 version.txt
+.pytest_cache/

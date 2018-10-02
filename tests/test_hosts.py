@@ -202,7 +202,7 @@ def test_getData(journalsUrls):
             l.debug("RSS page successfully dled")
         except Exception as e:
             dict_res_by_company[company]['count_journals_untested'] += 1
-            l.error("RSS page could not be downloaded: {}".format(e),
+            l.error("RSS page could not be downloaded for {}: {}".format(site, e),
                     exc_info=True)
             continue
 
@@ -261,9 +261,9 @@ def test_getData(journalsUrls):
                             format(resp.status_code, response.url))
                 else:
                     l.debug("Request was not redirected \n")
+                del response
             except UnboundLocalError:
                 pass
-
 
             # ------------------------ ASSERT SECTION -------------------------
 

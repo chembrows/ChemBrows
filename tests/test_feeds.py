@@ -15,11 +15,12 @@ import requests
 import pytest
 import validators
 from bs4 import BeautifulSoup, SoupStrainer
+import hosts
 
 from log import MyLog
 
 # Nbr of ACS journals registered
-NBR_ACS_JOURNALS = 55
+NBR_ACS_JOURNALS = 56
 
 
 l = MyLog("output_tests_feeds.log", mode='w')
@@ -41,6 +42,8 @@ def test_ACSFeeds():
 
     """Function to test we have the right number of ACS journals"""
 
+    _, _, journals_urls, _ = hosts.getJournals("ACS")
+
     page = requests.get("http://pubs.acs.org/page/follow.html", timeout=60)
 
     if page.status_code is not requests.codes.ok:
@@ -48,7 +51,7 @@ def test_ACSFeeds():
 
     # Strainer: get a soup with only the interesting part.
     # Don't load the complete tree in memory. Saves RAM
-    strainer = SoupStrainer("div", attrs={"id": "follow-pane-rss"})
+    strainer = SoupStrainer("div", attrs={"data-pb-dropzone-name": "RSS Feeds"})
     soup = BeautifulSoup(page.text, "html.parser", parse_only=strainer)
     r = soup.find_all("li")
 
@@ -72,6 +75,9 @@ def test_ACSFeeds():
             # print(name)
             # print("{} : {}".format(name, url))
             dic_journals[url] = name
+
+            if url not in journals_urls:
+                print("New journal? {}".format(url))
 
     print(dic_journals)
     logAssert(len(dic_journals) == NBR_ACS_JOURNALS,
