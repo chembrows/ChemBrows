@@ -30,3 +30,4 @@ output_tests_feeds.log
 packages/
 version.txt
 .pytest_cache/
+.mypy_cache/
