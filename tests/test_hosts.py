@@ -165,7 +165,7 @@ def test_getData(journalsUrls):
 
     # TODO: comment or uncomment
     # Bypass all companies but one
-    # list_urls_feed = hosts.getJournals("ChemRxiv")[2]
+    # list_urls_feed = hosts.getJournals("ACS")[2]
 
     # Build a dic with key: company
                      # value: journal name
@@ -309,8 +309,6 @@ def test_getData(journalsUrls):
                 logAssert(author_simple.endswith(' ') is True,
                           "author_simple doesn't end with space {}".
                           format(author_simple))
-
-    pprint(dict_res_by_company)
 
     # Count results
     count_abs_empty = 0
