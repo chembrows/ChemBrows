@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+arrow = "*"
+"beautifulsoup4" = "*"
+numpy = "*"
+requests = "*"
+scipy = "*"
+"pyqt5" = "==5.9.2"
+validators = "*"
+pillow = "*"
+appdirs = "*"
+requests-futures = "*"
+scikit-learn = "*"
+sklearn = "*"
+twitter = "*"
+feedparser = {editable = true, git = "https://github.com/JPFrancoia/feedparser"}
+pipfile = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"

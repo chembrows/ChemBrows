@@ -431,8 +431,9 @@ class MyWindow(QtWidgets.QMainWindow):
         """Method to connect to the database. Creates it
         if it does not exist"""
 
+        # Check status of SQLite driver
         sql_driver_available = QtSql.QSqlDatabase.isDriverAvailable('QSQLITE')
-        self.l.debug(f"Sqlite driver availe: {sql_driver_available}")
+        self.l.debug(f"Sqlite driver available: {sql_driver_available}")
 
         if not os.path.exists(os.path.join(self.DATA_PATH, "fichiers.sqlite")):
             self.l.info("db doesn't exist. Creating.")
