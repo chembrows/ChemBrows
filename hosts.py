@@ -18,10 +18,18 @@ import re
 import functions as fct
 
 
-def reject(entry_title):
+def reject(entry_title: str) -> bool:
 
-    """Function called by a Worker object to filter crappy entries.
-    It is meant to reject articles like corrigendum, erratum, etc"""
+    """
+    Function called by a Worker object to filter crappy entries.
+    Rejects articles like corrigendum, erratum, etc
+
+    Arguments:
+        entry_title (str): title of the entry to be checked
+
+    Returns:
+        bool: True if entry is rejected, False if it's accepted
+    """
 
     resource_dir, DATA_PATH = fct.getRightDirs()
 
@@ -31,14 +39,12 @@ def reject(entry_title):
               'r', encoding='utf-8') as filters_file:
         filters = filters_file.read().splitlines()
 
-    # Try to match the filters against the title entry
-    responses = [bool(re.search(regex, entry_title)) for regex in filters]
+    # If one regex matches, reject the entry
+    for regex in filters:
+        if re.search(regex, entry_title):
+            return True
 
-    # If one filter matched, reject the entry
-    if True in responses:
-        return True
-    else:
-        return False
+    return False
 
 
 def refineUrl(company, journal, entry):
@@ -933,7 +939,7 @@ def getJournals(company, user=False):
     return names, abb, urls, cares_image
 
 
-def getCompanies(user: bool=False) -> list:
+def getCompanies(user: bool = False) -> list:
 
     """
     Get a list of all the companies. Will return a list of publishers, without
