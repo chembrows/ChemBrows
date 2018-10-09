@@ -10,6 +10,7 @@ import requests
 import arrow
 from time import mktime
 import re
+from typing import List, Tuple
 
 # DEBUG
 # from memory_profiler import profile
@@ -875,7 +876,7 @@ def getDoi(company, journal, entry):
     return doi
 
 
-def getJournals(company, user=False):
+def getJournals(company, user=False) -> Tuple[List, List, List, List]:
 
     """Function to get the informations about all the journals of
     a company. Returns the names, the URLs, the abbreviations, and also

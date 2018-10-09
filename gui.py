@@ -14,6 +14,7 @@ import validators
 import collections as collec
 import logging
 import distutils.util
+from typing import Dict, Tuple, List
 
 # Personal modules
 from log import MyLog
@@ -488,17 +489,21 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.l.info("Max id for new: {}".format(max_id_for_new))
 
+    def getJournalsToParse(self) -> List[str]:
 
-    def getJournalsToParse(self):
+        """
+        Return the abbreviations of the journals checked in the settings window
 
-        """Get the journals checked in the settings window"""
+        Returns:
+            List[str]: list of abbreviations of journals names
+        """
 
         # If no journals to parse in the settings,
         # parse them all. So build a journals_to_parse list
         # with all the journals
         journals = self.options.value("journals_to_parse", [])
         if not journals:
-            journals = []
+            journals: List[str] = []
             for company in hosts.getCompanies():
                 journals += hosts.getJournals(company)[1]
 
@@ -507,6 +512,81 @@ class MyWindow(QtWidgets.QMainWindow):
 
         return journals
 
+    def createDictJournals(self) -> Dict[str, Tuple]:
+
+        """
+        Creates a dict:
+            {journal abbreviation: (company, journal's name, url, care image)}
+
+        Returns:
+            Dict[str, Tuple]:
+        """
+
+        # TODO: USER'S JOURNALS!!!!
+
+        dict_journals: Dict[str, Tuple] = {}
+
+        for company in hosts.getCompanies():
+            names, abb, urls, cares_image = hosts.getJournals(company)
+
+            for name, abbreviation, url, care_image in zip(names, abb, urls, cares_image):
+                dict_journals[abbreviation] = (company, name, url, care_image)
+
+        print(dict_journals)
+
+        return dict_journals
+
+    def getUrlsToParse(self) -> List[str]:
+
+        """
+        Build a list of URLs to parse, depending on the user's selected journals
+
+        Returns:
+            List[str]: list of urls
+        """
+
+        journals_to_parse = self.getJournalsToParse()
+        urls = [self.dict_journals[j][2] for j in journals_to_parse]
+        print(urls)
+
+        return urls
+
+    def initializeCounters(self) -> None:
+
+        """
+        Create counters for the parsing process. Counters initialized at 0
+
+        Returns:
+            None:
+        """
+
+        self.counter_added = 0
+        self.counter_updates = 0
+        self.counter_rejected = 0
+        self.counter_articles_failed = 0
+        self.counter_images_failed = 0
+        self.count_threads = 0
+
+    def findMaxNbrOfThreads(self) -> int:
+
+        """
+        Get the maximum nbr of threads usable for the parsing process
+        Will vary depending on user's computer. 4 is the maximum
+
+        Returns:
+            int: nbr of usable threads
+        """
+
+        # Get the optimal nbr of thread. Will vary depending
+        # on the user's computer. 4 is the maximum
+        if QtCore.QThread.idealThreadCount() > 4:
+            max_nbr_threads = 4
+        else:
+            max_nbr_threads = QtCore.QThread.idealThreadCount()
+
+        self.l.debug("IdealThreadCount: {}".format(max_nbr_threads))
+
+        return max_nbr_threads
 
     def parse(self):
 
@@ -520,20 +600,9 @@ class MyWindow(QtWidgets.QMainWindow):
         # Disables the parse action to avoid double start
         self.parseAction.setEnabled(False)
 
-        journals_to_parse = self.getJournalsToParse()
+        self.dict_journals = self.createDictJournals()
 
-        # Create a dictionary w/ all the data concerning the journals
-        # implemented in the program: names, abbreviations, urls.
-        # Create a list of urls to parse data
-        self.urls = []
-        self.dict_journals = {}
-        for company in hosts.getCompanies():
-            data_company = hosts.getJournals(company)
-            self.dict_journals[company] = data_company
-
-            for abb, url in zip(data_company[1], data_company[2]):
-                if abb in journals_to_parse:
-                    self.urls.append(url)
+        self.urls = self.getUrlsToParse()
 
         # Display a progress dialog box
         self.progress = QtWidgets.QProgressDialog("Collecting in progress",
@@ -545,33 +614,19 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.urls_max = len(self.urls)
 
-        # Get the optimal nbr of thread. Will vary depending
-        # on the user's computer. 4 is the maximum
-        if QtCore.QThread.idealThreadCount() > 4:
-            max_nbr_threads = 4
-        else:
-            max_nbr_threads = QtCore.QThread.idealThreadCount()
+        max_nbr_threads = self.findMaxNbrOfThreads()
 
-        self.l.debug("IdealThreadCount: {}".format(max_nbr_threads))
-        # max_nbr_threads = 1
-
-        # Counter to count the new entries in the database
-        self.counter_added = 0
-        self.l.debug("counter_added: {}".format(self.counter_added))
-        self.counter_updates = 0
-        self.counter_rejected = 0
-        self.counter_articles_failed = 0
-        self.counter_images_failed = 0
+        self.initializeCounters()
 
         self.browsing_session = requests.session()
 
         # List of failed dl of RSS feeds
         self.list_failed_rss = []
 
-        # List to store the threads.
+        # Store the running threads.
         # The list is cleared when the method is started
-        self.list_threads = []
-        self.count_threads = 0
+        self.list_threads: List[Worker] = list()
+
         for i in range(max_nbr_threads):
             try:
                 url = self.urls[i]
@@ -583,11 +638,9 @@ class MyWindow(QtWidgets.QMainWindow):
                 worker.start()
                 QtWidgets.qApp.processEvents()
             except IndexError:
-                self.l.debug("parse, self.urls, IndexError")
+                self.l.debug("Nbr max threads exceeds nbr of urls to parse")
                 break
 
-
-    # @profile
     def checkThreads(self):
 
         """Method to check the state of each thread.

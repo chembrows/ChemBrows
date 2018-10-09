@@ -113,15 +113,13 @@ class Worker(QtCore.QThread):
         # Get the company and the journal_abb by scrolling the dictionary
         # containing all the data regarding the journals implemented in the
         # program. This dictionary is built in gui.py, to avoid multiple calls
-        # to hosts.getJournals
+        # to hosts.getJournals and race conditions
         # care_image determines if the Worker will try to dl the graphical
         # abstracts
-        for key, tuple_data in self.dict_journals.items():
-            if journal in tuple_data[0]:
-                company = key
-                index = tuple_data[0].index(journal)
-                journal_abb = tuple_data[1][index]
-                care_image = tuple_data[3][index]
+        for abbreviation, tuple_data in self.dict_journals.items():
+            if journal == tuple_data[1]:
+                company, _, _, care_image = tuple_data
+                journal_abb = abbreviation
                 break
 
         try:
