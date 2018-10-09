@@ -746,6 +746,10 @@ def getData(company, journal, entry, response=None):
     if title is None:
         return None
 
+    # Just in case date is empy or None, assign date of today
+    if date is None or date == "":
+        date = arrow.now().format("YYYY-MM-DD")
+
     topic_simple = forgeTopicSimple(title, abstract)
 
     if abstract is None or abstract == '':

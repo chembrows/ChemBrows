@@ -15,6 +15,7 @@ import collections as collec
 import logging
 import distutils.util
 from typing import Dict, Tuple, List
+import arrow
 
 # Personal modules
 from log import MyLog
@@ -1622,7 +1623,7 @@ class MyWindow(QtWidgets.QMainWindow):
                 requete = requete + "\"" + str(each_journal) + "\"" + ")"
 
         self.query.prepare(requete)
-        self.query.exec_
+        self.query.exec_()
 
         self.updateView()
 
@@ -2173,6 +2174,8 @@ class MyWindow(QtWidgets.QMainWindow):
         incomplete articles.
         """
 
+        # TODO: split this function into several sub-functions
+
         mes = """
         You are about to clean your database, and you might loose data.
         The process will erase articles from unselected journals.
@@ -2211,6 +2214,11 @@ class MyWindow(QtWidgets.QMainWindow):
                      authors LIKE '%  %'")
         query.exec_("UPDATE papers SET author_simple=replace(author_simple, '  ', \
                      ' ' ) WHERE author_simple LIKE '%  %'")
+
+        query.prepare("UPDATE papers SET date = ? WHERE date = ''")
+        query.addBindValue(arrow.now().format("YYYY-MM-DD"))
+
+        query.exec_()
 
         # Delete all the articles of unselected journals
         requete = "DELETE FROM papers WHERE journal NOT IN ("
