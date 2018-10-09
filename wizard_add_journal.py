@@ -216,7 +216,7 @@ class WizardAddJournal(QtWidgets.QDialog):
         self.line_url_journal = QtWidgets.QLineEdit()
         self.line_url_journal.setPlaceholderText("http://feeds.rsc.org/rss/cc")
 
-        list_publishers = sorted(hosts.getCompanies())
+        list_publishers = sorted(hosts.getAllCompanies())
         self.combo_publishers = QtWidgets.QComboBox()
         self.combo_publishers.addItems(list_publishers)
 
@@ -237,7 +237,6 @@ class WizardAddJournal(QtWidgets.QDialog):
         self.setLayout(self.vbox_global)
         self.show()
 
-
     def saveJournal(self, title, abb, url, company):
 
         """Will save the new journal, in file company.ini located in
@@ -246,7 +245,7 @@ class WizardAddJournal(QtWidgets.QDialog):
         mes = "Journal already in the catalog"
 
         # Check if the RSS page's URL is not present in any company file
-        for company in hosts.getCompanies():
+        for company in hosts.getAllCompanies():
             data_company = hosts.getJournals(company)
 
             # If URL already present, display error dialog box

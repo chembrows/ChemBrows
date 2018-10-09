@@ -944,14 +944,17 @@ def getJournals(company, user=False) -> Tuple[List, List, List, List]:
     return names, abb, urls, cares_image
 
 
-def getCompanies(user: bool = False) -> list:
+def getDefaultCompanies() -> List[str]:
 
     """
-    Get a list of all the companies. Will return a list of publishers, without
-    .ini at the end. If user is true, returns companies on the user's side
+    Get a list of all the companies. Will return a list of publishers, without .ini
+    at the end. Returns only default (stock) companies
+
+    Returns:
+        List[str]: list of company/publisher names
     """
 
-    resource_dir, DATA_PATH = fct.getRightDirs()
+    resource_dir, _ = fct.getRightDirs()
 
     cb_companies = []
 
@@ -960,8 +963,20 @@ def getCompanies(user: bool = False) -> list:
         company = company.split('.')[0]
         cb_companies.append(company)
 
-    if not user:
-        return list(set(cb_companies))
+    return list(set(cb_companies))
+
+
+def getUserCompanies() -> List[str]:
+
+    """
+    Get a list of all the companies. Will return a list of publishers, without .ini
+    at the end. Returns only user's companies
+
+    Returns:
+        List[str]: list of company/publisher names
+    """
+
+    _, DATA_PATH = fct.getRightDirs()
 
     user_companies = []
 
@@ -970,8 +985,23 @@ def getCompanies(user: bool = False) -> list:
         company = company.split('.')[0]
         user_companies.append(company)
 
-    return list(set(cb_companies + user_companies))
+    return list(set(user_companies))
 
+
+def getAllCompanies() -> List[str]:
+
+    """
+    Get a list of all the companies. Will return a list of publishers, without .ini
+    at the end. Returns default (stock) and user companies
+
+    Returns:
+        List[str]: list of company/publisher names
+    """
+
+    all_companies = getDefaultCompanies() + getUserCompanies()
+    all_companies = list(set(all_companies))
+
+    return all_companies
 
 
 if __name__ == "__main__":

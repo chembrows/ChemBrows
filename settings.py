@@ -155,7 +155,7 @@ class Settings(QtWidgets.QDialog):
         labels_checkboxes = []
 
         # Get labels of the future check boxes of the journals to be parsed
-        for company in hosts.getCompanies():
+        for company in hosts.getAllCompanies():
             labels_checkboxes += hosts.getJournals(company)[1]
 
         labels_checkboxes.sort()

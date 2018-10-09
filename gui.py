@@ -502,10 +502,10 @@ class MyWindow(QtWidgets.QMainWindow):
         # If no journals to parse in the settings,
         # parse them all. So build a journals_to_parse list
         # with all the journals
-        journals = self.options.value("journals_to_parse", [])
+        journals: List[str] = self.options.value("journals_to_parse", [])
         if not journals:
-            journals: List[str] = []
-            for company in hosts.getCompanies():
+
+            for company in hosts.getAllCompanies():
                 journals += hosts.getJournals(company)[1]
 
             self.options.remove("journals_to_parse")
@@ -527,13 +527,11 @@ class MyWindow(QtWidgets.QMainWindow):
 
         dict_journals: Dict[str, Tuple] = {}
 
-        for company in hosts.getCompanies():
+        for company in hosts.getAllCompanies():
             names, abb, urls, cares_image = hosts.getJournals(company)
 
             for name, abbreviation, url, care_image in zip(names, abb, urls, cares_image):
                 dict_journals[abbreviation] = (company, name, url, care_image)
-
-        print(dict_journals)
 
         return dict_journals
 
@@ -548,7 +546,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
         journals_to_parse = self.getJournalsToParse()
         urls = [self.dict_journals[j][2] for j in journals_to_parse]
-        print(urls)
 
         return urls
 

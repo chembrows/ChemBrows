@@ -91,7 +91,7 @@ class WizardDelJournal(QtWidgets.QDialog):
 
         # Get labels of the future check boxes of the journals to be parsed
         # Only journals on user's side
-        for company in hosts.getCompanies(user=True):
+        for company in hosts.getUserCompanies():
             labels_checkboxes += hosts.getJournals(company, user=True)[1]
 
         labels_checkboxes.sort()
