@@ -533,6 +533,8 @@ class MyWindow(QtWidgets.QMainWindow):
             for name, abbreviation, url, care_image in zip(names, abb, urls, cares_image):
                 dict_journals[abbreviation] = (company, name, url, care_image)
 
+        self.l.debug(f"dict journals: {dict_journals}")
+
         return dict_journals
 
     def getUrlsToParse(self) -> List[str]:
@@ -546,6 +548,8 @@ class MyWindow(QtWidgets.QMainWindow):
 
         journals_to_parse = self.getJournalsToParse()
         urls = [self.dict_journals[j][2] for j in journals_to_parse]
+
+        self.l.debug(f"journals_to_parse: {journals_to_parse}")
 
         return urls
 
@@ -589,6 +593,8 @@ class MyWindow(QtWidgets.QMainWindow):
     def parse(self):
 
         """Method to start parsing the data"""
+
+        self.l.info("Parsing started")
 
         self.start_time = datetime.datetime.now()
 
