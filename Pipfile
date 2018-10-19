@@ -22,9 +22,9 @@ pipfile = "*"
 
 [dev-packages]
 jedi = "*"
-mypy = "*"
 pytest = "*"
 black = "*"
+mypy = "*"
 
 [requires]
 python_version = "3.6"

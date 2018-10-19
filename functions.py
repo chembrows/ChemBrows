@@ -9,12 +9,20 @@ import re
 import constants
 
 
-def prettyDate(date):
+def prettyDate(str_date: str) -> str:
 
-    """Prettify a date. Ex: 3 days ago"""
+    """
+    Prettify a date. Ex: 3 days ago
+
+    Arguments:
+        str_date (str): date to prettify. Normally YYYY-MM-DD
+
+    Returns:
+        str: the prettyfied date
+    """
 
     now = arrow.now()
-    date = arrow.get(date)
+    date = arrow.get(str_date)
 
     if now.timestamp - date.timestamp < 86400:
         return "Today"
@@ -22,24 +30,31 @@ def prettyDate(date):
         return date.humanize(now.naive)
 
 
-def simpleChar(string, wildcards=True):
+def simpleChar(rubbish_str: str, wildcards: bool = True) -> str:
 
-    """Sluggify the string.
-    If wildcards is False, don't sluggify them"""
-    # http://www.siteduzero.com/forum-83-810635-p1-sqlite-recherche-avec-like-insensible-a-la-casse.html#r7767300
+    """
+    Slugify a string, i.e. remove special characters like accents
 
-    # http://stackoverflow.com/questions/5574042/string-slugification-in-python
-    # string = unidecodePerso(string).lower()
+    Arguments:
+        rubbish_str (str): the str to slugify
+        wildcards (bool): if False, don't slugify wildcards (*). Otherwise, do
+
+    Returns:
+        str: the sluggified string
+
+    http://www.siteduzero.com/forum-83-810635-p1-sqlite-recherche-avec-like-insensible-a-la-casse.html#r7767300
+    http://stackoverflow.com/questions/35382793/regex-match-all-special-characters-but-not
+    """
 
     resource_dir, _ = getRightDirs()
 
     with open(os.path.join(resource_dir, 'config/data.bin'), 'rb') as f:
         _replaces = f.read().decode('utf8').split('\x00')
 
-    string = string.lower()
+    rubbish_str = rubbish_str.lower()
 
     chars = []
-    for ch in string:
+    for ch in rubbish_str:
         if ch == '*' and not wildcards:
             chars.append('*')
             continue
@@ -55,10 +70,9 @@ def simpleChar(string, wildcards=True):
         except IndexError:
             pass
 
-    string = "".join(chars)
+    rubbish_str = "".join(chars)
 
-    # http://stackoverflow.com/questions/35382793/regex-match-all-special-characters-but-not
-    return re.sub(r'_|[^\w\s*]+', ' ', string)
+    return re.sub(r'_|[^\w\s*]+', ' ', rubbish_str)
 
 
 def queryString(word):
@@ -222,9 +236,8 @@ def getVersion():
     return version
 
 
-
-
 if __name__ == "__main__":
+    print(prettyDate("2018-10-15"))
     # like(10)
     # _, dois = listDoi()
     # print(dois)
@@ -236,7 +249,7 @@ if __name__ == "__main__":
     # match(['jean-patrick francoia', 'robert pascal', 'laurent vial'], "r* pascal")
 
     # unidecodePerso('test')
-    print(simpleChar("Her_%%%v*é Cottet", False))
+    # print(simpleChar("Her_%%%v*é Cottet", False))
     # queryString("Hervé Cottet")
     # simpleChar("C* N. hunter", False)
     pass
