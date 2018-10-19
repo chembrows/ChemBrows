@@ -75,30 +75,35 @@ def simpleChar(rubbish_str: str, wildcards: bool = True) -> str:
     return re.sub(r'_|[^\w\s*]+', ' ', rubbish_str)
 
 
-def queryString(word):
+def queryString(word: str) -> str:
 
     """
-    Function to return a string formatted to be
-    included in a LIKE query
+    Function to return a string formatted to be included in a LIKE query
+    Will take care of wildcards, and % characters will be place properly
+
     Ex:
     querySting("sper*m") -> % sper%mine %
     querySting("*sperm*") -> %sperm%
     querySting("spermine") -> % spermine %
+
+    Arguments:
+        word (str): word to be prepared
+
+    Returns:
+        str: word prepared
     """
 
-    word = str(word)
-
-    if word[0] != '*' and word[-1] != '*' and '*' in word:
+    if "*" in word and not word.startswith("*") and not word.endswith("*"):
         word = word.replace('*', '%')
 
     res = word.replace('*', '')
 
-    if word[0] == '*':
+    if word.startswith("*"):
         res = '%' + res
     else:
         res = '% ' + res
 
-    if word[-1] == '*':
+    if word.endswith("*"):
         res = res + '%'
     else:
         res = res + ' %'
