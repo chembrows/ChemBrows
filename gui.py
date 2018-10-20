@@ -513,30 +513,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
         return journals
 
-    def createDictJournals(self) -> Dict[str, Tuple]:
-
-        """
-        Creates a dict:
-            {journal abbreviation: (company, journal's name, url, care image)}
-
-        Returns:
-            Dict[str, Tuple]:
-        """
-
-        # TODO: USER'S JOURNALS!!!!
-
-        dict_journals: Dict[str, Tuple] = {}
-
-        for company in hosts.getAllCompanies():
-            names, abb, urls, cares_image = hosts.getJournals(company)
-
-            for name, abbreviation, url, care_image in zip(names, abb, urls, cares_image):
-                dict_journals[abbreviation] = (company, name, url, care_image)
-
-        self.l.debug(f"dict journals: {dict_journals}")
-
-        return dict_journals
-
     def getUrlsToParse(self) -> List[str]:
 
         """
@@ -604,7 +580,8 @@ class MyWindow(QtWidgets.QMainWindow):
         # Disables the parse action to avoid double start
         self.parseAction.setEnabled(False)
 
-        self.dict_journals = self.createDictJournals()
+        self.dict_journals = hosts.createDictJournals()
+        self.l.debug(f"dict journals: {self.dict_journals}")
 
         self.urls = self.getUrlsToParse()
 

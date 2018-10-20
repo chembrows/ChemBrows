@@ -10,7 +10,7 @@ import requests
 import arrow
 from time import mktime
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 # DEBUG
 # from memory_profiler import profile
@@ -1002,6 +1002,29 @@ def getAllCompanies() -> List[str]:
     all_companies = list(set(all_companies))
 
     return all_companies
+
+
+def createDictJournals() -> Dict[str, Tuple]:
+
+    """
+    Creates a dict:
+        {journal abbreviation: (company, journal's name, url, care image)}
+
+    Returns:
+        Dict[str, Tuple]:
+    """
+
+    # TODO: USER'S JOURNALS!!!!
+
+    dict_journals: Dict[str, Tuple] = {}
+
+    for company in getAllCompanies():
+        names, abb, urls, cares_image = getJournals(company)
+
+        for name, abbreviation, url, care_image in zip(names, abb, urls, cares_image):
+            dict_journals[abbreviation] = (company, name, url, care_image)
+
+    return dict_journals
 
 
 if __name__ == "__main__":
