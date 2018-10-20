@@ -242,9 +242,14 @@ def getRightDirs():
     return resource_dir, DATA_PATH
 
 
+def getVersion() -> str:
 
+    """
+    Returns ChemBrows' version (semver). Read from file config/version.txt
 
-
+    Returns:
+        str: version, semver
+    """
 
     resource_dir, DATA_PATH = getRightDirs()
 
@@ -269,7 +274,7 @@ if __name__ == "__main__":
     # match(['jean-patrick francoia', 'robert pascal', 'laurent vial'], "r* pascal")
 
     # unidecodePerso('test')
-
+    print(simpleChar("Her_%%%v*é Cottet"))
     # queryString("Hervé Cottet")
-
+    print(simpleChar("are you ø"))
     pass
