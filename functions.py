@@ -30,14 +30,25 @@ def prettyDate(str_date: str) -> str:
         return date.humanize(now.naive)
 
 
-def simpleChar(rubbish_str: str, wildcards: bool = True) -> str:
+def simpleChar(rubbish_str: str) -> str:
 
     """
-    Slugify a string, i.e. remove special characters like accents
+    Slugify a string, i.e. remove/transform special characters like accents or
+    punctuation. When a special character can't be transformed to its simple
+    equivalent, it's replaced by a space.
+
+    This function is used instead of unidecode for licensing reasons. If you don't
+    care about licensing, don't use this.
+
+    Ex:
+        "are you ø" -> "are you o"
+        "are you here?" -> "are you here "
+        "Her_%%%v*é Cottet" -> "her  v*e cottet"
+
+    Note: wildcards (*) are left untouched
 
     Arguments:
         rubbish_str (str): the str to slugify
-        wildcards (bool): if False, don't slugify wildcards (*). Otherwise, do
 
     Returns:
         str: the sluggified string
@@ -55,10 +66,6 @@ def simpleChar(rubbish_str: str, wildcards: bool = True) -> str:
 
     chars = []
     for ch in rubbish_str:
-        if ch == '*' and not wildcards:
-            chars.append('*')
-            continue
-
         codepoint = ord(ch)
 
         if not codepoint:
@@ -254,7 +261,7 @@ if __name__ == "__main__":
     # match(['jean-patrick francoia', 'robert pascal', 'laurent vial'], "r* pascal")
 
     # unidecodePerso('test')
-    # print(simpleChar("Her_%%%v*é Cottet", False))
+    print(simpleChar("Her_%%%v*é Cottet"))
     # queryString("Hervé Cottet")
-    # simpleChar("C* N. hunter", False)
+    print(simpleChar("are you ø"))
     pass

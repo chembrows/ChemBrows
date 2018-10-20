@@ -33,5 +33,18 @@ def test_query_string():
     )
 
 
+def test_remove_html():
+
+    logAssert(fct.removeHtml("<a>coucou</a>") == "coucou", "removeHtml failed")
+
+
+def test_simple_char():
+
+    logAssert(fct.simpleChar("C* N. hunter") == "c* n  hunter", "simpleChar, test 1 failed")
+    logAssert(fct.simpleChar("C* N. hunter") == "c* n  hunter", "simpleChar, test 2 failed")
+    logAssert(fct.simpleChar("Her_%%%v*é Cottet") == "her  v*e cottet", "simpleChar, test 3 failed")
+    logAssert(fct.simpleChar("are you ø") == "are you o", "simpleChar, test 5 failed")
+
+
 if __name__ == "__main__":
     pass
