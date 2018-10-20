@@ -7,6 +7,7 @@ import os
 import arrow
 import re
 import constants
+from typing import List
 
 
 def prettyDate(str_date: str) -> str:
@@ -64,7 +65,7 @@ def simpleChar(rubbish_str: str) -> str:
 
     rubbish_str = rubbish_str.lower()
 
-    chars = []
+    chars: List[str] = []
     for ch in rubbish_str:
         codepoint = ord(ch)
 
@@ -207,11 +208,18 @@ def buildSearch(topic_entries, author_entries, radio_states):
     return base
 
 
-def removeHtml(data):
+def removeHtml(data: str) -> str:
 
-    """Simple function to remove html tags.
-    Not very robust, but does the job.
-    Used in gui.shareByEmail"""
+    """
+    Simple function to remove html tags. Not very robust, but does the job.
+    Used in gui.shareByEmail
+
+    Arguments:
+        data (str): string to strip from html tags
+
+    Returns:
+        str: string stripped
+    """
 
     p = re.compile(r'<.*?>')
 
@@ -234,9 +242,14 @@ def getRightDirs():
     return resource_dir, DATA_PATH
 
 
-def getVersion():
+def getVersion() -> str:
 
-    """Get the ChemBrows' version"""
+    """
+    Returns ChemBrows' version (semver). Read from file config/version.txt
+
+    Returns:
+        str: version, semver
+    """
 
     resource_dir, DATA_PATH = getRightDirs()
 
@@ -249,7 +262,7 @@ def getVersion():
 
 
 if __name__ == "__main__":
-    print(prettyDate("2018-10-15"))
+    # print(prettyDate("2018-10-15"))
     # like(10)
     # _, dois = listDoi()
     # print(dois)

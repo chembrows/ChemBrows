@@ -21,10 +21,10 @@ feedparser = {editable = true, git = "https://github.com/JPFrancoia/feedparser"}
 pipfile = "*"
 
 [dev-packages]
-jedi = "*"
 pytest = "*"
 black = "*"
 mypy = "*"
+jedi = "*"
 
 [requires]
 python_version = "3.6"
