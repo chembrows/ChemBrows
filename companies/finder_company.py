@@ -33,6 +33,16 @@ class FinderCompany:
 
     def init_feed(self) -> None:
 
+        """
+        Download the rss feed from the URL feed
+
+        Returns:
+            None
+
+        Raises:
+            DownloadError: if the RSS feed can't be downloaded
+        """
+
         try:
             # Get the RSS page of the url provided
             self.feed = feedparser.parse(self.url_feed, timeout=self.TIMEOUT)
@@ -47,6 +57,26 @@ class FinderCompany:
             raise DownloadError(f"Couldn't download feed {self.url_feed}")
 
     def init_infos(self, dict_journals: Dict[str, tuple]) -> None:
+
+        """
+        Creates/finds the following attributes:
+            - journal's name
+            - company's name
+            - journal's abbreviation
+            - care_image (bool to check if graphical abstract is expected)
+
+        Arguments:
+            dict_journals (Dict[str, tuple]): {journal abbreviation: (company,
+                                               journal's name, url, care image)}
+                                              dict used to find the infos. Created
+                                              in gui.py
+
+        Returns:
+            None
+
+        Raises:
+            JournalError: if the journal's title/name can't be found in the feed
+        """
 
         try:
             # Check if the feed has a title (journal's name)
@@ -67,6 +97,8 @@ class FinderCompany:
                 break
 
     def find_company_handler(self) -> BaseCompany:
+
+        # TODO: implement error handling when company handler is not present
 
         resource_dir, _ = functions.getRightDirs()
         directory = os.path.join(resource_dir, "companies")
