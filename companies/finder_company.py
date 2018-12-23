@@ -1,16 +1,26 @@
 #!/usr/bin/python
 # coding: utf-8
 
+"""
+------------------------------------------------------------------------------
+* Last Modified : 2018-12-23 18:22:44 +0100(CET)
+
+* Created By : JPFrancoia https://github.com/JPFrancoia
+
+* Description :
+
+Base class to find which CompanyHandler will be called to deal with a certain feed URL.
+Queries the dict of infos for journals from the main class, and find the right
+CompanyHandler
+------------------------------------------------------------------------------
+"""
+
 import os
 import sys
 import feedparser
 from typing import Dict
 
-sys.path.append(
-    os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))
-    )
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from exceptions import *
 from log import MyLog
@@ -27,7 +37,7 @@ class FinderCompany:
     def __init__(self, url_feed: str) -> None:
 
         self.l = MyLog("activity.log")
-        self.l.debug("Entering CompanyBase")
+        # self.l.debug("Entering CompanyBase")
 
         self.url_feed = url_feed
 
@@ -107,7 +117,7 @@ class FinderCompany:
         sys.path.insert(0, directory)
 
         module = __import__(self.company)
-        company_handler = module.CompanyHandler()
+        company_handler = module.CompanyHandler(self.url_feed)
 
         return company_handler
 

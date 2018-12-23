@@ -24,7 +24,9 @@ class CompanyHandler(BaseCompany):
 
     def get_doi(entry: feedparser.util.FeedParserDict) -> str:
 
-        pass
+        doi = entry.id.split("dx.doi.org/")[1]
+
+        return doi
 
 
 if __name__ == '__main__':

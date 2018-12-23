@@ -42,7 +42,7 @@ class Worker(QtCore.QThread):
     # http://stackoverflow.com/questions/6783194/background-thread-with-qthread-in-pyqt
     # https://wiki.python.org/moin/PyQt/Threading,_Signals_and_Slots
 
-    def __init__(self, parent: Optional["MyWindow"] = None):
+    def __init__(self, parent: Optional["MyWindow"] = None) -> None:
 
         QtCore.QThread.__init__(self)
 
