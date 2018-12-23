@@ -41,6 +41,7 @@ class FinderCompany:
 
         self.url_feed = url_feed
 
+
     def init_feed(self) -> None:
 
         """
@@ -118,6 +119,11 @@ class FinderCompany:
 
         module = __import__(self.company)
         company_handler = module.CompanyHandler(self.url_feed)
+
+        company_handler.journal = self.journal
+        company_handler.company = self.company
+        company_handler.journal_abb = self.journal_abb
+        company_handler.feed = self.feed
 
         return company_handler
 

@@ -581,7 +581,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.parseAction.setEnabled(False)
 
         self.dict_journals = hosts.createDictJournals()
-        self.l.debug(f"dict journals: {self.dict_journals}")
+        # self.l.debug(f"dict journals: {self.dict_journals}")
 
         self.urls = self.getUrlsToParse()
 

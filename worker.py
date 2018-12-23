@@ -100,351 +100,65 @@ class Worker(QtCore.QThread):
         # self.session_images = FuturesSession(max_workers=self.MAX_WORKERS,
             # session=self.parent.browsing_session)
 
-        # # Lists to check if the post is in the db, and if
-        # # it has all the info
-        # try:
-            # self.dico_doi = self.listDoi(journal_abb)
-        # except UnboundLocalError:
-            # self.l.error("Journal not recognized ! Aborting")
-            # self.parent.list_failed_rss.append(self.url_feed)
-            # return
+        # Lists to check if the post is in the db, and if
+        # it has all the info
+        try:
+            dico_doi = company_handler.data_completeness(self.bdd)
+        except UnboundLocalError:
+            self.l.error("Journal not recognized ! Aborting")
+            self.parent.list_failed_rss.append(self.url_feed)
+            return
 
-        # # Create a list for the journals which a dl of the article
-        # # page is not required. All the data are in the rss page
-        # company_no_dl = ['Science', 'Elsevier', 'Beilstein', 'PLOS',
-                         # 'ChemArxiv', 'Wiley']
+        # print(dico_doi)
 
-        # query = QtSql.QSqlQuery(self.bdd)
+        query = QtSql.QSqlQuery(self.bdd)
 
-        # self.bdd.transaction()
+        self.bdd.transaction()
 
-        # # The feeds of these journals are complete
-        # if company in company_no_dl:
+        for entry in company_handler.feed.entries:
 
-            # self.counter_futures_urls += len(feed.entries)
+            # Get the DOI, a unique number for a publication
+            try:
+                doi = company_handler.get_doi(entry)
+                # print("DOI", doi)
+            except Exception as e:
+                self.l.error("get_doi failed for: {}".
+                             format(company_handler.journal), exc_info=True)
+                self.counter_futures_urls += 1
+                continue
 
-            # for entry in feed.entries:
+            try:
+                url = company_handler.refine_url(entry)
+                # print("URL", url)
+            except Exception as e:
+                self.l.error("refine_url failed for: {}".
+                             format(company_handler.journal), exc_info=True)
+                self.counter_futures_urls += 1
+                continue
 
-                # # Get the DOI, a unique number for a publication
-                # try:
-                    # doi = hosts.getDoi(company, journal, entry)
-                # except Exception as e:
-                    # self.l.error("getDoi failed for: {}".
-                                 # format(journal), exc_info=True)
-                    # self.counter_futures_urls += 1
-                    # continue
+            # Reject crappy entries: corrigendum, erratum, etc
+            if company_handler.reject(entry.title):
+                title = entry.title
+                self.counter_futures_images += 1
+                self.parent.counter_rejected += 1
+                self.l.debug("Rejecting {0}".format(doi))
 
-                # try:
-                    # url = hosts.refineUrl(company, journal, entry)
-                # except Exception as e:
-                    # self.l.error("refineUrl failed for: {}".
-                                 # format(journal), exc_info=True)
-                    # self.counter_futures_urls += 1
-                    # continue
+            # Artice complete, skip it
+            elif doi in dico_doi and dico_doi[doi]:
+                self.counter_futures_images += 1
+                self.l.debug("Article complete, skipping {}".format(doi))
+                continue
 
-                # # Reject crappy entries: corrigendum, erratum, etc
-                # if hosts.reject(entry.title):
-                    # title = entry.title
+            # New article, treat it
+            else:
+                try:
+                    data = company_handler.get_data(entry)
+                except Exception as e:
+                    self.l.error("Problem with getData: {}".
+                                 format(company_handler.journal), exc_info=True)
                     # self.counter_futures_images += 1
-                    # self.parent.counter_rejected += 1
-                    # self.l.debug("Rejecting {0}".format(doi))
-
-                    # # Insert the crappy articles in a rescue database
-                    # if self.parent.debug_mod and doi not in self.dico_doi:
-                        # query.prepare("INSERT INTO debug (doi, title, \
-                                      # journal, url) VALUES(?, ?, ?, ?)")
-                        # params = (doi, title, journal_abb, url)
-                        # self.l.debug("Inserting {0} in table debug".
-                                     # format(doi))
-                        # for value in params:
-                            # query.addBindValue(value)
-                        # query.exec_()
-                    # else:
-                        # continue
-
-                # # Artice complete, skip it
-                # elif doi in self.dico_doi and self.dico_doi[doi]:
-                    # self.counter_futures_images += 1
-                    # self.l.debug("Article complete, skipping {}".format(doi))
-                    # continue
-
-                # # Artice not complete, try to complete it
-                # elif doi in self.dico_doi and not self.dico_doi[doi]:
-                    # self.l.debug("Trying to update {}".format(doi))
-
-                    # # How to update the entry
-                    # dl_page, dl_image, data = hosts.updateData(company,
-                                                               # journal,
-                                                               # entry,
-                                                               # care_image)
-
-                    # # For these journals, all the infos are in the RSS.
-                    # # Only care about the image
-                    # if dl_image:
-                        # self.parent.counter_updates += 1
-
-                        # graphical_abstract = data['graphical_abstract']
-
-                        # if os.path.exists(self.PATH +
-                                          # functions.simpleChar(
-                                              # graphical_abstract)):
-                            # self.counter_futures_images += 1
-                        # else:
-                            # headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
-                                       # 'Connection': 'close',
-                                       # 'Referer': url}
-
-                            # future_image = self.session_images.get(
-                                # graphical_abstract, headers=headers,
-                                # timeout=self.TIMEOUT)
-                            # future_image.add_done_callback(functools.partial(
-                                # self.pictureDownloaded, doi, url))
-                            # self.list_futures.append(future_image)
-
-                    # else:
-                        # self.counter_futures_images += 1
-                        # continue
-
-                # # New article, treat it
-                # else:
-                    # try:
-                        # title, date, authors, abstract, graphical_abstract, url, topic_simple, author_simple = hosts.getData(company, journal, entry)
-                    # except Exception as e:
-                        # self.l.error("Problem with getData: {}".
-                                     # format(journal), exc_info=True)
-                        # self.counter_futures_images += 1
-                        # self.parent.counter_articles_failed += 1
-                        # return
-
-                    # # Rejecting article if no author
-                    # if authors == "Empty":
-                        # self.counter_futures_images += 1
-                        # self.parent.counter_rejected += 1
-                        # self.l.debug("Rejecting article {}, no author".
-                                     # format(title))
-                        # continue
-
-                    # query.prepare("INSERT INTO papers (doi, title, date, \
-                                  # journal, authors, abstract, \
-                                  # graphical_abstract, url, new, topic_simple, \
-                                  # author_simple) \
-                                  # VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-
-                    # # Set new to 1 and not to true
-                    # params = (doi, title, date, journal_abb, authors, abstract,
-                              # graphical_abstract, url, 1, topic_simple,
-                              # author_simple)
-
-                    # for value in params:
-                        # query.addBindValue(value)
-
-                    # # Test that query worked
-                    # if not query.exec_():
-                        # self.l.error("SQL ERROR in run(): {}, company_no_dl".
-                                     # format(query.lastError().text()))
-                        # self.parent.counter_articles_failed += 1
-                        # continue
-                    # else:
-                        # self.l.debug("{} added to the database".format(doi))
-                        # self.new_entries_worker += 1
-                        # self.parent.counter_added += 1
-
-                    # # If article has no graphical abstract of if it has been
-                    # # dled
-                    # if graphical_abstract == "Empty" or os.path.exists(
-                            # self.PATH +
-                            # functions.simpleChar(graphical_abstract)):
-
-                        # self.counter_futures_images += 1
-
-                        # # This block is executed when you delete the db, but
-                        # # not the images. Allows to update the
-                        # # graphical_abstract in db accordingly
-                        # if os.path.exists(self.PATH +
-                                          # functions.simpleChar(
-                                              # graphical_abstract)):
-
-                            # query.prepare("UPDATE papers SET \
-                                          # graphical_abstract=? WHERE doi=?")
-
-                            # params = (functions.simpleChar(graphical_abstract),
-                                      # doi)
-
-                            # for value in params:
-                                # query.addBindValue(value)
-                            # query.exec_()
-                    # else:
-                        # headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
-                                   # 'Connection': 'close',
-                                   # 'Referer': url}
-
-                        # future_image = self.session_images.get(
-                            # graphical_abstract, headers=headers,
-                            # timeout=self.TIMEOUT)
-
-                        # future_image.add_done_callback(
-                            # functools.partial(self.pictureDownloaded,
-                                              # doi, url))
-
-                        # self.list_futures.append(future_image)
-
-        # # The company requires to download the article's web page
-        # else:
-
-            # headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
-                       # 'Connection': 'close'}
-
-            # self.session_pages = FuturesSession(max_workers=self.MAX_WORKERS,
-                # session=self.parent.browsing_session)
-
-            # for entry in feed.entries:
-
-                # # Get the DOI, a unique number for a publication
-                # try:
-                    # doi = hosts.getDoi(company, journal, entry)
-                # except Exception as e:
-                    # self.l.error("getDoi failed for: {}".
-                                 # format(journal), exc_info=True)
-                    # self.counter_futures_urls += 1
-                    # self.counter_futures_images += 1
-                    # continue
-
-                # # Try to refine the url
-                # try:
-                    # url = hosts.refineUrl(company, journal, entry)
-                # except Exception as e:
-                    # self.l.error("refineUrl failed for: {}".
-                                 # format(journal), exc_info=True)
-                    # self.counter_futures_urls += 1
-                    # self.counter_futures_images += 1
-                    # continue
-
-                # # Make sure the entry has a title
-                # try:
-                    # title = entry.title
-                # except AttributeError:
-                    # self.l.error("No title for {}".
-                                 # format(doi), exc_info=True)
-                    # self.counter_futures_urls += 1
-                    # self.counter_futures_images += 1
-                    # continue
-
-                # # Reject crappy entries: corrigendum, erratum, etc
-                # if hosts.reject(title):
-                    # self.counter_futures_images += 1
-                    # self.counter_futures_urls += 1
-                    # self.parent.counter_rejected += 1
-                    # self.l.debug("Rejecting {0}".format(doi))
-
-                    # if self.parent.debug_mod and doi not in self.dico_doi:
-                        # query.prepare("INSERT INTO debug (doi, title, \
-                                      # journal, url) VALUES(?, ?, ?, ?)")
-                        # params = (doi, title, journal_abb, url)
-
-                        # for value in params:
-                            # query.addBindValue(value)
-                        # query.exec_()
-
-                        # self.l.debug("Inserting {0} in table debug".
-                                     # format(doi))
-                    # continue
-
-
-                # # Article complete, skip it
-                # elif doi in self.dico_doi and self.dico_doi[doi]:
-                    # self.counter_futures_images += 1
-                    # self.counter_futures_urls += 1
-                    # self.l.debug("Article complete, skipping {}".format(doi))
-                    # continue
-
-
-                # # Article not complete, try to complete it
-                # elif doi in self.dico_doi and not self.dico_doi[doi]:
-
-                    # url = hosts.refineUrl(company, journal, entry)
-
-                    # dl_page, dl_image, data = hosts.updateData(company,
-                                                               # journal,
-                                                               # entry,
-                                                               # care_image)
-
-                    # if dl_page:
-                        # self.parent.counter_updates += 1
-
-                        # future = self.session_pages.get(url,
-                                                        # timeout=self.TIMEOUT,
-                                                        # headers=headers)
-                        # future.add_done_callback(functools.partial(
-                            # self.completeData, doi, company, journal,
-                            # journal_abb, entry))
-                        # self.list_futures.append(future)
-
-                        # # Continue just to be sure. If dl_page is True,
-                        # # dl_image is likely True too
-                        # continue
-
-                    # elif dl_image:
-                        # self.parent.counter_updates += 1
-                        # self.counter_futures_urls += 1
-
-                        # graphical_abstract = data['graphical_abstract']
-
-                        # if os.path.exists(self.PATH +
-                                          # functions.simpleChar(
-                                              # graphical_abstract)):
-                            # self.counter_futures_images += 1
-                        # else:
-                            # headers = {'User-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/21.0',
-                                       # 'Connection': 'close',
-                                       # 'Referer': url}
-
-                            # future_image = self.session_images.get(
-                                # graphical_abstract, headers=headers,
-                                # timeout=self.TIMEOUT)
-                            # future_image.add_done_callback(functools.partial(
-                                # self.pictureDownloaded, doi, url))
-                            # self.list_futures.append(future_image)
-
-                    # else:
-                        # self.counter_futures_urls += 1
-                        # self.counter_futures_images += 1
-                        # continue
-
-                # # New article, treat it
-                # else:
-
-                    # url = hosts.refineUrl(company, journal, entry)
-                    # self.l.debug("Starting adding new entry")
-
-                    # future = self.session_pages.get(url, timeout=self.TIMEOUT,
-                                                    # headers=headers)
-                    # future.add_done_callback(functools.partial(
-                        # self.completeData, doi, company, journal, journal_abb,
-                        # entry))
-                    # self.list_futures.append(future)
-
-
-        # # Check if the counters are full
-        # while ((self.counter_futures_images + self.counter_futures_urls) !=
-                # len(feed.entries) * 2 and self.parent.parsing):
-            # self.sleep(0.5)
-
-        # if self.parent.parsing:
-            # if not self.bdd.commit():
-                # self.l.error(self.bdd.lastError().text())
-                # self.l.debug("db insertions/modifications: {}".
-                             # format(self.new_entries_worker))
-                # self.l.error("Problem when comitting data for {}".
-                             # format(journal))
-
-        # # Free the memory, and clean the remaining futures
-        # try:
-            # self.session_pages.executor.shutdown()
-        # except AttributeError:
-            # self.l.error("No session_pages to shut down")
-
-        # self.session_images.executor.shutdown()
-        # self.l.debug("Exiting thread for {}".format(journal))
+                    self.parent.counter_articles_failed += 1
+                    return
 
 
     # def completeData(self, doi, company, journal, journal_abb, entry, future):
