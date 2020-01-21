@@ -49,4 +49,4 @@ sklearn==0.0
 stevedore==1.29.0
 twitter==1.18.0
 urllib3==1.23
-validators==0.12.2
+validators==0.12.6
