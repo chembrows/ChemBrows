@@ -27,7 +27,7 @@ Pillow==5.2.0
 pluggy==0.7.1
 py==1.6.0
 pycparser==2.18
-Pygments==2.2.0
+Pygments==2.7.4
 PyInstaller==3.4
 pyparsing==2.2.1
 PyQt5==5.9.2
