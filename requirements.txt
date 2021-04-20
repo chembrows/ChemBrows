@@ -25,7 +25,7 @@ pbr==4.2.0
 pefile==2018.8.8
 Pillow==5.2.0
 pluggy==0.7.1
-py==1.6.0
+py==1.10.0
 pycparser==2.18
 Pygments==2.2.0
 PyInstaller==3.4
